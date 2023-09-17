@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayCanvas Custom Elements</title>
+    <script type="importmap">
+        {
+            "imports": {
+                "playcanvas": "https://cdn.skypack.dev/playcanvas"
+            }
+        }
+    </script>
+
+    <!-- Import the custom elements -->
+    <script type="module" src="../src/index.mjs"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <pc-application>
+        <pc-entity>
+            <pc-camera-component clear-color="0.3,0.4,0.5,1"></pc-camera-component>
+        </pc-entity>
+        <pc-entity>
+            <pc-light-component color="1,1,0"></pc-light-component>
+        </pc-entity>
+        <pc-entity>
+            <pc-render-component type="sphere"></pc-render-component>
+        </pc-entity>
+    </pc-application>
+</body>
+
+</html>
