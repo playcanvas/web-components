@@ -1,0 +1,18 @@
+{
+  "name": "@playcanvas/playdom",
+  "version": "1.0.0",
+  "description": "Custom DOM elements for defining PlayCanvas apps",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "playcanvas"
+  ],
+  "author": "PlayCanvas <support@playcanvas.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "playcanvas": "^1.65.4",
+    "serve": "^14.2.1"
+  }
+}
