@@ -5,6 +5,7 @@ class EntityElement extends HTMLElement {
         super();
 
         // Default values
+        this._name = 'Untitled';
         this._position = [0, 0, 0];
         this._rotation = [0, 0, 0];
         this._scale = [1, 1, 1];
@@ -15,10 +16,12 @@ class EntityElement extends HTMLElement {
         this.entity = new Entity();
 
         // Initialize from attributes
+        const nameAttr = this.getAttribute('name');
         const positionAttr = this.getAttribute('position');
         const rotationAttr = this.getAttribute('rotation');
         const scaleAttr = this.getAttribute('scale');
 
+        if (nameAttr) this.name = nameAttr;
         if (positionAttr) this.position = positionAttr.split(',').map(Number);
         if (rotationAttr) this.rotation = rotationAttr.split(',').map(Number);
         if (scaleAttr) this.scale = scaleAttr.split(',').map(Number);
@@ -31,6 +34,18 @@ class EntityElement extends HTMLElement {
             this.entity.setLocalPosition(...this._position);
             this.entity.setLocalEulerAngles(...this._rotation);
             this.entity.setLocalScale(...this._scale);
+        }
+    }
+
+    // Name
+    get name() {
+        return this._name;
+    }
+
+    set name(value) {
+        this._name = value;
+        if (this.entity) {
+            this.entity.name = value;
         }
     }
 
@@ -71,7 +86,7 @@ class EntityElement extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['position', 'rotation', 'scale'];
+        return ['position', 'rotation', 'scale', 'name'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -84,6 +99,9 @@ class EntityElement extends HTMLElement {
                 break;
             case 'scale':
                 this.scale = newValue.split(',').map(Number);
+                break;
+            case 'name':
+                this.name = newValue;
                 break;
         }
     }
