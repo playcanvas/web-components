@@ -25,18 +25,23 @@
 
 <body>
     <pc-application>
-        <pc-entity name="camera" position="0,0,5">
-            <pc-camera-component clear-color="0.3,0.4,0.5,1"></pc-camera-component>
-        </pc-entity>
-        <pc-entity name="directional light" rotation="45,45,0">
-            <pc-light-component color="1,1,0" cast-shadows></pc-light-component>
-        </pc-entity>
-        <pc-entity name="shape" scale="2,2,2">
-            <pc-render-component type="sphere"></pc-render-component>
-        </pc-entity>
-        <pc-entity name="ground" position="0,-1.5,0" scale="10,10,10">
-            <pc-render-component type="plane"></pc-render-component>
-        </pc-entity>
+        <pc-scene fog="linear" fog-color="0,0,1">
+            <pc-entity name="camera" position="0,0,5" far-clip="60">
+                <pc-camera-component clear-color="0.3,0.4,0.5,1"></pc-camera-component>
+            </pc-entity>
+            <pc-entity name="directional light" rotation="45,45,0">
+                <pc-light-component color="1,1,0" cast-shadows></pc-light-component>
+            </pc-entity>
+            <pc-entity name="sphere" scale="2,2,2">
+                <pc-render-component type="sphere"></pc-render-component>
+            </pc-entity>
+            <pc-entity name="cylinder" position="20, 0, -50" scale="2,2,2">
+                <pc-render-component type="cylinder"></pc-render-component>
+            </pc-entity>
+            <pc-entity name="ground" position="0,-1.5,0" scale="150,150,150">
+                <pc-render-component type="plane"></pc-render-component>
+            </pc-entity>
+        </pc-scene>
     </pc-application>
 </body>
 
