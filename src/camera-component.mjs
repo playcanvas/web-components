@@ -14,7 +14,6 @@ class CameraComponentElement extends HTMLElement {
 
         if (entityElement && entityElement.entity) {
             // Add the camera component to the entity
-            entityElement.entity.setPosition(0, 0, 5);
             this.cameraComponent = entityElement.entity.addComponent('camera');
 
             // You can also check for attributes on this element to set properties
