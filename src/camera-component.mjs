@@ -6,6 +6,8 @@ class CameraComponentElement extends HTMLElement {
 
         // Set default values (optional)
         this._clearColor = [1, 1, 1, 1]; // Default to white, for instance
+        this._nearClip = 0.1; // Default value for near clip
+        this._farClip = 1000; // Default value for far clip
     }
 
     connectedCallback() {
@@ -40,6 +42,23 @@ class CameraComponentElement extends HTMLElement {
         if (this.cameraComponent) {
             this.cameraComponent.clearColor = new Color(this._clearColor);
         }
+
+        // Check for near-clip and far-clip attributes
+        const nearClipAttr = this.getAttribute('near-clip');
+        if (nearClipAttr) {
+            this.nearClip = parseFloat(nearClipAttr);
+        }
+
+        const farClipAttr = this.getAttribute('far-clip');
+        if (farClipAttr) {
+            this.farClip = parseFloat(farClipAttr);
+        }
+
+        // Apply near-clip and far-clip to the camera component
+        if (this.cameraComponent) {
+            this.cameraComponent.nearClip = this._nearClip;
+            this.cameraComponent.farClip = this._farClip;
+        }
     }
 
     get clearColor() {
@@ -55,13 +74,43 @@ class CameraComponentElement extends HTMLElement {
         }
     }
 
+    get nearClip() {
+        return this._nearClip;
+    }
+
+    set nearClip(value) {
+        this._nearClip = value;
+        if (this.cameraComponent) {
+            this.cameraComponent.nearClip = value;
+        }
+    }
+
+    get farClip() {
+        return this._farClip;
+    }
+
+    set farClip(value) {
+        this._farClip = value;
+        if (this.cameraComponent) {
+            this.cameraComponent.farClip = value;
+        }
+    }
+
     static get observedAttributes() {
-        return ['clear-color'];
+        return ['clear-color', 'near-clip', 'far-clip'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'clear-color') {
-            this.clearColor = newValue.split(',').map(Number);
+        switch(name) {
+            case 'clear-color':
+                this.clearColor = newValue.split(',').map(Number);
+                break;
+            case 'near-clip':
+                this.nearClip = parseFloat(newValue);
+                break;
+            case 'far-clip':
+                this.farClip = parseFloat(newValue);
+                break;
         }
     }
 }
