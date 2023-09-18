@@ -25,14 +25,17 @@
 
 <body>
     <pc-application>
-        <pc-entity>
+        <pc-entity position="0,0,5">
             <pc-camera-component clear-color="0.3,0.4,0.5,1"></pc-camera-component>
         </pc-entity>
-        <pc-entity>
-            <pc-light-component color="1,1,0"></pc-light-component>
+        <pc-entity rotation="45,45,0">
+            <pc-light-component color="1,1,0" cast-shadows></pc-light-component>
         </pc-entity>
-        <pc-entity>
+        <pc-entity scale="2,2,2">
             <pc-render-component type="sphere"></pc-render-component>
+        </pc-entity>
+        <pc-entity position="0,-1.5,0" scale="10,10,10">
+            <pc-render-component type="plane"></pc-render-component>
         </pc-entity>
     </pc-application>
 </body>

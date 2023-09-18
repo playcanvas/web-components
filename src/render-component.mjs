@@ -5,6 +5,8 @@ class RenderComponentElement extends HTMLElement {
         super();
 
         this._type = 'asset';
+        this._castShadows = false;
+        this._receiveShadows = false;
     }
 
     connectedCallback() {
@@ -29,8 +31,18 @@ class RenderComponentElement extends HTMLElement {
         if (typeAttr && this.renderComponent) {
             this.renderComponent.type = typeAttr;
         }
+
+        // Initialize the cast-shadows and receive-shadows properties
+        if (this.renderComponent) {
+            const castShadowsAttr = this.hasAttribute('cast-shadows');
+            const receiveShadowsAttr = this.hasAttribute('receive-shadows');
+
+            if (castShadowsAttr) this.castShadows = true;
+            if (receiveShadowsAttr) this.receiveShadows = true;
+        }
     }
 
+    // Type
     get type() {
         return this._type;
     }
@@ -42,13 +54,45 @@ class RenderComponentElement extends HTMLElement {
         }
     }
 
+    // Cast Shadows
+    get castShadows() {
+        return this._castShadows;
+    }
+
+    set castShadows(value) {
+        this._castShadows = Boolean(value);
+        if (this.renderComponent) {
+            this.renderComponent.castShadows = this._castShadows;
+        }
+    }
+
+    // Receive Shadows
+    get receiveShadows() {
+        return this._receiveShadows;
+    }
+
+    set receiveShadows(value) {
+        this._receiveShadows = Boolean(value);
+        if (this.renderComponent) {
+            this.renderComponent.receiveShadows = this._receiveShadows;
+        }
+    }
+
     static get observedAttributes() {
-        return ['type'];
+        return ['type', 'cast-shadows', 'receive-shadows'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'type') {
-            this.type = newValue;
+        switch(name) {
+            case 'type':
+                this.type = newValue;
+                break;
+            case 'cast-shadows':
+                this.castShadows = newValue !== null;  // Existence implies true
+                break;
+            case 'receive-shadows':
+                this.receiveShadows = newValue !== null;  // Existence implies true
+                break;
         }
     }
 }
