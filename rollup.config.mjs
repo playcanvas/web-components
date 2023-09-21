@@ -4,36 +4,36 @@ import babel from '@rollup/plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 
 export default {
-    input: 'src/index.mjs',  // your entry point
+    input: 'src/index.mjs',
     output: [
         {
             file: 'dist/playdom.mjs',
-            format: 'esm',  // ES module
-            sourcemap: true  // Optional: generate a source map
+            format: 'esm',
+            sourcemap: true
         },
         {
             file: 'dist/playdom.cjs',
-            format: 'cjs',  // CommonJS format
+            format: 'cjs',
             sourcemap: true
         },
         {
             file: 'dist/playdom.js',
-            name: 'pd',  // name of the global variable for browsers
-            format: 'umd',  // UMD format
+            name: 'pd',
+            format: 'umd',
             sourcemap: true
         },
         {
             file: 'dist/playdom.min.js',
             name: 'pd',
             format: 'umd',
-            plugins: [terser()]  // Minify this build
+            plugins: [terser()]
         }
     ],
     plugins: [
         resolve(),
         commonjs(),
         babel({
-            exclude: 'node_modules/**',  // only transpile our source code
+            exclude: 'node_modules/**',
             babelHelpers: 'bundled',
             presets: ['@babel/preset-env']
         })
