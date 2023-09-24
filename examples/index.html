@@ -11,20 +11,15 @@
 
 <body>
     <pc-app>
-        <pc-scene fog="linear" fog-color="0,0,1" fog-end="60">
-            <pc-entity name="camera" position="0,0,5" far-clip="100">
+        <pc-scene fog="linear" fog-color="0.3,0.4,0.5" fog-end="60">
+            <pc-entity name="camera" position="0,0,4" far-clip="100">
                 <pc-camera clear-color="0.3,0.4,0.5,1"></pc-camera>
             </pc-entity>
             <pc-entity name="directional light" rotation="45,45,0">
-                <pc-light color="1,1,0" cast-shadows></pc-light>
+                <pc-light color="1,1,1" cast-shadows></pc-light>
             </pc-entity>
-            <pc-entity name="sphere" scale="2,2,2">
-                <pc-render type="sphere"></pc-render>
-            </pc-entity>
-            <pc-entity name="cylinder" position="20,0,-50" scale="2,2,2">
-                <pc-render type="cylinder"></pc-render>
-            </pc-entity>
-            <pc-entity name="ground" position="0,-1.5,0" scale="150,150,150">
+            <pc-model src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"></pc-model>
+            <pc-entity name="ground" position="0,-1,0" scale="150,150,150">
                 <pc-render type="plane"></pc-render>
             </pc-entity>
         </pc-scene>
