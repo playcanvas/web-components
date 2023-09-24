@@ -3,6 +3,7 @@ import { AssetElement } from './asset.mjs';
 import { EntityElement } from "./entity.mjs";
 import { ModelElement } from './model.mjs';
 import { SceneElement } from './scene.mjs';
+import { SkyElement } from './sky.mjs';
 
 import { CameraComponentElement } from './camera-component.mjs';
 import { LightComponentElement } from './light-component.mjs';
@@ -17,4 +18,5 @@ document.addEventListener("DOMContentLoaded", () => {
     customElements.define('pc-light', LightComponentElement);
     customElements.define('pc-render', RenderComponentElement);
     customElements.define('pc-scene', SceneElement);
+    customElements.define('pc-sky', SkyElement);
 });
