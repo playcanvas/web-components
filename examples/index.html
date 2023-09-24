@@ -6,34 +6,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlayCanvas Custom Elements</title>
     <script type="module" src="../dist/playdom.mjs"></script>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <pc-application>
+    <pc-app>
         <pc-scene fog="linear" fog-color="0,0,1" fog-end="60">
             <pc-entity name="camera" position="0,0,5" far-clip="100">
-                <pc-camera-component clear-color="0.3,0.4,0.5,1"></pc-camera-component>
+                <pc-camera clear-color="0.3,0.4,0.5,1"></pc-camera>
             </pc-entity>
             <pc-entity name="directional light" rotation="45,45,0">
-                <pc-light-component color="1,1,0" cast-shadows></pc-light-component>
+                <pc-light color="1,1,0" cast-shadows></pc-light>
             </pc-entity>
             <pc-entity name="sphere" scale="2,2,2">
-                <pc-render-component type="sphere"></pc-render-component>
+                <pc-render type="sphere"></pc-render>
             </pc-entity>
             <pc-entity name="cylinder" position="20,0,-50" scale="2,2,2">
-                <pc-render-component type="cylinder"></pc-render-component>
+                <pc-render type="cylinder"></pc-render>
             </pc-entity>
             <pc-entity name="ground" position="0,-1.5,0" scale="150,150,150">
-                <pc-render-component type="plane"></pc-render-component>
+                <pc-render type="plane"></pc-render>
             </pc-entity>
         </pc-scene>
-    </pc-application>
+    </pc-app>
 </body>
 
 </html>

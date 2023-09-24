@@ -13,7 +13,7 @@ class SceneElement extends HTMLElement {
     }
 
     connectedCallback() {
-        const appElement = this.closest('pc-application');
+        const appElement = this.closest('pc-app');
         if (!appElement.app) {
             appElement.addEventListener('appInitialized', () => {
                 this.scene = appElement.app.scene;
