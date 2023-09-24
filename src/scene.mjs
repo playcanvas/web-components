@@ -37,54 +37,55 @@ class SceneElement extends HTMLElement {
     }
 
     // Fog
-    get fog() {
-        return this._fog;
-    }
-
     set fog(value) {
         this._fog = value;
         this.updateSceneSettings();
     }
 
-    // Fog Color
-    get fogColor() {
-        return this._fogColor;
+    get fog() {
+        return this._fog;
     }
 
+    // Fog Color
     set fogColor(value) {
         if (Array.isArray(value) && value.length === 3) {
             this._fogColor = value;
             this.updateSceneSettings();
         }
     }
-    // Fog Density
-    get fogDensity() {
-        return this._fogDensity;
+
+    get fogColor() {
+        return this._fogColor;
     }
 
+    // Fog Density
     set fogDensity(value) {
         this._fogDensity = parseFloat(value);
         this.updateSceneSettings();
     }
 
-    // Fog Start
-    get fogStart() {
-        return this._fogStart;
+    get fogDensity() {
+        return this._fogDensity;
     }
 
+    // Fog Start
     set fogStart(value) {
         this._fogStart = parseFloat(value);
         this.updateSceneSettings();
     }
 
-    // Fog End
-    get fogEnd() {
-        return this._fogEnd;
+    get fogStart() {
+        return this._fogStart;
     }
 
+    // Fog End
     set fogEnd(value) {
         this._fogEnd = parseFloat(value);
         this.updateSceneSettings();
+    }
+
+    get fogEnd() {
+        return this._fogEnd;
     }
 
     static get observedAttributes() {
@@ -113,4 +114,4 @@ class SceneElement extends HTMLElement {
     }
 }
 
-export { SceneElement }
+export { SceneElement };

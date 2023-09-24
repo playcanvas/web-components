@@ -46,10 +46,6 @@ class LightComponentElement extends HTMLElement {
         }
     }
 
-    get color() {
-        return this._color;
-    }
-
     set color(value) {
         if (Array.isArray(value) && value.length === 3) {
             this._color = value;
@@ -59,8 +55,8 @@ class LightComponentElement extends HTMLElement {
         }
     }
 
-    get castShadows() {
-        return this._castShadows;
+    get color() {
+        return this._color;
     }
 
     set castShadows(value) {
@@ -70,12 +66,16 @@ class LightComponentElement extends HTMLElement {
         }
     }
 
+    get castShadows() {
+        return this._castShadows;
+    }
+
     static get observedAttributes() {
         return ['color', 'cast-shadows'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        switch(name) {
+        switch (name) {
             case 'color':
                 this.color = newValue.split(',').map(Number);
                 break;

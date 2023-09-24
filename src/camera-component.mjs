@@ -61,10 +61,6 @@ class CameraComponentElement extends HTMLElement {
         }
     }
 
-    get clearColor() {
-        return this._clearColor;
-    }
-
     set clearColor(value) {
         if (Array.isArray(value) && value.length === 4) {
             this._clearColor = value;
@@ -74,8 +70,8 @@ class CameraComponentElement extends HTMLElement {
         }
     }
 
-    get nearClip() {
-        return this._nearClip;
+    get clearColor() {
+        return this._clearColor;
     }
 
     set nearClip(value) {
@@ -85,8 +81,8 @@ class CameraComponentElement extends HTMLElement {
         }
     }
 
-    get farClip() {
-        return this._farClip;
+    get nearClip() {
+        return this._nearClip;
     }
 
     set farClip(value) {
@@ -96,12 +92,16 @@ class CameraComponentElement extends HTMLElement {
         }
     }
 
+    get farClip() {
+        return this._farClip;
+    }
+
     static get observedAttributes() {
         return ['clear-color', 'near-clip', 'far-clip'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        switch(name) {
+        switch (name) {
             case 'clear-color':
                 this.clearColor = newValue.split(',').map(Number);
                 break;
