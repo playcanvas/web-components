@@ -1,5 +1,3 @@
-import { Color } from 'playcanvas';
-
 class RenderComponentElement extends HTMLElement {
     constructor() {
         super();
@@ -43,10 +41,6 @@ class RenderComponentElement extends HTMLElement {
     }
 
     // Type
-    get type() {
-        return this._type;
-    }
-
     set type(value) {
         this._type = value;
         if (this.renderComponent) {
@@ -54,11 +48,11 @@ class RenderComponentElement extends HTMLElement {
         }
     }
 
-    // Cast Shadows
-    get castShadows() {
-        return this._castShadows;
+    get type() {
+        return this._type;
     }
 
+    // Cast Shadows
     set castShadows(value) {
         this._castShadows = Boolean(value);
         if (this.renderComponent) {
@@ -66,11 +60,11 @@ class RenderComponentElement extends HTMLElement {
         }
     }
 
-    // Receive Shadows
-    get receiveShadows() {
-        return this._receiveShadows;
+    get castShadows() {
+        return this._castShadows;
     }
 
+    // Receive Shadows
     set receiveShadows(value) {
         this._receiveShadows = Boolean(value);
         if (this.renderComponent) {
@@ -78,12 +72,16 @@ class RenderComponentElement extends HTMLElement {
         }
     }
 
+    get receiveShadows() {
+        return this._receiveShadows;
+    }
+
     static get observedAttributes() {
         return ['type', 'cast-shadows', 'receive-shadows'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        switch(name) {
+        switch (name) {
             case 'type':
                 this.type = newValue;
                 break;

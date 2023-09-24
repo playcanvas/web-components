@@ -38,10 +38,6 @@ class EntityElement extends HTMLElement {
     }
 
     // Name
-    get name() {
-        return this._name;
-    }
-
     set name(value) {
         this._name = value;
         if (this.entity) {
@@ -49,11 +45,11 @@ class EntityElement extends HTMLElement {
         }
     }
 
-    // Position
-    get position() {
-        return this._position;
+    get name() {
+        return this._name;
     }
 
+    // Position
     set position(value) {
         if (Array.isArray(value) && value.length === 3) {
             this._position = value;
@@ -61,11 +57,11 @@ class EntityElement extends HTMLElement {
         }
     }
 
-    // Rotation
-    get rotation() {
-        return this._rotation;
+    get position() {
+        return this._position;
     }
 
+    // Rotation
     set rotation(value) {
         if (Array.isArray(value) && value.length === 3) {
             this._rotation = value;
@@ -73,11 +69,11 @@ class EntityElement extends HTMLElement {
         }
     }
 
-    // Scale
-    get scale() {
-        return this._scale;
+    get rotation() {
+        return this._rotation;
     }
 
+    // Scale
     set scale(value) {
         if (Array.isArray(value) && value.length === 3) {
             this._scale = value;
@@ -85,12 +81,16 @@ class EntityElement extends HTMLElement {
         }
     }
 
+    get scale() {
+        return this._scale;
+    }
+
     static get observedAttributes() {
         return ['position', 'rotation', 'scale', 'name'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        switch(name) {
+        switch (name) {
             case 'position':
                 this.position = newValue.split(',').map(Number);
                 break;
@@ -107,4 +107,4 @@ class EntityElement extends HTMLElement {
     }
 }
 
-export { EntityElement }
+export { EntityElement };
