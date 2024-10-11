@@ -7,7 +7,7 @@ Unleash the power of PlayCanvas in your HTML. PlayDOM allows you to write PlayCa
 Using NPM:
 
 ```bash
-npm install @playcanvas/playdom --save=dev
+npm install @playcanvas/playdom --save-dev
 ```
 
 Or, include it directly in your HTML file from a CDN:
