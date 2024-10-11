@@ -43,15 +43,15 @@ class AssetElement extends HTMLElement {
     }
 
     _loadAsset() {
-      // Implement asset loading logic here.
-      // This might involve adding the asset to a global asset registry,
-      // triggering the asset loading in your PlayCanvas app, etc.
-      // e.g.,
-      // if (this._type === 'texture') {
-      //   loadTexture(this._src, this._id);
-      // } else if (this._type === 'model') {
-      //   loadModel(this._src, this._id);
-      // }
+        // Implement asset loading logic here.
+        // This might involve adding the asset to a global asset registry,
+        // triggering the asset loading in your PlayCanvas app, etc.
+        // e.g.,
+        // if (this._type === 'texture') {
+        //   loadTexture(this._src, this._id);
+        // } else if (this._type === 'model') {
+        //   loadModel(this._src, this._id);
+        // }
     }
 
     get src() {

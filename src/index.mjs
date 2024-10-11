@@ -1,6 +1,6 @@
 import { ApplicationElement } from './application.mjs';
 import { AssetElement } from './asset.mjs';
-import { EntityElement } from "./entity.mjs";
+import { EntityElement } from './entity.mjs';
 import { ModelElement } from './model.mjs';
 import { SceneElement } from './scene.mjs';
 import { SkyElement } from './sky.mjs';
@@ -9,7 +9,7 @@ import { CameraComponentElement } from './camera-component.mjs';
 import { LightComponentElement } from './light-component.mjs';
 import { RenderComponentElement } from './render-component.mjs';
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
     customElements.define('pc-app', ApplicationElement);
     customElements.define('pc-asset', AssetElement);
     customElements.define('pc-entity', EntityElement);
