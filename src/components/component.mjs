@@ -20,7 +20,7 @@ class ComponentElement extends HTMLElement {
             this.dispatchEvent(
                 new CustomEvent('componentReady', {
                     bubbles: true,
-                    composed: true,
+                    composed: true
                 })
             );
         } else {

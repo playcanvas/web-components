@@ -4,8 +4,11 @@ class SkyElement extends HTMLElement {
     static observedAttributes = ['src', 'intensity', 'rotation', 'level'];
 
     _src = '';
+
     _intensity = 1;
+
     _rotation = [0, 0, 0];
+
     _level = 0;
 
     connectedCallback() {

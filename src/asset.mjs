@@ -2,7 +2,9 @@ class AssetElement extends HTMLElement {
     static observedAttributes = ['src', 'id'];
 
     _src = '';
+
     _id = '';
+
     _type = '';
 
     connectedCallback() {

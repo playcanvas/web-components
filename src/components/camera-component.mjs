@@ -1,11 +1,15 @@
 import { Color } from 'playcanvas';
+
 import { ComponentElement } from './component.mjs';
 import { parseColor } from '../utils.mjs';
 
 class CameraComponentElement extends ComponentElement {
     _clearColor = new Color(1, 1, 1, 1);
+
     _farClip = 1000;
+
     _fov = 45;
+
     _nearClip = 0.1;
 
     constructor() {

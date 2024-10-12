@@ -1,4 +1,5 @@
 import { Color } from 'playcanvas';
+
 import { ComponentElement } from './component.mjs';
 import { parseColor } from '../utils.mjs';
 

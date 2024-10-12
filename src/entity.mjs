@@ -2,8 +2,11 @@ import { Entity } from 'playcanvas';
 
 class EntityElement extends HTMLElement {
     _name = 'Untitled';
+
     _position = [0, 0, 0];
+
     _rotation = [0, 0, 0];
+
     _scale = [1, 1, 1];
 
     connectedCallback() {

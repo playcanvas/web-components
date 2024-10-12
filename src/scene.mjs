@@ -2,9 +2,13 @@ import { Color } from 'playcanvas';
 
 class SceneElement extends HTMLElement {
     _fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
+
     _fogColor = [1, 1, 1];
+
     _fogDensity = 0;
+
     _fogStart = 0;
+
     _fogEnd = 1000;
 
     connectedCallback() {
