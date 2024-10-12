@@ -21,18 +21,18 @@ class AssetElement extends HTMLElement {
 
         this.asset = new Asset(id, type, { url: src });
 
-        const appElement = this.closest('pc-application') as AppElement | null;
+        const appElement = this.closest('pc-app') as AppElement | null;
         if (appElement && appElement.app) {
             appElement.app.assets.add(this.asset);
             this.asset.load();
         } else {
-            console.warn('Asset element must be a descendant of a pc-application element');
+            console.warn('Asset element must be a descendant of a pc-app element');
         }
     }
 
     disconnectedCallback() {
         if (this.asset) {
-            const appElement = this.closest('pc-application') as AppElement | null;
+            const appElement = this.closest('pc-app') as AppElement | null;
             if (appElement && appElement.app) {
                 appElement.app.assets.remove(this.asset);
             }
