@@ -1,17 +1,3 @@
-/**
- * PlayDOM - Declarative PlayCanvas
- *
- * This file ensures all PlayDOM custom elements are registered.
- * Import this file to make all PlayDOM elements available in your HTML.
- *
- * Usage in HTML after importing this file:
- * <pc-application>
- *   <pc-entity>
- *     <pc-camera></pc-camera>
- *   </pc-entity>
- * </pc-application>
- */
-
 /* eslint-disable no-unused-vars */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
