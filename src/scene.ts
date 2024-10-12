@@ -1,9 +1,11 @@
-import { Color } from 'playcanvas';
+import { Color, Scene } from 'playcanvas';
+import { AppElement } from './app';
+import { parseColor } from './utils';
 
 class SceneElement extends HTMLElement {
     _fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
 
-    _fogColor = [1, 1, 1];
+    _fogColor = new Color(1, 1, 1);
 
     _fogDensity = 0;
 
@@ -11,11 +13,17 @@ class SceneElement extends HTMLElement {
 
     _fogEnd = 1000;
 
+    scene: Scene | null = null;
+
     connectedCallback() {
-        const appElement = this.closest('pc-app');
+        const appElement = this.closest('pc-app') as AppElement | null;
+        if (!appElement) {
+            console.warn('pc-scene element must be a descendant of a pc-app element');
+            return;
+        }
         if (!appElement.app) {
             appElement.addEventListener('appInitialized', () => {
-                this.scene = appElement.app.scene;
+                this.scene = appElement.app!.scene;
                 this.updateSceneSettings();
             });
         } else {
@@ -35,7 +43,6 @@ class SceneElement extends HTMLElement {
         }
     }
 
-    // Fog
     set fog(value) {
         this._fog = value;
         this.updateSceneSettings();
@@ -45,42 +52,36 @@ class SceneElement extends HTMLElement {
         return this._fog;
     }
 
-    // Fog Color
-    set fogColor(value) {
-        if (Array.isArray(value) && value.length === 3) {
-            this._fogColor = value;
-            this.updateSceneSettings();
-        }
+    set fogColor(value: Color) {
+        this._fogColor = value;
+        this.scene!.fogColor = this._fogColor;
     }
 
     get fogColor() {
         return this._fogColor;
     }
 
-    // Fog Density
-    set fogDensity(value) {
-        this._fogDensity = parseFloat(value);
-        this.updateSceneSettings();
+    set fogDensity(value: number) {
+        this._fogDensity = value;
+        this.scene!.fogDensity = this._fogDensity;
     }
 
     get fogDensity() {
         return this._fogDensity;
     }
 
-    // Fog Start
-    set fogStart(value) {
-        this._fogStart = parseFloat(value);
-        this.updateSceneSettings();
+    set fogStart(value: number) {
+        this._fogStart = value;
+        this.scene!.fogStart = this._fogStart;
     }
 
     get fogStart() {
         return this._fogStart;
     }
 
-    // Fog End
-    set fogEnd(value) {
-        this._fogEnd = parseFloat(value);
-        this.updateSceneSettings();
+    set fogEnd(value: number) {
+        this._fogEnd = value;
+        this.scene!.fogEnd = this._fogEnd;
     }
 
     get fogEnd() {
@@ -91,22 +92,22 @@ class SceneElement extends HTMLElement {
         return ['fog', 'fog-color', 'fog-density', 'fog-start', 'fog-end'];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         switch (name) {
             case 'fog':
                 this.fog = newValue;
                 break;
             case 'fog-color':
-                this.fogColor = newValue.split(',').map(Number);
+                this.fogColor = parseColor(newValue);
                 break;
             case 'fog-density':
-                this.fogDensity = newValue;
+                this.fogDensity = parseFloat(newValue);
                 break;
             case 'fog-start':
-                this.fogStart = newValue;
+                this.fogStart = parseFloat(newValue);
                 break;
             case 'fog-end':
-                this.fogEnd = newValue;
+                this.fogEnd = parseFloat(newValue);
                 break;
             // ... handle other attributes as well
         }

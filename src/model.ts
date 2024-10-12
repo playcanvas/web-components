@@ -1,5 +1,7 @@
 import { Asset } from 'playcanvas';
 
+import { AppElement } from './app';
+
 class ModelElement extends HTMLElement {
     static observedAttributes = ['src'];
 
@@ -10,7 +12,7 @@ class ModelElement extends HTMLElement {
         this._loadModel();
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         if (name === 'src' && this._src !== newValue) {
             this._src = newValue;
             this._loadModel();
@@ -18,7 +20,11 @@ class ModelElement extends HTMLElement {
     }
 
     _loadModel() {
-        const el = this.closest('pc-app');
+        const el = this.closest('pc-app') as AppElement | null;
+        if (!el) {
+            console.warn('Model element must be a descendant of a pc-app element');
+            return;
+        }
 
         const asset = new Asset(this._src, 'container', {
             url: this._src

@@ -1,4 +1,5 @@
 import { Asset, Quat } from 'playcanvas';
+import { AppElement } from './app';
 
 class SkyElement extends HTMLElement {
     static observedAttributes = ['src', 'intensity', 'rotation', 'level'];
@@ -15,7 +16,7 @@ class SkyElement extends HTMLElement {
         this._updateSkybox();
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         switch (name) {
             case 'src':
                 this._src = newValue;
@@ -34,29 +35,34 @@ class SkyElement extends HTMLElement {
     }
 
     _updateSkybox() {
-        const el = this.closest('pc-app');
-        const scene = el.app.scene;
-        scene.skybox = this._loadTexture();
+        const el = this.closest('pc-app') as AppElement | null;
+        if (!el) {
+            return;
+        }
+        const scene = el.app!.scene;
+        this._loadTexture();
         scene.skyboxIntensity = this._intensity;
         scene.skyboxRotation = new Quat().setFromEulerAngles(this._rotation[0], this._rotation[1], this._rotation[2]);
         scene.skyboxMip = this._level;
     }
 
     _loadTexture() {
-        const el = this.closest('pc-app');
-
+        const el = this.closest('pc-app') as AppElement | null;
+        if (!el) {
+            return;
+        }
         const asset = new Asset(this._src, 'texture', {
             url: this._src
         });
         asset.once('load', (asset) => {
-            el.app.scene.envAtlas = asset.resource;
+            el.app!.scene.envAtlas = asset.resource;
         });
         asset.once('error', (err) => {
             console.error(err);
         });
 
-        el.app.assets.add(asset);
-        el.app.assets.load(asset);
+        el.app!.assets.add(asset);
+        el.app!.assets.load(asset);
     }
 }
 

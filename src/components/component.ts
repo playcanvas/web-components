@@ -1,8 +1,14 @@
+import { Component } from 'playcanvas';
+
 class ComponentElement extends HTMLElement {
-    constructor(componentName) {
+    componentName: string;
+
+    _component: Component | null = null;
+
+    constructor(componentName: string) {
         super();
+
         this.componentName = componentName;
-        this.component = null;
     }
 
     connectedCallback() {
@@ -11,7 +17,7 @@ class ComponentElement extends HTMLElement {
 
         if (entityElement && entityElement.entity) {
             // Add the component to the entity
-            this.component = entityElement.entity.addComponent(
+            this._component = entityElement.entity.addComponent(
                 this.componentName,
                 this.getInitialComponentData()
             );
@@ -33,8 +39,8 @@ class ComponentElement extends HTMLElement {
     disconnectedCallback() {
         // Remove the component when the element is disconnected
         if (this.component && this.component.entity) {
-            this.component.entity.removeComponent(this.componentName);
-            this.component = null;
+            this._component!.entity.removeComponent(this.componentName);
+            this._component = null;
         }
     }
 
@@ -43,9 +49,11 @@ class ComponentElement extends HTMLElement {
         return {};
     }
 
-    // Common attribute handling can be placed here if needed
-    attributeChangedCallback(name, oldValue, newValue) {
-        // Subclasses can extend or override this method
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    }
+
+    get component(): Component | null {
+        return this._component;
     }
 }
 

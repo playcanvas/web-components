@@ -5,13 +5,16 @@
   "main": "dist/playdom.cjs",
   "module": "dist/playdom.mjs",
   "browser": "dist/playdom.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
     "develop": "concurrently \"npm run watch\" \"npm run serve\"",
     "lint": "eslint src",
     "serve": "serve",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "rollup -c -w"
+    "watch": "rollup -c -w",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch"
   },
   "keywords": [
     "playcanvas"
@@ -19,19 +22,18 @@
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.25.8",
-    "@babel/eslint-parser": "^7.25.8",
-    "@babel/preset-env": "^7.25.8",
     "@playcanvas/eslint-config": "^2.0.6",
-    "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.0",
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.0",
     "concurrently": "^9.0.1",
     "eslint": "^9.12.0",
     "globals": "^15.11.0",
     "playcanvas": "^2.1.0",
     "rollup": "^4.24.0",
-    "serve": "^14.2.3"
+    "serve": "^14.2.3",
+    "tslib": "^2.7.0",
+    "typescript": "^5.6.3"
   }
 }

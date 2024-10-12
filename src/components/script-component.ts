@@ -1,11 +1,14 @@
-import { registerScript } from 'playcanvas';
+import { registerScript, Entity } from 'playcanvas';
 
-// ScriptComponentElement.js
 class ScriptComponentElement extends HTMLElement {
+    _scriptInstance = null;
+
+    entity: Entity | null = null;
+
+    _scriptName = '';
+
     constructor() {
         super();
-        this._scriptInstance = null;
-        this.entity = null;
     }
 
     async connectedCallback() {

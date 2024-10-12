@@ -9,6 +9,8 @@ class EntityElement extends HTMLElement {
 
     _scale = [1, 1, 1];
 
+    entity: Entity | null = null;
+
     connectedCallback() {
         // Create a new entity
         this.entity = new Entity();
@@ -87,7 +89,7 @@ class EntityElement extends HTMLElement {
         return ['position', 'rotation', 'scale', 'name'];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         switch (name) {
             case 'position':
                 this.position = newValue.split(',').map(Number);
