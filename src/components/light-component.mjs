@@ -78,4 +78,6 @@ class LightComponentElement extends ComponentElement {
     }
 }
 
+customElements.define('pc-light', LightComponentElement);
+
 export { LightComponentElement };

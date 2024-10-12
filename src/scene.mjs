@@ -113,4 +113,6 @@ class SceneElement extends HTMLElement {
     }
 }
 
+customElements.define('pc-scene', SceneElement);
+
 export { SceneElement };

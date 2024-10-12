@@ -40,4 +40,6 @@ class ModelElement extends HTMLElement {
     }
 }
 
+customElements.define('pc-model', ModelElement);
+
 export { ModelElement };

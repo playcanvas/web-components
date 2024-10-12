@@ -126,4 +126,6 @@ class ApplicationElement extends HTMLElement {
     }
 }
 
+customElements.define('pc-app', ApplicationElement);
+
 export { ApplicationElement };

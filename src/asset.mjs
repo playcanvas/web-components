@@ -1,69 +1,43 @@
+import { Asset } from 'playcanvas';
+
 class AssetElement extends HTMLElement {
-    static observedAttributes = ['src', 'id'];
-
-    _src = '';
-
-    _id = '';
-
-    _type = '';
+    constructor() {
+        super();
+        this.asset = null;
+    }
 
     connectedCallback() {
-        this._src = this.getAttribute('src') || '';
-        this._id = this.getAttribute('id') || '';
-        this._determineType();
-        this._loadAsset();
-    }
+        const id = this.getAttribute('id');
+        const src = this.getAttribute('src');
+        const type = this.getAttribute('type');
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'src' && this._src !== newValue) {
-            this._src = newValue;
-            this._determineType();
-            this._loadAsset();
+        if (!id) {
+            console.error('Asset element must have an id attribute');
+            return;
         }
-        if (name === 'id' && this._id !== newValue) {
-            this._id = newValue;
-        }
-    }
 
-    _determineType() {
-        if (this._src.endsWith('.glb')) {
-            this._type = 'model';
-        } else if (
-            this._src.endsWith('.png') ||
-        this._src.endsWith('.jpg') ||
-        this._src.endsWith('.jpeg') ||
-        this._src.endsWith('.gif')
-        ) {
-            this._type = 'texture';
+        this.asset = new Asset(id, type, { url: src });
+
+        const appElement = this.closest('pc-application');
+        if (appElement && appElement.app) {
+            appElement.app.assets.add(this.asset);
+            this.asset.load();
         } else {
-            this._type = '';
-            console.error('Unsupported asset type for src:', this._src);
+            console.warn('Asset element must be a descendant of a pc-application element');
         }
     }
 
-    _loadAsset() {
-        // Implement asset loading logic here.
-        // This might involve adding the asset to a global asset registry,
-        // triggering the asset loading in your PlayCanvas app, etc.
-        // e.g.,
-        // if (this._type === 'texture') {
-        //   loadTexture(this._src, this._id);
-        // } else if (this._type === 'model') {
-        //   loadModel(this._src, this._id);
-        // }
-    }
-
-    get src() {
-        return this._src;
-    }
-
-    get id() {
-        return this._id;
-    }
-
-    get type() {
-        return this._type;
+    disconnectedCallback() {
+        if (this.asset) {
+            const appElement = this.closest('pc-application');
+            if (appElement && appElement.app) {
+                appElement.app.assets.remove(this.asset);
+            }
+            this.asset = null;
+        }
     }
 }
+
+customElements.define('pc-asset', AssetElement);
 
 export { AssetElement };

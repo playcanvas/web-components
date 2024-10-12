@@ -60,4 +60,6 @@ class SkyElement extends HTMLElement {
     }
 }
 
+customElements.define('pc-sky', SkyElement);
+
 export { SkyElement };
