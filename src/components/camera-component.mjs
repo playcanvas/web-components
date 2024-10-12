@@ -125,4 +125,6 @@ class CameraComponentElement extends ComponentElement {
     }
 }
 
+customElements.define('pc-camera', CameraComponentElement);
+
 export { CameraComponentElement };

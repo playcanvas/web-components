@@ -72,4 +72,6 @@ class RenderComponentElement extends ComponentElement {
     }
 }
 
+customElements.define('pc-render', RenderComponentElement);
+
 export { RenderComponentElement };
