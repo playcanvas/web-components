@@ -49,7 +49,7 @@ class ComponentElement extends HTMLElement {
         return {};
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
     }
 
     get component(): Component | null {

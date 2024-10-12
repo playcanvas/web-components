@@ -93,7 +93,7 @@ class CameraComponentElement extends ComponentElement {
         return ['clear-color', 'near-clip', 'far-clip', 'fov', 'orthographic', 'ortho-height'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'clear-color':
                 this.clearColor = parseColor(newValue);

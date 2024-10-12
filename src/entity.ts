@@ -89,7 +89,7 @@ class EntityElement extends HTMLElement {
         return ['position', 'rotation', 'scale', 'name'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'position':
                 this.position = newValue.split(',').map(Number);

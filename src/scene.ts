@@ -35,18 +35,18 @@ class SceneElement extends HTMLElement {
 
     updateSceneSettings() {
         if (this.scene) {
-            this.scene.fog = this._fog;
-            this.scene.fogColor = new Color(...this._fogColor);
-            this.scene.fogDensity = this._fogDensity;
-            this.scene.fogStart = this._fogStart;
-            this.scene.fogEnd = this._fogEnd;
+            this.scene.rendering.fog = this._fog;
+            this.scene.rendering.fogColor = this._fogColor;
+            this.scene.rendering.fogDensity = this._fogDensity;
+            this.scene.rendering.fogStart = this._fogStart;
+            this.scene.rendering.fogEnd = this._fogEnd;
             // ... set other properties on the scene as well
         }
     }
 
     set fog(value) {
         this._fog = value;
-        this.updateSceneSettings();
+        this.scene!.rendering.fog = value;
     }
 
     get fog() {
@@ -55,7 +55,7 @@ class SceneElement extends HTMLElement {
 
     set fogColor(value: Color) {
         this._fogColor = value;
-        this.scene!.fogColor = this._fogColor;
+        this.scene!.rendering.fogColor = value;
     }
 
     get fogColor() {
@@ -64,7 +64,7 @@ class SceneElement extends HTMLElement {
 
     set fogDensity(value: number) {
         this._fogDensity = value;
-        this.scene!.fogDensity = this._fogDensity;
+        this.scene!.rendering.fogDensity = value;
     }
 
     get fogDensity() {
@@ -73,7 +73,7 @@ class SceneElement extends HTMLElement {
 
     set fogStart(value: number) {
         this._fogStart = value;
-        this.scene!.fogStart = this._fogStart;
+        this.scene!.rendering.fogStart = value;
     }
 
     get fogStart() {
@@ -82,7 +82,7 @@ class SceneElement extends HTMLElement {
 
     set fogEnd(value: number) {
         this._fogEnd = value;
-        this.scene!.fogEnd = this._fogEnd;
+        this.scene!.rendering.fogEnd = value;
     }
 
     get fogEnd() {
@@ -93,7 +93,7 @@ class SceneElement extends HTMLElement {
         return ['fog', 'fog-color', 'fog-density', 'fog-start', 'fog-end'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'fog':
                 this.fog = newValue;

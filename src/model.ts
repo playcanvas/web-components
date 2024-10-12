@@ -12,7 +12,7 @@ class ModelElement extends HTMLElement {
         this._loadModel();
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         if (name === 'src' && this._src !== newValue) {
             this._src = newValue;
             this._loadModel();

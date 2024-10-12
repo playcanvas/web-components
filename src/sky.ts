@@ -17,7 +17,7 @@ class SkyElement extends HTMLElement {
         this._updateSkybox();
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'src':
                 this._src = newValue;

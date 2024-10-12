@@ -58,7 +58,7 @@ class RenderComponentElement extends ComponentElement {
         return ['type', 'cast-shadows', 'receive-shadows'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'type':
                 this.type = newValue;

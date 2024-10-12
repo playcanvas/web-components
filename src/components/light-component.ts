@@ -110,8 +110,7 @@ class LightComponentElement extends ComponentElement {
         return ['color', 'cast-shadows', 'intensity', 'inner-cone-angle', 'outer-cone-angle', 'range', 'type'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
-        if (oldValue === newValue) return;
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'color':
                 this.color = parseColor(newValue);
