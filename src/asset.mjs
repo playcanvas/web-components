@@ -1,12 +1,9 @@
 class AssetElement extends HTMLElement {
     static observedAttributes = ['src', 'id'];
 
-    constructor() {
-        super();
-        this._src = '';
-        this._id = '';
-        this._type = '';
-    }
+    _src = '';
+    _id = '';
+    _type = '';
 
     connectedCallback() {
         this._src = this.getAttribute('src') || '';

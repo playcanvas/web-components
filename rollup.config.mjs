@@ -37,5 +37,6 @@ export default {
             babelHelpers: 'bundled',
             presets: ['@babel/preset-env']
         })
-    ]
+    ],
+    external: ['playcanvas']
 };

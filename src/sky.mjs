@@ -3,13 +3,10 @@ import { Asset, Quat } from 'playcanvas';
 class SkyElement extends HTMLElement {
     static observedAttributes = ['src', 'intensity', 'rotation', 'level'];
 
-    constructor() {
-        super();
-        this._src = '';
-        this._intensity = 1;
-        this._rotation = [0, 0, 0];
-        this._level = 0;
-    }
+    _src = '';
+    _intensity = 1;
+    _rotation = [0, 0, 0];
+    _level = 0;
 
     connectedCallback() {
         this._updateSkybox();

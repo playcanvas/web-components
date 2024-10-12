@@ -18,31 +18,6 @@ export default [
                 ...globals.mocha,
                 ...globals.node
             }
-        },
-        rules: {
-            'import/order': 'off'
         }
-    },
-    {
-        files: ['scripts/**/*.js'],
-        rules: {
-            'no-var': 'off'
-        }
-    },
-    {
-        files: ['test/**/*.mjs'],
-        rules: {
-            'no-unused-expressions': 'off',
-            'prefer-arrow-callback': 'off' // Mocha uses function callbacks
-        }
-    },
-    {
-        ignores: [
-            'tests/**/*',
-            'examples/lib/*',
-            'scripts/textmesh/*.min.js',
-            'src/polyfill/*',
-            'scripts/spine/*'
-        ]
     }
 ];
