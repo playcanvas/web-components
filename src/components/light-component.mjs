@@ -36,9 +36,7 @@ class LightComponentElement extends ComponentElement {
 
     set castShadows(value) {
         this._castShadows = value;
-        if (this.component) {
-            this.component.castShadows = value;
-        }
+        this.component?.castShadows = value;
     }
 
     get castShadows() {
@@ -47,9 +45,7 @@ class LightComponentElement extends ComponentElement {
 
     set color(value) {
         this._color = value;
-        if (this.component) {
-            this.component.color = value;
-        }
+        this.component?.color = value;
     }
 
     get color() {
@@ -58,9 +54,7 @@ class LightComponentElement extends ComponentElement {
 
     set innerConeAngle(value) {
         this._innerConeAngle = value;
-        if (this.component) {
-            this.component.innerConeAngle = value;
-        }
+        this.component?.innerConeAngle = value;
     }
 
     get innerConeAngle() {
@@ -69,9 +63,7 @@ class LightComponentElement extends ComponentElement {
 
     set intensity(value) {
         this._intensity = value;
-        if (this.component) {
-            this.component.intensity = value;
-        }
+        this.component?.intensity = value;
     }
 
     get intensity() {
@@ -80,9 +72,7 @@ class LightComponentElement extends ComponentElement {
 
     set outerConeAngle(value) {
         this._outerConeAngle = value;
-        if (this.component) {
-            this.component.outerConeAngle = value;
-        }
+        this.component?.outerConeAngle = value;
     }
 
     get outerConeAngle() {
@@ -91,9 +81,7 @@ class LightComponentElement extends ComponentElement {
 
     set range(value) {
         this._range = value;
-        if (this.component) {
-            this.component.range = value;
-        }
+        this.component?.range = value;
     }
 
     get range() {
@@ -107,18 +95,16 @@ class LightComponentElement extends ComponentElement {
         }
 
         this._type = value;
-        if (this.component) {
-            switch (value) {
-                case 'directional':
-                    this.component.type = LIGHTTYPE_DIRECTIONAL;
-                    break;
-                case 'omni':
-                    this.component.type = LIGHTTYPE_OMNI;
-                    break;
-                case 'spot':
-                    this.component.type = LIGHTTYPE_SPOT;
-                    break;
-            }
+        switch (value) {
+            case 'directional':
+                this.component?.type = LIGHTTYPE_DIRECTIONAL;
+                break;
+            case 'omni':
+                this.component?.type = LIGHTTYPE_OMNI;
+                break;
+            case 'spot':
+                this.component?.type = LIGHTTYPE_SPOT;
+                break;
         }
     }
 
