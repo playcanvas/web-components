@@ -1,31 +1,42 @@
-import { Color } from 'playcanvas';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, Color } from 'playcanvas';
 
 import { ComponentElement } from './component.mjs';
 import { parseColor } from '../utils.mjs';
 
 class LightComponentElement extends ComponentElement {
+    _castShadows = false;
+
+    _color = new Color(1, 1, 1);
+
+    _innerConeAngle = 40;
+
+    _intensity = 1;
+
+    _outerConeAngle = 45;
+
+    _range = 10;
+
+    _type = 'directional';
+
     constructor() {
         super('light');
-
-        // Set default values
-        this._castShadows = false;
-        this._color = new Color(1, 1, 1);
-        this._type = 'directional';
     }
 
     getInitialComponentData() {
         return {
             castShadows: this._castShadows,
             color: this._color,
+            innerConeAngle: this._innerConeAngle,
+            intensity: this._intensity,
+            outerConeAngle: this._outerConeAngle,
+            range: this._range,
             type: this._type
         };
     }
 
     set castShadows(value) {
-        this._castShadows = Boolean(value);
-        if (this.component) {
-            this.component.castShadows = this._castShadows;
-        }
+        this._castShadows = value;
+        this.component?.castShadows = value;
     }
 
     get castShadows() {
@@ -34,23 +45,66 @@ class LightComponentElement extends ComponentElement {
 
     set color(value) {
         this._color = value;
-        if (this.component) {
-            this.component.color = new Color(value);
-        }
+        this.component?.color = value;
     }
 
     get color() {
         return this._color;
     }
 
+    set innerConeAngle(value) {
+        this._innerConeAngle = value;
+        this.component?.innerConeAngle = value;
+    }
+
+    get innerConeAngle() {
+        return this._innerConeAngle;
+    }
+
+    set intensity(value) {
+        this._intensity = value;
+        this.component?.intensity = value;
+    }
+
+    get intensity() {
+        return this._intensity;
+    }
+
+    set outerConeAngle(value) {
+        this._outerConeAngle = value;
+        this.component?.outerConeAngle = value;
+    }
+
+    get outerConeAngle() {
+        return this._outerConeAngle;
+    }
+
+    set range(value) {
+        this._range = value;
+        this.component?.range = value;
+    }
+
+    get range() {
+        return this._range;
+    }
+
     set type(value) {
-        if (['directional', 'point', 'spot'].includes(value)) {
-            this._type = value;
-            if (this.component) {
-                this.component.type = value;
-            }
-        } else {
+        if (!['directional', 'omni', 'spot'].includes(value)) {
             console.warn(`Invalid light type '${value}', using default type '${this._type}'.`);
+            return;
+        }
+
+        this._type = value;
+        switch (value) {
+            case 'directional':
+                this.component?.type = LIGHTTYPE_DIRECTIONAL;
+                break;
+            case 'omni':
+                this.component?.type = LIGHTTYPE_OMNI;
+                break;
+            case 'spot':
+                this.component?.type = LIGHTTYPE_SPOT;
+                break;
         }
     }
 
@@ -59,7 +113,7 @@ class LightComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return ['color', 'cast-shadows', 'type'];
+        return ['color', 'cast-shadows', 'intensity', 'inner-cone-angle', 'outer-cone-angle', 'range', 'type'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -69,7 +123,19 @@ class LightComponentElement extends ComponentElement {
                 this.color = parseColor(newValue);
                 break;
             case 'cast-shadows':
-                this.castShadows = newValue !== null && newValue !== 'false';
+                this.castShadows = newValue === null || newValue === 'true';
+                break;
+            case 'inner-cone-angle':
+                this.innerConeAngle = Number(newValue);
+                break;
+            case 'intensity':
+                this.intensity = Number(newValue);
+                break;
+            case 'outer-cone-angle':
+                this.outerConeAngle = Number(newValue);
+                break;
+            case 'range':
+                this.range = Number(newValue);
                 break;
             case 'type':
                 this.type = newValue;

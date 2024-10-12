@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+/* eslint-disable import/order */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
 import { ApplicationElement } from './application.mjs';
