@@ -1,4 +1,5 @@
 import { RenderComponent } from 'playcanvas';
+
 import { ComponentElement } from './component';
 
 class RenderComponentElement extends ComponentElement {

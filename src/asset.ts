@@ -1,4 +1,5 @@
 import { Asset } from 'playcanvas';
+
 import { AppElement } from './app';
 
 class AssetElement extends HTMLElement {

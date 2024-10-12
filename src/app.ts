@@ -1,4 +1,5 @@
 import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
+
 import { EntityElement } from './entity';
 
 class AppElement extends HTMLElement {

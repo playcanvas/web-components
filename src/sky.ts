@@ -1,4 +1,5 @@
 import { Asset, Quat } from 'playcanvas';
+
 import { AppElement } from './app';
 
 class SkyElement extends HTMLElement {

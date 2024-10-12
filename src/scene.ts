@@ -1,4 +1,5 @@
 import { Color, Scene } from 'playcanvas';
+
 import { AppElement } from './app';
 import { parseColor } from './utils';
 
