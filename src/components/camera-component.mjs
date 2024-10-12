@@ -1,4 +1,4 @@
-import { Color } from 'playcanvas';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, Color } from 'playcanvas';
 
 import { ComponentElement } from './component.mjs';
 import { parseColor } from '../utils.mjs';
@@ -12,6 +12,10 @@ class CameraComponentElement extends ComponentElement {
 
     _nearClip = 0.1;
 
+    _orthographic = false;
+
+    _orthoHeight = 10;
+
     constructor() {
         super('camera');
     }
@@ -21,7 +25,9 @@ class CameraComponentElement extends ComponentElement {
             clearColor: this._clearColor,
             farClip: this._farClip,
             fov: this._fov,
-            nearClip: this._nearClip
+            nearClip: this._nearClip,
+            projection: this._orthographic ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE,
+            orthoHeight: this._orthoHeight
         };
     }
 
@@ -69,8 +75,30 @@ class CameraComponentElement extends ComponentElement {
         return this._nearClip;
     }
 
+    set orthographic(value) {
+        this._orthographic = value;
+        if (this.component) {
+            this.component.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
+        }
+    }
+
+    get orthographic() {
+        return this._orthographic;
+    }
+
+    set orthoHeight(value) {
+        this._orthoHeight = value;
+        if (this.component) {
+            this.component.orthoHeight = value;
+        }
+    }
+
+    get orthoHeight() {
+        return this._orthoHeight;
+    }
+
     static get observedAttributes() {
-        return ['clear-color', 'near-clip', 'far-clip', 'fov'];
+        return ['clear-color', 'near-clip', 'far-clip', 'fov', 'orthographic', 'ortho-height'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -78,14 +106,20 @@ class CameraComponentElement extends ComponentElement {
             case 'clear-color':
                 this.clearColor = parseColor(newValue);
                 break;
-            case 'near-clip':
-                this.nearClip = parseFloat(newValue);
-                break;
             case 'far-clip':
                 this.farClip = parseFloat(newValue);
                 break;
             case 'fov':
                 this.fov = parseFloat(newValue);
+                break;
+            case 'near-clip':
+                this.nearClip = parseFloat(newValue);
+                break;
+            case 'orthographic':
+                this.orthographic = newValue !== null;
+                break;
+            case 'ortho-height':
+                this.orthoHeight = parseFloat(newValue);
                 break;
         }
     }
