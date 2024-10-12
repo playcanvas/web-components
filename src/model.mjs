@@ -3,10 +3,7 @@ import { Asset } from 'playcanvas';
 class ModelElement extends HTMLElement {
     static observedAttributes = ['src'];
 
-    constructor() {
-        super();
-        this._src = '';
-    }
+    _src = '';
 
     connectedCallback() {
         this._src = this.getAttribute('src') || '';

@@ -1,16 +1,11 @@
 import { Color } from 'playcanvas';
 
 class SceneElement extends HTMLElement {
-    constructor() {
-        super();
-
-        // Default settings for fog and other attributes
-        this._fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
-        this._fogColor = [1, 1, 1];
-        this._fogDensity = 0;
-        this._fogStart = 0;
-        this._fogEnd = 1000;
-    }
+    _fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
+    _fogColor = [1, 1, 1];
+    _fogDensity = 0;
+    _fogStart = 0;
+    _fogEnd = 1000;
 
     connectedCallback() {
         const appElement = this.closest('pc-app');

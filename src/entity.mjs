@@ -1,15 +1,10 @@
 import { Entity } from 'playcanvas';
 
 class EntityElement extends HTMLElement {
-    constructor() {
-        super();
-
-        // Default values
-        this._name = 'Untitled';
-        this._position = [0, 0, 0];
-        this._rotation = [0, 0, 0];
-        this._scale = [1, 1, 1];
-    }
+    _name = 'Untitled';
+    _position = [0, 0, 0];
+    _rotation = [0, 0, 0];
+    _scale = [1, 1, 1];
 
     connectedCallback() {
         // Create a new entity

@@ -5,23 +5,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlayCanvas Custom Elements</title>
+    <script type="importmap">
+        {
+            "imports": {
+                "playcanvas": "https://esm.run/playcanvas@2.1.0"
+            }
+        }
+    </script>
     <script type="module" src="../dist/playdom.mjs"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <pc-app>
-        <pc-scene fog="linear" fog-color="0.3,0.4,0.5" fog-end="60">
-            <pc-sky src="https://raw.githubusercontent.com/playcanvas/engine/main/examples/assets/cubemaps/helipad-env-atlas.png"></pc-sky>
-            <pc-entity name="camera" position="0,0,4" far-clip="100">
-                <pc-camera clear-color="0.3,0.4,0.5,1"></pc-camera>
+        <pc-scene>
+            <pc-entity name="camera" position="0,0,3">
+                <pc-camera clear-color="0.5,0.6,0.9,1"></pc-camera>
             </pc-entity>
-            <pc-entity name="directional light" rotation="45,45,0">
-                <pc-light color="1,1,1" cast-shadows></pc-light>
+            <pc-entity name="light" rotation="45,0,0">
+                <pc-light color="1,1,1"></pc-light>
             </pc-entity>
-            <pc-model src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb"></pc-model>
-            <pc-entity name="ground" position="0,-1,0" scale="150,150,150">
-                <pc-render type="plane"></pc-render>
+            <pc-entity name="cube">
+                <pc-render type="box"></pc-render>
+                <pc-script src="/examples/rotate.mjs"></pc-script>
             </pc-entity>
         </pc-scene>
     </pc-app>

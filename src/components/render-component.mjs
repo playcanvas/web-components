@@ -1,43 +1,20 @@
-class RenderComponentElement extends HTMLElement {
+import { ComponentElement } from './component.mjs';
+
+class RenderComponentElement extends ComponentElement {
     constructor() {
-        super();
+        super('render');
 
         this._type = 'asset';
         this._castShadows = false;
         this._receiveShadows = false;
     }
 
-    connectedCallback() {
-        // Access the parent pc-entity's 'entity' property
-        const entityElement = this.closest('pc-entity');
-
-        if (entityElement && entityElement.entity) {
-            // Add the camera component to the entity
-            this.renderComponent = entityElement.entity.addComponent('render');
-
-            // Notify the outer world (or parent elements) that the camera component is ready
-            this.dispatchEvent(new CustomEvent('componentReady', {
-                bubbles: true,
-                composed: true
-            }));
-        } else {
-            console.error('pc-render-component should be a child of pc-entity');
-        }
-
-        // Check if the clear-color attribute is set on the element
-        const typeAttr = this.getAttribute('type');
-        if (typeAttr && this.renderComponent) {
-            this.renderComponent.type = typeAttr;
-        }
-
-        // Initialize the cast-shadows and receive-shadows properties
-        if (this.renderComponent) {
-            const castShadowsAttr = this.hasAttribute('cast-shadows');
-            const receiveShadowsAttr = this.hasAttribute('receive-shadows');
-
-            if (castShadowsAttr) this.castShadows = true;
-            if (receiveShadowsAttr) this.receiveShadows = true;
-        }
+    getInitialComponentData() {
+        return {
+            type: this._type,
+            castShadows: this._castShadows,
+            receiveShadows: this._receiveShadows
+        };
     }
 
     // Type
