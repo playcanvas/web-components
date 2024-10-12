@@ -3,19 +3,20 @@ import { ComponentElement } from './component.mjs';
 import { parseColor } from '../utils.mjs';
 
 class CameraComponentElement extends ComponentElement {
+    _clearColor = new Color(1, 1, 1, 1);
+    _farClip = 1000;
+    _fov = 45;
+    _nearClip = 0.1;
+
     constructor() {
         super('camera');
-
-        // Set default values (optional)
-        this._clearColor = new Color(1, 1, 1, 1); // Default to white
-        this._nearClip = 0.1; // Default value for near clip
-        this._farClip = 1000; // Default value for far clip
     }
 
     getInitialComponentData() {
         return {
             clearColor: this._clearColor,
             farClip: this._farClip,
+            fov: this._fov,
             nearClip: this._nearClip
         };
     }
@@ -31,17 +32,6 @@ class CameraComponentElement extends ComponentElement {
         return this._clearColor;
     }
 
-    set nearClip(value) {
-        this._nearClip = value;
-        if (this.component) {
-            this.component.nearClip = value;
-        }
-    }
-
-    get nearClip() {
-        return this._nearClip;
-    }
-
     set farClip(value) {
         this._farClip = value;
         if (this.component) {
@@ -53,8 +43,30 @@ class CameraComponentElement extends ComponentElement {
         return this._farClip;
     }
 
+    set fov(value) {
+        this._fov = value;
+        if (this.component) {
+            this.component.fov = value;
+        }
+    }
+
+    get fov() {
+        return this._fov;
+    }
+
+    set nearClip(value) {
+        this._nearClip = value;
+        if (this.component) {
+            this.component.nearClip = value;
+        }
+    }
+
+    get nearClip() {
+        return this._nearClip;
+    }
+
     static get observedAttributes() {
-        return ['clear-color', 'near-clip', 'far-clip'];
+        return ['clear-color', 'near-clip', 'far-clip', 'fov'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -67,6 +79,9 @@ class CameraComponentElement extends ComponentElement {
                 break;
             case 'far-clip':
                 this.farClip = parseFloat(newValue);
+                break;
+            case 'fov':
+                this.fov = parseFloat(newValue);
                 break;
         }
     }
