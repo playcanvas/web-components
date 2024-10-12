@@ -20,8 +20,8 @@ class RenderComponentElement extends ComponentElement {
     // Type
     set type(value) {
         this._type = value;
-        if (this.renderComponent) {
-            this.renderComponent.type = value;
+        if (this.component) {
+            this.component.type = value;
         }
     }
 
@@ -32,8 +32,8 @@ class RenderComponentElement extends ComponentElement {
     // Cast Shadows
     set castShadows(value) {
         this._castShadows = Boolean(value);
-        if (this.renderComponent) {
-            this.renderComponent.castShadows = this._castShadows;
+        if (this.component) {
+            this.component.castShadows = this._castShadows;
         }
     }
 
@@ -44,8 +44,8 @@ class RenderComponentElement extends ComponentElement {
     // Receive Shadows
     set receiveShadows(value) {
         this._receiveShadows = Boolean(value);
-        if (this.renderComponent) {
-            this.renderComponent.receiveShadows = this._receiveShadows;
+        if (this.component) {
+            this.component.receiveShadows = this._receiveShadows;
         }
     }
 
