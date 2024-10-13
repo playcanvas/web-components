@@ -107,6 +107,4 @@ class EntityElement extends HTMLElement {
     }
 }
 
-customElements.define('pc-entity', EntityElement);
-
 export { EntityElement };

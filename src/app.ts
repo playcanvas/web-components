@@ -130,5 +130,6 @@ class AppElement extends HTMLElement {
 }
 
 customElements.define('pc-app', AppElement);
+customElements.define('pc-entity', EntityElement);
 
 export { AppElement };

@@ -24,7 +24,7 @@ class AssetElement extends HTMLElement {
         const appElement = this.closest('pc-app') as AppElement | null;
         if (appElement && appElement.app) {
             appElement.app.assets.add(this.asset);
-            this.asset.load();
+            appElement.app.assets.load(this.asset);
         } else {
             console.warn('Asset element must be a descendant of a pc-app element');
         }

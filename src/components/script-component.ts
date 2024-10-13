@@ -1,7 +1,9 @@
-import { registerScript, Entity } from 'playcanvas';
+import { registerScript, Entity, Script } from 'playcanvas';
+
+import { EntityElement } from '../entity';
 
 class ScriptComponentElement extends HTMLElement {
-    _scriptInstance = null;
+    _scriptInstance: Script | null = null;
 
     entity: Entity | null = null;
 
@@ -13,7 +15,7 @@ class ScriptComponentElement extends HTMLElement {
 
     async connectedCallback() {
         // Find the closest pc-entity element
-        const entityElement = this.closest('pc-entity');
+        const entityElement = this.closest('pc-entity') as EntityElement | null;
         if (entityElement && entityElement.entity) {
             this.entity = entityElement.entity;
 
@@ -28,7 +30,7 @@ class ScriptComponentElement extends HTMLElement {
 
                 // Create an instance of the script on the entity
                 const scriptName = this._scriptName;
-                this._scriptInstance = this.entity.script.create(scriptName);
+                this._scriptInstance = this.entity.script!.create(scriptName);
             } else {
                 console.error('Attribute "src" is required for pc-script.');
             }
@@ -40,7 +42,7 @@ class ScriptComponentElement extends HTMLElement {
     disconnectedCallback() {
         // Remove the script instance
         if (this._scriptInstance && this.entity && this.entity.script) {
-            this.entity.script.destroy(this._scriptInstance);
+//            this.entity.script.destroy(this._scriptInstance);
             this._scriptInstance = null;
         }
     }
