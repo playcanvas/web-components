@@ -9,6 +9,8 @@ class EntityElement extends HTMLElement {
 
     _scale = [1, 1, 1];
 
+    entity: Entity | null = null;
+
     connectedCallback() {
         // Create a new entity
         this.entity = new Entity();
@@ -29,9 +31,9 @@ class EntityElement extends HTMLElement {
 
     updateTransform() {
         if (this.entity) {
-            this.entity.setLocalPosition(...this._position);
-            this.entity.setLocalEulerAngles(...this._rotation);
-            this.entity.setLocalScale(...this._scale);
+            this.entity.setLocalPosition(this._position[0], this._position[1], this._position[2]);
+            this.entity.setLocalEulerAngles(this._rotation[0], this._rotation[1], this._rotation[2]);
+            this.entity.setLocalScale(this._scale[0], this._scale[1], this._scale[2]);
         }
     }
 
@@ -87,7 +89,7 @@ class EntityElement extends HTMLElement {
         return ['position', 'rotation', 'scale', 'name'];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'position':
                 this.position = newValue.split(',').map(Number);
@@ -104,7 +106,5 @@ class EntityElement extends HTMLElement {
         }
     }
 }
-
-customElements.define('pc-entity', EntityElement);
 
 export { EntityElement };

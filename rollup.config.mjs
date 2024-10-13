@@ -1,10 +1,10 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import babel from '@rollup/plugin-babel';
+import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
 
 export default {
-    input: 'src/index.mjs',
+    input: 'src/index.ts',
     output: [
         {
             file: 'dist/playdom.mjs',
@@ -20,22 +20,26 @@ export default {
             file: 'dist/playdom.js',
             name: 'pd',
             format: 'umd',
-            sourcemap: true
+            sourcemap: true,
+            globals: { playcanvas: 'pc' }
         },
         {
             file: 'dist/playdom.min.js',
             name: 'pd',
             format: 'umd',
-            plugins: [terser()]
+            sourcemap: true,
+            plugins: [terser()],
+            globals: { playcanvas: 'pc' }
         }
     ],
     plugins: [
         resolve(),
         commonjs(),
-        babel({
-            exclude: 'node_modules/**',
-            babelHelpers: 'bundled',
-            presets: ['@babel/preset-env']
+        typescript({
+            tsconfig: './tsconfig.json', // Path to your tsconfig.json
+            declaration: true,
+            declarationDir: './dist',
+            sourceMap: true
         })
     ],
     external: ['playcanvas']

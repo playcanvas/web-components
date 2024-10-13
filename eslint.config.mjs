@@ -1,23 +1,30 @@
 import playcanvasConfig from '@playcanvas/eslint-config';
-import babelParser from '@babel/eslint-parser';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
 
 export default [
     ...playcanvasConfig,
     {
-        files: ['**/*.js', '**/*.mjs'],
+        files: ['**/*.ts', '**/*.tsx'],
         languageOptions: {
-            ecmaVersion: 2022,
-            sourceType: 'module',
-            parser: babelParser,
+            parser: tsParser,
             parserOptions: {
-                requireConfigFile: false
+                ecmaVersion: 2022,
+                sourceType: 'module',
+                project: './tsconfig.json'
             },
             globals: {
                 ...globals.browser,
                 ...globals.mocha,
                 ...globals.node
             }
+        },
+        plugins: {
+            '@typescript-eslint': tsPlugin
+        },
+        rules: {
+            ...tsPlugin.configs['recommended'].rules
         }
     }
 ];

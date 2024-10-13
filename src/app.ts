@@ -1,13 +1,16 @@
 import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
 
-class ApplicationElement extends HTMLElement {
+import { EntityElement } from './entity';
+
+class AppElement extends HTMLElement {
+    app: Application | null = null;
+
+    _observer: MutationObserver | null = null;
+
+    _canvas: HTMLCanvasElement | null = null;
+
     constructor() {
         super();
-        /** @type {Application} */
-        this.app = null;
-        /** @type {MutationObserver} */
-        this._observer = null;
-        this._canvas = null;
 
         // Bind methods to maintain 'this' context
         this._onWindowResize = this._onWindowResize.bind(this);
@@ -80,28 +83,28 @@ class ApplicationElement extends HTMLElement {
     _initializeEntities() {
         const entityElements = this.querySelectorAll('pc-entity');
         entityElements.forEach((entityElement) => {
-            this._addEntity(entityElement);
+            this._addEntity(entityElement as EntityElement);
         });
     }
 
-    _onMutation(mutationsList) {
+    _onMutation(mutationsList: MutationRecord[]) {
         for (const mutation of mutationsList) {
             mutation.addedNodes.forEach((node) => {
-                if (node.matches && node.matches('pc-entity')) {
+                if (node instanceof EntityElement && node.matches('pc-entity')) {
                     this._addEntity(node);
                 }
             });
             mutation.removedNodes.forEach((node) => {
-                if (node.matches && node.matches('pc-entity')) {
+                if (node instanceof EntityElement && node.matches('pc-entity')) {
                     this._removeEntity(node);
                 }
             });
         }
     }
 
-    _addEntity(entityElement) {
+    _addEntity(entityElement: EntityElement) {
         if (entityElement.entity) {
-            this.app.root.addChild(entityElement.entity);
+            this.app!.root.addChild(entityElement.entity);
             // Dispatch an event indicating the entity was added
             this.dispatchEvent(new CustomEvent('entityAdded', {
                 bubbles: true,
@@ -113,7 +116,7 @@ class ApplicationElement extends HTMLElement {
         }
     }
 
-    _removeEntity(entityElement) {
+    _removeEntity(entityElement: EntityElement) {
         if (entityElement.entity && entityElement.entity.parent) {
             entityElement.entity.parent.removeChild(entityElement.entity);
             // Dispatch an event indicating the entity was removed
@@ -126,6 +129,7 @@ class ApplicationElement extends HTMLElement {
     }
 }
 
-customElements.define('pc-app', ApplicationElement);
+customElements.define('pc-app', AppElement);
+customElements.define('pc-entity', EntityElement);
 
-export { ApplicationElement };
+export { AppElement };

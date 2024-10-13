@@ -1,12 +1,16 @@
-import { ComponentElement } from './component.mjs';
+import { RenderComponent } from 'playcanvas';
+
+import { ComponentElement } from './component';
 
 class RenderComponentElement extends ComponentElement {
+    _type = 'asset';
+
+    _castShadows = false;
+
+    _receiveShadows = false;
+
     constructor() {
         super('render');
-
-        this._type = 'asset';
-        this._castShadows = false;
-        this._receiveShadows = false;
     }
 
     getInitialComponentData() {
@@ -17,8 +21,11 @@ class RenderComponentElement extends ComponentElement {
         };
     }
 
-    // Type
-    set type(value) {
+    get component(): RenderComponent | null {
+        return super.component as RenderComponent | null;
+    }
+
+    set type(value: string) {
         this._type = value;
         if (this.component) {
             this.component.type = value;
@@ -29,24 +36,18 @@ class RenderComponentElement extends ComponentElement {
         return this._type;
     }
 
-    // Cast Shadows
-    set castShadows(value) {
-        this._castShadows = Boolean(value);
-        if (this.component) {
-            this.component.castShadows = this._castShadows;
-        }
+    set castShadows(value: boolean) {
+        this._castShadows = value;
+        this.component!.castShadows = value;
     }
 
     get castShadows() {
         return this._castShadows;
     }
 
-    // Receive Shadows
-    set receiveShadows(value) {
-        this._receiveShadows = Boolean(value);
-        if (this.component) {
-            this.component.receiveShadows = this._receiveShadows;
-        }
+    set receiveShadows(value: boolean) {
+        this._receiveShadows = value;
+        this.component!.receiveShadows = value;
     }
 
     get receiveShadows() {
@@ -57,7 +58,7 @@ class RenderComponentElement extends ComponentElement {
         return ['type', 'cast-shadows', 'receive-shadows'];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'type':
                 this.type = newValue;

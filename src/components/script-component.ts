@@ -1,16 +1,21 @@
-import { registerScript } from 'playcanvas';
+import { registerScript, Entity, Script } from 'playcanvas';
 
-// ScriptComponentElement.js
+import { EntityElement } from '../entity';
+
 class ScriptComponentElement extends HTMLElement {
+    _scriptInstance: Script | null = null;
+
+    entity: Entity | null = null;
+
+    _scriptName = '';
+
     constructor() {
         super();
-        this._scriptInstance = null;
-        this.entity = null;
     }
 
     async connectedCallback() {
         // Find the closest pc-entity element
-        const entityElement = this.closest('pc-entity');
+        const entityElement = this.closest('pc-entity') as EntityElement | null;
         if (entityElement && entityElement.entity) {
             this.entity = entityElement.entity;
 
@@ -25,7 +30,7 @@ class ScriptComponentElement extends HTMLElement {
 
                 // Create an instance of the script on the entity
                 const scriptName = this._scriptName;
-                this._scriptInstance = this.entity.script.create(scriptName);
+                this._scriptInstance = this.entity.script!.create(scriptName);
             } else {
                 console.error('Attribute "src" is required for pc-script.');
             }
@@ -37,12 +42,12 @@ class ScriptComponentElement extends HTMLElement {
     disconnectedCallback() {
         // Remove the script instance
         if (this._scriptInstance && this.entity && this.entity.script) {
-            this.entity.script.destroy(this._scriptInstance);
+//            this.entity.script.destroy(this._scriptInstance);
             this._scriptInstance = null;
         }
     }
 
-    async _loadAndRegisterScript(src) {
+    async _loadAndRegisterScript(src: string) {
         try {
             const module = await import(src);
             const ScriptClass = module.default || Object.values(module)[0];

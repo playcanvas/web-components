@@ -1,15 +1,18 @@
 import { Asset } from 'playcanvas';
 
+import { AppElement } from './app';
+
 class AssetElement extends HTMLElement {
+    asset: Asset | null = null;
+
     constructor() {
         super();
-        this.asset = null;
     }
 
     connectedCallback() {
         const id = this.getAttribute('id');
-        const src = this.getAttribute('src');
-        const type = this.getAttribute('type');
+        const src = this.getAttribute('src') || '';
+        const type = this.getAttribute('type') || '';
 
         if (!id) {
             console.error('Asset element must have an id attribute');
@@ -18,18 +21,18 @@ class AssetElement extends HTMLElement {
 
         this.asset = new Asset(id, type, { url: src });
 
-        const appElement = this.closest('pc-application');
+        const appElement = this.closest('pc-app') as AppElement | null;
         if (appElement && appElement.app) {
             appElement.app.assets.add(this.asset);
-            this.asset.load();
+            appElement.app.assets.load(this.asset);
         } else {
-            console.warn('Asset element must be a descendant of a pc-application element');
+            console.warn('Asset element must be a descendant of a pc-app element');
         }
     }
 
     disconnectedCallback() {
         if (this.asset) {
-            const appElement = this.closest('pc-application');
+            const appElement = this.closest('pc-app') as AppElement | null;
             if (appElement && appElement.app) {
                 appElement.app.assets.remove(this.asset);
             }

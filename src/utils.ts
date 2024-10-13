@@ -7,7 +7,7 @@ import { Color } from 'playcanvas';
  * @param {string} value - The color string to parse
  * @returns {Color} The parsed Color object
  */
-export const parseColor = (value) => {
+export const parseColor = (value: string): Color => {
     if (value.startsWith('#')) {
         return new Color().fromString(value);
     }

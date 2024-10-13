@@ -1,7 +1,7 @@
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, Color } from 'playcanvas';
+import { Color, LightComponent } from 'playcanvas';
 
-import { ComponentElement } from './component.mjs';
-import { parseColor } from '../utils.mjs';
+import { ComponentElement } from './component';
+import { parseColor } from '../utils';
 
 class LightComponentElement extends ComponentElement {
     _castShadows = false;
@@ -34,78 +34,72 @@ class LightComponentElement extends ComponentElement {
         };
     }
 
-    set castShadows(value) {
+    get component(): LightComponent | null {
+        return super.component as LightComponent | null;
+    }
+
+    set castShadows(value: boolean) {
         this._castShadows = value;
-        this.component?.castShadows = value;
+        this.component!.castShadows = value;
     }
 
     get castShadows() {
         return this._castShadows;
     }
 
-    set color(value) {
+    set color(value: Color) {
         this._color = value;
-        this.component?.color = value;
+        this.component!.color = value;
     }
 
     get color() {
         return this._color;
     }
 
-    set innerConeAngle(value) {
+    set innerConeAngle(value: number) {
         this._innerConeAngle = value;
-        this.component?.innerConeAngle = value;
+        this.component!.innerConeAngle = value;
     }
 
     get innerConeAngle() {
         return this._innerConeAngle;
     }
 
-    set intensity(value) {
+    set intensity(value: number) {
         this._intensity = value;
-        this.component?.intensity = value;
+        this.component!.intensity = value;
     }
 
     get intensity() {
         return this._intensity;
     }
 
-    set outerConeAngle(value) {
+    set outerConeAngle(value: number) {
         this._outerConeAngle = value;
-        this.component?.outerConeAngle = value;
+        this.component!.outerConeAngle = value;
     }
 
     get outerConeAngle() {
         return this._outerConeAngle;
     }
 
-    set range(value) {
+    set range(value: number) {
         this._range = value;
-        this.component?.range = value;
+        this.component!.range = value;
     }
 
     get range() {
         return this._range;
     }
 
-    set type(value) {
+    set type(value: string) {
         if (!['directional', 'omni', 'spot'].includes(value)) {
             console.warn(`Invalid light type '${value}', using default type '${this._type}'.`);
             return;
         }
 
         this._type = value;
-        switch (value) {
-            case 'directional':
-                this.component?.type = LIGHTTYPE_DIRECTIONAL;
-                break;
-            case 'omni':
-                this.component?.type = LIGHTTYPE_OMNI;
-                break;
-            case 'spot':
-                this.component?.type = LIGHTTYPE_SPOT;
-                break;
-        }
+        this.component!.type = value;
     }
 
     get type() {
@@ -116,8 +110,7 @@ class LightComponentElement extends ComponentElement {
         return ['color', 'cast-shadows', 'intensity', 'inner-cone-angle', 'outer-cone-angle', 'range', 'type'];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue === newValue) return;
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'color':
                 this.color = parseColor(newValue);
