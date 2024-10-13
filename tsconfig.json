@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-      "target": "es2016",
+      "target": "es2017",
       "module": "ESNext",
-      "lib": ["ES2015", "DOM", "DOM.Iterable"],
+      "lib": ["ES2017", "DOM", "DOM.Iterable"],
       "declaration": true,
       "declarationDir": "./dist",
       "outDir": "./dist",

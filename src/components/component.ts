@@ -1,4 +1,5 @@
 import { Component } from 'playcanvas';
+import { EntityElement } from '../entity';
 
 class ComponentElement extends HTMLElement {
     componentName: string;
@@ -13,7 +14,7 @@ class ComponentElement extends HTMLElement {
 
     connectedCallback() {
         // Access the parent pc-entity's 'entity' property
-        const entityElement = this.closest('pc-entity');
+        const entityElement = this.closest('pc-entity') as EntityElement | null;
 
         if (entityElement && entityElement.entity) {
             // Add the component to the entity
@@ -49,7 +50,7 @@ class ComponentElement extends HTMLElement {
         return {};
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(_name: string, _oldValue: string, _newValue: string) {
     }
 
     get component(): Component | null {

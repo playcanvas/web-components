@@ -45,7 +45,7 @@ class ScriptComponentElement extends HTMLElement {
         }
     }
 
-    async _loadAndRegisterScript(src) {
+    async _loadAndRegisterScript(src: string) {
         try {
             const module = await import(src);
             const ScriptClass = module.default || Object.values(module)[0];

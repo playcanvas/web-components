@@ -31,14 +31,14 @@ class ModelElement extends HTMLElement {
         });
         asset.once('load', (asset) => {
             const entity = asset.resource.instantiateRenderEntity();
-            el.app.root.addChild(entity);
+            el.app!.root.addChild(entity);
         });
         asset.once('error', (err) => {
             console.error(err);
         });
 
-        el.app.assets.add(asset);
-        el.app.assets.load(asset);
+        el.app!.assets.add(asset);
+        el.app!.assets.load(asset);
     }
 
     get src() {

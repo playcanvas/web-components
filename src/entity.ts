@@ -31,9 +31,9 @@ class EntityElement extends HTMLElement {
 
     updateTransform() {
         if (this.entity) {
-            this.entity.setLocalPosition(...this._position);
-            this.entity.setLocalEulerAngles(...this._rotation);
-            this.entity.setLocalScale(...this._scale);
+            this.entity.setLocalPosition(this._position[0], this._position[1], this._position[2]);
+            this.entity.setLocalEulerAngles(this._rotation[0], this._rotation[1], this._rotation[2]);
+            this.entity.setLocalScale(this._scale[0], this._scale[1], this._scale[2]);
         }
     }
 
