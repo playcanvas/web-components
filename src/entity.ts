@@ -1,13 +1,16 @@
-import { Entity } from 'playcanvas';
+import { Entity, Vec3 } from 'playcanvas';
+import { parseVec3 } from './utils';
 
 class EntityElement extends HTMLElement {
-    _name = 'Untitled';
+    private _name = 'Untitled';
 
-    _position = [0, 0, 0];
+    private _position = new Vec3();
 
-    _rotation = [0, 0, 0];
+    private _rotation = new Vec3();
 
-    _scale = [1, 1, 1];
+    private _scale = new Vec3(1, 1, 1);
+
+    private _tags: string[] = [];
 
     entity: Entity | null = null;
 
@@ -20,24 +23,15 @@ class EntityElement extends HTMLElement {
         const positionAttr = this.getAttribute('position');
         const rotationAttr = this.getAttribute('rotation');
         const scaleAttr = this.getAttribute('scale');
+        const tagsAttr = this.getAttribute('tags');
 
         if (nameAttr) this.name = nameAttr;
-        if (positionAttr) this.position = positionAttr.split(',').map(Number);
-        if (rotationAttr) this.rotation = rotationAttr.split(',').map(Number);
-        if (scaleAttr) this.scale = scaleAttr.split(',').map(Number);
-
-        this.updateTransform();
+        if (positionAttr) this.position = parseVec3(positionAttr);
+        if (rotationAttr) this.rotation = parseVec3(rotationAttr);
+        if (scaleAttr) this.scale = parseVec3(scaleAttr);
+        if (tagsAttr) this.tags = tagsAttr.split(',').map(tag => tag.trim());
     }
 
-    updateTransform() {
-        if (this.entity) {
-            this.entity.setLocalPosition(this._position[0], this._position[1], this._position[2]);
-            this.entity.setLocalEulerAngles(this._rotation[0], this._rotation[1], this._rotation[2]);
-            this.entity.setLocalScale(this._scale[0], this._scale[1], this._scale[2]);
-        }
-    }
-
-    // Name
     set name(value) {
         this._name = value;
         if (this.entity) {
@@ -49,11 +43,10 @@ class EntityElement extends HTMLElement {
         return this._name;
     }
 
-    // Position
     set position(value) {
-        if (Array.isArray(value) && value.length === 3) {
-            this._position = value;
-            this.updateTransform();
+        this._position = value;
+        if (this.entity) {
+            this.entity.setLocalPosition(this._position);
         }
     }
 
@@ -61,11 +54,10 @@ class EntityElement extends HTMLElement {
         return this._position;
     }
 
-    // Rotation
     set rotation(value) {
-        if (Array.isArray(value) && value.length === 3) {
-            this._rotation = value;
-            this.updateTransform();
+        this._rotation = value;
+        if (this.entity) {
+            this.entity.setLocalEulerAngles(this._rotation);
         }
     }
 
@@ -73,11 +65,10 @@ class EntityElement extends HTMLElement {
         return this._rotation;
     }
 
-    // Scale
     set scale(value) {
-        if (Array.isArray(value) && value.length === 3) {
-            this._scale = value;
-            this.updateTransform();
+        this._scale = value;
+        if (this.entity) {
+            this.entity.setLocalScale(this._scale);
         }
     }
 
@@ -85,23 +76,38 @@ class EntityElement extends HTMLElement {
         return this._scale;
     }
 
+    set tags(value) {
+        this._tags = value;
+        if (this.entity) {
+            this.entity.tags.clear();
+            this.entity.tags.add(this._tags);
+        }
+    }
+
+    get tags() {
+        return this._tags;
+    }
+
     static get observedAttributes() {
-        return ['position', 'rotation', 'scale', 'name'];
+        return ['position', 'rotation', 'scale', 'name', 'tags'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'position':
-                this.position = newValue.split(',').map(Number);
+                this.position = parseVec3(newValue);
                 break;
             case 'rotation':
-                this.rotation = newValue.split(',').map(Number);
+                this.rotation = parseVec3(newValue);
                 break;
             case 'scale':
-                this.scale = newValue.split(',').map(Number);
+                this.scale = parseVec3(newValue);
                 break;
             case 'name':
                 this.name = newValue;
+                break;
+            case 'tags':
+                this.tags = newValue.split(',').map(tag => tag.trim());
                 break;
         }
     }
