@@ -1,7 +1,7 @@
 {
-  "name": "@playcanvas/playdom",
-  "version": "1.0.0",
-  "description": "Custom DOM elements for defining PlayCanvas apps",
+  "name": "@playcanvas/web-components",
+  "version": "0.1.0",
+  "description": "Web Components for PlayCanvas",
   "main": "dist/playdom.cjs",
   "module": "dist/playdom.mjs",
   "browser": "dist/playdom.js",
@@ -12,12 +12,17 @@
     "lint": "eslint src",
     "serve": "serve",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "rollup -c -w",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch"
+    "type-check:watch": "npm run type-check -- --watch",
+    "watch": "rollup -c -w"
   },
   "keywords": [
-    "playcanvas"
+    "custom-elements",
+    "playcanvas",
+    "web-components",
+    "webgl",
+    "webgpu",
+    "webxr"
   ],
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT",
