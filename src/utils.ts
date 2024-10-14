@@ -1,4 +1,4 @@
-import { Color, Quat, Vec3 } from 'playcanvas';
+import { Color, Vec3 } from 'playcanvas';
 
 /**
  * Parse a color string into a Color object. String can be in the format of '#rgb', '#rgba',
@@ -16,6 +16,12 @@ export const parseColor = (value: string): Color => {
     return new Color(components);
 };
 
+/**
+ * Parse a Vec3 string into a Vec3 object. String can be in the format of 'x,y,z'.
+ *
+ * @param value - The Vec3 string to parse.
+ * @returns The parsed Vec3 object.
+ */
 export const parseVec3 = (value: string): Vec3 => {
     const components = value.split(',').map(Number);
     return new Vec3(components);
