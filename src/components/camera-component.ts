@@ -37,7 +37,9 @@ class CameraComponentElement extends ComponentElement {
 
     set clearColor(value) {
         this._clearColor = value;
-        this.component!.clearColor = value;
+        if (this.component) {
+            this.component.clearColor = value;
+        }
     }
 
     get clearColor(): Color {
@@ -46,7 +48,9 @@ class CameraComponentElement extends ComponentElement {
 
     set farClip(value: number) {
         this._farClip = value;
-        this.component!.farClip = value;
+        if (this.component) {
+            this.component.farClip = value;
+        }
     }
 
     get farClip(): number {
@@ -55,7 +59,9 @@ class CameraComponentElement extends ComponentElement {
 
     set fov(value: number) {
         this._fov = value;
-        this.component!.fov = value;
+        if (this.component) {
+            this.component.fov = value;
+        }
     }
 
     get fov(): number {
@@ -64,7 +70,9 @@ class CameraComponentElement extends ComponentElement {
 
     set nearClip(value: number) {
         this._nearClip = value;
-        this.component!.nearClip = value;
+        if (this.component) {
+            this.component.nearClip = value;
+        }
     }
 
     get nearClip(): number {
@@ -73,7 +81,9 @@ class CameraComponentElement extends ComponentElement {
 
     set orthographic(value) {
         this._orthographic = value;
-        this.component!.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
+        if (this.component) {
+            this.component.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
+        }
     }
 
     get orthographic(): boolean {
@@ -82,7 +92,9 @@ class CameraComponentElement extends ComponentElement {
 
     set orthoHeight(value: number) {
         this._orthoHeight = value;
-        this.component!.orthoHeight = value;
+        if (this.component) {
+            this.component.orthoHeight = value;
+        }
     }
 
     get orthoHeight() {

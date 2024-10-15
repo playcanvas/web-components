@@ -1,6 +1,7 @@
 import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
 
 import { EntityElement } from './entity';
+import { AssetElement } from './asset';
 
 class AppElement extends HTMLElement {
     app: Application | null = null;
@@ -27,28 +28,61 @@ class AppElement extends HTMLElement {
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
 
-        // Start the application
-        this.app.start();
+        // Load assets before starting the application
+        this._loadAssets().then(() => {
+            // Start the application
+            this.app!.start();
 
-        // Handle window resize to keep the canvas responsive
-        window.addEventListener('resize', this._onWindowResize);
+            // Handle window resize to keep the canvas responsive
+            window.addEventListener('resize', this._onWindowResize);
 
-        // Wait until 'pc-entity' is defined
-        customElements.whenDefined('pc-entity').then(() => {
-            // Add existing pc-entity elements to the scene
-            this._initializeEntities();
+            // Wait until 'pc-entity' is defined
+            customElements.whenDefined('pc-entity').then(() => {
+                // Add existing pc-entity elements to the scene
+                this._initializeEntities();
 
-            // Observe for dynamically added or removed pc-entity elements
-            this._observer = new MutationObserver(this._onMutation);
-            this._observer.observe(this, { childList: true, subtree: true });
+                // Observe for dynamically added or removed pc-entity elements
+                this._observer = new MutationObserver(this._onMutation);
+                this._observer.observe(this, { childList: true, subtree: true });
+            });
+
+            // Dispatch an event indicating the application is initialized
+            this.dispatchEvent(new CustomEvent('appInitialized', {
+                bubbles: true,
+                composed: true,
+                detail: { app: this.app }
+            }));
         });
+    }
 
-        // Dispatch an event indicating the application is initialized
-        this.dispatchEvent(new CustomEvent('appInitialized', {
-            bubbles: true,
-            composed: true,
-            detail: { app: this.app }
-        }));
+    private _loadAssets(): Promise<void> {
+        return new Promise((resolve) => {
+            const assetElements = this.querySelectorAll('pc-asset');
+            const assets = Array.from(assetElements).map((el: AssetElement) => el.asset);
+
+            if (assets.length === 0) {
+                resolve();
+                return;
+            }
+
+            let loadedCount = 0;
+            const onAssetLoad = () => {
+                loadedCount++;
+                if (loadedCount === assets.length) {
+                    resolve();
+                }
+            };
+
+            assets.forEach(asset => {
+                if (asset!.loaded) {
+                    onAssetLoad();
+                } else {
+                    asset!.once('load', onAssetLoad);
+                    this.app!.assets.add(asset!);
+                    this.app!.assets.load(asset!);
+                }
+            });
+        });
     }
 
     disconnectedCallback() {
@@ -129,6 +163,7 @@ class AppElement extends HTMLElement {
     }
 }
 
+customElements.define('pc-asset', AssetElement);
 customElements.define('pc-app', AppElement);
 customElements.define('pc-entity', EntityElement);
 

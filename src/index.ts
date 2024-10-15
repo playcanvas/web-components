@@ -8,6 +8,8 @@ import { CameraComponentElement } from './components/camera-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
 import { ScriptComponentElement } from './components/script-component';
+import { SoundComponentElement } from './components/sound-component';
+import { SoundSlotElement } from './components/sound-slot';
 import { ModelElement } from './model';
 import { SceneElement } from './scene';
 import { SkyElement } from './sky';
@@ -20,6 +22,8 @@ export {
     LightComponentElement,
     RenderComponentElement,
     ScriptComponentElement,
+    SoundComponentElement,
+    SoundSlotElement,
     ModelElement,
     SceneElement,
     SkyElement

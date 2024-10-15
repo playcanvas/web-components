@@ -1,4 +1,5 @@
 import { Component } from 'playcanvas';
+
 import { EntityElement } from '../entity';
 
 class ComponentElement extends HTMLElement {
