@@ -129,7 +129,7 @@ class SoundSlotElement extends HTMLElement {
             this.soundSlot.overlap = value;
         }
     }
-    
+
     get overlap() {
         return this._overlap;
     }
@@ -177,7 +177,6 @@ class SoundSlotElement extends HTMLElement {
                 const appElement = this.closest('pc-app') as AppElement;
                 const assetElement = appElement.querySelector(`pc-asset[id="${newValue}"]`) as AssetElement;
                 if (assetElement && assetElement.asset) {
-                    assetElement
                     this.asset = assetElement.asset;
                 } else {
                     console.warn(`Asset with id "${newValue}" not found`);

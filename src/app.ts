@@ -1,7 +1,7 @@
 import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
 
-import { EntityElement } from './entity';
 import { AssetElement } from './asset';
+import { EntityElement } from './entity';
 
 class AppElement extends HTMLElement {
     app: Application | null = null;
@@ -73,7 +73,7 @@ class AppElement extends HTMLElement {
                 }
             };
 
-            assets.forEach(asset => {
+            assets.forEach((asset) => {
                 if (asset!.loaded) {
                     onAssetLoad();
                 } else {
