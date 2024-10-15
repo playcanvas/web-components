@@ -1,6 +1,7 @@
 import { Asset } from 'playcanvas';
 
 import { AppElement } from './app';
+import { EntityElement } from './entity';
 
 class ModelElement extends HTMLElement {
     static observedAttributes = ['src'];
@@ -31,7 +32,13 @@ class ModelElement extends HTMLElement {
         });
         asset.once('load', (asset) => {
             const entity = asset.resource.instantiateRenderEntity();
-            el.app!.root.addChild(entity);
+
+            const parentEntityElement = this.closest('pc-entity') as EntityElement | null;
+            if (!parentEntityElement) {
+                el.app!.root.addChild(entity);
+            } else {
+                parentEntityElement.entity!.addChild(entity);
+            }
         });
         asset.once('error', (err) => {
             console.error(err);
