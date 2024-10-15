@@ -42,7 +42,7 @@ class ScriptComponentElement extends HTMLElement {
     disconnectedCallback() {
         // Remove the script instance
         if (this._scriptInstance && this.entity && this.entity.script) {
-//            this.entity.script.destroy(this._scriptInstance);
+            //            this.entity.script.destroy(this._scriptInstance);
             this._scriptInstance = null;
         }
     }

@@ -38,7 +38,9 @@ class RenderComponentElement extends ComponentElement {
 
     set castShadows(value: boolean) {
         this._castShadows = value;
-        this.component!.castShadows = value;
+        if (this.component) {
+            this.component.castShadows = value;
+        }
     }
 
     get castShadows() {
@@ -47,7 +49,9 @@ class RenderComponentElement extends ComponentElement {
 
     set receiveShadows(value: boolean) {
         this._receiveShadows = value;
-        this.component!.receiveShadows = value;
+        if (this.component) {
+            this.component.receiveShadows = value;
+        }
     }
 
     get receiveShadows() {

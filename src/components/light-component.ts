@@ -40,7 +40,9 @@ class LightComponentElement extends ComponentElement {
 
     set castShadows(value: boolean) {
         this._castShadows = value;
-        this.component!.castShadows = value;
+        if (this.component) {
+            this.component.castShadows = value;
+        }
     }
 
     get castShadows() {
@@ -49,7 +51,9 @@ class LightComponentElement extends ComponentElement {
 
     set color(value: Color) {
         this._color = value;
-        this.component!.color = value;
+        if (this.component) {
+            this.component.color = value;
+        }
     }
 
     get color() {
@@ -58,7 +62,9 @@ class LightComponentElement extends ComponentElement {
 
     set innerConeAngle(value: number) {
         this._innerConeAngle = value;
-        this.component!.innerConeAngle = value;
+        if (this.component) {
+            this.component.innerConeAngle = value;
+        }
     }
 
     get innerConeAngle() {
@@ -67,7 +73,9 @@ class LightComponentElement extends ComponentElement {
 
     set intensity(value: number) {
         this._intensity = value;
-        this.component!.intensity = value;
+        if (this.component) {
+            this.component.intensity = value;
+        }
     }
 
     get intensity() {
@@ -76,7 +84,9 @@ class LightComponentElement extends ComponentElement {
 
     set outerConeAngle(value: number) {
         this._outerConeAngle = value;
-        this.component!.outerConeAngle = value;
+        if (this.component) {
+            this.component.outerConeAngle = value;
+        }
     }
 
     get outerConeAngle() {
@@ -85,7 +95,9 @@ class LightComponentElement extends ComponentElement {
 
     set range(value: number) {
         this._range = value;
-        this.component!.range = value;
+        if (this.component) {
+            this.component.range = value;
+        }
     }
 
     get range() {
@@ -99,7 +111,9 @@ class LightComponentElement extends ComponentElement {
         }
 
         this._type = value;
-        this.component!.type = value;
+        if (this.component) {
+            this.component.type = value;
+        }
     }
 
     get type() {

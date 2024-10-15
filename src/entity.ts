@@ -1,4 +1,5 @@
 import { Entity, Vec3 } from 'playcanvas';
+
 import { parseVec3 } from './utils';
 
 class EntityElement extends HTMLElement {
