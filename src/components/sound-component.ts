@@ -3,6 +3,11 @@ import { SoundComponent } from 'playcanvas';
 import { ComponentElement } from './component';
 import { SoundSlotElement } from './sound-slot';
 
+/**
+ * Represents a sound component in the PlayCanvas engine.
+ *
+ * @category Components
+ */
 class SoundComponentElement extends ComponentElement {
     private _pitch: number = 1;
 
@@ -22,10 +27,18 @@ class SoundComponentElement extends ComponentElement {
         };
     }
 
+    /**
+     * Gets the sound component.
+     * @returns The sound component.
+     */
     get component(): SoundComponent | null {
         return super.component as SoundComponent | null;
     }
 
+    /**
+     * Sets the pitch of the sound.
+     * @param value - The pitch.
+     */
     set pitch(value: number) {
         this._pitch = value;
         if (this.component) {
@@ -33,10 +46,18 @@ class SoundComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the pitch of the sound.
+     * @returns The pitch.
+     */
     get pitch() {
         return this._pitch;
     }
 
+    /**
+     * Sets the positional flag of the sound.
+     * @param value - The positional flag.
+     */
     set positional(value: boolean) {
         this._positional = value;
         if (this.component) {
@@ -44,10 +65,18 @@ class SoundComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the positional flag of the sound.
+     * @returns The positional flag.
+     */
     get positional() {
         return this._positional;
     }
 
+    /**
+     * Sets the volume of the sound.
+     * @param value - The volume.
+     */
     set volume(value: number) {
         this._volume = value;
         if (this.component) {
@@ -55,6 +84,10 @@ class SoundComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the volume of the sound.
+     * @returns The volume.
+     */
     get volume() {
         return this._volume;
     }

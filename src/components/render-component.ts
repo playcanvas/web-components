@@ -2,12 +2,17 @@ import { RenderComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 
+/**
+ * Represents a render component in the PlayCanvas engine.
+ *
+ * @category Components
+ */
 class RenderComponentElement extends ComponentElement {
-    _type = 'asset';
+    private _type = 'asset';
 
-    _castShadows = false;
+    private _castShadows = false;
 
-    _receiveShadows = false;
+    private _receiveShadows = false;
 
     constructor() {
         super('render');
@@ -21,6 +26,10 @@ class RenderComponentElement extends ComponentElement {
         };
     }
 
+    /**
+     * Gets the render component.
+     * @returns The render component.
+     */
     get component(): RenderComponent | null {
         return super.component as RenderComponent | null;
     }
@@ -32,10 +41,18 @@ class RenderComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the type of the render component.
+     * @returns The type.
+     */
     get type() {
         return this._type;
     }
 
+    /**
+     * Sets the cast shadows flag of the render component.
+     * @param value - The cast shadows flag.
+     */
     set castShadows(value: boolean) {
         this._castShadows = value;
         if (this.component) {
@@ -43,10 +60,18 @@ class RenderComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the cast shadows flag of the render component.
+     * @returns The cast shadows flag.
+     */
     get castShadows() {
         return this._castShadows;
     }
 
+    /**
+     * Sets the receive shadows flag of the render component.
+     * @param value - The receive shadows flag.
+     */
     set receiveShadows(value: boolean) {
         this._receiveShadows = value;
         if (this.component) {
@@ -54,6 +79,10 @@ class RenderComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the receive shadows flag of the render component.
+     * @returns The receive shadows flag.
+     */
     get receiveShadows() {
         return this._receiveShadows;
     }

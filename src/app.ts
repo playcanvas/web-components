@@ -3,13 +3,28 @@ import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
 import { AssetElement } from './asset';
 import { EntityElement } from './entity';
 
+/**
+ * The main application element.
+ */
 class AppElement extends HTMLElement {
+    /**
+     * The PlayCanvas application instance.
+     */
     app: Application | null = null;
 
-    _observer: MutationObserver | null = null;
+    /**
+     * The mutation observer for observing changes to the DOM.
+     */
+    private _observer: MutationObserver | null = null;
 
-    _canvas: HTMLCanvasElement | null = null;
+    /**
+     * The canvas element.
+     */
+    private _canvas: HTMLCanvasElement | null = null;
 
+    /**
+     * Creates a new AppElement.
+     */
     constructor() {
         super();
 
@@ -58,7 +73,7 @@ class AppElement extends HTMLElement {
     private _loadAssets(): Promise<void> {
         return new Promise((resolve) => {
             const assetElements = this.querySelectorAll('pc-asset');
-            const assets = Array.from(assetElements).map((el: AssetElement) => el.asset);
+            const assets = Array.from(assetElements).map(el => (el as AssetElement).asset);
 
             if (assets.length === 0) {
                 resolve();

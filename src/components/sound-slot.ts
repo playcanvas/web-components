@@ -4,6 +4,9 @@ import { AppElement } from '../app';
 import { SoundComponentElement } from './sound-component';
 import { AssetElement } from '../asset';
 
+/**
+ * Represents a sound slot in the PlayCanvas engine.
+ */
 class SoundSlotElement extends HTMLElement {
     private _asset: Asset | null = null;
 
@@ -23,6 +26,9 @@ class SoundSlotElement extends HTMLElement {
 
     private _volume: number = 1;
 
+    /**
+     * The sound slot.
+     */
     soundSlot: SoundSlot | null = null;
 
     connectedCallback() {
@@ -68,6 +74,10 @@ class SoundSlotElement extends HTMLElement {
         soundElement.component!.removeSlot(this._name);
     }
 
+    /**
+     * Sets the asset of the sound slot.
+     * @param value - The asset.
+     */
     set asset(value: Asset | null) {
         this._asset = value;
         if (this.soundSlot) {
@@ -75,10 +85,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the asset of the sound slot.
+     * @returns The asset.
+     */
     get asset() {
         return this._asset;
     }
 
+    /**
+     * Sets the auto play flag of the sound slot.
+     * @param value - The auto play flag.
+     */
     set autoPlay(value: boolean) {
         this._autoPlay = value;
         if (this.soundSlot) {
@@ -86,10 +104,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the auto play flag of the sound slot.
+     * @returns The auto play flag.
+     */
     get autoPlay() {
         return this._autoPlay;
     }
 
+    /**
+     * Sets the duration of the sound slot.
+     * @param value - The duration.
+     */
     set duration(value: number) {
         this._duration = value;
         if (this.soundSlot) {
@@ -97,10 +123,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the duration of the sound slot.
+     * @returns The duration.
+     */
     get duration() {
         return this._duration as number;
     }
 
+    /**
+     * Sets the loop flag of the sound slot.
+     * @param value - The loop flag.
+     */
     set loop(value: boolean) {
         this._loop = value;
         if (this.soundSlot) {
@@ -108,10 +142,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the loop flag of the sound slot.
+     * @returns The loop flag.
+     */
     get loop() {
         return this._loop;
     }
 
+    /**
+     * Sets the name of the sound slot.
+     * @param value - The name.
+     */
     set name(value: string) {
         this._name = value;
         if (this.soundSlot) {
@@ -119,10 +161,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the name of the sound slot.
+     * @returns The name.
+     */
     get name() {
         return this._name;
     }
 
+    /**
+     * Sets the overlap flag of the sound slot.
+     * @param value - The overlap flag.
+     */
     set overlap(value: boolean) {
         this._overlap = value;
         if (this.soundSlot) {
@@ -130,10 +180,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the overlap flag of the sound slot.
+     * @returns The overlap flag.
+     */
     get overlap() {
         return this._overlap;
     }
 
+    /**
+     * Sets the pitch of the sound slot.
+     * @param value - The pitch.
+     */
     set pitch(value: number) {
         this._pitch = value;
         if (this.soundSlot) {
@@ -141,10 +199,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the pitch of the sound slot.
+     * @returns The pitch.
+     */
     get pitch() {
         return this._pitch;
     }
 
+    /**
+     * Sets the start time of the sound slot.
+     * @param value - The start time.
+     */
     set startTime(value: number) {
         this._startTime = value;
         if (this.soundSlot) {
@@ -152,10 +218,18 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the start time of the sound slot.
+     * @returns The start time.
+     */
     get startTime() {
         return this._startTime;
     }
 
+    /**
+     * Sets the volume of the sound slot.
+     * @param value - The volume.
+     */
     set volume(value: number) {
         this._volume = value;
         if (this.soundSlot) {
@@ -163,6 +237,10 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the volume of the sound slot.
+     * @returns The volume.
+     */
     get volume() {
         return this._volume;
     }

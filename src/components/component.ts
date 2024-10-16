@@ -2,10 +2,15 @@ import { Component } from 'playcanvas';
 
 import { EntityElement } from '../entity';
 
+/**
+ * Represents a component in the PlayCanvas engine.
+ *
+ * @category Components
+ */
 class ComponentElement extends HTMLElement {
     componentName: string;
 
-    _component: Component | null = null;
+    private _component: Component | null = null;
 
     constructor(componentName: string) {
         super();

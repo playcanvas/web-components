@@ -15,7 +15,13 @@ const extToType = new Map([
     ['webp', 'texture']
 ]);
 
+/**
+ * Loads an asset into the PlayCanvas engine.
+ */
 class AssetElement extends HTMLElement {
+    /**
+     * The asset that is loaded.
+     */
     asset: Asset | null = null;
 
     connectedCallback() {
