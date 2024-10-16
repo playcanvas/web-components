@@ -19,6 +19,8 @@ const extToType = new Map([
  * Loads an asset into the PlayCanvas engine.
  */
 class AssetElement extends HTMLElement {
+    private _preload: boolean = false;
+
     /**
      * The asset that is loaded.
      */
@@ -37,9 +39,39 @@ class AssetElement extends HTMLElement {
         }
 
         this.asset = new Asset(id, type, { url: src });
+        this.asset.preload = this.preload;
     }
 
     disconnectedCallback() {
+    }
+
+    /**
+     * Sets the preload flag of the asset.
+     * @param value - The preload flag.
+     */
+    set preload(value: boolean) {
+        this._preload = value;
+        if (this.asset) {
+            this.asset.preload = value;
+        }
+    }
+
+    /**
+     * Gets the preload flag of the asset.
+     * @returns The preload flag.
+     */
+    get preload() {
+        return this._preload;
+    }
+
+    static get observedAttributes() {
+        return ['preload'];
+    }
+
+    attributeChangedCallback(name: string, _oldValue: string, _newValue: string) {
+        if (name === 'preload') {
+            this.preload = this.hasAttribute('preload');
+        }
     }
 }
 

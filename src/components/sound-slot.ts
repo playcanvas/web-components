@@ -264,13 +264,13 @@ class SoundSlotElement extends HTMLElement {
                 this.duration = parseFloat(newValue);
                 break;
             case 'loop':
-                this.loop = newValue === 'true';
+                this.loop = this.hasAttribute('loop');
                 break;
             case 'name':
                 this.name = newValue;
                 break;
             case 'overlap':
-                this.overlap = newValue === 'true';
+                this.overlap = this.hasAttribute('overlap');
                 break;
             case 'pitch':
                 this.pitch = parseFloat(newValue);
