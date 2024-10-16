@@ -24,15 +24,10 @@
                     <pc-light></pc-light>
                 </pc-entity>
                 <pc-entity name="cube">
-                    <pc-render type="box" onclick="console.log('clicked')"></pc-render>
+                    <pc-render type="box"></pc-render>
                     <pc-script src="/examples/rotate.mjs"></pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>
     </body>
-    <script>
-        // get the light entity and rotate it
-        const light = document.querySelector('pc-entity[name="light"]');
-        light.entity.rotate(45, 0, 0);
-    </script>
 </html>
