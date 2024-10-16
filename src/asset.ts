@@ -9,6 +9,7 @@ const extToType = new Map([
     ['jpg', 'texture'],
     ['json', 'json'],
     ['mp3', 'audio'],
+    ['ply', 'gsplat'],
     ['png', 'texture'],
     ['txt', 'text'],
     ['vert', 'shader'],

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PlayDOM - Spinning Cube</title>
+        <title>PlayCanvas Web Components - 3D Gaussian Splat</title>
         <script type="importmap">
             {
                 "imports": {
@@ -17,22 +17,14 @@
     <body>
         <pc-app>
             <pc-scene>
-                <pc-entity name="camera" position="0,0,3">
+                <pc-sky src="helipad-env-atlas.png"></pc-sky>
+                <pc-entity name="camera" position="0,1,3.5">
                     <pc-camera clear-color="#8099e6"></pc-camera>
                 </pc-entity>
-                <pc-entity name="light" rotation="45,0,0">
-                    <pc-light></pc-light>
-                </pc-entity>
-                <pc-entity name="cube">
-                    <pc-render type="box" onclick="console.log('clicked')"></pc-render>
-                    <pc-script src="/examples/rotate.mjs"></pc-script>
+                <pc-entity name="biker" rotation="0,45,0">
+                    <pc-gsplat src="angel.compressed.ply"></pc-gsplat>
                 </pc-entity>
             </pc-scene>
         </pc-app>
     </body>
-    <script>
-        // get the light entity and rotate it
-        const light = document.querySelector('pc-entity[name="light"]');
-        light.entity.rotate(45, 0, 0);
-    </script>
 </html>
