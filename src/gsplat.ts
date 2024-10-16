@@ -4,7 +4,7 @@ import { AppElement } from './app';
 import { EntityElement } from './entity';
 
 /**
- * Represents a model in the PlayCanvas engine.
+ * Represents a gsplat in the PlayCanvas engine.
  */
 class GSplatElement extends HTMLElement {
     static observedAttributes = ['src'];
@@ -13,17 +13,17 @@ class GSplatElement extends HTMLElement {
 
     connectedCallback() {
         this._src = this.getAttribute('src') || '';
-        this._loadModel();
+        this._loadGSplat();
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         if (name === 'src' && this._src !== newValue) {
             this._src = newValue;
-            this._loadModel();
+            this._loadGSplat();
         }
     }
 
-    _loadModel() {
+    _loadGSplat() {
         const el = this.closest('pc-app') as AppElement | null;
         if (!el) {
             console.warn('Model element must be a descendant of a pc-app element');
@@ -52,8 +52,8 @@ class GSplatElement extends HTMLElement {
     }
 
     /**
-     * Gets the source URL of the model.
-     * @returns The source URL of the model.
+     * Gets the source URL of the gsplat.
+     * @returns The source URL of the gsplat.
      */
     get src() {
         return this._src;
