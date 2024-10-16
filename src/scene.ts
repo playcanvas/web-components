@@ -3,17 +3,38 @@ import { Color, Scene } from 'playcanvas';
 import { AppElement } from './app';
 import { parseColor } from './utils';
 
+/**
+ * Represents a scene in the PlayCanvas engine.
+ */
 class SceneElement extends HTMLElement {
-    _fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
+    /**
+     * The fog type of the scene.
+     */
+    private _fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
 
-    _fogColor = new Color(1, 1, 1);
+    /**
+     * The color of the fog.
+     */
+    private _fogColor = new Color(1, 1, 1);
 
-    _fogDensity = 0;
+    /**
+     * The density of the fog.
+     */
+    private _fogDensity = 0;
 
-    _fogStart = 0;
+    /**
+     * The start distance of the fog.
+     */
+    private _fogStart = 0;
 
-    _fogEnd = 1000;
+    /**
+     * The end distance of the fog.
+     */
+    private _fogEnd = 1000;
 
+    /**
+     * The PlayCanvas scene instance.
+     */
     scene: Scene | null = null;
 
     connectedCallback() {
@@ -44,47 +65,87 @@ class SceneElement extends HTMLElement {
         }
     }
 
+    /**
+     * Sets the fog type of the scene.
+     * @param value - The fog type.
+     */
     set fog(value) {
         this._fog = value;
         this.scene!.rendering.fog = value;
     }
 
+    /**
+     * Gets the fog type of the scene.
+     * @returns The fog type.
+     */
     get fog() {
         return this._fog;
     }
 
+    /**
+     * Sets the fog color of the scene.
+     * @param value - The fog color.
+     */
     set fogColor(value: Color) {
         this._fogColor = value;
         this.scene!.rendering.fogColor = value;
     }
 
+    /**
+     * Gets the fog color of the scene.
+     * @returns The fog color.
+     */
     get fogColor() {
         return this._fogColor;
     }
 
+    /**
+     * Sets the fog density of the scene.
+     * @param value - The fog density.
+     */
     set fogDensity(value: number) {
         this._fogDensity = value;
         this.scene!.rendering.fogDensity = value;
     }
 
+    /**
+     * Gets the fog density of the scene.
+     * @returns The fog density.
+     */
     get fogDensity() {
         return this._fogDensity;
     }
 
+    /**
+     * Sets the fog start distance of the scene.
+     * @param value - The fog start distance.
+     */
     set fogStart(value: number) {
         this._fogStart = value;
         this.scene!.rendering.fogStart = value;
     }
 
+    /**
+     * Gets the fog start distance of the scene.
+     * @returns The fog start distance.
+     */
     get fogStart() {
         return this._fogStart;
     }
 
+    /**
+     * Sets the fog end distance of the scene.
+     * @param value - The fog end distance.
+     */
     set fogEnd(value: number) {
         this._fogEnd = value;
         this.scene!.rendering.fogEnd = value;
     }
 
+    /**
+     * Gets the fog end distance of the scene.
+     * @returns The fog end distance.
+     */
     get fogEnd() {
         return this._fogEnd;
     }

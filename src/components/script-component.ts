@@ -2,12 +2,20 @@ import { registerScript, Entity, Script } from 'playcanvas';
 
 import { EntityElement } from '../entity';
 
+/**
+ * Represents a script component in the PlayCanvas engine.
+ *
+ * @category Components
+ */
 class ScriptComponentElement extends HTMLElement {
-    _scriptInstance: Script | null = null;
+    private _scriptInstance: Script | null = null;
 
+    private _scriptName = '';
+
+    /**
+     * The entity that the script component is attached to.
+     */
     entity: Entity | null = null;
-
-    _scriptName = '';
 
     constructor() {
         super();

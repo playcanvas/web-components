@@ -3,21 +3,29 @@ import { Color, LightComponent } from 'playcanvas';
 import { ComponentElement } from './component';
 import { parseColor } from '../utils';
 
+/**
+ * Represents a light component in the PlayCanvas engine.
+ *
+ * @category Components
+ */
 class LightComponentElement extends ComponentElement {
-    _castShadows = false;
+    private _castShadows = false;
 
-    _color = new Color(1, 1, 1);
+    private _color = new Color(1, 1, 1);
 
-    _innerConeAngle = 40;
+    private _innerConeAngle = 40;
 
-    _intensity = 1;
+    private _intensity = 1;
 
-    _outerConeAngle = 45;
+    private _outerConeAngle = 45;
 
-    _range = 10;
+    private _range = 10;
 
-    _type = 'directional';
+    private _type = 'directional';
 
+    /**
+     * Creates a new LightComponentElement.
+     */
     constructor() {
         super('light');
     }
@@ -34,10 +42,18 @@ class LightComponentElement extends ComponentElement {
         };
     }
 
+    /**
+     * Gets the light component.
+     * @returns The light component.
+     */
     get component(): LightComponent | null {
         return super.component as LightComponent | null;
     }
 
+    /**
+     * Sets the cast shadows flag of the light.
+     * @param value - The cast shadows flag.
+     */
     set castShadows(value: boolean) {
         this._castShadows = value;
         if (this.component) {
@@ -45,10 +61,18 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the cast shadows flag of the light.
+     * @returns The cast shadows flag.
+     */
     get castShadows() {
         return this._castShadows;
     }
 
+    /**
+     * Sets the color of the light.
+     * @param value - The color.
+     */
     set color(value: Color) {
         this._color = value;
         if (this.component) {
@@ -56,10 +80,18 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the color of the light.
+     * @returns The color.
+     */
     get color() {
         return this._color;
     }
 
+    /**
+     * Sets the inner cone angle of the light.
+     * @param value - The inner cone angle.
+     */
     set innerConeAngle(value: number) {
         this._innerConeAngle = value;
         if (this.component) {
@@ -67,10 +99,18 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the inner cone angle of the light.
+     * @returns The inner cone angle.
+     */
     get innerConeAngle() {
         return this._innerConeAngle;
     }
 
+    /**
+     * Sets the intensity of the light.
+     * @param value - The intensity.
+     */
     set intensity(value: number) {
         this._intensity = value;
         if (this.component) {
@@ -78,10 +118,18 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the intensity of the light.
+     * @returns The intensity.
+     */
     get intensity() {
         return this._intensity;
     }
 
+    /**
+     * Sets the outer cone angle of the light.
+     * @param value - The outer cone angle.
+     */
     set outerConeAngle(value: number) {
         this._outerConeAngle = value;
         if (this.component) {
@@ -89,10 +137,18 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the outer cone angle of the light.
+     * @returns The outer cone angle.
+     */
     get outerConeAngle() {
         return this._outerConeAngle;
     }
 
+    /**
+     * Sets the range of the light.
+     * @param value - The range.
+     */
     set range(value: number) {
         this._range = value;
         if (this.component) {
@@ -100,10 +156,18 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the range of the light.
+     * @returns The range.
+     */
     get range() {
         return this._range;
     }
 
+    /**
+     * Sets the type of the light.
+     * @param value - The type.
+     */
     set type(value: string) {
         if (!['directional', 'omni', 'spot'].includes(value)) {
             console.warn(`Invalid light type '${value}', using default type '${this._type}'.`);
@@ -116,6 +180,10 @@ class LightComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the type of the light.
+     * @returns The type.
+     */
     get type() {
         return this._type;
     }

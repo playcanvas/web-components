@@ -3,10 +3,13 @@ import { Asset } from 'playcanvas';
 import { AppElement } from './app';
 import { EntityElement } from './entity';
 
+/**
+ * Represents a model in the PlayCanvas engine.
+ */
 class ModelElement extends HTMLElement {
     static observedAttributes = ['src'];
 
-    _src = '';
+    private _src = '';
 
     connectedCallback() {
         this._src = this.getAttribute('src') || '';
@@ -48,6 +51,10 @@ class ModelElement extends HTMLElement {
         el.app!.assets.load(asset);
     }
 
+    /**
+     * Gets the source URL of the model.
+     * @returns The source URL of the model.
+     */
     get src() {
         return this._src;
     }

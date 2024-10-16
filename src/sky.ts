@@ -2,6 +2,9 @@ import { Asset, Quat } from 'playcanvas';
 
 import { AppElement } from './app';
 
+/**
+ * Represents a sky in the PlayCanvas engine.
+ */
 class SkyElement extends HTMLElement {
     static observedAttributes = ['src', 'intensity', 'rotation', 'level'];
 

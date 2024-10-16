@@ -3,19 +3,27 @@ import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, CameraComponent, Color
 import { ComponentElement } from './component';
 import { parseColor } from '../utils';
 
+/**
+ * Represents a camera component in the PlayCanvas engine.
+ *
+ * @category Components
+ */
 class CameraComponentElement extends ComponentElement {
-    _clearColor = new Color(1, 1, 1, 1);
+    private _clearColor = new Color(1, 1, 1, 1);
 
-    _farClip = 1000;
+    private _farClip = 1000;
 
-    _fov = 45;
+    private _fov = 45;
 
-    _nearClip = 0.1;
+    private _nearClip = 0.1;
 
-    _orthographic = false;
+    private _orthographic = false;
 
-    _orthoHeight = 10;
+    private _orthoHeight = 10;
 
+    /**
+     * Creates a new CameraComponentElement.
+     */
     constructor() {
         super('camera');
     }
@@ -31,10 +39,18 @@ class CameraComponentElement extends ComponentElement {
         };
     }
 
+    /**
+     * Gets the camera component.
+     * @returns The camera component.
+     */
     get component(): CameraComponent | null {
         return super.component as CameraComponent | null;
     }
 
+    /**
+     * Sets the clear color of the camera.
+     * @param value - The clear color.
+     */
     set clearColor(value) {
         this._clearColor = value;
         if (this.component) {
@@ -42,10 +58,18 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the clear color of the camera.
+     * @returns The clear color.
+     */
     get clearColor(): Color {
         return this._clearColor;
     }
 
+    /**
+     * Sets the far clip distance of the camera.
+     * @param value - The far clip distance.
+     */
     set farClip(value: number) {
         this._farClip = value;
         if (this.component) {
@@ -53,10 +77,18 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the far clip distance of the camera.
+     * @returns The far clip distance.
+     */
     get farClip(): number {
         return this._farClip;
     }
 
+    /**
+     * Sets the field of view of the camera.
+     * @param value - The field of view.
+     */
     set fov(value: number) {
         this._fov = value;
         if (this.component) {
@@ -64,10 +96,18 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the field of view of the camera.
+     * @returns The field of view.
+     */
     get fov(): number {
         return this._fov;
     }
 
+    /**
+     * Sets the near clip distance of the camera.
+     * @param value - The near clip distance.
+     */
     set nearClip(value: number) {
         this._nearClip = value;
         if (this.component) {
@@ -75,10 +115,18 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the near clip distance of the camera.
+     * @returns The near clip distance.
+     */
     get nearClip(): number {
         return this._nearClip;
     }
 
+    /**
+     * Sets the orthographic projection of the camera.
+     * @param value - The orthographic projection.
+     */
     set orthographic(value) {
         this._orthographic = value;
         if (this.component) {
@@ -86,10 +134,18 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the orthographic projection of the camera.
+     * @returns The orthographic projection.
+     */
     get orthographic(): boolean {
         return this._orthographic;
     }
 
+    /**
+     * Sets the orthographic height of the camera.
+     * @param value - The orthographic height.
+     */
     set orthoHeight(value: number) {
         this._orthoHeight = value;
         if (this.component) {
@@ -97,6 +153,10 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the orthographic height of the camera.
+     * @returns The orthographic height.
+     */
     get orthoHeight() {
         return this._orthoHeight;
     }
