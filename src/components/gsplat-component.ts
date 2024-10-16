@@ -1,4 +1,4 @@
-import { /*GSplat,*/ GSplatComponent/*, GSplatInstance */} from 'playcanvas';
+//import { GSplat, GSplatComponent, GSplatInstance } from 'playcanvas';
 
 //import { AppElement } from '../app';
 import { ComponentElement } from './component';
@@ -34,8 +34,8 @@ class GSplatComponentElement extends ComponentElement {
     }*/
 
     /**
-     * Gets the render component.
-     * @returns The render component.
+     * Gets the gsplat component.
+     * @returns The gsplat component.
      *//*
     get component(): GSplatComponent | null {
         return super.component as GSplatComponent | null;
