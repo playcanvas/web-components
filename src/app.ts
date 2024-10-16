@@ -43,8 +43,16 @@ class AppElement extends HTMLElement {
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
 
+        const assetElements = this.querySelectorAll('pc-asset');
+        Array.from(assetElements).forEach(assetElement => {
+            const asset = (assetElement as AssetElement).asset;
+            if (asset) {
+                this.app!.assets.add(asset);
+            }
+        });
+
         // Load assets before starting the application
-        this._loadAssets().then(() => {
+        this.app.preload(() => {
             // Start the application
             this.app!.start();
 
@@ -67,36 +75,6 @@ class AppElement extends HTMLElement {
                 composed: true,
                 detail: { app: this.app }
             }));
-        });
-    }
-
-    private _loadAssets(): Promise<void> {
-        return new Promise((resolve) => {
-            const assetElements = this.querySelectorAll('pc-asset');
-            const assets = Array.from(assetElements).map(el => (el as AssetElement).asset);
-
-            if (assets.length === 0) {
-                resolve();
-                return;
-            }
-
-            let loadedCount = 0;
-            const onAssetLoad = () => {
-                loadedCount++;
-                if (loadedCount === assets.length) {
-                    resolve();
-                }
-            };
-
-            assets.forEach((asset) => {
-                if (asset!.loaded) {
-                    onAssetLoad();
-                } else {
-                    asset!.once('load', onAssetLoad);
-                    this.app!.assets.add(asset!);
-                    this.app!.assets.load(asset!);
-                }
-            });
         });
     }
 
