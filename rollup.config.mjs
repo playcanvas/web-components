@@ -7,24 +7,24 @@ export default {
     input: 'src/index.ts',
     output: [
         {
-            file: 'dist/playdom.mjs',
+            file: 'dist/pwc.mjs',
             format: 'esm',
             sourcemap: true
         },
         {
-            file: 'dist/playdom.cjs',
+            file: 'dist/pwc.cjs',
             format: 'cjs',
             sourcemap: true
         },
         {
-            file: 'dist/playdom.js',
+            file: 'dist/pwc.js',
             name: 'pd',
             format: 'umd',
             sourcemap: true,
             globals: { playcanvas: 'pc' }
         },
         {
-            file: 'dist/playdom.min.js',
+            file: 'dist/pwc.min.js',
             name: 'pd',
             format: 'umd',
             sourcemap: true,
