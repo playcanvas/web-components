@@ -1,57 +1,29 @@
-import { registerScript, Entity, Script } from 'playcanvas';
+import { registerScript, ScriptComponent } from 'playcanvas';
 
-import { EntityElement } from '../entity';
+import { ComponentElement } from './component';
 
 /**
  * Represents a script component in the PlayCanvas engine.
  *
  * @category Components
  */
-class ScriptComponentElement extends HTMLElement {
-    private _scriptInstance: Script | null = null;
-
+class ScriptComponentElement extends ComponentElement {
     private _scriptName = '';
 
-    /**
-     * The entity that the script component is attached to.
-     */
-    entity: Entity | null = null;
-
     constructor() {
-        super();
+        super('script');
     }
 
     async connectedCallback() {
-        // Find the closest pc-entity element
-        const entityElement = this.closest('pc-entity') as EntityElement | null;
-        if (entityElement && entityElement.entity) {
-            this.entity = entityElement.entity;
+        super.connectedCallback();
 
-            // Ensure the script component is added
-            if (!this.entity.script) {
-                this.entity.addComponent('script');
-            }
+        const src = this.getAttribute('src');
+        if (src) {
+            await this._loadAndRegisterScript(src);
 
-            const src = this.getAttribute('src');
-            if (src) {
-                await this._loadAndRegisterScript(src);
-
-                // Create an instance of the script on the entity
-                const scriptName = this._scriptName;
-                this._scriptInstance = this.entity.script!.create(scriptName);
-            } else {
-                console.error('Attribute "src" is required for pc-script.');
-            }
-        } else {
-            console.error('pc-script should be a child of pc-entity.');
-        }
-    }
-
-    disconnectedCallback() {
-        // Remove the script instance
-        if (this._scriptInstance && this.entity && this.entity.script) {
-            //            this.entity.script.destroy(this._scriptInstance);
-            this._scriptInstance = null;
+            // Create an instance of the script on the entity
+            const scriptName = this._scriptName;
+            this.component!.create(scriptName);
         }
     }
 
@@ -71,6 +43,10 @@ class ScriptComponentElement extends HTMLElement {
         } catch (error) {
             console.error(`Failed to load script module from "${src}":`, error);
         }
+    }
+
+    get component(): ScriptComponent | null {
+        return super.component as ScriptComponent | null;
     }
 }
 
