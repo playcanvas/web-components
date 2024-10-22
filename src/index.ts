@@ -4,6 +4,7 @@
 import { AppElement } from './app';
 import { EntityElement } from './entity';
 import { AssetElement } from './asset';
+import { ListenerComponentElement } from './components/listener-component';
 import { CameraComponentElement } from './components/camera-component';
 import { GSplatComponentElement } from './components/gsplat-component';
 import { LightComponentElement } from './components/light-component';
@@ -22,6 +23,7 @@ export {
     CameraComponentElement,
     GSplatComponentElement,
     LightComponentElement,
+    ListenerComponentElement,
     RenderComponentElement,
     ScriptComponentElement,
     SoundComponentElement,
