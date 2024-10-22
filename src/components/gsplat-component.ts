@@ -1,8 +1,7 @@
-//import { GSplat, GSplatComponent, GSplatInstance } from 'playcanvas';
+import { GSplatComponent } from 'playcanvas';
 
-//import { AppElement } from '../app';
 import { ComponentElement } from './component';
-//import { AssetElement } from '../asset';
+import { AssetElement } from '../asset';
 
 /**
  * Represents a gsplat component in the PlayCanvas engine.
@@ -10,39 +9,37 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class GSplatComponentElement extends ComponentElement {
-/*    private _asset: string = '';
-
-    private _instance: GSplatInstance | null = null;
+    private _asset: string = '';
 
     constructor() {
         super('gsplat');
     }
 
-    getSplatInstance() {
-        const appElement = this.closest('pc-app') as AppElement;
-        const device = appElement?.app?.graphicsDevice;
+    getAsset() {
         const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
-        const { splatData} = assetElement?.asset?.resource;
-        const splat = splatData.isCompressed ? new GSplat(device!, splatData) : new GSplat(device!, splatData);
-        return new GSplatInstance(splat, {});
+        return assetElement!.asset;
     }
 
     getInitialComponentData() {
         return {
-            instance: this.getSplatInstance()
+            asset: this.getAsset()
         };
-    }*/
+    }
 
     /**
      * Gets the gsplat component.
      * @returns The gsplat component.
-     *//*
+     */
     get component(): GSplatComponent | null {
         return super.component as GSplatComponent | null;
     }
 
     set asset(value: string) {
         this._asset = value;
+        const asset = this.getAsset();
+        if (this.component && asset) {
+            this.component.asset = asset;
+        }
     }
 
     get asset() {
@@ -59,9 +56,9 @@ class GSplatComponentElement extends ComponentElement {
                 this.asset = newValue;
                 break;
         }
-    }*/
+    }
 }
 
-//customElements.define('pc-gsplat', GSplatComponentElement);
+customElements.define('pc-gsplat', GSplatComponentElement);
 
 export { GSplatComponentElement };

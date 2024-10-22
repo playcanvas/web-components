@@ -11,7 +11,6 @@ import { RenderComponentElement } from './components/render-component';
 import { ScriptComponentElement } from './components/script-component';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
-import { GSplatElement } from './gsplat';
 import { ModelElement } from './model';
 import { SceneElement } from './scene';
 import { SkyElement } from './sky';
@@ -28,7 +27,6 @@ export {
     SoundComponentElement,
     SoundSlotElement,
     ModelElement,
-    GSplatElement,
     SceneElement,
     SkyElement
 };
