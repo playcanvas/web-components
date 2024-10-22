@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PlayCanvas Web Components - PositionalSound</title>
+        <title>PlayCanvas Web Components - Positional Sound</title>
         <script type="importmap">
             {
                 "imports": {
@@ -17,7 +17,7 @@
     <body>
         <pc-app>
             <pc-assets>
-                <pc-asset id="music" src="footsteps.mp3" preload></pc-asset>
+                <pc-asset id="footsteps" src="footsteps.mp3" preload></pc-asset>
             </pc-assets>
             <pc-scene>
                 <pc-entity name="camera">
@@ -30,7 +30,7 @@
                 <pc-entity name="sphere">
                     <pc-render type="sphere"></pc-render>
                     <pc-sound positional>
-                        <pc-sound-slot asset="music" loop></pc-sound-slot>
+                        <pc-sound-slot asset="footsteps" loop></pc-sound-slot>
                     </pc-sound>
                     <pc-script src="/examples/orbit.mjs"></pc-script>
                 </pc-entity>
