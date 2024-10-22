@@ -1,4 +1,3 @@
-// rotate.mjs
 import { Script } from 'playcanvas';
 
 export class Rotate extends Script { 
