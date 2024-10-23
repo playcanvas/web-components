@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Spinning Cube via DOM API</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "https://esm.run/playcanvas@2.1.0"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <script type="module">
+            // Use the DOM API to programmatically create the scene
+            const app = document.createElement('pc-app');
+            document.body.appendChild(app);
+
+            const scene = document.createElement('pc-scene');
+            app.appendChild(scene);
+
+            // Create the camera entity
+            const camera = document.createElement('pc-entity');
+            camera.setAttribute('name', 'camera');
+            camera.setAttribute('position', '0,0,3');
+            scene.appendChild(camera);
+
+            const cameraComponent = document.createElement('pc-camera');
+            cameraComponent.setAttribute('clear-color', '#8099e6');
+            camera.appendChild(cameraComponent);
+
+            // Create the light entity
+            const light = document.createElement('pc-entity');
+            light.setAttribute('name', 'light');
+            light.setAttribute('rotation', '45,0,0');
+            scene.appendChild(light);
+
+            const lightComponent = document.createElement('pc-light');
+            light.appendChild(lightComponent);
+
+            // Create the cube entity
+            const cube = document.createElement('pc-entity');
+            cube.setAttribute('name', 'cube');
+            scene.appendChild(cube);
+
+            const renderComponent = document.createElement('pc-render');
+            renderComponent.setAttribute('type', 'box');
+            cube.appendChild(renderComponent);
+
+            const scriptComponent = document.createElement('pc-script');
+            scriptComponent.setAttribute('src', '/examples/rotate.mjs');
+            cube.appendChild(scriptComponent);
+        </script>
+    </body>
+</html>

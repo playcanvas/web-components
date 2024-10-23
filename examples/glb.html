@@ -16,6 +16,7 @@
     </head>
     <body>
         <pc-app>
+            <pc-asset id="cube" src="playcanvas-cube.glb"></pc-asset>
             <pc-scene>
                 <pc-sky src="helipad-env-atlas.png"></pc-sky>
                 <pc-entity name="camera" position="0,0,3">
@@ -25,7 +26,7 @@
                     <pc-light></pc-light>
                 </pc-entity>
                 <pc-entity name="cube">
-                    <pc-model src="playcanvas-cube.glb"></pc-model>
+                    <pc-model asset="cube"></pc-model>
                     <pc-script src="/examples/rotate.mjs"></pc-script>
                 </pc-entity>
             </pc-scene>
