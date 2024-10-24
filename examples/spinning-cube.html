@@ -16,6 +16,17 @@
     </head>
     <body>
         <pc-app>
+            <script type="module">
+                import { registerScript, Script } from 'playcanvas';
+
+                class Rotate extends Script { 
+                    update(dt) {
+                        this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
+                    }
+                }                
+
+                registerScript(Rotate, 'rotate');
+            </script>
             <pc-scene>
                 <pc-entity name="camera" position="0,0,3">
                     <pc-camera clear-color="#8099e6"></pc-camera>
@@ -25,7 +36,9 @@
                 </pc-entity>
                 <pc-entity name="cube">
                     <pc-render type="box"></pc-render>
-                    <pc-script src="/examples/rotate.mjs"></pc-script>
+                    <pc-scripts enable="false">
+                        <pc-script name="rotate"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>

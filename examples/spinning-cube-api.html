@@ -16,9 +16,19 @@
     </head>
     <body>
         <script type="module">
+            import { registerScript, Script } from 'playcanvas';
+
             // Use the DOM API to programmatically create the scene
             const app = document.createElement('pc-app');
             document.body.appendChild(app);
+
+            class Rotate extends Script { 
+                update(dt) {
+                    this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
+                }
+            }                
+
+            registerScript(Rotate, 'rotate');
 
             const scene = document.createElement('pc-scene');
             app.appendChild(scene);
@@ -51,9 +61,12 @@
             renderComponent.setAttribute('type', 'box');
             cube.appendChild(renderComponent);
 
-            const scriptComponent = document.createElement('pc-script');
-            scriptComponent.setAttribute('src', '/examples/rotate.mjs');
-            cube.appendChild(scriptComponent);
+            const scriptsComponent = document.createElement('pc-scripts');
+            cube.appendChild(scriptsComponent);
+
+            const script = document.createElement('pc-script');
+            script.setAttribute('name', 'rotate');
+            scriptsComponent.appendChild(script);
         </script>
     </body>
 </html>

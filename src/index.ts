@@ -10,6 +10,7 @@ import { GSplatComponentElement } from './components/gsplat-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
 import { ScriptComponentElement } from './components/script-component';
+import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
 import { ModelElement } from './model';
@@ -26,6 +27,7 @@ export {
     ListenerComponentElement,
     RenderComponentElement,
     ScriptComponentElement,
+    ScriptElement,
     SoundComponentElement,
     SoundSlotElement,
     ModelElement,
