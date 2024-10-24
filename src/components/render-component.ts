@@ -8,7 +8,7 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class RenderComponentElement extends ComponentElement {
-    private _type = 'asset';
+    private _type: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'asset';
 
     private _castShadows = false;
 
@@ -34,7 +34,11 @@ class RenderComponentElement extends ComponentElement {
         return super.component as RenderComponent | null;
     }
 
-    set type(value: string) {
+    /**
+     * Sets the type of the render component.
+     * @param value - The type.
+     */
+    set type(value: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere') {
         this._type = value;
         if (this.component) {
             this.component.type = value;
@@ -45,7 +49,7 @@ class RenderComponentElement extends ComponentElement {
      * Gets the type of the render component.
      * @returns The type.
      */
-    get type() {
+    get type(): 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' {
         return this._type;
     }
 
@@ -96,13 +100,13 @@ class RenderComponentElement extends ComponentElement {
 
         switch (name) {
             case 'type':
-                this.type = newValue;
+                this.type = newValue as 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere';
                 break;
             case 'cast-shadows':
-                this.castShadows = newValue !== null;  // Existence implies true
+                this.castShadows = this.hasAttribute('cast-shadows');
                 break;
             case 'receive-shadows':
-                this.receiveShadows = newValue !== null;  // Existence implies true
+                this.receiveShadows = this.hasAttribute('receive-shadows');
                 break;
         }
     }

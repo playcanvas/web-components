@@ -182,7 +182,7 @@ class CameraComponentElement extends ComponentElement {
                 this.nearClip = parseFloat(newValue);
                 break;
             case 'orthographic':
-                this.orthographic = newValue !== null;
+                this.orthographic = this.hasAttribute('orthographic');
                 break;
             case 'ortho-height':
                 this.orthoHeight = parseFloat(newValue);

@@ -200,7 +200,7 @@ class LightComponentElement extends ComponentElement {
                 this.color = parseColor(newValue);
                 break;
             case 'cast-shadows':
-                this.castShadows = newValue === null || newValue === 'true';
+                this.castShadows = this.hasAttribute('cast-shadows');
                 break;
             case 'inner-cone-angle':
                 this.innerConeAngle = Number(newValue);

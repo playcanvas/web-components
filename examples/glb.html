@@ -19,11 +19,11 @@
             <script type="module">
                 import { registerScript, Script } from 'playcanvas';
 
-                class Rotate extends Script { 
+                class Rotate extends Script {
                     update(dt) {
                         this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
                     }
-                }                
+                }
 
                 registerScript(Rotate, 'rotate');
             </script>
