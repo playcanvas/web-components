@@ -27,8 +27,9 @@
 
                 registerScript(Rotate, 'rotate');
             </script>
+            <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
             <pc-scene>
-                <pc-sky src="assets/helipad-env-atlas.png"></pc-sky>
+                <pc-sky asset="helipad" intensity="1.5" level="1" rotation="0,90,0"></pc-sky>
                 <pc-entity name="camera" position="0,0,3">
                     <pc-camera clear-color="#8099e6"></pc-camera>
                 </pc-entity>
