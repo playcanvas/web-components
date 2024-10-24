@@ -88,10 +88,12 @@ class RenderComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return ['type', 'cast-shadows', 'receive-shadows'];
+        return [...super.observedAttributes, 'type', 'cast-shadows', 'receive-shadows'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        super.attributeChangedCallback(name, _oldValue, newValue);
+
         switch (name) {
             case 'type':
                 this.type = newValue;

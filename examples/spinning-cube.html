@@ -19,11 +19,11 @@
             <script type="module">
                 import { registerScript, Script } from 'playcanvas';
 
-                class Rotate extends Script { 
+                class Rotate extends Script {
                     update(dt) {
                         this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
                     }
-                }                
+                }
 
                 registerScript(Rotate, 'rotate');
             </script>
@@ -36,7 +36,7 @@
                 </pc-entity>
                 <pc-entity name="cube">
                     <pc-render type="box"></pc-render>
-                    <pc-scripts enable="false">
+                    <pc-scripts>
                         <pc-script name="rotate"></pc-script>
                     </pc-scripts>
                 </pc-entity>

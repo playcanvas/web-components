@@ -162,10 +162,12 @@ class CameraComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return ['clear-color', 'near-clip', 'far-clip', 'fov', 'orthographic', 'ortho-height'];
+        return [...super.observedAttributes, 'clear-color', 'near-clip', 'far-clip', 'fov', 'orthographic', 'ortho-height'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        super.attributeChangedCallback(name, _oldValue, newValue);
+
         switch (name) {
             case 'clear-color':
                 this.clearColor = parseColor(newValue);

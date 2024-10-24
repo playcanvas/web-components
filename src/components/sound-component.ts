@@ -93,10 +93,12 @@ class SoundComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return ['pitch', 'positional', 'volume'];
+        return [...super.observedAttributes, 'pitch', 'positional', 'volume'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        super.attributeChangedCallback(name, _oldValue, newValue);
+
         switch (name) {
             case 'pitch':
                 this.pitch = parseFloat(newValue);
