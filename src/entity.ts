@@ -7,6 +7,11 @@ import { parseVec3 } from './utils';
  */
 class EntityElement extends HTMLElement {
     /**
+     * Whether the entity is enabled.
+     */
+    private _enabled = true;
+
+    /**
      * The name of the entity.
      */
     private _name = 'Untitled';
@@ -52,6 +57,32 @@ class EntityElement extends HTMLElement {
         if (rotationAttr) this.rotation = parseVec3(rotationAttr);
         if (scaleAttr) this.scale = parseVec3(scaleAttr);
         if (tagsAttr) this.tags = tagsAttr.split(',').map(tag => tag.trim());
+    }
+
+    disconnectedCallback() {
+        if (this.entity) {
+            this.entity.destroy();
+            this.entity = null;
+        }
+    }
+
+    /**
+     * Sets the enabled state of the entity.
+     * @param value - Whether the entity is enabled.
+     */
+    set enabled(value) {
+        this._enabled = value;
+        if (this.entity) {
+            this.entity.enabled = value;
+        }
+    }
+
+    /**
+     * Gets the enabled state of the entity.
+     * @returns Whether the entity is enabled.
+     */
+    get enabled() {
+        return this._enabled;
     }
 
     /**
@@ -151,11 +182,17 @@ class EntityElement extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['position', 'rotation', 'scale', 'name', 'tags'];
+        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
+            case 'enabled':
+                this.enabled = newValue !== 'false';
+                break
+            case 'name':
+                this.name = newValue;
+                break;
             case 'position':
                 this.position = parseVec3(newValue);
                 break;
@@ -164,9 +201,6 @@ class EntityElement extends HTMLElement {
                 break;
             case 'scale':
                 this.scale = parseVec3(newValue);
-                break;
-            case 'name':
-                this.name = newValue;
                 break;
             case 'tags':
                 this.tags = newValue.split(',').map(tag => tag.trim());
