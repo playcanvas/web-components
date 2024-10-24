@@ -59,6 +59,4 @@ class ScriptElement extends HTMLElement {
     }
 }
 
-customElements.define('pc-script', ScriptElement);
-
 export { ScriptElement };

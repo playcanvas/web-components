@@ -20,6 +20,11 @@ class ComponentElement extends HTMLElement {
         this._componentName = componentName;
     }
 
+    // Method to be overridden by subclasses to provide initial component data
+    getInitialComponentData() {
+        return {};
+    }
+
     connectedCallback() {
         // Access the parent pc-entity's 'entity' property
         const entityElement = this.closest('pc-entity') as EntityElement | null;
@@ -53,23 +58,6 @@ class ComponentElement extends HTMLElement {
         }
     }
 
-    // Method to be overridden by subclasses to provide initial component data
-    getInitialComponentData() {
-        return {};
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
-        switch (name) {
-            case 'enabled':
-                this.enabled = newValue !== 'false';
-                break;
-        }
-    }
-
-    static get observedAttributes() {
-        return ['enabled'];
-    }
-
     get component(): Component | null {
         return this._component;
     }
@@ -83,6 +71,18 @@ class ComponentElement extends HTMLElement {
 
     get enabled() {
         return this._enabled;
+    }
+
+    static get observedAttributes() {
+        return ['enabled'];
+    }
+
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        switch (name) {
+            case 'enabled':
+                this.enabled = newValue !== 'false';
+                break;
+        }
     }
 }
 

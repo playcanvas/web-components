@@ -8,13 +8,13 @@ import { AppElement } from './app';
 class SkyElement extends HTMLElement {
     static observedAttributes = ['src', 'intensity', 'rotation', 'level'];
 
-    _src = '';
+    private _src = '';
 
-    _intensity = 1;
+    private _intensity = 1;
 
-    _rotation = [0, 0, 0];
+    private _rotation = [0, 0, 0];
 
-    _level = 0;
+    private _level = 0;
 
     connectedCallback() {
         this._updateSkybox();

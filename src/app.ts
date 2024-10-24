@@ -8,11 +8,6 @@ import { EntityElement } from './entity';
  */
 class AppElement extends HTMLElement {
     /**
-     * The PlayCanvas application instance.
-     */
-    app: Application | null = null;
-
-    /**
      * The mutation observer for observing changes to the DOM.
      */
     private _observer: MutationObserver | null = null;
@@ -21,6 +16,11 @@ class AppElement extends HTMLElement {
      * The canvas element.
      */
     private _canvas: HTMLCanvasElement | null = null;
+
+    /**
+     * The PlayCanvas application instance.
+     */
+    app: Application | null = null;
 
     /**
      * Creates a new AppElement.
