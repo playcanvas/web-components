@@ -189,10 +189,12 @@ class LightComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return ['color', 'cast-shadows', 'intensity', 'inner-cone-angle', 'outer-cone-angle', 'range', 'type'];
+        return [...super.observedAttributes, 'color', 'cast-shadows', 'intensity', 'inner-cone-angle', 'outer-cone-angle', 'range', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        super.attributeChangedCallback(name, _oldValue, newValue);
+
         switch (name) {
             case 'color':
                 this.color = parseColor(newValue);

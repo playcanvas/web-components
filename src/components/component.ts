@@ -8,14 +8,16 @@ import { EntityElement } from '../entity';
  * @category Components
  */
 class ComponentElement extends HTMLElement {
-    componentName: string;
+    private _componentName: string;
+
+    private _enabled = true;
 
     private _component: Component | null = null;
 
     constructor(componentName: string) {
         super();
 
-        this.componentName = componentName;
+        this._componentName = componentName;
     }
 
     connectedCallback() {
@@ -25,7 +27,7 @@ class ComponentElement extends HTMLElement {
         if (entityElement && entityElement.entity) {
             // Add the component to the entity
             this._component = entityElement.entity.addComponent(
-                this.componentName,
+                this._componentName,
                 this.getInitialComponentData()
             );
 
@@ -46,7 +48,7 @@ class ComponentElement extends HTMLElement {
     disconnectedCallback() {
         // Remove the component when the element is disconnected
         if (this.component && this.component.entity) {
-            this._component!.entity.removeComponent(this.componentName);
+            this._component!.entity.removeComponent(this._componentName);
             this._component = null;
         }
     }
@@ -56,11 +58,31 @@ class ComponentElement extends HTMLElement {
         return {};
     }
 
-    attributeChangedCallback(_name: string, _oldValue: string, _newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        switch (name) {
+            case 'enabled':
+                this.enabled = newValue !== 'false';
+                break;
+        }
+    }
+
+    static get observedAttributes() {
+        return ['enabled'];
     }
 
     get component(): Component | null {
         return this._component;
+    }
+
+    set enabled(value: boolean) {
+        this._enabled = value;
+        if (this.component) {
+            this.component.enabled = value;
+        }
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 }
 

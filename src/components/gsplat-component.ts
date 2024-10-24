@@ -47,10 +47,12 @@ class GSplatComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return ['asset'];
+        return [...super.observedAttributes, 'asset'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        super.attributeChangedCallback(name, _oldValue, newValue);
+
         switch (name) {
             case 'asset':
                 this.asset = newValue;
