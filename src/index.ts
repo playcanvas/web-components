@@ -10,7 +10,7 @@ import { CollisionComponentElement } from './components/collision-component';
 import { GSplatComponentElement } from './components/gsplat-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
-import { RigidbodyComponentElement } from './components/rigidbody-component';
+import { RigidBodyComponentElement } from './components/rigidbody-component';
 import { ScriptComponentElement } from './components/script-component';
 import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
@@ -29,7 +29,7 @@ export {
     LightComponentElement,
     ListenerComponentElement,
     RenderComponentElement,
-    RigidbodyComponentElement,
+    RigidBodyComponentElement,
     ScriptComponentElement,
     ScriptElement,
     SoundComponentElement,

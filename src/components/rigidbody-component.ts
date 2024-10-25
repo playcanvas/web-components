@@ -7,7 +7,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class RigidbodyComponentElement extends ComponentElement {
+class RigidBodyComponentElement extends ComponentElement {
     /**
      * The friction of the rigidbody.
      */
@@ -29,7 +29,7 @@ class RigidbodyComponentElement extends ComponentElement {
     private _type: string = 'static';
 
     /**
-     * Creates a new RigidbodyComponentElement.
+     * Creates a new RigidBodyComponentElement.
      */
     constructor() {
         super('rigidbody');
@@ -120,6 +120,6 @@ class RigidbodyComponentElement extends ComponentElement {
     }
 }   
 
-customElements.define('pc-rigidbody', RigidbodyComponentElement);
+customElements.define('pc-rigidbody', RigidBodyComponentElement);
 
-export { RigidbodyComponentElement };
+export { RigidBodyComponentElement };
