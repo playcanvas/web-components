@@ -28,7 +28,9 @@
             <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
             <pc-asset id="angel" src="assets/angel.compressed.ply" preload></pc-asset>
             <pc-scene>
+                <!-- Sky -->
                 <pc-sky asset="helipad"></pc-sky>
+                <!-- Camera -->
                 <pc-entity name="camera" position="0,1,3.5">
                     <pc-camera></pc-camera>
                     <pc-scripts>
@@ -36,6 +38,7 @@
                         <pc-script name="orbitCameraInputMouse"></pc-script>
                     </pc-scripts>
                 </pc-entity>
+                <!-- Statue -->
                 <pc-entity name="statue" rotation="0,45,0">
                     <pc-gsplat asset="angel"></pc-gsplat>
                 </pc-entity>
