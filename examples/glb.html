@@ -7,11 +7,11 @@
         <script type="importmap">
             {
                 "imports": {
-                    "playcanvas": "https://esm.run/playcanvas@2.1.0"
+                    "playcanvas": "/node_modules/playcanvas/build/playcanvas.mjs"
                 }
             }
         </script>
-        <script type="module" src="../dist/pwc.mjs"></script>
+        <script type="module" src="/dist/pwc.mjs"></script>
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
@@ -25,6 +25,8 @@
                     }
                 }
 
+                const appElement = document.querySelector('pc-app');
+                await appElement.getApplication();
                 registerScript(Rotate, 'rotate');
             </script>
             <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>

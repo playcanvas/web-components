@@ -27,7 +27,14 @@ class AssetElement extends HTMLElement {
      */
     asset: Asset | null = null;
 
-    connectedCallback() {
+    async connectedCallback() {
+    }
+
+    disconnectedCallback() {
+        this.destroyAsset();
+    }
+
+    createAsset() {
         const id = this.getAttribute('id') || '';
         const src = this.getAttribute('src') || '';
 
@@ -43,7 +50,11 @@ class AssetElement extends HTMLElement {
         this.asset.preload = this.preload;
     }
 
-    disconnectedCallback() {
+    destroyAsset() {
+        if (this.asset) {
+            this.asset.unload();
+            this.asset = null;
+        }
     }
 
     /**

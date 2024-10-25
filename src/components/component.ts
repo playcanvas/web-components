@@ -1,5 +1,6 @@
 import { Component } from 'playcanvas';
 
+import { AppElement } from '../app';
 import { EntityElement } from '../entity';
 
 /**
@@ -25,27 +26,31 @@ class ComponentElement extends HTMLElement {
         return {};
     }
 
-    connectedCallback() {
+    async connectedCallback() {
+        const appElement = this.closest('pc-app') as AppElement | null;
+        if (!appElement) {
+            console.error(`${this.tagName.toLowerCase()} should be a descendant of pc-app`);
+            return;
+        }
+
+        await appElement.getApplication();
+
+        this.addComponent();
+    }
+
+    addComponent() {
         // Access the parent pc-entity's 'entity' property
         const entityElement = this.closest('pc-entity') as EntityElement | null;
+        if (!entityElement) {
+            console.error(`${this.tagName.toLowerCase()} should be a child of pc-entity`);
+            return;
+        }
 
         if (entityElement && entityElement.entity) {
             // Add the component to the entity
             this._component = entityElement.entity.addComponent(
                 this._componentName,
                 this.getInitialComponentData()
-            );
-
-            // Dispatch an event indicating the component is ready
-            this.dispatchEvent(
-                new CustomEvent('componentReady', {
-                    bubbles: true,
-                    composed: true
-                })
-            );
-        } else {
-            console.error(
-                `${this.tagName.toLowerCase()} should be a child of pc-entity`
             );
         }
     }
