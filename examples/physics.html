@@ -17,29 +17,21 @@
     <body>
         <pc-app>
             <pc-module name="Ammo" glue="ammo/ammo.wasm.js" wasm="ammo/ammo.wasm.wasm" fallback="ammo/ammo.js"></pc-module>
-            <script type="module">
-                import { registerScript, Script } from 'playcanvas';
-
-                class Rotate extends Script {
-                    update(dt) {
-                        this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
-                    }
-                }
-
-                const appElement = document.querySelector('pc-app');
-                await appElement.getApplication();
-                registerScript(Rotate, 'rotate');
-            </script>
             <pc-scene>
-                <pc-entity name="camera" position="0,0,3">
+                <pc-entity name="camera" position="0,1,5">
                     <pc-camera clear-color="#8099e6"></pc-camera>
                 </pc-entity>
                 <pc-entity name="light" rotation="45,0,0">
                     <pc-light></pc-light>
                 </pc-entity>
-                <pc-entity name="cube">
+                <pc-entity name="cube" position="0,2,0">
                     <pc-render type="box"></pc-render>
-                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                    <pc-rigidbody type="dynamic" restitution="0.9"></pc-rigidbody>
+                    <pc-collision></pc-collision>
+                </pc-entity>
+                <pc-entity name="ground">
+                    <pc-render type="box"></pc-render>
+                    <pc-rigidbody restitution="0.9"></pc-rigidbody>
                     <pc-collision></pc-collision>
                 </pc-entity>
             </pc-scene>
