@@ -34,11 +34,15 @@ class SkyElement extends HTMLElement {
     }
 
     getScene() {
-        const el = this.closest('pc-app') as AppElement | null;
-        if (!el) {
+        const appElement = this.closest('pc-app') as AppElement | null;
+        if (!appElement) {
             return;
         }
-        return el.app!.scene;
+        const app = appElement.app;
+        if (!app) {
+            return;
+        }
+        return app.scene;
     }
 
     set asset(value: string) {

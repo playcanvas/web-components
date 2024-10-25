@@ -16,11 +16,25 @@
     </head>
     <body>
         <pc-app>
-            <pc-asset id="angel" src="assets/angel.compressed.ply"></pc-asset>
+            <script type="module">
+                import { registerScript } from 'playcanvas';
+                import { OrbitCamera, OrbitCameraInputMouse } from './scripts/orbit-camera.mjs';
+
+                const app = document.querySelector('pc-app');
+                await app.getApplication();
+                registerScript(OrbitCamera, 'orbitCamera');
+                registerScript(OrbitCameraInputMouse, 'orbitCameraInputMouse');
+            </script>
+            <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
+            <pc-asset id="angel" src="assets/angel.compressed.ply" preload></pc-asset>
             <pc-scene>
-                <pc-sky src="assets/helipad-env-atlas.png"></pc-sky>
+                <pc-sky asset="helipad"></pc-sky>
                 <pc-entity name="camera" position="0,1,3.5">
-                    <pc-camera clear-color="#8099e6"></pc-camera>
+                    <pc-camera></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="orbitCamera"></pc-script>
+                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
                 <pc-entity name="statue" rotation="0,45,0">
                     <pc-gsplat asset="angel"></pc-gsplat>

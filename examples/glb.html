@@ -30,6 +30,7 @@
                 registerScript(Rotate, 'rotate');
             </script>
             <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
+            <pc-asset id="cube" src="assets/playcanvas-cube.glb" preload></pc-asset>
             <pc-scene>
                 <pc-sky asset="helipad" intensity="1.5" level="1" rotation="0,90,0"></pc-sky>
                 <pc-entity name="camera" position="0,0,3">
@@ -39,7 +40,7 @@
                     <pc-light></pc-light>
                 </pc-entity>
                 <pc-entity name="cube">
-                    <pc-model src="assets/playcanvas-cube.glb"></pc-model>
+                    <pc-model asset="cube"></pc-model>
                     <pc-scripts>
                         <pc-script name="rotate"></pc-script>
                     </pc-scripts>
