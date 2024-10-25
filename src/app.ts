@@ -1,7 +1,8 @@
-import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO, WasmModule } from 'playcanvas';
+import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { EntityElement } from './entity';
+import { ModuleElement } from './module';
 
 /**
  * The main application element.
@@ -36,27 +37,11 @@ class AppElement extends HTMLElement {
     }
 
     async connectedCallback() {
-        // Get all pc-module elements
-        const moduleElements = this.querySelectorAll('pc-module');
+        // Get all pc-module elements that are direct children of the pc-app element
+        const moduleElements = this.querySelectorAll<ModuleElement>(':scope > pc-module');
 
-        if (moduleElements.length > 0) {
-            // Set the configuration for each module
-            const moduleElement = moduleElements[0];
-            const name = moduleElement.getAttribute('name')!;
-            const glue = moduleElement.getAttribute('glue')!;
-            const wasm = moduleElement.getAttribute('wasm')!;
-            const fallback = moduleElement.getAttribute('fallback')!;
-
-            WasmModule.setConfig(name, {
-                glueUrl: glue,
-                wasmUrl: wasm,
-                fallbackUrl: fallback
-            });
-
-            await new Promise((resolve) => {
-                WasmModule.getInstance(name, resolve);
-            });
-        }
+        // Wait for all modules to load
+        await Promise.all(Array.from(moduleElements).map(module => module.getLoadPromise()));
 
         // Create and append the canvas to the element
         this._canvas = document.createElement('canvas');

@@ -1,6 +1,7 @@
 /* eslint-disable import/order */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
+import { ModuleElement } from './module';
 import { AppElement } from './app';
 import { EntityElement } from './entity';
 import { AssetElement } from './asset';
@@ -20,6 +21,7 @@ import { SceneElement } from './scene';
 import { SkyElement } from './sky';
 
 export {
+    ModuleElement,
     AppElement,
     EntityElement,
     AssetElement,
