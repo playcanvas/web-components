@@ -11,7 +11,16 @@ class ModelElement extends HTMLElement {
 
     private _src = '';
 
-    connectedCallback() {
+    async connectedCallback() {
+        // Get the application
+        const appElement = this.closest('pc-app') as AppElement;
+        if (!appElement) {
+            console.warn(`${this.tagName} must be a child of pc-app`);
+            return;
+        }
+
+        await appElement.getApplication();
+
         this._src = this.getAttribute('src') || '';
         this._loadModel();
     }

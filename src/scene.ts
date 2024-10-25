@@ -37,21 +37,18 @@ class SceneElement extends HTMLElement {
      */
     scene: Scene | null = null;
 
-    connectedCallback() {
-        const appElement = this.closest('pc-app') as AppElement | null;
+    async connectedCallback() {
+        // Get the application
+        const appElement = this.closest('pc-app') as AppElement;
         if (!appElement) {
-            console.warn('pc-scene element must be a descendant of a pc-app element');
+            console.warn(`${this.tagName} must be a child of pc-app`);
             return;
         }
-        if (!appElement.app) {
-            appElement.addEventListener('appInitialized', () => {
-                this.scene = appElement.app!.scene;
-                this.updateSceneSettings();
-            });
-        } else {
-            this.scene = appElement.app.scene;
-            this.updateSceneSettings();
-        }
+
+        const app = await appElement.getApplication();
+
+        this.scene = app.scene;
+        this.updateSceneSettings();
     }
 
     updateSceneSettings() {

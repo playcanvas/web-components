@@ -16,6 +16,7 @@
     </head>
     <body>
         <pc-app>
+            <pc-module name="Ammo" glue="ammo/ammo.wasm.js" wasm="ammo/ammo.wasm.wasm" fallback="ammo/ammo.js"></pc-module>
             <script type="module">
                 import { registerScript, Script } from 'playcanvas';
 
@@ -25,6 +26,8 @@
                     }
                 }
 
+                const appElement = document.querySelector('pc-app');
+                await appElement.getApplication();
                 registerScript(Rotate, 'rotate');
             </script>
             <pc-scene>
@@ -36,9 +39,8 @@
                 </pc-entity>
                 <pc-entity name="cube">
                     <pc-render type="box"></pc-render>
-                    <pc-scripts>
-                        <pc-script name="rotate"></pc-script>
-                    </pc-scripts>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                    <pc-collision></pc-collision>
                 </pc-entity>
             </pc-scene>
         </pc-app>

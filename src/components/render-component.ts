@@ -68,7 +68,7 @@ class RenderComponentElement extends ComponentElement {
      * Gets the cast shadows flag of the render component.
      * @returns The cast shadows flag.
      */
-    get castShadows() {
+    get castShadows(): boolean {
         return this._castShadows;
     }
 
@@ -87,7 +87,7 @@ class RenderComponentElement extends ComponentElement {
      * Gets the receive shadows flag of the render component.
      * @returns The receive shadows flag.
      */
-    get receiveShadows() {
+    get receiveShadows(): boolean {
         return this._receiveShadows;
     }
 

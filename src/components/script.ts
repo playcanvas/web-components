@@ -1,3 +1,4 @@
+import { AppElement } from '../app';
 import { ScriptComponentElement } from './script-component';
 
 /**
@@ -6,7 +7,19 @@ import { ScriptComponentElement } from './script-component';
 class ScriptElement extends HTMLElement {
     private _name: string = '';
 
-    connectedCallback() {
+    async connectedCallback() {
+        const appElement = this.closest('pc-app') as AppElement | null;
+        if (!appElement) {
+            console.error(`${this.tagName.toLowerCase()} should be a descendant of pc-app`);
+            return;
+        }
+
+        await appElement.getApplication();
+
+        this.createScript();
+    }
+
+    createScript() {
         const scriptsElement = this.closest('pc-scripts') as ScriptComponentElement;
 
         if (!scriptsElement) {
@@ -34,8 +47,6 @@ class ScriptElement extends HTMLElement {
      */
     set name(value: string) {
         this._name = value;
-        this.disconnectedCallback();
-        this.connectedCallback();
     }
 
     /**

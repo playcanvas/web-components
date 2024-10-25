@@ -15,7 +15,17 @@ class SkyElement extends HTMLElement {
 
     private _level = 0;
 
-    connectedCallback() {
+    async connectedCallback() {
+        // Get the application
+        const appElement = this.closest('pc-app') as AppElement;
+        if (!appElement) {
+            console.warn(`${this.tagName} must be a child of pc-app`);
+            return;
+        }
+
+        await appElement.getApplication();
+
+        this.asset = this.getAttribute('asset') || '';
     }
 
     getAsset() {
@@ -29,10 +39,6 @@ class SkyElement extends HTMLElement {
             return;
         }
         return el.app!.scene;
-    }
-
-    static get observedAttributes() {
-        return ['asset', 'intensity', 'level', 'rotation'];
     }
 
     set asset(value: string) {
@@ -90,6 +96,10 @@ class SkyElement extends HTMLElement {
 
     get level() {
         return this._level;
+    }
+
+    static get observedAttributes() {
+        return ['asset', 'intensity', 'level', 'rotation'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {

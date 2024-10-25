@@ -1,5 +1,6 @@
 import { Entity, Vec3 } from 'playcanvas';
 
+import { AppElement } from './app';
 import { parseVec3 } from './utils';
 
 /**
@@ -41,9 +42,24 @@ class EntityElement extends HTMLElement {
      */
     entity: Entity | null = null;
 
-    connectedCallback() {
+    async connectedCallback() {
+        // Get the application
+        const appElement = this.closest('pc-app') as AppElement;
+        if (!appElement) {
+            console.warn(`${this.tagName} must be a child of pc-app`);
+            return;
+        }
+
+        const app = await appElement.getApplication();
+
         // Create a new entity
-        this.entity = new Entity();
+        this.entity = new Entity(this._name, app);
+
+        if (this.parentElement && this.parentElement.tagName === 'pc-entity' && (this.parentElement as EntityElement).entity) {
+            (this.parentElement as EntityElement).entity!.addChild(this.entity);
+        } else {
+            app.root.addChild(this.entity);
+        }
 
         // Initialize from attributes
         const nameAttr = this.getAttribute('name');
