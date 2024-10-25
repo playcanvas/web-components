@@ -29,6 +29,7 @@
                 registerScript(OrbitCameraInputMouse, 'orbitCameraInputMouse');
             </script>
             <pc-scene>
+                <!-- Camera -->
                 <pc-entity name="camera" position="0,1,5">
                     <pc-camera clear-color="#222222"></pc-camera>
                     <pc-scripts>
@@ -36,19 +37,23 @@
                         <pc-script name="orbitCameraInputMouse"></pc-script>
                     </pc-scripts>
                 </pc-entity>
+                <!-- Light -->
                 <pc-entity name="light" rotation="45,45,0" cast-shadows>
                     <pc-light></pc-light>
                 </pc-entity>
+                <!-- Grid -->
                 <pc-entity name="grid">
                     <pc-scripts>
                         <pc-script name="grid"></pc-script>
                     </pc-scripts>
                 </pc-entity>
+                <!-- Ball -->
                 <pc-entity name="ball" position="0,3,0">
                     <pc-render type="sphere" cast-shadows></pc-render>
                     <pc-rigidbody type="dynamic" restitution="0.9"></pc-rigidbody>
                     <pc-collision type="sphere"></pc-collision>
                 </pc-entity>
+                <!-- Ground -->
                 <pc-entity name="ground" position="0,0.5,0">
                     <pc-render type="box"></pc-render>
                     <pc-rigidbody restitution="0.9"></pc-rigidbody>

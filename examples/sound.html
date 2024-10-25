@@ -18,15 +18,19 @@
         <pc-app>
             <pc-asset id="music" src="assets/frak.mp3" preload></pc-asset>
             <pc-scene>
+                <!-- Camera -->
                 <pc-entity name="camera" position="0,0,3">
-                    <pc-camera clear-color="#8099e6"></pc-camera>
+                    <pc-camera></pc-camera>
                 </pc-entity>
+                <!-- Light -->
                 <pc-entity name="light" rotation="45,0,0">
                     <pc-light></pc-light>
                 </pc-entity>
+                <!-- Sphere -->
                 <pc-entity name="sphere">
                     <pc-render type="sphere"></pc-render>
                 </pc-entity>
+                <!-- Music -->
                 <pc-entity name="music">
                     <pc-sound>
                         <pc-sound-slot asset="music" loop></pc-sound-slot>

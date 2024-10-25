@@ -1,15 +1,12 @@
-import { Asset } from 'playcanvas';
-
 import { AppElement } from './app';
+import { AssetElement } from './asset';
 import { EntityElement } from './entity';
 
 /**
  * Represents a model in the PlayCanvas engine.
  */
 class ModelElement extends HTMLElement {
-    static observedAttributes = ['src'];
-
-    private _src = '';
+    private _asset: string = '';
 
     async connectedCallback() {
         // Get the application
@@ -21,51 +18,60 @@ class ModelElement extends HTMLElement {
 
         await appElement.getApplication();
 
-        this._src = this.getAttribute('src') || '';
-        this._loadModel();
+        const asset = this.getAttribute('asset');
+        if (asset) {
+            this.asset = asset;
+        }
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
-        if (name === 'src' && this._src !== newValue) {
-            this._src = newValue;
-            this._loadModel();
-        }
+    getAsset() {
+        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
+        return assetElement!.asset;
     }
 
     _loadModel() {
-        const el = this.closest('pc-app') as AppElement | null;
-        if (!el) {
-            console.warn('Model element must be a descendant of a pc-app element');
+        const asset = this.getAsset();
+        if (!asset) {
             return;
         }
+        const entity = asset.resource.instantiateRenderEntity();
 
-        const asset = new Asset(this._src, 'container', {
-            url: this._src
-        });
-        asset.once('load', (asset) => {
-            const entity = asset.resource.instantiateRenderEntity();
+        const parentEntityElement = this.closest('pc-entity') as EntityElement | null;
+        if (parentEntityElement) {
+            parentEntityElement.entity!.addChild(entity);
+        } else {
+            const appElement = this.closest('pc-app') as AppElement;
+            appElement.app!.root.addChild(entity);
+        }
+    }
 
-            const parentEntityElement = this.closest('pc-entity') as EntityElement | null;
-            if (!parentEntityElement) {
-                el.app!.root.addChild(entity);
-            } else {
-                parentEntityElement.entity!.addChild(entity);
-            }
-        });
-        asset.once('error', (err) => {
-            console.error(err);
-        });
-
-        el.app!.assets.add(asset);
-        el.app!.assets.load(asset);
+    /**
+     * Sets the asset ID of the model.
+     * @param value - The asset ID.
+     */
+    set asset(value: string) {
+        this._asset = value;
+        this._loadModel();
     }
 
     /**
      * Gets the source URL of the model.
      * @returns The source URL of the model.
      */
-    get src() {
-        return this._src;
+    get asset(): string {
+        return this._asset;
+    }
+
+    static get observedAttributes() {
+        return ['asset'];
+    }
+
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+        switch (name) {
+            case 'asset':
+                this.asset = newValue;
+                break;
+        }
     }
 }
 
