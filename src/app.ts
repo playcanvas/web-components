@@ -1,4 +1,4 @@
-import { Application, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO } from 'playcanvas';
+import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { EntityElement } from './entity';
@@ -48,7 +48,10 @@ class AppElement extends HTMLElement {
         this.appendChild(this._canvas);
 
         // Initialize the PlayCanvas application
-        this.app = new Application(this._canvas);
+        this.app = new Application(this._canvas, {
+            mouse: new Mouse(this._canvas),
+            keyboard: new Keyboard(window)
+        });
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
 
