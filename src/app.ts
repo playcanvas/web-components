@@ -1,7 +1,6 @@
 import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
-import { EntityElement } from './entity';
 import { ModuleElement } from './module';
 
 /**
@@ -113,6 +112,5 @@ class AppElement extends HTMLElement {
 }
 
 customElements.define('pc-app', AppElement);
-customElements.define('pc-entity', EntityElement);
 
 export { AppElement };
