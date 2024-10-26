@@ -4,39 +4,28 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>PlayCanvas Web Components - Spinning Cube</title>
-        <script type="importmap">
-            {
-                "imports": {
-                    "playcanvas": "/node_modules/playcanvas/build/playcanvas.mjs"
-                }
-            }
-        </script>
-        <script type="module" src="/dist/pwc.mjs"></script>
+        <script src="/node_modules/playcanvas/build/playcanvas.js"></script>
+        <script src="/dist/pwc.js"></script>
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
         <pc-app>
-            <script type="module">
-                import { registerScript, Script } from 'playcanvas';
-
-                class Rotate extends Script {
+            <script type="text/javascript">
+                class Rotate extends pc.Script {
                     update(dt) {
                         this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
                     }
                 }
 
-                registerScript(Rotate, 'rotate');
+                pc.registerScript(Rotate, 'rotate');
             </script>
             <pc-scene>
-                <!-- Camera -->
                 <pc-entity name="camera" position="0,0,3">
                     <pc-camera clear-color="#8099e6"></pc-camera>
                 </pc-entity>
-                <!-- Light -->
                 <pc-entity name="light" rotation="45,0,0">
                     <pc-light></pc-light>
                 </pc-entity>
-                <!-- Cube -->
                 <pc-entity name="cube">
                     <pc-render type="box"></pc-render>
                     <pc-scripts>

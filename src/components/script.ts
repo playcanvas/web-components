@@ -16,29 +16,22 @@ class ScriptElement extends HTMLElement {
 
         await appElement.getApplication();
 
-        this.createScript();
-    }
-
-    createScript() {
-        const scriptsElement = this.closest('pc-scripts') as ScriptComponentElement;
-
-        if (!scriptsElement) {
-            console.warn('pc-script must be used within a pc-scripts element');
-            return;
-        }
-
-        scriptsElement.component!.create(this._name);
+        this.scriptsElement?.component!.create(this._name);
     }
 
     disconnectedCallback() {
-        const scriptsElement = this.closest('pc-scripts') as ScriptComponentElement;
+        this.scriptsElement?.component!.destroy(this._name);
+    }
 
-        if (!scriptsElement) {
-            console.warn('pc-script must be used within a pc-scripts element');
-            return;
+    protected get scriptsElement(): ScriptComponentElement | null {
+        const scriptsElement = this.parentElement as ScriptComponentElement;
+
+        if (!(scriptsElement instanceof ScriptComponentElement)) {
+            console.warn('pc-script must be a direct child of a pc-scripts element');
+            return null;
         }
 
-        scriptsElement.component!.destroy(this._name);
+        return scriptsElement;
     }
 
     /**
@@ -69,5 +62,7 @@ class ScriptElement extends HTMLElement {
         }
     }
 }
+
+customElements.define('pc-script', ScriptElement);
 
 export { ScriptElement };

@@ -21,6 +21,7 @@
             // Use the DOM API to programmatically create the scene
             const app = document.createElement('pc-app');
             document.body.appendChild(app);
+            await app.getApplication();
 
             class Rotate extends Script { 
                 update(dt) {

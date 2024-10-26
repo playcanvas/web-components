@@ -1,7 +1,6 @@
 import { ScriptComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { ScriptElement } from './script';
 
 /**
  * Represents a script component in the PlayCanvas engine.
@@ -23,6 +22,5 @@ class ScriptComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-scripts', ScriptComponentElement);
-customElements.define('pc-script', ScriptElement);
 
 export { ScriptComponentElement };
