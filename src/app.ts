@@ -54,10 +54,11 @@ class AppElement extends HTMLElement {
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
 
-        const assetElements = this.querySelectorAll('pc-asset');
+        // Get all pc-asset elements that are direct children of the pc-app element
+        const assetElements = this.querySelectorAll<AssetElement>(':scope > pc-asset');
         Array.from(assetElements).forEach(assetElement => {
-            (assetElement as AssetElement).createAsset();
-            const asset = (assetElement as AssetElement).asset;
+            assetElement.createAsset();
+            const asset = assetElement.asset;
             if (asset) {
                 this.app!.assets.add(asset);
             }
@@ -70,13 +71,6 @@ class AppElement extends HTMLElement {
 
             // Handle window resize to keep the canvas responsive
             window.addEventListener('resize', this._onWindowResize);
-
-            // Dispatch an event indicating the application is initialized
-            this.dispatchEvent(new CustomEvent('appInitialized', {
-                bubbles: true,
-                composed: true,
-                detail: { app: this.app }
-            }));
 
             this.appReadyResolve(this.app!);
         });
