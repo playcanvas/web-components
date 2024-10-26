@@ -1,4 +1,4 @@
-import { Asset, SoundSlot } from 'playcanvas';
+import { SoundSlot } from 'playcanvas';
 
 import { AppElement } from '../app';
 import { SoundComponentElement } from './sound-component';
@@ -53,9 +53,6 @@ class SoundSlotElement extends HTMLElement {
             startTime: this._startTime,
             volume: this._volume
         } as any;
-        if (this._asset) {
-            options.asset = this._asset.id;
-        }
         if (this._duration) {
             options.duration = this._duration;
         }
@@ -286,5 +283,7 @@ class SoundSlotElement extends HTMLElement {
         }
     }
 }
+
+customElements.define('pc-sound-slot', SoundSlotElement);
 
 export { SoundSlotElement };

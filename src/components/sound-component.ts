@@ -1,7 +1,6 @@
 import { SoundComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { SoundSlotElement } from './sound-slot';
 
 /**
  * Represents a sound component in the PlayCanvas engine.
@@ -114,6 +113,5 @@ class SoundComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-sound', SoundComponentElement);
-customElements.define('pc-sound-slot', SoundSlotElement);
 
 export { SoundComponentElement };
