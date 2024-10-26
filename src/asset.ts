@@ -87,4 +87,6 @@ class AssetElement extends HTMLElement {
     }
 }
 
+customElements.define('pc-asset', AssetElement);
+
 export { AssetElement };
