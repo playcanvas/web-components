@@ -8,6 +8,7 @@ import { AssetElement } from './asset';
 import { ListenerComponentElement } from './components/listener-component';
 import { CameraComponentElement } from './components/camera-component';
 import { CollisionComponentElement } from './components/collision-component';
+import { ComponentElement } from './components/component';
 import { GSplatComponentElement } from './components/gsplat-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
@@ -27,6 +28,7 @@ export {
     AssetElement,
     CameraComponentElement,
     CollisionComponentElement,
+    ComponentElement,
     GSplatComponentElement,
     LightComponentElement,
     ListenerComponentElement,

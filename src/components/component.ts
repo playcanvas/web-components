@@ -15,6 +15,10 @@ class ComponentElement extends HTMLElement {
 
     private _component: Component | null = null;
 
+    /**
+     * Constructor for the ComponentElement.
+     * @param componentName - The name of the component.
+     */
     constructor(componentName: string) {
         super();
 
@@ -67,6 +71,10 @@ class ComponentElement extends HTMLElement {
         return this._component;
     }
 
+    /**
+     * Sets the enabled state of the component.
+     * @param value - The enabled state of the component.
+     */
     set enabled(value: boolean) {
         this._enabled = value;
         if (this.component) {
@@ -74,6 +82,10 @@ class ComponentElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the enabled state of the component.
+     * @returns The enabled state of the component.
+     */
     get enabled() {
         return this._enabled;
     }
