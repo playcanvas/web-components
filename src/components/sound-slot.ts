@@ -8,7 +8,7 @@ import { AssetElement } from '../asset';
  * Represents a sound slot in the PlayCanvas engine.
  */
 class SoundSlotElement extends HTMLElement {
-    private _asset: Asset | null = null;
+    private _asset: string = '';
 
     private _autoPlay: boolean = false;
 
@@ -31,13 +31,19 @@ class SoundSlotElement extends HTMLElement {
      */
     soundSlot: SoundSlot | null = null;
 
-    connectedCallback() {
-        const soundElement = this.closest('pc-sound') as SoundComponentElement;
+    getAsset() {
+        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
+        return assetElement!.asset;
+    }
 
-        if (!soundElement) {
-            console.warn('pc-sound-slot must be used within a pc-sound element');
+    async connectedCallback() {
+        const appElement = this.closest('pc-app') as AppElement | null;
+        if (!appElement) {
+            console.error(`${this.tagName.toLowerCase()} should be a descendant of pc-app`);
             return;
         }
+
+        await appElement.getApplication();
 
         const options = {
             autoPlay: this._autoPlay,
@@ -53,35 +59,37 @@ class SoundSlotElement extends HTMLElement {
         if (this._duration) {
             options.duration = this._duration;
         }
-        this.soundSlot = soundElement.component!.addSlot(this._name, options);
-
-        // on appInitialized, set the asset
-        const appElement = this.closest('pc-app') as AppElement;
-        appElement.addEventListener('appInitialized', () => {
-            this.asset = this._asset;
-            this.soundSlot!.play();
-        });
+        this.soundSlot = this.soundElement!.component!.addSlot(this._name, options);
+        this.asset = this._asset;
+        this.soundSlot!.play();
     }
 
     disconnectedCallback() {
-        const soundElement = this.closest('pc-sound') as SoundComponentElement;
+        this.soundElement!.component!.removeSlot(this._name);
+    }
 
-        if (!soundElement) {
-            console.warn('pc-sound-slot must be used within a pc-sound element');
-            return;
+    protected get soundElement(): SoundComponentElement | null {
+        const soundElement = this.parentElement as SoundComponentElement;
+
+        if (!(soundElement instanceof SoundComponentElement)) {
+            console.warn('pc-sound-slot must be a direct child of a pc-sound element');
+            return null;
         }
 
-        soundElement.component!.removeSlot(this._name);
+        return soundElement;
     }
 
     /**
      * Sets the asset of the sound slot.
      * @param value - The asset.
      */
-    set asset(value: Asset | null) {
+    set asset(value: string) {
         this._asset = value;
         if (this.soundSlot) {
-            this.soundSlot.asset = value ? value.id : 0; // the 0 should be null - fix engine types
+            const id = this.getAsset()?.id;
+            if (id) {
+                this.soundSlot.asset = id;
+            }
         }
     }
 
@@ -252,13 +260,7 @@ class SoundSlotElement extends HTMLElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'asset':
-                const appElement = this.closest('pc-app') as AppElement;
-                const assetElement = appElement.querySelector(`pc-asset[id="${newValue}"]`) as AssetElement;
-                if (assetElement && assetElement.asset) {
-                    this.asset = assetElement.asset;
-                } else {
-                    console.warn(`Asset with id "${newValue}" not found`);
-                }
+                this.asset = newValue;
                 break;
             case 'duration':
                 this.duration = parseFloat(newValue);
