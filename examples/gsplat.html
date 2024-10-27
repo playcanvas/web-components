@@ -20,8 +20,8 @@
                 import { registerScript } from 'playcanvas';
                 import { OrbitCamera, OrbitCameraInputMouse } from './scripts/orbit-camera.mjs';
 
-                const appElement = document.querySelector('pc-app');
-                const app = await appElement.getApplication();
+                const app = document.querySelector('pc-app');
+                await app.getApplication();
                 registerScript(OrbitCamera, 'orbitCamera');
                 registerScript(OrbitCameraInputMouse, 'orbitCameraInputMouse');
             </script>
