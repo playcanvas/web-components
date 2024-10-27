@@ -33,13 +33,13 @@
                 <pc-entity name="camera" position="0,1,5">
                     <pc-camera clear-color="#222222"></pc-camera>
                     <pc-scripts>
-                        <pc-script name="orbitCamera"></pc-script>
+                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 10, "inertiaFactor": 0.1}'></pc-script>
                         <pc-script name="orbitCameraInputMouse"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="45,45,0" cast-shadows>
-                    <pc-light></pc-light>
+                    <pc-light cast-shadows></pc-light>
                 </pc-entity>
                 <!-- Grid -->
                 <pc-entity name="grid">

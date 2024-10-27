@@ -10,9 +10,9 @@ import { ComponentElement } from './component';
 class RenderComponentElement extends ComponentElement {
     private _type: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'asset';
 
-    private _castShadows = false;
+    private _castShadows = true;
 
-    private _receiveShadows = false;
+    private _receiveShadows = true;
 
     constructor() {
         super('render');
@@ -92,7 +92,7 @@ class RenderComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'type', 'cast-shadows', 'receive-shadows'];
+        return [...super.observedAttributes, 'cast-shadows', 'receive-shadows', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -103,10 +103,10 @@ class RenderComponentElement extends ComponentElement {
                 this.type = newValue as 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere';
                 break;
             case 'cast-shadows':
-                this.castShadows = this.hasAttribute('cast-shadows');
+                this.castShadows = newValue !== 'false';
                 break;
             case 'receive-shadows':
-                this.receiveShadows = this.hasAttribute('receive-shadows');
+                this.receiveShadows = newValue !== 'false';
                 break;
         }
     }
