@@ -17,9 +17,15 @@ class LightComponentElement extends ComponentElement {
 
     private _intensity = 1;
 
+    private _normalOffsetBias = 0.05;
+
     private _outerConeAngle = 45;
 
     private _range = 10;
+
+    private _shadowBias = 0.2;
+
+    private _shadowDistance = 16;
 
     private _type = 'directional';
 
@@ -36,8 +42,11 @@ class LightComponentElement extends ComponentElement {
             color: this._color,
             innerConeAngle: this._innerConeAngle,
             intensity: this._intensity,
+            normalOffsetBias: this._normalOffsetBias,
             outerConeAngle: this._outerConeAngle,
             range: this._range,
+            shadowBias: this._shadowBias,
+            shadowDistance: this._shadowDistance,
             type: this._type
         };
     }
@@ -127,6 +136,25 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the normal offset bias of the light.
+     * @param value - The normal offset bias.
+     */
+    set normalOffsetBias(value: number) {
+        this._normalOffsetBias = value;
+        if (this.component) {
+            this.component.normalOffsetBias = value;
+        }
+    }
+
+    /**
+     * Gets the normal offset bias of the light.
+     * @returns The normal offset bias.
+     */
+    get normalOffsetBias() {
+        return this._normalOffsetBias;
+    }
+
+    /**
      * Sets the outer cone angle of the light.
      * @param value - The outer cone angle.
      */
@@ -165,6 +193,44 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the shadow bias of the light.
+     * @param value - The shadow bias.
+     */
+    set shadowBias(value: number) {
+        this._shadowBias = value;
+        if (this.component) {
+            this.component.shadowBias = value;
+        }
+    }
+
+    /**
+     * Gets the shadow bias of the light.
+     * @returns The shadow bias.
+     */
+    get shadowBias() {
+        return this._shadowBias;
+    }
+
+    /**
+     * Sets the shadow distance of the light.
+     * @param value - The shadow distance.
+     */
+    set shadowDistance(value: number) {
+        this._shadowDistance = value;
+        if (this.component) {
+            this.component.shadowDistance = value;
+        }
+    }
+
+    /**
+     * Gets the shadow distance of the light.
+     * @returns The shadow distance.
+     */
+    get shadowDistance() {
+        return this._shadowDistance;
+    }
+
+    /**
      * Sets the type of the light.
      * @param value - The type.
      */
@@ -189,7 +255,19 @@ class LightComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'color', 'cast-shadows', 'intensity', 'inner-cone-angle', 'outer-cone-angle', 'range', 'type'];
+        return [
+            ...super.observedAttributes,
+            'color',
+            'cast-shadows',
+            'intensity',
+            'inner-cone-angle',
+            'normal-offset-bias',
+            'outer-cone-angle',
+            'range',
+            'shadow-bias',
+            'shadow-distance',
+            'type'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -208,11 +286,20 @@ class LightComponentElement extends ComponentElement {
             case 'intensity':
                 this.intensity = Number(newValue);
                 break;
+            case 'normal-offset-bias':
+                this.normalOffsetBias = Number(newValue);
+                break;
             case 'outer-cone-angle':
                 this.outerConeAngle = Number(newValue);
                 break;
             case 'range':
                 this.range = Number(newValue);
+                break;
+            case 'shadow-bias':
+                this.shadowBias = Number(newValue);
+                break;
+            case 'shadow-distance':
+                this.shadowDistance = Number(newValue);
                 break;
             case 'type':
                 this.type = newValue;
