@@ -23,10 +23,6 @@ class ScriptElement extends HTMLElement {
         }
 
         await appElement.getApplication();
-
-        if (!this._attributes) {
-            this._attributes = {};
-        }
     
         const scriptAttributes = this.getAttribute('attributes');
         if (scriptAttributes) {
@@ -39,14 +35,10 @@ class ScriptElement extends HTMLElement {
 
         // When the script is created, initialize it with the necessary attributes
         this.scriptsElement?.component!.on(`create:${this._name}`, scriptInstance => {
-            // If attributes exist assign them to the instance
-            const attributes = this._attributes || {};
-            Object.assign(scriptInstance, attributes);
+            Object.assign(scriptInstance, this._attributes);
         });        
 
         this._script = this.scriptsElement?.component!.create(this._name, { preloading: false }) ?? null;
-
-        console.log('Script created:', this._script);
     }
 
     disconnectedCallback() {
@@ -105,7 +97,7 @@ class ScriptElement extends HTMLElement {
     set name(value: string) {
         this._name = value;
     }
-    
+
     /**
      * Gets the name of the script.
      * @returns The name.
