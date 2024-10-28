@@ -1,4 +1,4 @@
-import { Quat } from 'playcanvas';
+import { LAYERID_SKYBOX, Quat } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AssetElement } from './asset';
@@ -15,6 +15,8 @@ class SkyElement extends HTMLElement {
 
     private _level = 0;
 
+    private _solidColor = false;
+
     async connectedCallback() {
         // Get the application
         const appElement = this.closest('pc-app') as AppElement;
@@ -26,6 +28,7 @@ class SkyElement extends HTMLElement {
         await appElement.getApplication();
 
         this.asset = this.getAttribute('asset') || '';
+        this.solidColor = this.hasAttribute('solid-color');
     }
 
     getAsset() {
@@ -90,6 +93,21 @@ class SkyElement extends HTMLElement {
         return this._rotation;
     }
 
+    set solidColor(value: boolean) {
+        this._solidColor = value;
+        const scene = this.getScene();
+        if (scene) {
+            const layer = scene.layers.getLayerById(LAYERID_SKYBOX);
+            if (layer) {
+                layer.enabled = !this._solidColor;
+            }
+        }
+    }
+
+    get solidColor() {
+        return this._solidColor;
+    }
+
     set level(value: number) {
         this._level = value;
         const scene = this.getScene();
@@ -103,7 +121,7 @@ class SkyElement extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'intensity', 'level', 'rotation'];
+        return ['asset', 'intensity', 'level', 'rotation', 'solid-color'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -119,6 +137,9 @@ class SkyElement extends HTMLElement {
                 break;
             case 'level':
                 this.level = parseInt(newValue, 10);
+                break;
+            case 'solid-color':
+                this.solidColor = this.hasAttribute('solid-color');
                 break;
         }
     }

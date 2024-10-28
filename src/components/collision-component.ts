@@ -1,6 +1,7 @@
-import { CollisionComponent } from 'playcanvas';
+import { CollisionComponent, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
+import { parseVec3 } from '../utils';
 
 /**
  * Represents a collision component in the PlayCanvas engine.
@@ -11,6 +12,8 @@ class CollisionComponentElement extends ComponentElement {
     private _axis: number = 1;
 
     private _convexHull: boolean = false;
+
+    private _halfExtents: Vec3 = new Vec3(0.5, 0.5, 0.5);
 
     private _height: number = 2;
 
@@ -29,6 +32,7 @@ class CollisionComponentElement extends ComponentElement {
         return {
             axis: this._axis,
             convexHull: this._convexHull,
+            halfExtents: this._halfExtents,
             height: this._height,
             radius: this._radius,
             type: this._type
@@ -65,6 +69,17 @@ class CollisionComponentElement extends ComponentElement {
         return this._convexHull;
     }
 
+    set halfExtents(value: Vec3) {
+        this._halfExtents = value;
+        if (this.component) {
+            this.component.halfExtents = value;
+        }
+    }
+
+    get halfExtents() {
+        return this._halfExtents;
+    }
+
     set height(value: number) {
         this._height = value;
         if (this.component) {
@@ -99,7 +114,7 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'axis', 'convex-hull', 'height', 'radius', 'type'];
+        return [...super.observedAttributes, 'axis', 'convex-hull', 'half-extents', 'height', 'radius', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -111,6 +126,9 @@ class CollisionComponentElement extends ComponentElement {
                 break;
             case 'convex-hull':
                 this.convexHull = this.hasAttribute('convex-hull');
+                break;
+            case 'half-extents':
+                this.halfExtents = parseVec3(newValue);
                 break;
             case 'height':
                 this.height = parseFloat(newValue);
