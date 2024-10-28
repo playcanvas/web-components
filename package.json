@@ -21,6 +21,9 @@
   "browser": "dist/pwc.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rollup -c",
     "develop": "concurrently \"npm run watch\" \"npm run serve\"",
