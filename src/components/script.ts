@@ -1,85 +1,43 @@
-import { ScriptType } from 'playcanvas';
-
-import { AppElement } from '../app';
-import { ScriptComponentElement } from './script-component';
-
 /**
  * Represents a script in the PlayCanvas engine.
  */
 class ScriptElement extends HTMLElement {
-    private _attributes: Record<string, any> = {};
+    private _attributes: string = '{}';
 
     private _enabled: boolean = true;
 
     private _name: string = '';
 
-    private _script: ScriptType | null = null;
-
-    async connectedCallback() {
-        const appElement = this.closest('pc-app') as AppElement | null;
-        if (!appElement) {
-            console.error(`${this.tagName.toLowerCase()} should be a descendant of pc-app`);
-            return;
-        }
-
-        await appElement.getApplication();
-
-        const scriptAttributes = this.getAttribute('attributes');
-        if (scriptAttributes) {
-            try {
-                this._attributes = JSON.parse(scriptAttributes);
-            } catch (e) {
-                console.error('Failed to parse script attributes:', e);
-            }
-        }
-
-        // When the script is created, initialize it with the necessary attributes
-        this.scriptsElement?.component!.on(`create:${this._name}`, (scriptInstance) => {
-            Object.assign(scriptInstance, this._attributes);
-        });
-
-        this._script = this.scriptsElement?.component!.create(this._name, { preloading: false }) ?? null;
-    }
-
-    disconnectedCallback() {
-        this.scriptsElement?.component!.destroy(this._name);
-    }
-
-    refreshAttributes() {
-        if (this._script) {
-            Object.entries(this._attributes).forEach(([name, value]) => {
-                if (this._script && name in this._script) {
-                    (this._script as any)[name] = value;
-                }
-            });
-        }
-    }
-
-    protected get scriptsElement(): ScriptComponentElement | null {
-        const scriptsElement = this.parentElement as ScriptComponentElement;
-
-        if (!(scriptsElement instanceof ScriptComponentElement)) {
-            console.warn('pc-script must be a direct child of a pc-scripts element');
-            return null;
-        }
-
-        return scriptsElement;
-    }
-
+    /**
+     * Sets the attributes of the script.
+     * @param value - The attributes of the script.
+     */
     set scriptAttributes(value: string) {
-        this._attributes = JSON.parse(value);
-        this.refreshAttributes();
+        this._attributes = value;
+        this.dispatchEvent(new CustomEvent('scriptattributeschange', {
+            detail: { attributes: value },
+            bubbles: true
+        }));
     }
 
+    /**
+     * Gets the attributes of the script.
+     * @returns The attributes of the script.
+     */
     get scriptAttributes() {
-        return JSON.stringify(this._attributes);
+        return this._attributes;
     }
 
+    /**
+     * Sets the enabled state of the script.
+     * @param value - The enabled state of the script.
+     */
     set enabled(value: boolean) {
         this._enabled = value;
-        if (this._script) {
-            this._script.enabled = value;
-        }
+        this.dispatchEvent(new CustomEvent('scriptenablechange', {
+            detail: { enabled: value },
+            bubbles: true
+        }));
     }
 
     /**
