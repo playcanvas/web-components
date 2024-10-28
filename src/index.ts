@@ -9,6 +9,7 @@ import { ListenerComponentElement } from './components/listener-component';
 import { CameraComponentElement } from './components/camera-component';
 import { CollisionComponentElement } from './components/collision-component';
 import { ComponentElement } from './components/component';
+import { ElementComponentElement } from './components/element-component';
 import { GSplatComponentElement } from './components/gsplat-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
@@ -29,6 +30,7 @@ export {
     CameraComponentElement,
     CollisionComponentElement,
     ComponentElement,
+    ElementComponentElement,
     GSplatComponentElement,
     LightComponentElement,
     ListenerComponentElement,
