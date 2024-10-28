@@ -42,7 +42,7 @@ Below is a basic example of how to use PlayCanvas Web Components to create a sim
                 }
             }
         </script>
-        <script type="module" src="https://esm.run/@playcanvas/web-components@0.1.0"></script>
+        <script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.0/dist/pwc.mjs"></script>
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
@@ -61,7 +61,7 @@ Below is a basic example of how to use PlayCanvas Web Components to create a sim
             <pc-scene>
                 <!-- Camera -->
                 <pc-entity name="camera" position="0,0,3">
-                    <pc-camera></pc-camera>
+                    <pc-camera clear-color="#8099e6"></pc-camera>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="45,0,0">
