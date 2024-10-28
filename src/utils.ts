@@ -1,4 +1,4 @@
-import { Color, Vec2, Vec3 } from 'playcanvas';
+import { Color, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 /**
  * Parse a color string into a Color object. String can be in the format of '#rgb', '#rgba',
