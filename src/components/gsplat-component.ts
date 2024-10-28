@@ -61,6 +61,6 @@ class GSplatComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-gsplat', GSplatComponentElement);
+customElements.define('pc-splat', GSplatComponentElement);
 
 export { GSplatComponentElement };
