@@ -122,7 +122,7 @@ class CollisionComponentElement extends ComponentElement {
 
         switch (name) {
             case 'axis':
-                this.axis = parseInt(newValue);
+                this.axis = parseInt(newValue, 10);
                 break;
             case 'convex-hull':
                 this.convexHull = this.hasAttribute('convex-hull');

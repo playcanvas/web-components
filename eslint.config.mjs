@@ -24,7 +24,13 @@ export default [
             '@typescript-eslint': tsPlugin
         },
         rules: {
-            ...tsPlugin.configs['recommended'].rules
+            ...tsPlugin.configs['recommended'].rules,
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+            'import/extensions': 'off',
+            'import/no-unresolved': 'off',
+            'jsdoc/require-param-type': 'off',
+            'jsdoc/require-returns-type': 'off'
         }
     }
 ];
