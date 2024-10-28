@@ -62,8 +62,13 @@ class ScriptComponentElement extends ComponentElement {
 
         const script = this.component.get(scriptName);
         if (script) {
-            const attributesObject = event.detail.attributes ? JSON.parse(event.detail.attributes) : {};
-            Object.assign(script, attributesObject);
+            try {
+                // Parse the attributes string into an object and set them on the script
+                const attributesObject = event.detail.attributes ? JSON.parse(event.detail.attributes) : {};
+                Object.assign(script, attributesObject);
+            } catch (error) {
+                console.error(`Error parsing attributes for script ${scriptName}:`, error);
+            }
         }
     }
 
