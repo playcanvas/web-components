@@ -55,6 +55,16 @@ class ScriptComponentElement extends ComponentElement {
         });
     }
 
+    private applyAttributes(script: ScriptType, attributes: string | null) {
+        try {
+            // Parse the attributes string into an object and set them on the script
+            const attributesObject = attributes ? JSON.parse(attributes) : {};
+            Object.assign(script, attributesObject);
+        } catch (error) {
+            console.error(`Error parsing attributes JSON string ${attributes}:`, error);
+        }
+    }
+
     private handleScriptAttributesChange(event: ScriptAttributesChangeEvent) {
         const scriptElement = event.target as ScriptElement;
         const scriptName = scriptElement.getAttribute('name');
@@ -62,13 +72,7 @@ class ScriptComponentElement extends ComponentElement {
 
         const script = this.component.get(scriptName);
         if (script) {
-            try {
-                // Parse the attributes string into an object and set them on the script
-                const attributesObject = event.detail.attributes ? JSON.parse(event.detail.attributes) : {};
-                Object.assign(script, attributesObject);
-            } catch (error) {
-                console.error(`Error parsing attributes for script ${scriptName}:`, error);
-            }
+            this.applyAttributes(script, event.detail.attributes);
         }
     }
 
@@ -86,9 +90,8 @@ class ScriptComponentElement extends ComponentElement {
     private createScript(name: string, attributes: string | null): ScriptType | null {
         if (!this.component) return null;
 
-        this.component.on(`create:${name}`, (scriptInstance) => {
-            const attributesObject = attributes ? JSON.parse(attributes) : {};
-            Object.assign(scriptInstance, attributesObject);
+        this.component.on(`create:${name}`, (script) => {
+            this.applyAttributes(script, attributes);
         });
         return this.component.create(name);
     }
