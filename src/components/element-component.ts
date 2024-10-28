@@ -2,8 +2,8 @@ import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { parseColor, parseVec2 } from '../utils';
-import { parseVec4 } from '../utils';
+import { parseColor, parseVec2, parseVec4 } from '../utils';
+
 
 /**
  * Represents an element component in the PlayCanvas engine.
@@ -26,7 +26,7 @@ class ElementComponentElement extends ComponentElement {
     private _pivot: Vec2 = new Vec2(0.5, 0.5);
 
     private _text: string = '';
-    
+
     private _type: 'group' | 'image' | 'text' = 'group';
 
     private _width: number = 0;

@@ -219,7 +219,7 @@ class RigidBodyComponentElement extends ComponentElement {
                 break;
         }
     }
-}   
+}
 
 customElements.define('pc-rigidbody', RigidBodyComponentElement);
 

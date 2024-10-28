@@ -205,7 +205,7 @@ class EntityElement extends HTMLElement {
         switch (name) {
             case 'enabled':
                 this.enabled = newValue !== 'false';
-                break
+                break;
             case 'name':
                 this.name = newValue;
                 break;

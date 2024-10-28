@@ -141,7 +141,7 @@ class CollisionComponentElement extends ComponentElement {
                 break;
         }
     }
-}   
+}
 
 customElements.define('pc-collision', CollisionComponentElement);
 

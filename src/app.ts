@@ -61,7 +61,7 @@ class AppElement extends HTMLElement {
 
         // Get all pc-asset elements that are direct children of the pc-app element
         const assetElements = this.querySelectorAll<AssetElement>(':scope > pc-asset');
-        Array.from(assetElements).forEach(assetElement => {
+        Array.from(assetElements).forEach((assetElement) => {
             assetElement.createAsset();
             const asset = assetElement.asset;
             if (asset) {

@@ -23,7 +23,7 @@ class ScriptElement extends HTMLElement {
         }
 
         await appElement.getApplication();
-    
+
         const scriptAttributes = this.getAttribute('attributes');
         if (scriptAttributes) {
             try {
@@ -34,9 +34,9 @@ class ScriptElement extends HTMLElement {
         }
 
         // When the script is created, initialize it with the necessary attributes
-        this.scriptsElement?.component!.on(`create:${this._name}`, scriptInstance => {
+        this.scriptsElement?.component!.on(`create:${this._name}`, (scriptInstance) => {
             Object.assign(scriptInstance, this._attributes);
-        });        
+        });
 
         this._script = this.scriptsElement?.component!.create(this._name, { preloading: false }) ?? null;
     }

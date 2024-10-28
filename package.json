@@ -1,11 +1,26 @@
 {
   "name": "@playcanvas/web-components",
   "version": "0.1.0",
-  "description": "Web Components for PlayCanvas",
-  "main": "dist/playdom.cjs",
-  "module": "dist/playdom.mjs",
-  "browser": "dist/playdom.js",
+  "author": "PlayCanvas <support@playcanvas.com>",
+  "homepage": "https://playcanvas.com",
+  "description": "Web Components for the PlayCanvas Engine",
+  "keywords": [
+    "custom-elements",
+    "declarative",
+    "html",
+    "playcanvas",
+    "typescript",
+    "web-components",
+    "webgl",
+    "webgpu",
+    "webxr"
+  ],
+  "license": "MIT",
+  "main": "dist/pwc.cjs",
+  "module": "dist/pwc.mjs",
+  "browser": "dist/pwc.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "rollup -c",
     "develop": "concurrently \"npm run watch\" \"npm run serve\"",
@@ -17,16 +32,6 @@
     "type-check:watch": "npm run type-check -- --watch",
     "watch": "rollup -c -w"
   },
-  "keywords": [
-    "custom-elements",
-    "playcanvas",
-    "web-components",
-    "webgl",
-    "webgpu",
-    "webxr"
-  ],
-  "author": "PlayCanvas <support@playcanvas.com>",
-  "license": "MIT",
   "devDependencies": {
     "@playcanvas/eslint-config": "^2.0.6",
     "@rollup/plugin-commonjs": "^28.0.1",
