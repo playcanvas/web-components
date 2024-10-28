@@ -68,7 +68,9 @@ class SceneElement extends HTMLElement {
      */
     set fog(value) {
         this._fog = value;
-        this.scene!.rendering.fog = value;
+        if (this.scene) {
+            this.scene.rendering.fog = value;
+        }
     }
 
     /**
@@ -85,7 +87,9 @@ class SceneElement extends HTMLElement {
      */
     set fogColor(value: Color) {
         this._fogColor = value;
-        this.scene!.rendering.fogColor = value;
+        if (this.scene) {
+            this.scene.rendering.fogColor = value;
+        }
     }
 
     /**
@@ -102,7 +106,9 @@ class SceneElement extends HTMLElement {
      */
     set fogDensity(value: number) {
         this._fogDensity = value;
-        this.scene!.rendering.fogDensity = value;
+        if (this.scene) {
+            this.scene.rendering.fogDensity = value;
+        }
     }
 
     /**
@@ -119,7 +125,9 @@ class SceneElement extends HTMLElement {
      */
     set fogStart(value: number) {
         this._fogStart = value;
-        this.scene!.rendering.fogStart = value;
+        if (this.scene) {
+            this.scene.rendering.fogStart = value;
+        }
     }
 
     /**
@@ -136,7 +144,9 @@ class SceneElement extends HTMLElement {
      */
     set fogEnd(value: number) {
         this._fogEnd = value;
-        this.scene!.rendering.fogEnd = value;
+        if (this.scene) {
+            this.scene.rendering.fogEnd = value;
+        }
     }
 
     /**

@@ -39,12 +39,15 @@ class AssetElement extends HTMLElement {
     createAsset() {
         const id = this.getAttribute('id') || '';
         const src = this.getAttribute('src') || '';
-
-        const ext = src.split('.').pop();
-        const type = extToType.get(ext || '');
+        let type = this.getAttribute('type');
 
         if (!type) {
-            console.warn(`Unsupported asset type: ${ext}`);
+            const ext = src.split('.').pop();
+            type = extToType.get(ext || '') || '';
+        }
+
+        if (!type) {
+            console.warn(`Unsupported asset type: ${src}`);
             return;
         }
 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Text</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "/node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="/dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <pc-app>
+            <pc-asset id="arial" src="assets/fonts/arial.json" type="font" preload></pc-asset>
+            <pc-asset id="courier" src="assets/fonts/courier.json" type="font" preload></pc-asset>
+            <pc-asset id="trade-gothic" src="assets/fonts/trade gothic lt bold no. 2.json" type="font" preload></pc-asset>
+            <pc-scene fog="linear" fog-start="0" fog-end="8" fog-color="#000000">
+                <!-- Camera -->
+                <pc-entity name="camera" position="0,0,5">
+                    <pc-camera clear-color="#000000" fov="35"></pc-camera>
+                </pc-entity>
+                <!-- Text -->
+                <pc-entity name="trade-gothic text" rotation="-72,0,0">
+                    <pc-element type="text" asset="trade-gothic" color="#ffe81f" auto-width="false" font-size="0.2" line-height="0.25" width="2.65" wrap-lines text="It is a period of civil war.
+Rebel spaceships, striking
+from a hidden base, have won
+their first victory against
+the evil Galactic Empire.
+
+During the battle, Rebel
+spies managed to steal secret
+plans to the Empire's
+ultimate weapon, the DEATH
+STAR, an armored space
+station with enough power to
+destroy an entire planet.
+
+Pursued by the Empire's
+sinister agents, Princess
+Leia races home aboard her
+starship, custodian of the
+stolen plans that can save
+her people and restore
+freedom to the galaxy...."></pc-element>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+    </body>
+</html>
