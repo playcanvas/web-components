@@ -16,6 +16,8 @@ class AppElement extends HTMLElement {
 
     private appReadyResolve!: (app: Application) => void;
 
+    private _highResolution = false;
+
     /**
      * The PlayCanvas application instance.
      */
@@ -49,7 +51,7 @@ class AppElement extends HTMLElement {
         // Initialize the PlayCanvas application
         this.app = new Application(this._canvas, {
             graphicsDeviceOptions: {
-                devicePixelRatio: window.devicePixelRatio
+                devicePixelRatio: this._highResolution ? window.devicePixelRatio : 1
             },
             keyboard: new Keyboard(window),
             mouse: new Mouse(this._canvas)
@@ -104,6 +106,29 @@ class AppElement extends HTMLElement {
     _onWindowResize() {
         if (this.app) {
             this.app.resizeCanvas();
+        }
+    }
+
+    set highResolution(value: boolean) {
+        this._highResolution = value;
+        if (this.app) {
+            this.app.graphicsDevice.maxPixelRatio = value ? window.devicePixelRatio : 1;
+        }
+    }
+
+    get highResolution() {
+        return this._highResolution;
+    }
+
+    static get observedAttributes() {
+        return ['high-resolution'];
+    }
+
+    attributeChangedCallback(name: string, _oldValue: string, _newValue: string) {
+        switch (name) {
+            case 'high-resolution':
+                this.highResolution = this.hasAttribute(name);
+                break;
         }
     }
 }

@@ -2,6 +2,7 @@ import { Asset } from 'playcanvas';
 
 const extToType = new Map([
     ['bin', 'binary'],
+    ['css', 'css'],
     ['frag', 'shader'],
     ['glb', 'container'],
     ['glsl', 'shader'],
@@ -41,9 +42,10 @@ class AssetElement extends HTMLElement {
         const src = this.getAttribute('src') || '';
         let type = this.getAttribute('type');
 
+        // If no type is specified, try to infer it from the file extension.
         if (!type) {
             const ext = src.split('.').pop();
-            type = extToType.get(ext || '') || '';
+            type = extToType.get(ext || '') ?? null;
         }
 
         if (!type) {
