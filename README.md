@@ -26,6 +26,26 @@ UMD:
 
 ## Tag Reference 📖
 
+Table of contents:
+
+- [pc-app](#pc-app)
+- [pc-asset](#pc-asset)
+- [pc-camera](#pc-camera)
+- [pc-collision](#pc-collision)
+- [pc-element](#pc-element)
+- [pc-entity](#pc-entity)
+- [pc-light](#pc-light)
+- [pc-listener](#pc-listener)
+- [pc-module](#pc-module)
+- [pc-render](#pc-render)
+- [pc-rigidbody](#pc-rigidbody)
+- [pc-scene](#pc-scene)
+- [pc-script](#pc-script)
+- [pc-scripts](#pc-scripts)
+- [pc-sound](#pc-sound)
+- [pc-sounds](#pc-sounds)
+- [pc-splat](#pc-splat)
+
 ### pc-app
 
 The `pc-app` tag is the root element for your PlayCanvas application. It is used to initialize the PlayCanvas application and provide a container for your scene.
