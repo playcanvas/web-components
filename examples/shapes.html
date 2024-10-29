@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Sound</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "/node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="/dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <pc-app>
+            <script type="module">
+                import { registerScript } from 'playcanvas';
+                import { OrbitCamera, OrbitCameraInputMouse } from './scripts/orbit-camera.mjs';
+
+                const app = document.querySelector('pc-app');
+                await app.getApplication();
+                registerScript(OrbitCamera, 'orbitCamera');
+                registerScript(OrbitCameraInputMouse, 'orbitCameraInputMouse');
+            </script>
+            <!-- Assets -->
+            <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
+            <pc-asset id="metal-diffuse" src="assets/textures/metal-diffuse.jpg" preload></pc-asset>
+            <pc-asset id="metal-metalness" src="assets/textures/metal-metalness.jpg" preload></pc-asset>
+            <pc-asset id="metal-normal" src="assets/textures/metal-normal.jpg" preload></pc-asset>
+            <!-- Materials -->
+            <pc-material id="metal" diffuse-map="metal-diffuse" metalness-map="metal-metalness" normal-map="metal-normal"></pc-material>
+            <pc-scene>
+                <pc-sky asset="helipad" solid-color></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0,0,5">
+                    <pc-camera clear-color="0.4,0.45,0.5"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 5, "inertiaFactor": 0.1}'></pc-script>
+                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45,0,0">
+                    <pc-light></pc-light>
+                </pc-entity>
+                <!-- Box-->
+                <pc-entity name="box" position="-1.2,1,0">
+                    <pc-render type="box" material="metal"></pc-render>
+                </pc-entity>
+                <!-- Capsule -->
+                <pc-entity name="capsule" position="0,1,0">
+                    <pc-render type="capsule" material="metal"></pc-render>
+                </pc-entity>
+                <!-- Cone -->
+                <pc-entity name="cone" position="1.2,1,0">
+                    <pc-render type="cone" material="metal"></pc-render>
+                </pc-entity>
+                <!-- Cylinder -->
+                <pc-entity name="cylinder" position="-1.2,-1,0">
+                    <pc-render type="cylinder" material="metal"></pc-render>
+                </pc-entity>
+                <!-- Plane -->
+                <pc-entity name="plane" position="0,-1,0">
+                    <pc-render type="plane" material="metal"></pc-render>
+                </pc-entity>
+                <!-- Sphere -->
+                <pc-entity name="sphere" position="1.2,-1,0">
+                    <pc-render type="sphere" material="metal"></pc-render>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+    </body>
+</html>

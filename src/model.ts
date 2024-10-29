@@ -24,13 +24,8 @@ class ModelElement extends HTMLElement {
         }
     }
 
-    getAsset() {
-        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
-        return assetElement!.asset;
-    }
-
     _loadModel() {
-        const asset = this.getAsset();
+        const asset = AssetElement.get(this._asset);
         if (!asset) {
             return;
         }

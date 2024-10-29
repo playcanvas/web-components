@@ -18,6 +18,7 @@ import { ScriptComponentElement } from './components/script-component';
 import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
+import { MaterialElement } from './material';
 import { ModelElement } from './model';
 import { SceneElement } from './scene';
 import { SkyElement } from './sky';
@@ -40,6 +41,7 @@ export {
     ScriptElement,
     SoundComponentElement,
     SoundSlotElement,
+    MaterialElement,
     ModelElement,
     SceneElement,
     SkyElement

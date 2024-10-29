@@ -31,11 +31,6 @@ class SkyElement extends HTMLElement {
         this.solidColor = this.hasAttribute('solid-color');
     }
 
-    getAsset() {
-        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
-        return assetElement!.asset;
-    }
-
     getScene() {
         const appElement = this.closest('pc-app') as AppElement | null;
         if (!appElement) {
@@ -52,7 +47,7 @@ class SkyElement extends HTMLElement {
         this._asset = value;
         const scene = this.getScene();
         if (scene) {
-            const asset = this.getAsset();
+            const asset = AssetElement.get(value);
             if (asset) {
                 if (asset.resource) {
                     scene.envAtlas = asset.resource;
