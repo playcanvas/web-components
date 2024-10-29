@@ -43,6 +43,7 @@ The `pc-asset` tag is used to define an asset. It is a direct child of `pc-app`.
 | `id` | The ID of the asset. This is used to reference the asset in scripts. |
 | `src` | The path to the asset. |
 | `preload` | Valueless attribute. If present, the asset is loaded immediately. |
+| `type` | The type of asset. If not specified, the type is inferred from the file extension. Can be: `audio`, `binary`, `css`, `container`, `gsplat`, `html`, `json`, `script`, `shader`, `text`, `texture`. |
 
 ### pc-camera
 
@@ -85,7 +86,7 @@ The `pc-element` tag is used to define an element component. It is a direct chil
 | `line-height` | The line height of the element component. If not specified, `1.2` is used. |
 | `pivot` | The pivot of the element component. Specified as a comma-separated list of X and Y values. If not specified, `0.5,0.5` is used. |
 | `text` | The text of the element component. |
-| `type` | The type of element component. Can be `group`, `image` or `text`. |
+| `type` | The type of element component. Can be `group`, `image` or `text`. If not specified, `group` is used. |
 | `width` | The width of the element component. If not specified, `0` is used. |
 | `wrap-lines` | Valueless attribute. If present, the element component wraps lines. |
 
@@ -97,9 +98,9 @@ The `pc-entity` tag is used to define an entity. It is a direct child of `pc-sce
 | --- | --- |
 | `enabled` | Enabled state of the entity. If not specified, `true` is used. |
 | `name` | The name of the entity. |
-| `position` | The position of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, "0,0,0" is used. |
-| `rotation` | The rotation of the entity. Specified as a comma-separated list of X, Y, and Z Euler angles in degrees. If not specified, "0,0,0" is used. |
-| `scale` | The scale of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, "1,1,1" is used. |
+| `position` | The position of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0,0,0` is used. |
+| `rotation` | The rotation of the entity. Specified as a comma-separated list of X, Y, and Z Euler angles in degrees. If not specified, `0,0,0` is used. |
+| `scale` | The scale of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, `1,1,1` is used. |
 | `tags` | A comma-separated list of tags for the entity. |
 
 ### pc-light
@@ -192,21 +193,11 @@ The `pc-scripts` tag is used to define a scripts component. It is a direct child
 
 ### pc-sound
 
-The `pc-sound` tag is used to define a sound component. It is a direct child of a `pc-entity`.
+The `pc-sound-slot` tag is used to define a sound slot. It is a direct child of a `pc-sounds`.
 
 | Attribute | Description |
 | --- | --- |
-| `pitch` | The pitch of the sound. If not specified, `1` is used. |
-| `positional` | Valueless attribute. If present, the sound is positional. |
-| `volume` | The volume of the sound. If not specified, `1` is used. |
-
-### pc-sound-slot
-
-The `pc-sound-slot` tag is used to define a sound slot. It is a direct child of a `pc-entity`.
-
-| Attribute | Description |
-| --- | --- |
-| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `gsound`. |
+| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `audio`. |
 | `auto-play` | Valueless attribute. If present, the sound slot plays automatically. |
 | `duration` | The duration of the sound slot. |
 | `loop` | Valueless attribute. If present, the sound slot loops. |
@@ -215,6 +206,16 @@ The `pc-sound-slot` tag is used to define a sound slot. It is a direct child of 
 | `pitch` | The pitch of the sound slot. If not specified, `1` is used. |
 | `start-time` | The start time of the sound slot. If not specified, `0` is used. |
 | `volume` | The volume of the sound slot. If not specified, `1` is used. |
+
+### pc-sounds
+
+The `pc-sounds` tag is used to define a sound component. It is a direct child of a `pc-entity`.
+
+| Attribute | Description |
+| --- | --- |
+| `pitch` | The pitch of the sound. If not specified, `1` is used. |
+| `positional` | Valueless attribute. If present, the sound is positional. |
+| `volume` | The volume of the sound. If not specified, `1` is used. |
 
 ### pc-splat
 

@@ -284,6 +284,6 @@ class SoundSlotElement extends HTMLElement {
     }
 }
 
-customElements.define('pc-sound-slot', SoundSlotElement);
+customElements.define('pc-sound', SoundSlotElement);
 
 export { SoundSlotElement };
