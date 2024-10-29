@@ -36,17 +36,18 @@ The `pc-app` tag is the root element for your PlayCanvas application. It is used
 
 ### pc-asset
 
-The `pc-asset` tag is used to define an asset. It is a direct child of `pc-app`.
+The `pc-asset` tag is used to define an asset. It must be a direct child of `pc-app`.
 
 | Attribute | Description |
 | --- | --- |
 | `id` | The ID of the asset. This is used to reference the asset in scripts. |
 | `src` | The path to the asset. |
 | `preload` | Valueless attribute. If present, the asset is loaded immediately. |
+| `type` | The type of asset. If not specified, the type is inferred from the file extension. Can be: `audio`, `binary`, `css`, `container`, `gsplat`, `html`, `json`, `script`, `shader`, `text`, `texture`. |
 
 ### pc-camera
 
-The `pc-camera` tag is used to define a camera component. It is a direct child of an `pc-entity`.
+The `pc-camera` tag is used to define a camera component. It must be a direct child of an `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
@@ -59,7 +60,7 @@ The `pc-camera` tag is used to define a camera component. It is a direct child o
 
 ### pc-collision
 
-The `pc-collision` tag is used to define a collision component. It is a direct child of a `pc-entity`.
+The `pc-collision` tag is used to define a collision component. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
@@ -73,38 +74,38 @@ The `pc-collision` tag is used to define a collision component. It is a direct c
 
 ### pc-element
 
-The `pc-element` tag is used to define an element component. It is a direct child of a `pc-entity`.
+The `pc-element` tag is used to define an element component. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
 | `anchor` | The anchor of the element component. Specified as a comma-separated list of X, Y, Z, and W values. If not specified, `0,0,0,1` is used. |
-| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `gtext`. |
+| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `font`. |
 | `auto-width` | Valueless attribute. If present, the element component automatically adjusts its width. |
 | `color` | The color of the element component. Can be a comma-separated list of R, G, B, and A values or a hex color code. If not specified, `1,1,1,1` is used. |
 | `font-size` | The font size of the element component. If not specified, `16` is used. |
 | `line-height` | The line height of the element component. If not specified, `1.2` is used. |
 | `pivot` | The pivot of the element component. Specified as a comma-separated list of X and Y values. If not specified, `0.5,0.5` is used. |
 | `text` | The text of the element component. |
-| `type` | The type of element component. Can be `group`, `image` or `text`. |
+| `type` | The type of element component. Can be `group`, `image` or `text`. If not specified, `group` is used. |
 | `width` | The width of the element component. If not specified, `0` is used. |
 | `wrap-lines` | Valueless attribute. If present, the element component wraps lines. |
 
 ### pc-entity
 
-The `pc-entity` tag is used to define an entity. It is a direct child of `pc-scene`. They can also be children of other entities.
+The `pc-entity` tag is used to define an entity. It must be a direct child of `pc-scene` or another `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
 | `enabled` | Enabled state of the entity. If not specified, `true` is used. |
 | `name` | The name of the entity. |
-| `position` | The position of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, "0,0,0" is used. |
-| `rotation` | The rotation of the entity. Specified as a comma-separated list of X, Y, and Z Euler angles in degrees. If not specified, "0,0,0" is used. |
-| `scale` | The scale of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, "1,1,1" is used. |
+| `position` | The position of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0,0,0` is used. |
+| `rotation` | The rotation of the entity. Specified as a comma-separated list of X, Y, and Z Euler angles in degrees. If not specified, `0,0,0` is used. |
+| `scale` | The scale of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, `1,1,1` is used. |
 | `tags` | A comma-separated list of tags for the entity. |
 
 ### pc-light
 
-The `pc-light` tag is used to define a light component. It is a direct child of a `pc-entity`.
+The `pc-light` tag is used to define a light component. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
@@ -121,11 +122,11 @@ The `pc-light` tag is used to define a light component. It is a direct child of 
 
 ### pc-listener
 
-The `pc-listener` tag is used to define a listener component. It is a direct child of a `pc-entity`. It has no attributes.
+The `pc-listener` tag is used to define a listener component. It must be a direct child of a `pc-entity`. It has no attributes.
 
 ### pc-module
 
-The `pc-module` tag is used to define a WASM module. It is a direct child of `pc-app`.
+The `pc-module` tag is used to define a WASM module. It must be a direct child of `pc-app`.
 
 | Attribute | Description |
 | --- | --- |
@@ -136,7 +137,7 @@ The `pc-module` tag is used to define a WASM module. It is a direct child of `pc
 
 ### pc-render
 
-The `pc-render` tag is used to define a render component that render a 3D primitive. It is a direct child of a `pc-entity`.
+The `pc-render` tag is used to define a render component that render a 3D primitive. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
@@ -146,7 +147,7 @@ The `pc-render` tag is used to define a render component that render a 3D primit
 
 ### pc-rigidbody
 
-The `pc-rigidbody` tag is used to define a rigidbody component. It is a direct child of a `pc-entity`.
+The `pc-rigidbody` tag is used to define a rigidbody component. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
@@ -162,7 +163,7 @@ The `pc-rigidbody` tag is used to define a rigidbody component. It is a direct c
 
 ### pc-scene
 
-The `pc-scene` tag is used to define the scene. It is a direct child of `pc-app`.
+The `pc-scene` tag is used to define the scene. It must be a direct child of `pc-app`.
 
 | Attribute | Description |
 | --- | --- |
@@ -174,7 +175,7 @@ The `pc-scene` tag is used to define the scene. It is a direct child of `pc-app`
 
 ### pc-script
 
-The `pc-script` tag is used to define a script. It is a direct child of a `pc-scripts` component.
+The `pc-script` tag is used to define a script. It must be a direct child of a `pc-scripts` component.
 
 | Attribute | Description |
 | --- | --- |
@@ -184,7 +185,7 @@ The `pc-script` tag is used to define a script. It is a direct child of a `pc-sc
 
 ### pc-scripts
 
-The `pc-scripts` tag is used to define a scripts component. It is a direct child of a `pc-entity`.
+The `pc-scripts` tag is used to define a scripts component. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
@@ -192,21 +193,11 @@ The `pc-scripts` tag is used to define a scripts component. It is a direct child
 
 ### pc-sound
 
-The `pc-sound` tag is used to define a sound component. It is a direct child of a `pc-entity`.
+The `pc-sound` tag is used to define a sound. It must be a direct child of a `pc-sounds`.
 
 | Attribute | Description |
 | --- | --- |
-| `pitch` | The pitch of the sound. If not specified, `1` is used. |
-| `positional` | Valueless attribute. If present, the sound is positional. |
-| `volume` | The volume of the sound. If not specified, `1` is used. |
-
-### pc-sound-slot
-
-The `pc-sound-slot` tag is used to define a sound slot. It is a direct child of a `pc-entity`.
-
-| Attribute | Description |
-| --- | --- |
-| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `gsound`. |
+| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `audio`. |
 | `auto-play` | Valueless attribute. If present, the sound slot plays automatically. |
 | `duration` | The duration of the sound slot. |
 | `loop` | Valueless attribute. If present, the sound slot loops. |
@@ -216,9 +207,19 @@ The `pc-sound-slot` tag is used to define a sound slot. It is a direct child of 
 | `start-time` | The start time of the sound slot. If not specified, `0` is used. |
 | `volume` | The volume of the sound slot. If not specified, `1` is used. |
 
+### pc-sounds
+
+The `pc-sounds` tag is used to define a sound component. It must be a direct child of a `pc-entity`.
+
+| Attribute | Description |
+| --- | --- |
+| `pitch` | The pitch of the sound. If not specified, `1` is used. |
+| `positional` | Valueless attribute. If present, the sound is positional. |
+| `volume` | The volume of the sound. If not specified, `1` is used. |
+
 ### pc-splat
 
-The `pc-splat` tag is used to define a splat component. It is a direct child of a `pc-entity`.
+The `pc-splat` tag is used to define a splat component. It must be a direct child of a `pc-entity`.
 
 | Attribute | Description |
 | --- | --- |
