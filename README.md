@@ -42,6 +42,7 @@ Table of contents:
 - [pc-scene](#pc-scene)
 - [pc-script](#pc-script)
 - [pc-scripts](#pc-scripts)
+- [pc-sky](#pc-sky)
 - [pc-sound](#pc-sound)
 - [pc-sounds](#pc-sounds)
 - [pc-splat](#pc-splat)
@@ -210,6 +211,18 @@ The `pc-scripts` tag is used to define a scripts component. It must be a direct 
 | Attribute | Description |
 | --- | --- |
 | `enabled` | Enabled state of the scripts component. If not specified, `true` is used. |
+
+### pc-sky
+
+The `pc-sky` tag is used to define a sky component. It must be a direct child of a `pc-scene`.
+
+| Attribute | Description |
+| --- | --- |
+| `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `texture`. |
+| `intensity` | The intensity of the sky. If not specified, `1` is used. |
+| `level` | The mipmap level used to render the sky. If not specified, `0` is used (base mip level). |
+| `rotation` | The rotation of the sky. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0,0,0` is used. |
+| `solid-color` | Valueless attribute. If present, the skybox itself is not rendered but is still used for environment lighting. |
 
 ### pc-sound
 
