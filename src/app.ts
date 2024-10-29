@@ -2,6 +2,7 @@ import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } f
 
 import { AssetElement } from './asset';
 import { ModuleElement } from './module';
+import { MaterialElement } from './material';
 
 /**
  * The main application element.
@@ -67,6 +68,12 @@ class AppElement extends HTMLElement {
             if (asset) {
                 this.app!.assets.add(asset);
             }
+        });
+
+        // Get all pc-material elements that are direct children of the pc-app element
+        const materialElements = this.querySelectorAll<MaterialElement>(':scope > pc-material');
+        Array.from(materialElements).forEach((materialElement) => {
+            materialElement.createMaterial();
         });
 
         // Load assets before starting the application

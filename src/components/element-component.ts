@@ -43,17 +43,12 @@ class ElementComponentElement extends ComponentElement {
         this.component!._text._material.useFog = true;
     }
 
-    getAsset() {
-        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
-        return assetElement!.asset;
-    }
-
     getInitialComponentData() {
         return {
             anchor: this._anchor,
             autoWidth: this._autoWidth,
             color: this._color,
-            fontAsset: this.getAsset()!.id,
+            fontAsset: AssetElement.get(this._asset)!.id,
             fontSize: this._fontSize,
             lineHeight: this._lineHeight,
             pivot: this._pivot,
@@ -85,7 +80,7 @@ class ElementComponentElement extends ComponentElement {
 
     set asset(value: string) {
         this._asset = value;
-        const asset = this.getAsset();
+        const asset = AssetElement.get(value);
         if (this.component && asset) {
             this.component.fontAsset = asset.id;
         }

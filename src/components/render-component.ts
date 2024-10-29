@@ -1,6 +1,7 @@
-import { RenderComponent } from 'playcanvas';
+import { RenderComponent, StandardMaterial } from 'playcanvas';
 
 import { ComponentElement } from './component';
+import { MaterialElement } from '../material';
 
 /**
  * Represents a render component in the PlayCanvas engine.
@@ -8,14 +9,22 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class RenderComponentElement extends ComponentElement {
-    private _type: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'asset';
-
     private _castShadows = true;
+
+    private _material: string = '';
 
     private _receiveShadows = true;
 
+    private _type: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'asset';
+
     constructor() {
         super('render');
+    }
+
+    async connectedCallback() {
+        await super.connectedCallback();
+
+        this.material = this._material;
     }
 
     getInitialComponentData() {
@@ -73,6 +82,25 @@ class RenderComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the material of the render component.
+     * @param value - The id of the material asset to use.
+     */
+    set material(value: string) {
+        this._material = value;
+        if (this.component) {
+            this.component.material = MaterialElement.get(value) as StandardMaterial;
+        }
+    }
+
+    /**
+     * Gets the id of the material asset used by the render component.
+     * @returns The id of the material asset.
+     */
+    get material() {
+        return this._material;
+    }
+
+    /**
      * Sets the receive shadows flag of the render component.
      * @param value - The receive shadows flag.
      */
@@ -92,21 +120,24 @@ class RenderComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'cast-shadows', 'receive-shadows', 'type'];
+        return [...super.observedAttributes, 'cast-shadows', 'material', 'receive-shadows', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'type':
-                this.type = newValue as 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere';
-                break;
             case 'cast-shadows':
                 this.castShadows = newValue !== 'false';
                 break;
+            case 'material':
+                this.material = newValue;
+                break;
             case 'receive-shadows':
                 this.receiveShadows = newValue !== 'false';
+                break;
+            case 'type':
+                this.type = newValue as 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere';
                 break;
         }
     }

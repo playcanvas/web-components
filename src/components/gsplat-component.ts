@@ -15,14 +15,9 @@ class GSplatComponentElement extends ComponentElement {
         super('gsplat');
     }
 
-    getAsset() {
-        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
-        return assetElement!.asset;
-    }
-
     getInitialComponentData() {
         return {
-            asset: this.getAsset()
+            asset: AssetElement.get(this._asset)
         };
     }
 
@@ -36,7 +31,7 @@ class GSplatComponentElement extends ComponentElement {
 
     set asset(value: string) {
         this._asset = value;
-        const asset = this.getAsset();
+        const asset = AssetElement.get(value);
         if (this.component && asset) {
             this.component.asset = asset;
         }

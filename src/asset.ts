@@ -83,6 +83,11 @@ class AssetElement extends HTMLElement {
         return this._preload;
     }
 
+    static get(id: string) {
+        const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
+        return assetElement?.asset;
+    }
+
     static get observedAttributes() {
         return ['preload'];
     }

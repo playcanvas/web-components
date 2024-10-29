@@ -31,11 +31,6 @@ class SoundSlotElement extends HTMLElement {
      */
     soundSlot: SoundSlot | null = null;
 
-    getAsset() {
-        const assetElement = document.querySelector(`pc-asset[id="${this._asset}"]`) as AssetElement;
-        return assetElement!.asset;
-    }
-
     async connectedCallback() {
         const appElement = this.closest('pc-app') as AppElement | null;
         if (!appElement) {
@@ -83,7 +78,7 @@ class SoundSlotElement extends HTMLElement {
     set asset(value: string) {
         this._asset = value;
         if (this.soundSlot) {
-            const id = this.getAsset()?.id;
+            const id = AssetElement.get(value)?.id;
             if (id) {
                 this.soundSlot.asset = id;
             }
