@@ -14,6 +14,7 @@ import { GSplatComponentElement } from './components/gsplat-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
 import { RigidBodyComponentElement } from './components/rigidbody-component';
+import { ScreenComponentElement } from './components/screen-component';
 import { ScriptComponentElement } from './components/script-component';
 import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
@@ -37,6 +38,7 @@ export {
     ListenerComponentElement,
     RenderComponentElement,
     RigidBodyComponentElement,
+    ScreenComponentElement,
     ScriptComponentElement,
     ScriptElement,
     SoundComponentElement,
