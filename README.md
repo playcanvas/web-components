@@ -43,6 +43,7 @@ Table of contents:
 - [pc-script](#pc-script)
 - [pc-scripts](#pc-scripts)
 - [pc-sky](#pc-sky)
+- [pc-screen](#pc-screen)
 - [pc-sound](#pc-sound)
 - [pc-sounds](#pc-sounds)
 - [pc-splat](#pc-splat)
@@ -202,6 +203,20 @@ The `pc-scene` tag is used to define the scene. It must be a direct child of `pc
 | `fog-start` | The start distance of the fog. |
 | `fog-end` | The end distance of the fog. |
 | `fog-density` | The density of the fog. |
+
+### pc-screen
+
+The `pc-screen` tag is used to define a screen component. It must be a direct child of a `pc-entity`.
+
+| Attribute | Description |
+| --- | --- |
+| `blend` | Valueless attribute. If present, the screen component blends. |
+| `priority` | The priority of the screen component. Must be an integer between `0` and `255`. If not specified, `0` is used. |
+| `reference-resolution` | The reference resolution of the screen component. Specified as a comma-separated list of Width and Height values. If not specified, `640,320` is used. |
+| `resolution` | The resolution of the screen component. Specified as a comma-separated list of Width and Height values. If not specified, `640,320` is used. |
+| `scale-blend` | The scale blend of the screen component. Must be a number between `0` and `1`. If not specified, `0.5` is used. |
+| `screen-space` | Valueless attribute. If present, the screen component is in screen space. |
+
 
 ### pc-script
 
