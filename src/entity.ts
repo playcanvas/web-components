@@ -55,7 +55,10 @@ class EntityElement extends HTMLElement {
         // Create a new entity
         this.entity = new Entity(this._name, app);
 
-        if (this.parentElement && this.parentElement.tagName === 'pc-entity' && (this.parentElement as EntityElement).entity) {
+        // Wait for next microtask to ensure parent entity is created
+        await Promise.resolve();
+
+        if (this.parentElement && this.parentElement.tagName.toLowerCase() === 'pc-entity' && (this.parentElement as EntityElement).entity) {
             (this.parentElement as EntityElement).entity!.addChild(this.entity);
         } else {
             app.root.addChild(this.entity);

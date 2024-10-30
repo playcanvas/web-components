@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Text</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "/node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="/dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <pc-app high-resolution>
+            <pc-asset id="arial" src="assets/fonts/arial.json" type="font" preload></pc-asset>
+            <pc-asset id="courier" src="assets/fonts/courier.json" type="font" preload></pc-asset>
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0,0,5">
+                    <pc-camera clear-color="#000000"></pc-camera>
+                </pc-entity>
+                <!-- Screen -->
+                <pc-entity name="screen">
+                    <pc-screen screen-space></pc-screen>
+                    <pc-entity name="text" position="0,20,0">
+                        <pc-element type="text" asset="arial" text="This is Arial"></pc-element>
+                    </pc-entity>
+                    <pc-entity name="text2" position="0,-20,0">
+                        <pc-element type="text" asset="courier" text="This is Courier"></pc-element>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+    </body>
+</html>
