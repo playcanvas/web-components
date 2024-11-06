@@ -16,12 +16,8 @@
     </head>
     <body>
         <pc-app>
-            <script type="module">
-                import { registerScript, Script } from 'playcanvas';
-                import { Orbit } from './scripts/orbit.mjs';
-
-                registerScript(Orbit, 'orbit');
-            </script>
+            <!-- Assets -->
+            <pc-asset id="orbit" src="scripts/orbit.mjs" preload></pc-asset>
             <pc-asset id="footsteps" src="assets/footsteps.mp3" preload></pc-asset>
             <pc-scene>
                 <!-- Camera -->

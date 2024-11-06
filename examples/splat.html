@@ -16,15 +16,8 @@
     </head>
     <body>
         <pc-app>
-            <script type="module">
-                import { registerScript } from 'playcanvas';
-                import { OrbitCamera, OrbitCameraInputMouse } from './scripts/orbit-camera.mjs';
-
-                const app = document.querySelector('pc-app');
-                await app.getApplication();
-                registerScript(OrbitCamera, 'orbitCamera');
-                registerScript(OrbitCameraInputMouse, 'orbitCameraInputMouse');
-            </script>
+            <!-- Assets -->
+            <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
             <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
             <pc-asset id="angel" src="assets/angel.compressed.ply" preload></pc-asset>
             <pc-scene>
