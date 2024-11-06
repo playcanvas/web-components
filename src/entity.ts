@@ -37,6 +37,12 @@ class EntityElement extends HTMLElement {
      */
     private _tags: string[] = [];
 
+    private _resolveEntity!: (entity: Entity) => void;
+
+    private _entityReady = new Promise<Entity>((resolve) => {
+        this._resolveEntity = resolve;
+    });
+
     /**
      * The PlayCanvas entity instance.
      */
@@ -54,9 +60,12 @@ class EntityElement extends HTMLElement {
 
         // Create a new entity
         this.entity = new Entity(this._name, app);
+        this._resolveEntity(this.entity);
 
-        if (this.parentElement && this.parentElement.tagName.toLowerCase() === 'pc-entity' && (this.parentElement as EntityElement).entity) {
-            (this.parentElement as EntityElement).entity!.addChild(this.entity);
+        if (this.parentElement &&
+            this.parentElement.tagName.toLowerCase() === 'pc-entity') {
+            const parentEntity = await (this.parentElement as EntityElement)._entityReady;
+            parentEntity.addChild(this.entity);
         } else {
             app.root.addChild(this.entity);
         }
@@ -77,9 +86,20 @@ class EntityElement extends HTMLElement {
 
     disconnectedCallback() {
         if (this.entity) {
+            // Notify all children that their entities are about to become invalid
+            const children = this.querySelectorAll('pc-entity');
+            children.forEach((child) => {
+                (child as EntityElement).entity = null;
+            });
+
             this.entity.destroy();
             this.entity = null;
         }
+
+        // Reset the promise for potential reconnection
+        this._entityReady = new Promise<Entity>((resolve) => {
+            this._resolveEntity = resolve;
+        });
     }
 
     /**
