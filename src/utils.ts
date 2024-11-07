@@ -16,6 +16,12 @@ export const parseColor = (value: string): Color => {
     return new Color(components);
 };
 
+/**
+ * Parse an Euler angles string into a Quat object. String can be in the format of 'x,y,z'.
+ *
+ * @param value - The Euler angles string to parse.
+ * @returns The parsed Quat object.
+ */
 export const parseQuat = (value: string): Quat => {
     const [x, y, z] = value.split(',').map(Number);
     const q = new Quat();
