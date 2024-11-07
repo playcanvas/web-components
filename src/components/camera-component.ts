@@ -150,7 +150,7 @@ class CameraComponentElement extends ComponentElement {
         return this._clearStencilBuffer;
     }
 
-    /** 
+    /**
      * Sets the cull faces of the camera.
      * @param value - The cull faces.
      */

@@ -127,7 +127,7 @@ class ScreenComponentElement extends ComponentElement {
 
         switch (name) {
             case 'priority':
-                this.priority = parseInt(newValue);
+                this.priority = parseInt(newValue, 10);
                 break;
             case 'reference-resolution':
                 this.referenceResolution = parseVec2(newValue);

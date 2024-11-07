@@ -1,8 +1,8 @@
 import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
-import { ModuleElement } from './module';
 import { MaterialElement } from './material';
+import { ModuleElement } from './module';
 
 /**
  * The main application element.
