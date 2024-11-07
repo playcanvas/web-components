@@ -23,6 +23,7 @@
             <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
             <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
             <pc-asset id="cube" src="assets/playcanvas-cube.glb" preload></pc-asset>
+            <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
                 <pc-sky asset="helipad" solid-color></pc-sky>
@@ -38,12 +39,6 @@
                 <pc-entity name="light" rotation="45,45,0" cast-shadows>
                     <pc-light cast-shadows></pc-light>
                 </pc-entity>
-                <!-- Grid -->
-                <pc-entity name="grid">
-                    <pc-scripts>
-                        <pc-script name="grid"></pc-script>
-                    </pc-scripts>
-                </pc-entity>
                 <!-- Box 1 -->
                 <pc-entity name="box1" position="0,4,0">
                     <pc-model asset="cube"></pc-model>
@@ -53,13 +48,16 @@
                 <!-- Box 2 -->
                 <pc-entity name="box2" position="0,2,0">
                     <pc-model asset="cube"></pc-model>
-                    <pc-rigidbody type="dynamic" restitution="0.9"></pc-rigidbody>
                     <pc-collision></pc-collision>
+                    <pc-rigidbody type="dynamic" restitution="0.9"></pc-rigidbody>
                 </pc-entity>
-                <!-- Plane -->
-                <pc-entity name="plane" position="0,-0.5,0">
+                <!-- Ground -->
+                <pc-entity name="plane">
+                    <pc-collision half-extents="100,0.5,100" linear-offset="0,-0.5,0"></pc-collision>
                     <pc-rigidbody></pc-rigidbody>
-                    <pc-collision half-extents="100,0.5,100"></pc-collision>
+                    <pc-scripts>
+                        <pc-script name="grid"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>

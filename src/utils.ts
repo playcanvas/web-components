@@ -1,4 +1,4 @@
-import { Color, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 /**
  * Parse a color string into a Color object. String can be in the format of '#rgb', '#rgba',
@@ -14,6 +14,13 @@ export const parseColor = (value: string): Color => {
 
     const components = value.split(',').map(Number);
     return new Color(components);
+};
+
+export const parseQuat = (value: string): Quat => {
+    const [x, y, z] = value.split(',').map(Number);
+    const q = new Quat();
+    q.setFromEulerAngles(x, y, z);
+    return q;
 };
 
 /**
