@@ -1,7 +1,7 @@
 import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseVec3 } from '../utils';
+import { parseQuat, parseVec3 } from '../utils';
 
 /**
  * Represents a collision component in the PlayCanvas engine.
@@ -142,7 +142,7 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'axis', 'angular-offset', 'convex-hull', 'half-extents', 'height', 'linear-offset', 'radius', 'type'];
+        return [...super.observedAttributes, 'angular-offset', 'axis', 'convex-hull', 'half-extents', 'height', 'linear-offset', 'radius', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
