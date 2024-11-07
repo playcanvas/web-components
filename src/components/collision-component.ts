@@ -149,11 +149,11 @@ class CollisionComponentElement extends ComponentElement {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'axis':
-                this.axis = parseInt(newValue, 10);
-                break;
             case 'angular-offset':
                 this.angularOffset = parseQuat(newValue);
+                break;
+            case 'axis':
+                this.axis = parseInt(newValue, 10);
                 break;
             case 'convex-hull':
                 this.convexHull = this.hasAttribute('convex-hull');
