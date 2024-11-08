@@ -6,14 +6,9 @@ import globals from 'globals';
 export default [
     ...playcanvasConfig,
     {
-        files: ['**/*.ts', '**/*.tsx'],
+        files: ['**/*.ts'],
         languageOptions: {
             parser: tsParser,
-            parserOptions: {
-                ecmaVersion: 2022,
-                sourceType: 'module',
-                project: './tsconfig.json'
-            },
             globals: {
                 ...globals.browser,
                 ...globals.mocha,
@@ -23,12 +18,15 @@ export default [
         plugins: {
             '@typescript-eslint': tsPlugin
         },
+        settings: {
+            'import/resolver': {
+                typescript: {}
+            }
+        },
         rules: {
             ...tsPlugin.configs['recommended'].rules,
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-unused-vars': 'off',
-            'import/extensions': 'off',
-            'import/no-unresolved': 'off',
             'jsdoc/require-param-type': 'off',
             'jsdoc/require-returns-type': 'off'
         }
