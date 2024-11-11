@@ -31,6 +31,11 @@ class ModelElement extends HTMLElement {
         }
         const entity = asset.resource.instantiateRenderEntity();
 
+        if (asset.resource.animations.length > 0) {
+            entity.addComponent('anim');
+            entity.anim.assignAnimation('animation', asset.resource.animations[0].resource);
+        }
+
         const parentEntityElement = this.closest('pc-entity') as EntityElement | null;
         if (parentEntityElement) {
             parentEntityElement.entity!.addChild(entity);

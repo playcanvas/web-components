@@ -6,6 +6,7 @@ const extToType = new Map([
     ['frag', 'shader'],
     ['glb', 'container'],
     ['glsl', 'shader'],
+    ['hdr', 'texture'],
     ['html', 'html'],
     ['jpg', 'texture'],
     ['js', 'script'],

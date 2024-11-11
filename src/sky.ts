@@ -1,7 +1,8 @@
-import { LAYERID_SKYBOX, Quat } from 'playcanvas';
+import { EnvLighting, LAYERID_SKYBOX, Quat, Texture, Vec3 } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AssetElement } from './asset';
+import { parseVec3 } from './utils';
 
 /**
  * Represents a sky in the PlayCanvas engine.
@@ -9,13 +10,17 @@ import { AssetElement } from './asset';
 class SkyElement extends HTMLElement {
     private _asset = '';
 
+    private _center = new Vec3(0, 0.01, 0);
+
     private _intensity = 1;
 
-    private _rotation = [0, 0, 0];
+    private _rotation = new Vec3();
 
     private _level = 0;
 
-    private _solidColor = false;
+    private _scale = new Vec3(100, 100, 100);
+
+    private _type: 'box' | 'dome' | 'infinite' | 'none' = 'infinite';
 
     async connectedCallback() {
         // Get the application
@@ -28,19 +33,40 @@ class SkyElement extends HTMLElement {
         await appElement.getApplication();
 
         this.asset = this.getAttribute('asset') || '';
-        this.solidColor = this.hasAttribute('solid-color');
+    }
+
+    get app() {
+        return (this.closest('pc-app') as AppElement)?.app;
     }
 
     getScene() {
-        const appElement = this.closest('pc-app') as AppElement | null;
-        if (!appElement) {
-            return;
-        }
-        const app = appElement.app;
+        const app = this.app;
         if (!app) {
             return;
         }
         return app.scene;
+    }
+
+    private initSkybox(source: Texture) {
+        source.anisotropy = 4;
+
+        const skybox = EnvLighting.generateSkyboxCubemap(source);
+        const lighting = EnvLighting.generateLightingSource(source);
+        const envAtlas = EnvLighting.generateAtlas(lighting);
+        const app = this.app;
+        if (app) {
+            app.scene.envAtlas = envAtlas;
+            app.scene.skybox = skybox;
+
+            const layer = app.scene.layers.getLayerById(LAYERID_SKYBOX);
+            if (layer) {
+                layer.enabled = this._type !== 'none';
+            }
+
+            app.scene.sky.type = this._type;
+            app.scene.sky.node.setLocalScale(this._scale);
+            app.scene.sky.center = this._center;
+        }
     }
 
     set asset(value: string) {
@@ -49,19 +75,25 @@ class SkyElement extends HTMLElement {
         if (scene) {
             const asset = AssetElement.get(value);
             if (asset) {
-                if (asset.resource) {
-                    scene.envAtlas = asset.resource;
-                } else {
-                    asset.once('load', () => {
-                        scene.envAtlas = asset.resource;
-                    });
-                }
+                this.initSkybox(asset.resource);
             }
         }
     }
 
     get asset() {
         return this._asset;
+    }
+
+    set center(value: Vec3) {
+        this._center = value;
+        const scene = this.getScene();
+        if (scene) {
+            scene.sky.center = this._center;
+        }
+    }
+
+    get center() {
+        return this._center;
     }
 
     set intensity(value: number) {
@@ -76,11 +108,11 @@ class SkyElement extends HTMLElement {
         return this._intensity;
     }
 
-    set rotation(value: number[]) {
+    set rotation(value: Vec3) {
         this._rotation = value;
         const scene = this.getScene();
         if (scene) {
-            scene.skyboxRotation = new Quat().setFromEulerAngles(this._rotation[0], this._rotation[1], this._rotation[2]);
+            scene.skyboxRotation = new Quat().setFromEulerAngles(value);
         }
     }
 
@@ -88,19 +120,16 @@ class SkyElement extends HTMLElement {
         return this._rotation;
     }
 
-    set solidColor(value: boolean) {
-        this._solidColor = value;
+    set scale(value: Vec3) {
+        this._scale = value;
         const scene = this.getScene();
         if (scene) {
-            const layer = scene.layers.getLayerById(LAYERID_SKYBOX);
-            if (layer) {
-                layer.enabled = !this._solidColor;
-            }
+            scene.sky.node.setLocalScale(this._scale);
         }
     }
 
-    get solidColor() {
-        return this._solidColor;
+    get scale() {
+        return this._scale;
     }
 
     set level(value: number) {
@@ -115,8 +144,24 @@ class SkyElement extends HTMLElement {
         return this._level;
     }
 
+    set type(value: 'box' | 'dome' | 'infinite' | 'none') {
+        this._type = value;
+        const scene = this.getScene();
+        if (scene) {
+            scene.sky.type = this._type;
+            const layer = scene.layers.getLayerById(LAYERID_SKYBOX);
+            if (layer) {
+                layer.enabled = this._type !== 'none';
+            }
+        }
+    }
+
+    get type() {
+        return this._type;
+    }
+
     static get observedAttributes() {
-        return ['asset', 'intensity', 'level', 'rotation', 'solid-color'];
+        return ['asset', 'center', 'intensity', 'level', 'rotation', 'scale', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -124,17 +169,23 @@ class SkyElement extends HTMLElement {
             case 'asset':
                 this.asset = newValue;
                 break;
+            case 'center':
+                this.center = parseVec3(newValue);
+                break;
             case 'intensity':
                 this.intensity = parseFloat(newValue);
                 break;
             case 'rotation':
-                this.rotation = newValue.split(',').map(Number);
+                this.rotation = parseVec3(newValue);
                 break;
             case 'level':
                 this.level = parseInt(newValue, 10);
                 break;
-            case 'solid-color':
-                this.solidColor = this.hasAttribute('solid-color');
+            case 'scale':
+                this.scale = parseVec3(newValue);
+                break;
+            case 'type':
+                this.type = newValue as 'box' | 'dome' | 'infinite' | 'none';
                 break;
         }
     }

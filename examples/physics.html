@@ -21,14 +21,14 @@
             <!-- Assets -->
             <pc-asset id="grid" src="scripts/grid.mjs" preload></pc-asset>
             <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
-            <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
+            <pc-asset id="studio" src="assets/sky/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
             <pc-asset id="cube" src="assets/playcanvas-cube.glb" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
-                <pc-sky asset="helipad" solid-color></pc-sky>
+                <pc-sky asset="studio" type="none"></pc-sky>
                 <!-- Camera -->
-                <pc-entity name="camera" position="0,1,5">
+                <pc-entity name="camera" position="0,3,2.5">
                     <pc-camera clear-color="#222222"></pc-camera>
                     <pc-scripts>
                         <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 10, "inertiaFactor": 0.1}'></pc-script>
