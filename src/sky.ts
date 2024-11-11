@@ -20,8 +20,6 @@ class SkyElement extends HTMLElement {
 
     private _scale = new Vec3(100, 100, 100);
 
-    private _solidColor = false;
-
     private _type: 'box' | 'dome' | 'infinite' | 'none' = 'infinite';
 
     async connectedCallback() {
@@ -35,7 +33,6 @@ class SkyElement extends HTMLElement {
         await appElement.getApplication();
 
         this.asset = this.getAttribute('asset') || '';
-        this.solidColor = this.hasAttribute('solid-color');
     }
 
     get app() {

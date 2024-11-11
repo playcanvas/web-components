@@ -1,5 +1,3 @@
-import { AnimTrack, Asset } from 'playcanvas';
-
 import { AppElement } from './app';
 import { AssetElement } from './asset';
 import { EntityElement } from './entity';
