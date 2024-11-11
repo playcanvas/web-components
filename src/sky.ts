@@ -1,13 +1,13 @@
 import { EnvLighting, LAYERID_SKYBOX, Quat, Texture, Vec3 } from 'playcanvas';
 
-import { AppElement } from './app';
 import { AssetElement } from './asset';
+import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
 
 /**
  * Represents a sky in the PlayCanvas engine.
  */
-class SkyElement extends HTMLElement {
+class SkyElement extends AsyncElement {
     private _asset = '';
 
     private _center = new Vec3(0, 0.01, 0);
@@ -23,24 +23,15 @@ class SkyElement extends HTMLElement {
     private _type: 'box' | 'dome' | 'infinite' | 'none' = 'infinite';
 
     async connectedCallback() {
-        // Get the application
-        const appElement = this.closest('pc-app') as AppElement;
-        if (!appElement) {
-            console.warn(`${this.tagName} must be a child of pc-app`);
-            return;
-        }
-
-        await appElement.getApplication();
+        await this.closestApp?.ready();
 
         this.asset = this.getAttribute('asset') || '';
-    }
 
-    get app() {
-        return (this.closest('pc-app') as AppElement)?.app;
+        this._onReady();
     }
 
     getScene() {
-        const app = this.app;
+        const app = this.closestApp!.app;
         if (!app) {
             return;
         }
@@ -53,7 +44,7 @@ class SkyElement extends HTMLElement {
         const skybox = EnvLighting.generateSkyboxCubemap(source);
         const lighting = EnvLighting.generateLightingSource(source);
         const envAtlas = EnvLighting.generateAtlas(lighting);
-        const app = this.app;
+        const app = this.closestApp!.app;
         if (app) {
             app.scene.envAtlas = envAtlas;
             app.scene.skybox = skybox;

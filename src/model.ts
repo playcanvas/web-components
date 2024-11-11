@@ -1,27 +1,21 @@
-import { AppElement } from './app';
 import { AssetElement } from './asset';
-import { EntityElement } from './entity';
+import { AsyncElement } from './async-element';
 
 /**
  * Represents a model in the PlayCanvas engine.
  */
-class ModelElement extends HTMLElement {
+class ModelElement extends AsyncElement {
     private _asset: string = '';
 
     async connectedCallback() {
-        // Get the application
-        const appElement = this.closest('pc-app') as AppElement;
-        if (!appElement) {
-            console.warn(`${this.tagName} must be a child of pc-app`);
-            return;
-        }
-
-        await appElement.getApplication();
+        await this.closestApp?.ready();
 
         const asset = this.getAttribute('asset');
         if (asset) {
             this.asset = asset;
         }
+
+        this._onReady();
     }
 
     _loadModel() {
@@ -36,12 +30,18 @@ class ModelElement extends HTMLElement {
             entity.anim.assignAnimation('animation', asset.resource.animations[0].resource);
         }
 
-        const parentEntityElement = this.closest('pc-entity') as EntityElement | null;
+        const parentEntityElement = this.closestEntity;
         if (parentEntityElement) {
-            parentEntityElement.entity!.addChild(entity);
+            parentEntityElement.ready().then(() => {
+                parentEntityElement.entity!.addChild(entity);
+            });
         } else {
-            const appElement = this.closest('pc-app') as AppElement;
-            appElement.app!.root.addChild(entity);
+            const appElement = this.closestApp;
+            if (appElement) {
+                appElement.ready().then(() => {
+                    appElement.app!.root.addChild(entity);
+                });
+            }
         }
     }
 

@@ -1,21 +1,18 @@
 import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
+import { AsyncElement } from './async-element';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
 
 /**
  * The main application element.
  */
-class AppElement extends HTMLElement {
+class AppElement extends AsyncElement {
     /**
      * The canvas element.
      */
     private _canvas: HTMLCanvasElement | null = null;
-
-    private appReadyPromise: Promise<Application>;
-
-    private appReadyResolve!: (app: Application) => void;
 
     private _highResolution = false;
 
@@ -32,10 +29,6 @@ class AppElement extends HTMLElement {
 
         // Bind methods to maintain 'this' context
         this._onWindowResize = this._onWindowResize.bind(this);
-
-        this.appReadyPromise = new Promise<Application>((resolve) => {
-            this.appReadyResolve = resolve;
-        });
     }
 
     async connectedCallback() {
@@ -84,7 +77,7 @@ class AppElement extends HTMLElement {
             // Handle window resize to keep the canvas responsive
             window.addEventListener('resize', this._onWindowResize);
 
-            this.appReadyResolve(this.app!);
+            this._onReady();
         });
     }
 
@@ -105,17 +98,17 @@ class AppElement extends HTMLElement {
         }
     }
 
-    async getApplication(): Promise<Application> {
-        await this.appReadyPromise;
-        return this.app!;
-    }
-
     _onWindowResize() {
         if (this.app) {
             this.app.resizeCanvas();
         }
     }
 
+    /**
+     * Sets the high resolution flag. When true, the application will render at the device's
+     * physical resolution. When false, the application will render at CSS resolution.
+     * @param value - The high resolution flag.
+     */
     set highResolution(value: boolean) {
         this._highResolution = value;
         if (this.app) {
@@ -123,6 +116,10 @@ class AppElement extends HTMLElement {
         }
     }
 
+    /**
+     * Gets the high resolution flag.
+     * @returns The high resolution flag.
+     */
     get highResolution() {
         return this._highResolution;
     }

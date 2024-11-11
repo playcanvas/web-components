@@ -1,12 +1,12 @@
 import { Color, Scene } from 'playcanvas';
 
-import { AppElement } from './app';
+import { AsyncElement } from './async-element';
 import { parseColor } from './utils';
 
 /**
  * Represents a scene in the PlayCanvas engine.
  */
-class SceneElement extends HTMLElement {
+class SceneElement extends AsyncElement {
     /**
      * The fog type of the scene.
      */
@@ -38,17 +38,12 @@ class SceneElement extends HTMLElement {
     scene: Scene | null = null;
 
     async connectedCallback() {
-        // Get the application
-        const appElement = this.closest('pc-app') as AppElement;
-        if (!appElement) {
-            console.warn(`${this.tagName} must be a child of pc-app`);
-            return;
-        }
+        await this.closestApp?.ready();
 
-        const app = await appElement.getApplication();
-
-        this.scene = app.scene;
+        this.scene = this.closestApp!.app!.scene;
         this.updateSceneSettings();
+
+        this._onReady();
     }
 
     updateSceneSettings() {

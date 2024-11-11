@@ -1,13 +1,13 @@
 import { SoundSlot } from 'playcanvas';
 
-import { AppElement } from '../app';
-import { SoundComponentElement } from './sound-component';
 import { AssetElement } from '../asset';
+import { AsyncElement } from '../async-element';
+import { SoundComponentElement } from './sound-component';
 
 /**
  * Represents a sound slot in the PlayCanvas engine.
  */
-class SoundSlotElement extends HTMLElement {
+class SoundSlotElement extends AsyncElement {
     private _asset: string = '';
 
     private _autoPlay: boolean = false;
@@ -32,13 +32,7 @@ class SoundSlotElement extends HTMLElement {
     soundSlot: SoundSlot | null = null;
 
     async connectedCallback() {
-        const appElement = this.closest('pc-app') as AppElement | null;
-        if (!appElement) {
-            console.error(`${this.tagName.toLowerCase()} should be a descendant of pc-app`);
-            return;
-        }
-
-        await appElement.getApplication();
+        await this.soundElement?.ready();
 
         const options = {
             autoPlay: this._autoPlay,
@@ -51,9 +45,12 @@ class SoundSlotElement extends HTMLElement {
         if (this._duration) {
             options.duration = this._duration;
         }
+
         this.soundSlot = this.soundElement!.component!.addSlot(this._name, options);
         this.asset = this._asset;
         this.soundSlot!.play();
+
+        this._onReady();
     }
 
     disconnectedCallback() {

@@ -31,9 +31,6 @@ class AssetElement extends HTMLElement {
      */
     asset: Asset | null = null;
 
-    async connectedCallback() {
-    }
-
     disconnectedCallback() {
         this.destroyAsset();
     }

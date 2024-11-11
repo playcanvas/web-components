@@ -21,16 +21,11 @@ class RenderComponentElement extends ComponentElement {
         super('render');
     }
 
-    async connectedCallback() {
-        await super.connectedCallback();
-
-        this.material = this._material;
-    }
-
     getInitialComponentData() {
         return {
             type: this._type,
             castShadows: this._castShadows,
+            material: MaterialElement.get(this._material),
             receiveShadows: this._receiveShadows
         };
     }
