@@ -1,3 +1,12 @@
+/**
+ * The Engine Web Components module provides a set of Web Components for the PlayCanvas Engine.
+ * While these components are normally instantiated in a declarative fashion using HTML, this
+ * reference covers the TypeScript/JavaScript API that allows these components to be created
+ * programmatically.
+ *
+ * @module EngineWebComponents
+ */
+
 /* eslint-disable import/order */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
