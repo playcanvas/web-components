@@ -58,7 +58,7 @@ export class ShadowCatcher extends Script {
             castShadows: true,
             normalOffsetBias: 0,
             shadowBias: 0,
-            shadowDistance: 10,
+            shadowDistance: 16,
             shadowResolution: 2048,
             shadowType: SHADOW_VSM16,
             shadowUpdateMode: SHADOWUPDATE_REALTIME,
