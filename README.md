@@ -15,13 +15,13 @@ Or you can include it directly in your HTML file from a CDN.
 ES Modules:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.0/dist/pwc.mjs"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.4/dist/pwc.mjs"></script>
 ```
 
 UMD:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.4"></script>
 ```
 
 ## Tag Reference 📖
@@ -243,10 +243,12 @@ The `pc-sky` tag is used to define a sky component. It must be a direct child of
 | Attribute | Description |
 | --- | --- |
 | `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `texture`. |
+| `center` | The center of the sky. Specified as a comma-separated list of X, Y, and Z values in the range 0 to 1. If not specified, `0,0.01,0` is used. |
 | `intensity` | The intensity of the sky. If not specified, `1` is used. |
 | `level` | The mipmap level used to render the sky. If not specified, `0` is used (base mip level). |
 | `rotation` | The rotation of the sky. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0,0,0` is used. |
-| `solid-color` | Valueless attribute. If present, the skybox itself is not rendered but is still used for environment lighting. |
+| `scale` | The scale of the sky. Specified as a comma-separated list of X, Y, and Z values. If not specified, `100,100,100` is used. |
+| `type` | The type of sky component. Can be `box`, `dome`, `infinite` or `none`. |
 
 ### pc-sound
 
@@ -285,7 +287,7 @@ The `pc-splat` tag is used to define a splat component. It must be a direct chil
 
 ## Example 
 
-Below is a basic example of how to use PlayCanvas Web Components to create a simple 3D scene (a spinning cube):
+Below is a basic example of how to use PlayCanvas Web Components to create a simple 3D scene (a humble sphere):
 
 ```html
 <!DOCTYPE html>
@@ -293,30 +295,19 @@ Below is a basic example of how to use PlayCanvas Web Components to create a sim
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PlayCanvas Web Components - Spinning Cube</title>
+        <title>PlayCanvas Web Components - Sphere</title>
         <script type="importmap">
             {
                 "imports": {
-                    "playcanvas": "https://esm.run/playcanvas@2.1.0"
+                    "playcanvas": "https://esm.run/playcanvas@2.2.2"
                 }
             }
         </script>
-        <script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.0/dist/pwc.mjs"></script>
+        <script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.4/dist/pwc.mjs"></script>
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
         <pc-app>
-            <script type="module">
-                import { registerScript, Script } from 'playcanvas';
-
-                class Rotate extends Script {
-                    update(dt) {
-                        this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
-                    }
-                }
-
-                registerScript(Rotate, 'rotate');
-            </script>
             <pc-scene>
                 <!-- Camera -->
                 <pc-entity name="camera" position="0,0,3">
@@ -326,12 +317,9 @@ Below is a basic example of how to use PlayCanvas Web Components to create a sim
                 <pc-entity name="light" rotation="45,0,0">
                     <pc-light></pc-light>
                 </pc-entity>
-                <!-- Cube -->
-                <pc-entity name="cube">
-                    <pc-render type="box"></pc-render>
-                    <pc-scripts>
-                        <pc-script name="rotate"></pc-script>
-                    </pc-scripts>
+                <!-- Sphere -->
+                <pc-entity name="sphere">
+                    <pc-render type="sphere"></pc-render>
                 </pc-entity>
             </pc-scene>
         </pc-app>
