@@ -1,3 +1,5 @@
+import { AnimTrack, Asset } from 'playcanvas';
+
 import { AppElement } from './app';
 import { AssetElement } from './asset';
 import { EntityElement } from './entity';
@@ -30,6 +32,11 @@ class ModelElement extends HTMLElement {
             return;
         }
         const entity = asset.resource.instantiateRenderEntity();
+
+        if (asset.resource.animations.length > 0) {
+            entity.addComponent('anim');
+            entity.anim.assignAnimation('animation', asset.resource.animations[0].resource);
+        }
 
         const parentEntityElement = this.closest('pc-entity') as EntityElement | null;
         if (parentEntityElement) {

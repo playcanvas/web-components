@@ -18,7 +18,7 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
-            <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
+            <pc-asset id="lake-bed" src="assets/sky/dry-lake-bed-2k.hdr" preload></pc-asset>
             <pc-asset id="metal-diffuse" src="assets/textures/metal-diffuse.jpg" preload></pc-asset>
             <pc-asset id="metal-metalness" src="assets/textures/metal-metalness.jpg" preload></pc-asset>
             <pc-asset id="metal-normal" src="assets/textures/metal-normal.jpg" preload></pc-asset>
@@ -27,7 +27,7 @@
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
-                <pc-sky asset="helipad" solid-color></pc-sky>
+                <pc-sky asset="lake-bed" type="none"></pc-sky>
                 <!-- Camera -->
                 <pc-entity name="camera" position="0,0,5">
                     <pc-camera clear-color="0.4,0.45,0.5"></pc-camera>
