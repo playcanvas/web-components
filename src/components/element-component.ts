@@ -198,7 +198,20 @@ class ElementComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'anchor', 'asset', 'auto-width', 'color', 'font-size', 'line-height', 'pivot', 'text', 'type', 'width', 'wrap-lines'];
+        return [
+            ...super.observedAttributes,
+            'anchor',
+            'asset',
+            'auto-width',
+            'color',
+            'font-size',
+            'line-height',
+            'pivot',
+            'text',
+            'type',
+            'width',
+            'wrap-lines'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
