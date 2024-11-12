@@ -1,12 +1,12 @@
 import { Entity, Vec3 } from 'playcanvas';
 
-import { AppElement } from './app';
+import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
 
 /**
  * Represents an entity in the PlayCanvas engine.
  */
-class EntityElement extends HTMLElement {
+class EntityElement extends AsyncElement {
     /**
      * Whether the entity is enabled.
      */
@@ -37,38 +37,22 @@ class EntityElement extends HTMLElement {
      */
     private _tags: string[] = [];
 
-    private _resolveEntity!: (entity: Entity) => void;
-
-    private _entityReady = new Promise<Entity>((resolve) => {
-        this._resolveEntity = resolve;
-    });
-
     /**
      * The PlayCanvas entity instance.
      */
     entity: Entity | null = null;
 
     async connectedCallback() {
-        // Get the application
-        const appElement = this.closest('pc-app') as AppElement;
-        if (!appElement) {
-            console.warn(`${this.tagName} must be a child of pc-app`);
-            return;
-        }
+        const closestApp = this.closestApp;
+        if (!closestApp) return;
 
-        const app = await appElement.getApplication();
+        // Wait for the app to complete initialization
+        await closestApp.ready();
+
+        const app = closestApp.app!;
 
         // Create a new entity
         this.entity = new Entity(this._name, app);
-        this._resolveEntity(this.entity);
-
-        if (this.parentElement &&
-            this.parentElement.tagName.toLowerCase() === 'pc-entity') {
-            const parentEntity = await (this.parentElement as EntityElement)._entityReady;
-            parentEntity.addChild(this.entity);
-        } else {
-            app.root.addChild(this.entity);
-        }
 
         // Initialize from attributes
         const nameAttr = this.getAttribute('name');
@@ -82,6 +66,17 @@ class EntityElement extends HTMLElement {
         if (rotationAttr) this.rotation = parseVec3(rotationAttr);
         if (scaleAttr) this.scale = parseVec3(scaleAttr);
         if (tagsAttr) this.tags = tagsAttr.split(',').map(tag => tag.trim());
+
+        const closestEntity = this.closestEntity;
+        if (closestEntity) {
+            closestEntity.ready().then(() => {
+                closestEntity.entity!.addChild(this.entity!);
+                this._onReady();
+            });
+        } else {
+            app.root.addChild(this.entity);
+            this._onReady();
+        }
     }
 
     disconnectedCallback() {
@@ -95,11 +90,6 @@ class EntityElement extends HTMLElement {
             this.entity.destroy();
             this.entity = null;
         }
-
-        // Reset the promise for potential reconnection
-        this._entityReady = new Promise<Entity>((resolve) => {
-            this._resolveEntity = resolve;
-        });
     }
 
     /**

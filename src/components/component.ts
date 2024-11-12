@@ -1,14 +1,13 @@
 import { Component } from 'playcanvas';
 
-import { AppElement } from '../app';
-import { EntityElement } from '../entity';
+import { AsyncElement } from '../async-element';
 
 /**
  * Represents a component in the PlayCanvas engine.
  *
  * @category Components
  */
-class ComponentElement extends HTMLElement {
+class ComponentElement extends AsyncElement {
     private _componentName: string;
 
     private _enabled = true;
@@ -30,33 +29,23 @@ class ComponentElement extends HTMLElement {
         return {};
     }
 
-    async connectedCallback() {
-        const appElement = this.closest('pc-app') as AppElement | null;
-        if (!appElement) {
-            console.error(`${this.tagName.toLowerCase()} should be a descendant of pc-app`);
-            return;
+    async addComponent() {
+        const entityElement = this.closestEntity;
+        if (entityElement) {
+            await entityElement.ready();
+            // Add the component to the entity
+            const data = this.getInitialComponentData();
+            this._component = entityElement.entity!.addComponent(this._componentName, data);
         }
-
-        await appElement.getApplication();
-
-        this.addComponent();
     }
 
-    addComponent() {
-        // Access the parent pc-entity's 'entity' property
-        const entityElement = this.closest('pc-entity') as EntityElement | null;
-        if (!entityElement) {
-            console.error(`${this.tagName.toLowerCase()} should be a child of pc-entity`);
-            return;
-        }
+    initComponent() {}
 
-        if (entityElement && entityElement.entity) {
-            // Add the component to the entity
-            this._component = entityElement.entity.addComponent(
-                this._componentName,
-                this.getInitialComponentData()
-            );
-        }
+    async connectedCallback() {
+        await this.closestApp?.ready();
+        await this.addComponent();
+        this.initComponent();
+        this._onReady();
     }
 
     disconnectedCallback() {

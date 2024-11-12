@@ -18,10 +18,12 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
-            <pc-asset id="helipad" src="assets/helipad-env-atlas.png" preload></pc-asset>
             <pc-asset id="angel" src="assets/angel.compressed.ply" preload></pc-asset>
+            <pc-asset id="rotunda" src="assets/sky/sepulchral-chapel-rotunda-8k.webp" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="rotunda"></pc-sky>
                 <!-- Camera -->
                 <pc-entity name="camera" position="0,1,3.5">
                     <pc-camera></pc-camera>

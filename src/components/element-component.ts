@@ -37,9 +37,7 @@ class ElementComponentElement extends ComponentElement {
         super('element');
     }
 
-    async connectedCallback() {
-        await super.connectedCallback();
-
+    initComponent() {
         this.component!._text._material.useFog = true;
     }
 

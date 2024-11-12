@@ -42,9 +42,7 @@ class ScriptComponentElement extends ComponentElement {
         this.addEventListener('scriptenablechange', this.handleScriptEnableChange.bind(this));
     }
 
-    async connectedCallback() {
-        await super.connectedCallback();
-
+    initComponent() {
         // Handle initial script elements
         this.querySelectorAll<ScriptElement>(':scope > pc-script').forEach((scriptElement) => {
             const scriptName = scriptElement.getAttribute('name');
