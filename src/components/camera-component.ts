@@ -71,9 +71,9 @@ class CameraComponentElement extends ComponentElement {
         return xrManager && xrManager.supported && xrManager.isAvailable(XRTYPE_VR);
     }
 
-    startXr() {
+    startXr(type: 'ar' | 'vr', space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer') {
         if (this.component && this.xrAvailable) {
-            this.component.startXr(XRTYPE_VR, XRSPACE_LOCAL, {
+            this.component.startXr(type, space, {
                 callback: (err: any) => {
                     if (err) console.error(`WebXR Immersive VR failed to start: ${err.message}`);
                 }
