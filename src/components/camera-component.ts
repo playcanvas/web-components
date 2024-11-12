@@ -1,4 +1,4 @@
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, CameraComponent, Color, Vec4, XRSPACE_LOCAL, XRTYPE_VR } from 'playcanvas';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, CameraComponent, Color, Vec4, XRTYPE_VR } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { parseColor, parseVec4 } from '../utils';
@@ -71,7 +71,7 @@ class CameraComponentElement extends ComponentElement {
         return xrManager && xrManager.supported && xrManager.isAvailable(XRTYPE_VR);
     }
 
-    startXr(type: 'ar' | 'vr', space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer') {
+    startXr(type: 'immersive-ar' | 'immersive-vr', space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer') {
         if (this.component && this.xrAvailable) {
             this.component.startXr(type, space, {
                 callback: (err: any) => {
