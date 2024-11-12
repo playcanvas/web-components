@@ -1,4 +1,4 @@
-name: "docs"
+name: "Deploy"
 
 on:
   workflow_dispatch:
