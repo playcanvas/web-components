@@ -48,8 +48,7 @@
         <script>
             // Add VR support
             document.addEventListener('DOMContentLoaded', async () => {
-                const camera = document.querySelector('pc-camera');
-                await camera.ready();
+                const camera = await document.querySelector('pc-camera').ready();
 
                 if (camera.xrAvailable) {
                     const button = document.getElementById('xr-button');
