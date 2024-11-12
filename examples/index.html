@@ -222,6 +222,7 @@
                     if (e.target !== openInNew) {  // Don't load in iframe if clicking the "open in new" icon
                         e.preventDefault();
                         loadExample(example.path);
+                        updateURL(example.path);
                         document.querySelectorAll('.example-link').forEach(l => l.classList.remove('active'));
                         link.classList.add('active');
                     }
@@ -281,6 +282,39 @@
                 loadExample(examples[0].path);
                 exampleList.firstChild.classList.add('active');
             }
+
+            // Update URL when example changes and load correct example on page load
+            function updateURL(path) {
+                history.pushState(null, '', `#${path}`);
+            }
+
+            // Load example from URL on page load
+            window.addEventListener('load', () => {
+                const hash = window.location.hash.slice(1);
+                if (hash && examples.some(ex => ex.path === hash)) {
+                    loadExample(hash);
+                    // Update active state
+                    document.querySelectorAll('.example-link').forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + hash);
+                    });
+                } else if (examples.length > 0) {
+                    loadExample(examples[0].path);
+                    updateURL(examples[0].path);
+                    document.querySelector('.example-link').classList.add('active');
+                }
+            });
+
+            // Add this new event listener for handling browser back/forward buttons
+            window.addEventListener('popstate', () => {
+                const hash = window.location.hash.slice(1);
+                if (hash && examples.some(ex => ex.path === hash)) {
+                    loadExample(hash);
+                    // Update active state
+                    document.querySelectorAll('.example-link').forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + hash);
+                    });
+                }
+            });
         </script>
     </body>
 </html>

@@ -42,29 +42,7 @@
                 </pc-entity>
             </pc-scene>
         </pc-app>
-        <button id="xr-button" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: none;">
-            Enter VR
-        </button>
-        <script>
-            // Add VR support
-            document.addEventListener('DOMContentLoaded', async () => {
-                const camera = await document.querySelector('pc-camera').ready();
-
-                if (camera.xrAvailable) {
-                    const button = document.getElementById('xr-button');
-                    button.style.display = 'block';
-
-                    button.addEventListener('click', () => {
-                        camera.startXr('immersive-vr', 'local-floor');
-                    });
-
-                    window.addEventListener('keydown', (event) => {
-                        if (event.key === 'Escape') {
-                            camera.endXr();
-                        }
-                    });
-                }
-            });
-        </script>
+        <button id="xr-button">Enter VR</button>
+        <script type="module" src="scripts/vr.mjs"></script>
     </body>
 </html>

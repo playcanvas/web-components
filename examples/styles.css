@@ -2,3 +2,11 @@ body {
     margin: 0;
     overflow: hidden;
 }
+
+#xr-button {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+}

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PlayCanvas Web Components - Sound</title>
+        <title>PlayCanvas Web Components - GLB Loader</title>
         <script type="importmap">
             {
                 "imports": {
@@ -17,21 +17,25 @@
     <body>
         <pc-app>
             <!-- Assets -->
-            <pc-asset id="music" src="assets/frak.mp3" preload></pc-asset>
+            <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
+            <pc-asset id="nyan-cat" src="assets/models/nyan-cat.glb" preload></pc-asset>
+            <pc-asset id="music" src="assets/sounds/nyan-cat.mp3" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera -->
-                <pc-entity name="camera" position="0,0,3">
-                    <pc-camera clear-color="#8099e6"></pc-camera>
+                <pc-entity name="camera">
+                    <pc-camera></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 10, "inertiaFactor": 0.1}'></pc-script>
+                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
-                <pc-entity name="light" rotation="45,0,0">
+                <pc-entity name="light" rotation="45,0,0" intensity="1">
                     <pc-light></pc-light>
                 </pc-entity>
-                <!-- Sphere -->
-                <pc-entity name="sphere">
-                    <pc-render type="sphere"></pc-render>
-                </pc-entity>
+                <!-- Cube -->
+                <pc-model asset="nyan-cat"></pc-model>
                 <!-- Music -->
                 <pc-entity name="music">
                     <pc-sounds>
@@ -40,5 +44,7 @@
                 </pc-entity>
             </pc-scene>
         </pc-app>
+        <button id="xr-button">Enter VR</button>
+        <script type="module" src="scripts/vr.mjs"></script>
     </body>
 </html>
