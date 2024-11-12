@@ -6,7 +6,6 @@ body {
 #xr-button {
     position: absolute;
     bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 20px;
     display: none;
 }
