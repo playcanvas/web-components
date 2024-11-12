@@ -34,11 +34,11 @@ class AsyncElement extends HTMLElement {
     }
 
     /**
-     * Returns a promise that resolves when the element is ready.
-     * @returns A promise that resolves when the element is ready.
+     * Returns a promise that resolves with this element when it's ready.
+     * @returns A promise that resolves with this element when it's ready.
      */
-    ready(): Promise<void> {
-        return this._readyPromise;
+    ready(): Promise<this> {
+        return this._readyPromise.then(() => this);
     }
 }
 
