@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Examples</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                display: grid;
+                grid-template-columns: 250px 1fr;
+                height: 100vh;
+                font-family: system-ui, -apple-system, sans-serif;
+                overflow: hidden;
+            }
+            
+            .sidebar {
+                background: #f5f5f5;
+                padding: 20px;
+                border-right: 1px solid #ddd;
+                overflow-y: auto;
+            }
+            
+            .main {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            #example-frame {
+                width: 100%;
+                height: 100%;
+                border: none;
+                display: block;
+            }
+            
+            #code-panel {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 80%;
+                height: 80%;
+                background: rgba(0, 0, 0, 0.9);
+                padding: 20px;
+                overflow: auto;
+                display: none;
+                backdrop-filter: blur(2px);
+                box-sizing: border-box;
+                z-index: 2;
+            }
+            
+            #code-panel pre {
+                margin: 0;
+                white-space: pre-wrap;
+            }
+            
+            #code-panel code {
+                font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+                font-size: 14px;
+            }
+            
+            .example-link {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px;
+                color: #333;
+                text-decoration: none;
+                border-radius: 4px;
+            }
+            
+            .example-link:hover {
+                background: #ffe0cc;
+            }
+            
+            .example-link.active {
+                background: #ff8533;
+                color: white;
+            }
+
+            .open-in-new {
+                opacity: 0.5;
+                padding: 4px;
+                border-radius: 4px;
+            }
+
+            .open-in-new:hover {
+                opacity: 1;
+                background: rgba(0, 0, 0, 0.1);
+            }
+
+            .example-link.active .open-in-new {
+                filter: brightness(2);
+            }
+
+            pre {
+                margin: 0;
+                white-space: pre-wrap;
+            }
+
+            .controls {
+                padding: 10px;
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 1;
+            }
+
+            /* Webkit (Chrome, Safari, newer versions of Opera) */
+            ::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.1);
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 5px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(0, 0, 0, 0.4);
+            }
+
+            /* For Firefox */
+            * {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.1);
+            }
+
+            /* Dark scrollbars for code panel */
+            #code-panel::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            #code-panel::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            #code-panel::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.4);
+            }
+
+            #code-panel {
+                scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+            }
+
+            #overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                display: none;
+            }
+        </style>
+        <!-- Add Prism CSS and JS -->
+        <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markup.min.js"></script>
+    </head>
+    <body>
+        <div class="sidebar">
+            <h2>Web Components Examples</h2>
+            <div id="example-list"></div>
+        </div>
+        <div class="main">
+            <div class="controls">
+                <button onclick="toggleCode()">View Source</button>
+            </div>
+            <iframe id="example-frame"></iframe>
+            <div id="code-panel">
+                <pre><code id="source-code" class="language-html"></code></pre>
+            </div>
+        </div>
+        <div id="overlay"></div>
+        <script>
+            const examples = [
+                { name: 'Animation', path: 'animation.html' },
+                { name: 'GLB Loader', path: 'glb.html' },
+                { name: 'Physics', path: 'physics.html' },
+                { name: 'Positional Sound', path: 'positional-sound.html' },
+                { name: 'Shapes', path: 'shapes.html' },
+                { name: 'Spinning Cube', path: 'spinning-cube.html' },
+                { name: 'Sound', path: 'sound.html' },
+                { name: 'Text Demo', path: 'text.html' },
+                { name: '3D Gaussian Splat', path: 'splat.html' }
+            ];
+
+            const exampleList = document.getElementById('example-list');
+            const frame = document.getElementById('example-frame');
+            const codePanel = document.getElementById('code-panel');
+            const sourceCode = document.getElementById('source-code');
+
+            // Create example links
+            examples.forEach(example => {
+                const link = document.createElement('a');
+                link.href = '#' + example.path;
+                link.className = 'example-link';
+                
+                // Add example name span
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = example.name;
+                link.appendChild(nameSpan);
+                
+                // Add "open in new tab" icon
+                const openInNew = document.createElement('a');
+                openInNew.href = example.path;
+                openInNew.target = '_blank';
+                openInNew.className = 'open-in-new';
+                openInNew.innerHTML = '↗️';
+                openInNew.title = 'Open in new tab';
+                openInNew.onclick = (e) => e.stopPropagation();
+                link.appendChild(openInNew);
+                
+                link.onclick = (e) => {
+                    if (e.target !== openInNew) {  // Don't load in iframe if clicking the "open in new" icon
+                        e.preventDefault();
+                        loadExample(example.path);
+                        document.querySelectorAll('.example-link').forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+                    }
+                };
+                
+                exampleList.appendChild(link);
+            });
+
+            async function loadExample(path) {
+                frame.src = path;
+                const response = await fetch(path);
+                const code = await response.text();
+                sourceCode.textContent = code;
+                Prism.highlightElement(sourceCode);
+                codePanel.style.display = 'none';
+            }
+
+            function toggleCode() {
+                const isVisible = codePanel.style.display === 'block';
+                codePanel.style.display = isVisible ? 'none' : 'block';
+                document.getElementById('overlay').style.display = isVisible ? 'none' : 'block';
+            }
+
+            document.getElementById('overlay').addEventListener('click', () => {
+                codePanel.style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+            });
+
+            // Add escape key handler
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && codePanel.style.display === 'block') {
+                    codePanel.style.display = 'none';
+                }
+            });
+
+            // Add click handler to close panel when clicking outside
+            document.querySelector('.main').addEventListener('click', (e) => {
+                if (codePanel.style.display === 'block' && 
+                    !codePanel.contains(e.target) && 
+                    !e.target.closest('button')) {  // Better button check
+                    codePanel.style.display = 'none';
+                }
+            });
+
+            // Alternative approach: handle clicks on specific areas
+            document.querySelector('.main').addEventListener('click', (e) => {
+                const isButton = e.target.closest('button');
+                const isCodePanel = e.target.closest('#code-panel');
+                
+                if (codePanel.style.display === 'block' && !isButton && !isCodePanel) {
+                    codePanel.style.display = 'none';
+                }
+            });
+
+            // Load first example by default
+            if (examples.length > 0) {
+                loadExample(examples[0].path);
+                exampleList.firstChild.classList.add('active');
+            }
+        </script>
+    </body>
+</html>
