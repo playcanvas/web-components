@@ -46,19 +46,22 @@
             Enter VR
         </button>
         <script>
+            // Add VR support
             document.addEventListener('DOMContentLoaded', async () => {
                 const camera = document.querySelector('pc-camera');
                 await camera.ready();
+
                 if (camera.xrAvailable) {
                     const button = document.getElementById('xr-button');
                     button.style.display = 'block';
+
                     button.addEventListener('click', () => {
-                        if (button.textContent === 'Enter VR') {
-                            camera.startXr();
-                            button.textContent = 'Exit VR';
-                        } else {
+                        camera.startXr();
+                    });
+
+                    window.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
                             camera.endXr();
-                            button.textContent = 'Enter VR';
                         }
                     });
                 }

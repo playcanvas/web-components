@@ -67,7 +67,8 @@ class CameraComponentElement extends ComponentElement {
     }
 
     get xrAvailable() {
-        return this.component?.system.app.xr!.isAvailable(XRTYPE_VR);
+        const xrManager = this.component?.system.app.xr;
+        return xrManager && xrManager.supported && xrManager.isAvailable(XRTYPE_VR);
     }
 
     startXr() {
