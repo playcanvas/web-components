@@ -23,17 +23,17 @@
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
-                <pc-sky asset="rotunda"></pc-sky>
+                <pc-sky asset="rotunda" type="dome" center="0,0.1,0" scale="20,20,20"></pc-sky>
                 <!-- Camera -->
-                <pc-entity name="camera" position="0,1,3.5">
+                <pc-entity name="camera" position="0,2,3.5">
                     <pc-camera></pc-camera>
                     <pc-scripts>
-                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 5, "inertiaFactor": 0.1}'></pc-script>
+                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 5, "inertiaFactor": 0.1, "pitchAngleMin": 0, "pitchAngleMax": 90}'></pc-script>
                         <pc-script name="orbitCameraInputMouse"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Statue -->
-                <pc-entity name="statue" rotation="0,45,0">
+                <pc-entity name="statue" position="0,1,0" rotation="0,45,0">
                     <pc-splat asset="angel"></pc-splat>
                 </pc-entity>
             </pc-scene>

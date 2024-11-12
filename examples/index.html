@@ -14,26 +14,26 @@
                 font-family: system-ui, -apple-system, sans-serif;
                 overflow: hidden;
             }
-            
+
             .sidebar {
                 background: #f5f5f5;
                 padding: 20px;
                 border-right: 1px solid #ddd;
                 overflow-y: auto;
             }
-            
+
             .main {
                 position: relative;
                 overflow: hidden;
             }
-            
+
             #example-frame {
                 width: 100%;
                 height: 100%;
                 border: none;
                 display: block;
             }
-            
+
             #code-panel {
                 position: absolute;
                 top: 50%;
@@ -49,17 +49,17 @@
                 box-sizing: border-box;
                 z-index: 2;
             }
-            
+
             #code-panel pre {
                 margin: 0;
                 white-space: pre-wrap;
             }
-            
+
             #code-panel code {
                 font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
                 font-size: 14px;
             }
-            
+
             .example-link {
                 display: flex;
                 align-items: center;
@@ -69,11 +69,11 @@
                 text-decoration: none;
                 border-radius: 4px;
             }
-            
+
             .example-link:hover {
                 background: #ffe0cc;
             }
-            
+
             .example-link.active {
                 background: #ff8533;
                 color: white;
@@ -157,6 +157,24 @@
                 bottom: 0;
                 display: none;
             }
+
+            @media (max-width: 768px) {
+                body {
+                    grid-template-columns: 1fr;
+                    grid-template-rows: auto 1fr;
+                }
+
+                .sidebar {
+                    max-height: 200px;
+                    border-bottom: 1px solid #ddd;
+                    border-right: none;
+                }
+
+                #code-panel {
+                    width: 95%;
+                    height: 90%;
+                }
+            }
         </style>
         <!-- Add Prism CSS and JS -->
         <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -207,7 +225,7 @@
                 const nameSpan = document.createElement('span');
                 nameSpan.textContent = example.name;
                 link.appendChild(nameSpan);
-                
+
                 // Add "open in new tab" icon
                 const openInNew = document.createElement('a');
                 openInNew.href = example.path;
@@ -217,7 +235,7 @@
                 openInNew.title = 'Open in new tab';
                 openInNew.onclick = (e) => e.stopPropagation();
                 link.appendChild(openInNew);
-                
+
                 link.onclick = (e) => {
                     if (e.target !== openInNew) {  // Don't load in iframe if clicking the "open in new" icon
                         e.preventDefault();
@@ -313,6 +331,20 @@
                     document.querySelectorAll('.example-link').forEach(link => {
                         link.classList.toggle('active', link.getAttribute('href') === '#' + hash);
                     });
+                }
+            });
+
+            // Add keyboard navigation between examples
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const links = Array.from(document.querySelectorAll('.example-link'));
+                    const currentIndex = links.findIndex(link => link.classList.contains('active'));
+                    const nextIndex = e.key === 'ArrowUp' 
+                        ? Math.max(0, currentIndex - 1)
+                        : Math.min(links.length - 1, currentIndex + 1);
+
+                    links[nextIndex].click();
                 }
             });
         </script>
