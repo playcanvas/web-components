@@ -70,11 +70,9 @@ class EntityElement extends AsyncElement {
         const closestEntity = this.closestEntity;
         if (closestEntity) {
             closestEntity.ready().then(() => {
-                console.log(`Adding entity to ${closestEntity._name}: ${this._name}`);
                 closestEntity.entity!.addChild(this.entity!);
             });
         } else {
-            console.log(`Adding entity to root: ${this._name}`);
             app.root.addChild(this.entity);
         }
 
