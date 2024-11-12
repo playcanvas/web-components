@@ -71,12 +71,12 @@ class EntityElement extends AsyncElement {
         if (closestEntity) {
             closestEntity.ready().then(() => {
                 closestEntity.entity!.addChild(this.entity!);
+                this._onReady();
             });
         } else {
             app.root.addChild(this.entity);
+            this._onReady();
         }
-
-        this._onReady();
     }
 
     disconnectedCallback() {

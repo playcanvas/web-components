@@ -2,7 +2,7 @@ import { AppElement } from './app';
 import { EntityElement } from './entity';
 
 /**
- * Base class for all PlayCanvas web components.
+ * Base class for all PlayCanvas web components that initialize asynchronously.
  */
 class AsyncElement extends HTMLElement {
     private _readyPromise: Promise<void>;
@@ -16,11 +16,11 @@ class AsyncElement extends HTMLElement {
         });
     }
 
-    get closestApp(): AppElement | undefined {
+    get closestApp(): AppElement {
         return this.parentElement?.closest('pc-app') as AppElement;
     }
 
-    get closestEntity(): EntityElement | undefined {
+    get closestEntity(): EntityElement {
         return this.parentElement?.closest('pc-entity') as EntityElement;
     }
 
