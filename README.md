@@ -1,5 +1,10 @@
 # PlayCanvas Web Components
 
+[![NPM Version](https://img.shields.io/npm/v/@playcanvas/web-components.svg)](https://www.npmjs.com/package/@playcanvas/web-components)
+[![NPM Downloads](https://img.shields.io/npm/dw/@playcanvas/web-components)](https://npmtrends.com/@playcanvas/web-components)
+[![License](https://img.shields.io/npm/l/@playcanvas/web-components.svg)](https://github.com/playcanvas/web-components/blob/main/LICENSE)
+[![GitHub Actions Build Status](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml/badge.svg)](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml)
+
 Unleash the power of PlayCanvas in your HTML. PlayCanvas Web Components allows you to write PlayCanvas scenes using only HTML, enabling a clear and concise structure, and making it easier than ever to integrate with other web technologies. Just add tags for entities, components, and assets, and watch your 3D scene come to life!
 
 ## Usage 🚧
