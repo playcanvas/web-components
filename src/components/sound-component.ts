@@ -8,6 +8,8 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class SoundComponentElement extends ComponentElement {
+    private _maxDistance: number = 10000;
+
     private _pitch: number = 1;
 
     private _positional: boolean = false;
@@ -20,6 +22,7 @@ class SoundComponentElement extends ComponentElement {
 
     getInitialComponentData() {
         return {
+            maxDistance: this._maxDistance,
             pitch: this._pitch,
             positional: this._positional,
             volume: this._volume
@@ -32,6 +35,25 @@ class SoundComponentElement extends ComponentElement {
      */
     get component(): SoundComponent | null {
         return super.component as SoundComponent | null;
+    }
+
+    /**
+     * Sets the maximum distance from the listener at which audio falloff stops.
+     * @param value - The max distance.
+     */
+    set maxDistance(value: number) {
+        this._maxDistance = value;
+        if (this.component) {
+            this.component.maxDistance = value;
+        }
+    }
+
+    /**
+     * Gets the maximum distance from the listener at which audio falloff stops.
+     * @returns The max distance.
+     */
+    get maxDistance() {
+        return this._maxDistance;
     }
 
     /**
@@ -92,13 +114,16 @@ class SoundComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'pitch', 'positional', 'volume'];
+        return [...super.observedAttributes, 'max-distance', 'pitch', 'positional', 'volume'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
+            case 'max-distance':
+                this.maxDistance = parseFloat(newValue);
+                break;
             case 'pitch':
                 this.pitch = parseFloat(newValue);
                 break;

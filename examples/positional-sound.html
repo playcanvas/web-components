@@ -18,22 +18,26 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="orbit" src="scripts/orbit.mjs" preload></pc-asset>
+            <pc-asset id="lake-bed" src="assets/sky/dry-lake-bed-2k.hdr" preload></pc-asset>
+            <pc-asset id="robot" src="assets/models/walking-robot.glb" preload></pc-asset>
             <pc-asset id="footsteps" src="assets/sounds/footsteps.mp3" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="lake-bed" type="none"></pc-sky>
                 <!-- Camera -->
-                <pc-entity name="camera">
+                <pc-entity name="camera" position="0,1,7">
                     <pc-camera clear-color="#8099e6"></pc-camera>
                     <pc-listener></pc-listener>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="45,0,0">
-                    <pc-light></pc-light>
+                    <pc-light cast-shadows></pc-light>
                 </pc-entity>
-                <!-- Sphere -->
-                <pc-entity name="sphere">
-                    <pc-render type="sphere"></pc-render>
-                    <pc-sounds positional>
+                <!-- Robot -->
+                <pc-entity name="robot">
+                    <pc-model asset="robot"></pc-model>
+                    <pc-sounds max-distance="12" positional>
                         <pc-sound asset="footsteps" loop></pc-sound>
                     </pc-sounds>
                     <pc-scripts>
