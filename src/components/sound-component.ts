@@ -8,11 +8,17 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class SoundComponentElement extends ComponentElement {
+    private _distanceModel: 'exponential' | 'inverse' | 'linear' = 'linear';
+
     private _maxDistance: number = 10000;
 
     private _pitch: number = 1;
 
     private _positional: boolean = false;
+
+    private _refDistance: number = 1;
+
+    private _rollOffFactor: number = 1;
 
     private _volume: number = 1;
 
@@ -22,9 +28,12 @@ class SoundComponentElement extends ComponentElement {
 
     getInitialComponentData() {
         return {
+            distanceModel: this._distanceModel,
             maxDistance: this._maxDistance,
             pitch: this._pitch,
             positional: this._positional,
+            refDistance: this._refDistance,
+            rollOffFactor: this._rollOffFactor,
             volume: this._volume
         };
     }
@@ -35,6 +44,25 @@ class SoundComponentElement extends ComponentElement {
      */
     get component(): SoundComponent | null {
         return super.component as SoundComponent | null;
+    }
+
+    /**
+     * Sets which algorithm to use to reduce the volume of the sound as it moves away from the listener.
+     * @param value - The distance model.
+     */
+    set distanceModel(value: 'exponential' | 'inverse' | 'linear') {
+        this._distanceModel = value;
+        if (this.component) {
+            this.component.distanceModel = value;
+        }
+    }
+
+    /**
+     * Gets which algorithm to use to reduce the volume of the sound as it moves away from the listener.
+     * @returns The distance model.
+     */
+    get distanceModel(): 'exponential' | 'inverse' | 'linear' {
+        return this._distanceModel;
     }
 
     /**
@@ -95,6 +123,44 @@ class SoundComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the reference distance for reducing volume as the sound source moves further from the listener. Defaults to 1.
+     * @param value - The ref distance.
+     */
+    set refDistance(value: number) {
+        this._refDistance = value;
+        if (this.component) {
+            this.component.refDistance = value;
+        }
+    }
+
+    /**
+     * Gets the reference distance for reducing volume as the sound source moves further from the listener.
+     * @returns The ref distance.
+     */
+    get refDistance() {
+        return this._refDistance;
+    }
+
+    /**
+     * Sets the factor used in the falloff equation. Defaults to 1.
+     * @param value - The roll-off factor.
+     */
+    set rollOffFactor(value: number) {
+        this._rollOffFactor = value;
+        if (this.component) {
+            this.component.rollOffFactor = value;
+        }
+    }
+
+    /**
+     * Gets the factor used in the falloff equation.
+     * @returns The roll-off factor.
+     */
+    get rollOffFactor() {
+        return this._rollOffFactor;
+    }
+
+    /**
      * Sets the volume of the sound.
      * @param value - The volume.
      */
@@ -114,13 +180,25 @@ class SoundComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'max-distance', 'pitch', 'positional', 'volume'];
+        return [
+            ...super.observedAttributes,
+            'distance-model',
+            'max-distance',
+            'pitch',
+            'positional',
+            'ref-distance',
+            'roll-off-factor',
+            'volume'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
+            case 'distance-model':
+                this.distanceModel = newValue as 'exponential' | 'inverse' | 'linear';
+                break;
             case 'max-distance':
                 this.maxDistance = parseFloat(newValue);
                 break;
@@ -129,6 +207,12 @@ class SoundComponentElement extends ComponentElement {
                 break;
             case 'positional':
                 this.positional = this.hasAttribute('positional');
+                break;
+            case 'ref-distance':
+                this.refDistance = parseFloat(newValue);
+                break;
+            case 'roll-off-factor':
+                this.rollOffFactor = parseFloat(newValue);
                 break;
             case 'volume':
                 this.volume = parseFloat(newValue);
