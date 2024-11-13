@@ -180,7 +180,16 @@ class SoundComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'distance-model', 'max-distance', 'pitch', 'positional', 'ref-distance', 'roll-off-factor', 'volume'];
+        return [
+            ...super.observedAttributes,
+            'distance-model',
+            'max-distance',
+            'pitch',
+            'positional',
+            'ref-distance',
+            'roll-off-factor',
+            'volume'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
