@@ -175,6 +175,30 @@
                     height: 90%;
                 }
             }
+
+            .header {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 20px;
+                align-items: center;
+            }
+
+            .logo {
+                width: 40px;
+                height: 40px;
+            }
+
+            .header h2 {
+                margin: 0;
+                font-size: 18px;
+                line-height: 1.2;
+            }
+
+            .header h3 {
+                margin: 8px 0 0 0;
+                font-size: 16px;
+                color: #666;
+            }
         </style>
         <!-- Add Prism CSS and JS -->
         <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -184,7 +208,12 @@
     </head>
     <body>
         <div class="sidebar">
-            <h2>Web Components Examples</h2>
+            <div class="header">
+                <img src="playcanvas.png" alt="PlayCanvas Logo" class="logo">
+                <div>
+                    <h2>PlayCanvas<br>Web Components</h2>
+                </div>
+            </div>
             <div id="example-list"></div>
         </div>
         <div class="main">
