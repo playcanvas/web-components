@@ -43,13 +43,13 @@ Or you can include it directly in your HTML file from a CDN.
 ES Modules:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.4/dist/pwc.mjs"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.5/dist/pwc.mjs"></script>
 ```
 
 UMD:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.4"></script>
+<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.5"></script>
 ```
 
 ## Tag Reference 📖
@@ -312,45 +312,3 @@ The `pc-splat` tag is used to define a splat component. It must be a direct chil
 | --- | --- |
 | `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `gsplat`. |
 | `enabled` | Enabled state of the splat component. If not specified, `true` is used. |
-
-## Example 
-
-Below is a basic example of how to use PlayCanvas Web Components to create a simple 3D scene (a humble sphere):
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PlayCanvas Web Components - Sphere</title>
-        <script type="importmap">
-            {
-                "imports": {
-                    "playcanvas": "https://esm.run/playcanvas@2.2.2"
-                }
-            }
-        </script>
-        <script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.4/dist/pwc.mjs"></script>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <pc-app>
-            <pc-scene>
-                <!-- Camera -->
-                <pc-entity name="camera" position="0,0,3">
-                    <pc-camera clear-color="#8099e6"></pc-camera>
-                </pc-entity>
-                <!-- Light -->
-                <pc-entity name="light" rotation="45,0,0">
-                    <pc-light></pc-light>
-                </pc-entity>
-                <!-- Sphere -->
-                <pc-entity name="sphere">
-                    <pc-render type="sphere"></pc-render>
-                </pc-entity>
-            </pc-scene>
-        </pc-app>
-    </body>
-</html>
-```
