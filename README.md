@@ -5,7 +5,24 @@
 [![License](https://img.shields.io/npm/l/@playcanvas/web-components.svg)](https://github.com/playcanvas/web-components/blob/main/LICENSE)
 [![GitHub Actions Build Status](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml/badge.svg)](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml)
 
-Unleash the power of PlayCanvas in your HTML. PlayCanvas Web Components allows you to write PlayCanvas scenes using only HTML, enabling a clear and concise structure, and making it easier than ever to integrate with other web technologies. Just add tags for entities, components, and assets, and watch your 3D scene come to life!
+PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website.
+
+```html
+<!-- A lit sphere -->
+<pc-app>
+    <pc-scene>
+        <pc-entity name="camera" position="0,0,3">
+            <pc-camera></pc-camera>
+        </pc-entity>
+        <pc-entity name="light" rotation="45,45,0">
+            <pc-light></pc-light>
+        </pc-entity>
+        <pc-entity name="ball">
+            <pc-render type="sphere"></pc-render>
+        </pc-entity>
+    </pc-scene>
+</pc-app>
+```
 
 ## Examples
 
