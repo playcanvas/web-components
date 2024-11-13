@@ -1,0 +1,233 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    height: 100vh;
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+}
+
+.sidebar {
+    background: #f5f5f5;
+    padding: 20px;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+.main {
+    position: relative;
+    overflow: hidden;
+}
+
+#example-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+#code-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    overflow: auto;
+    display: none;
+    backdrop-filter: blur(2px);
+    box-sizing: border-box;
+    z-index: 2;
+}
+
+#code-panel pre {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+#code-panel code {
+    font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+}
+
+.example-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.example-link:hover {
+    background: #ffe0cc;
+}
+
+.example-link.active {
+    background: #ff8533;
+    color: white;
+}
+
+.open-in-new {
+    opacity: 0.5;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.open-in-new:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.example-link.active .open-in-new {
+    filter: brightness(2);
+}
+
+pre {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.controls {
+    padding: 10px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+}
+
+/* Webkit (Chrome, Safari, newer versions of Opera) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.1);
+}
+
+/* Dark scrollbars for code panel */
+#code-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#code-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#code-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+#code-panel {
+    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .sidebar {
+        max-height: 200px;
+        border-bottom: 1px solid #ddd;
+        border-right: none;
+    }
+
+    #code-panel {
+        width: 95%;
+        height: 90%;
+    }
+}
+
+.header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.header h3 {
+    margin: 8px 0 0 0;
+    font-size: 16px;
+    color: #666;
+}
+
+#qr-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.qr-modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+#qr-code {
+    margin-bottom: 16px;
+}
+
+.qr-button {
+    opacity: 0.5;
+    padding: 4px;
+    border-radius: 4px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.qr-button:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.1);
+}
