@@ -16,14 +16,15 @@
     </head>
     <body>
         <pc-app high-resolution>
+            <pc-asset id="scroll" src="scripts/scroll.mjs" preload></pc-asset>
             <pc-asset id="trade-gothic" src="assets/fonts/trade gothic lt bold no. 2.json" type="font" preload></pc-asset>
             <pc-scene fog="linear" fog-start="0" fog-end="8" fog-color="#000000">
                 <!-- Camera -->
-                <pc-entity name="camera" position="0,0,5">
+                <pc-entity name="camera">
                     <pc-camera clear-color="#000000" fov="35"></pc-camera>
                 </pc-entity>
                 <!-- Text -->
-                <pc-entity name="crawl text" rotation="-72,0,0">
+                <pc-entity name="crawl text" position="0,-2,0" rotation="-72,0,0">
                     <pc-element type="text" asset="trade-gothic" color="#ffe81f" auto-width="false" font-size="0.2" line-height="0.25" width="2.65" wrap-lines text="It is a period of civil war.
 Rebel spaceships, striking
 from a hidden base, have won
@@ -45,6 +46,9 @@ starship, custodian of the
 stolen plans that can save
 her people and restore
 freedom to the galaxy...."></pc-element>
+                    <pc-scripts>
+                        <pc-script name="scroll"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>
