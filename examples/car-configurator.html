@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Car Configurator</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <style>body { margin: 0; overflow: hidden; }</style>
+    </head>
+    <body>
+        <pc-app high-resolution>
+            <!-- Modules -->
+            <pc-module name="DracoDecoderModule" glue="draco/draco.wasm.js" wasm="draco/draco.wasm.wasm" fallback="draco/draco.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
+            <pc-asset id="choose-color" src="scripts/choose-color.mjs" preload></pc-asset>
+            <pc-asset id="studio" src="assets/sky/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
+            <pc-asset id="car" src="assets/models/porsche-911-carrera-4s.glb" preload></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="studio" type="none"></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0,0,3">
+                    <pc-camera fov="40"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="orbitCamera" attributes='{"distanceMin": 2, "distanceMax": 5, "inertiaFactor": 0.1, "pitchAngleMin": 0, "pitchAngleMax": 90}'></pc-script>
+                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45,0,0">
+                    <pc-light></pc-light>
+                </pc-entity>
+                <!-- Car -->
+                <pc-entity name="car">
+                    <pc-model asset="car"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="chooseColor"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="scripts/vr.mjs"></script>
+    </body>
+</html>
