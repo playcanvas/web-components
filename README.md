@@ -7,6 +7,12 @@
 
 Unleash the power of PlayCanvas in your HTML. PlayCanvas Web Components allows you to write PlayCanvas scenes using only HTML, enabling a clear and concise structure, and making it easier than ever to integrate with other web technologies. Just add tags for entities, components, and assets, and watch your 3D scene come to life!
 
+## Examples
+
+[![image](https://github.com/user-attachments/assets/4b708711-4ac1-4908-a254-cf89c2e206ce)](https://playcanvas.github.io/web-components/examples)
+
+See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-components/examples
+
 ## Usage 🚧
 
 If you are using a bundler (e.g. Rollup), you can install PlayCanvas Web Components and the PlayCanvas Engine using NPM:
