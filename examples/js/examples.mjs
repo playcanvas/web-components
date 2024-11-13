@@ -9,4 +9,4 @@ export const examples = [
     { name: 'Sound', path: 'sound.html' },
     { name: 'Text Demo', path: 'text.html' },
     { name: '3D Gaussian Splat', path: 'splat.html' }
-]; 
+];

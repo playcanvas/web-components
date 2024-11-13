@@ -6,13 +6,19 @@ import globals from 'globals';
 export default [
     ...playcanvasConfig,
     {
+        files: ['examples/js/**/*.mjs'],
+        languageOptions: {
+            globals: {
+                ...globals.browser
+            }
+        }
+    },
+    {
         files: ['**/*.ts'],
         languageOptions: {
             parser: tsParser,
             globals: {
-                ...globals.browser,
-                ...globals.mocha,
-                ...globals.node
+                ...globals.browser
             }
         },
         plugins: {

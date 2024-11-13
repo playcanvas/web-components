@@ -9,7 +9,7 @@ export function setupCodePanel() {
     }
 
     document.querySelector('.controls button').onclick = toggleCode;
-    
+
     document.getElementById('overlay').addEventListener('click', () => {
         codePanel.style.display = 'none';
         document.getElementById('overlay').style.display = 'none';
@@ -22,4 +22,4 @@ export function setupCodePanel() {
     });
 
     return { codePanel, sourceCode };
-} 
+}

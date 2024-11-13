@@ -50,7 +50,7 @@
 
             // Setup components
             const { codePanel, sourceCode, toggleCode } = setupCodePanel();
-            const exampleLoader = loadExample(frame, sourceCode, codePanel);
+            const exampleLoader = loadExample(frame, sourceCode, codePanel, Prism);
             const { updateURL } = setupNavigation(exampleLoader);
 
             // Create example links
@@ -74,7 +74,7 @@
                 qrButton.onclick = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    showQRCode(example.path);
+                    showQRCode(example.path, qrcode);
                 };
                 buttonContainer.appendChild(qrButton);
 
