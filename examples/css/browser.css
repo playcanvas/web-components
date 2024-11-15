@@ -18,6 +18,7 @@ body {
 .main {
     position: relative;
     overflow: hidden;
+    touch-action: none;
 }
 
 #example-frame {
@@ -25,6 +26,7 @@ body {
     height: 100%;
     border: none;
     display: block;
+    touch-action: none;
 }
 
 #code-panel {
