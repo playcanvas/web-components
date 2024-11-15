@@ -70,16 +70,9 @@
 
                 <pc-scene>
                     <pc-entity name="camera" position="0,0,10">
-                        <pc-camera clear-color="#000000">
-                            <pc-cameraframe>
-                                <pc-vignette intensity="0.5" smoothness="0.5"></pc-vignette>
-                                <pc-bloom strength="0.5" threshold="0.5"></pc-bloom>
-                                <pc-ssao radius="10" bias="0.025" intensity="1"></pc-ssao>
-                            </pc-cameraframe>
-                        </pc-camera>
+                        <pc-camera clear-color="#000000"></pc-camera>
                         <pc-scripts>
                             <pc-script name="planetaryCamera"></pc-script>
-                            <pc-script name="cameraFrame" attribute='{"bloomEnabled": true, "bloomStrength": 0.5, "bloomThreshold": 0.5}'></pc-script>
                         </pc-scripts>
                     </pc-entity>
 

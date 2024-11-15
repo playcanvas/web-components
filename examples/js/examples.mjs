@@ -4,10 +4,9 @@ export const examples = [
     { name: 'GLB Loader', path: 'glb.html' },
     { name: 'Physics', path: 'physics.html' },
     { name: 'Positional Sound', path: 'positional-sound.html' },
-    { name: 'Solar System', path: 'solar-system.html' },
     { name: 'Shapes', path: 'shapes.html' },
     { name: 'Shoe Configurator', path: 'shoe-configurator.html' },
-    { name: 'Spinning Cube', path: 'spinning-cube.html' },
+    { name: 'Solar System', path: 'solar-system.html' },
     { name: 'Sound', path: 'sound.html' },
     { name: 'Text Demo', path: 'text.html' },
     { name: '3D Gaussian Splat', path: 'splat.html' }
