@@ -14,6 +14,8 @@ class AppElement extends AsyncElement {
      */
     private _canvas: HTMLCanvasElement | null = null;
 
+    private _alpha = true;
+
     private _antialias = true;
 
     private _depth = true;
@@ -51,6 +53,7 @@ class AppElement extends AsyncElement {
         // Initialize the PlayCanvas application
         this.app = new Application(this._canvas, {
             graphicsDeviceOptions: {
+                alpha: this._alpha,
                 antialias: this._antialias,
                 depth: this._depth,
                 stencil: this._stencil
@@ -112,6 +115,22 @@ class AppElement extends AsyncElement {
         if (this.app) {
             this.app.resizeCanvas();
         }
+    }
+
+    /**
+     * Sets the alpha flag.
+     * @param value - The alpha flag.
+     */
+    set alpha(value: boolean) {
+        this._alpha = value;
+    }
+
+    /**
+     * Gets the alpha flag.
+     * @returns The alpha flag.
+     */
+    get alpha() {
+        return this._alpha;
     }
 
     /**
@@ -183,11 +202,14 @@ class AppElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['antialias', 'depth', 'stencil', 'high-resolution'];
+        return ['alpha', 'antialias', 'depth', 'stencil', 'high-resolution'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
+            case 'alpha':
+                this.alpha = newValue !== 'false';
+                break;
             case 'antialias':
                 this.antialias = newValue !== 'false';
                 break;
