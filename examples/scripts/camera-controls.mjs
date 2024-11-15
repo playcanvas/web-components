@@ -31,7 +31,7 @@ class CameraControls extends Script {
      * @private
      * @type {Vec3}
      */
-    _origin = new Vec3(0, 1, 0);
+    _origin = new Vec3(0, 0, 0);
 
     /**
      * @private
@@ -248,6 +248,9 @@ class CameraControls extends Script {
         super(args);
         const {
             name,
+            enableOrbit,
+            enablePan,
+            enableFly,
             focusPoint,
             sceneSize,
             lookSensitivity,
@@ -263,9 +266,12 @@ class CameraControls extends Script {
             crouchSpeed
         } = args.attributes;
 
-        this.root = new Entity(name ?? 'multi-camera');
+        this.root = new Entity(name ?? 'camera-controls');
         this.app.root.addChild(this.root);
 
+        this.enableOrbit = enableOrbit ?? this.enableOrbit;
+        this.enablePan = enablePan ?? this.enablePan;
+        this.enableFly = enableFly ?? this.enableFly;
         this.sceneSize = sceneSize ?? this.sceneSize;
         this.lookSensitivity = lookSensitivity ?? this.lookSensitivity;
         this.lookDamping = lookDamping ?? this.lookDamping;
@@ -290,7 +296,7 @@ class CameraControls extends Script {
         }
         this.attach(this.entity.camera);
 
-        this.focusPoint = focusPoint ?? this.focusPoint;
+        this.focusPoint = focusPoint ?? Vec3.ZERO;
         this.pitchRange = pitchRange ?? this.pitchRange;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
@@ -309,7 +315,13 @@ class CameraControls extends Script {
     }
 
     get focusPoint() {
-        return this._origin;
+        if (!this._camera) {
+            return Vec3.ZERO;
+        }
+        return tmpV1
+        .copy(this._camera.entity.forward)
+        .mulScalar(this._zoomDist)
+        .add(this._camera.entity.getPosition());
     }
 
     /**
@@ -380,7 +392,7 @@ class CameraControls extends Script {
      * @returns {number} - The clamped value.
      */
     _clampZoom(value) {
-        const min = this._camera.nearClip + this.zoomMin * this.sceneSize;
+        const min = (this._camera?.nearClip ?? 0) + this.zoomMin * this.sceneSize;
         const max = this.zoomMax <= this.zoomMin ? Infinity : this.zoomMax * this.sceneSize;
         return math.clamp(value, min, max);
     }
@@ -788,15 +800,15 @@ class CameraControls extends Script {
      *
      * @param {Vec3} point - The point.
      * @param {Vec3} [start] - The start.
-     * @param {boolean} [smoothing] - Whether to smooth the focus.
+     * @param {boolean} [smooth] - Whether to smooth the focus.
      */
-    focus(point, start, smoothing = true) {
+    focus(point, start, smooth = true) {
         if (!this._camera) {
             return;
         }
         if (!start) {
             this._origin.copy(point);
-            if (!smoothing) {
+            if (!smooth) {
                 this._position.copy(point);
             }
             return;
@@ -813,7 +825,7 @@ class CameraControls extends Script {
 
         this._zoomDist = tmpV1.length();
 
-        if (!smoothing) {
+        if (!smooth) {
             this._angles.set(this._dir.x, this._dir.y, 0);
             this._position.copy(point);
             this._cameraDist = this._zoomDist;
@@ -824,11 +836,11 @@ class CameraControls extends Script {
      * Reset the zoom. For orbit and panning only.
      *
      * @param {number} [zoomDist] - The zoom distance.
-     * @param {boolean} [smoothing] - Whether to smooth the zoom.
+     * @param {boolean} [smooth] - Whether to smooth the zoom.
      */
-    resetZoom(zoomDist = 0, smoothing = true) {
+    resetZoom(zoomDist = 0, smooth = true) {
         this._zoomDist = zoomDist;
-        if (!smoothing) {
+        if (!smooth) {
             this._cameraDist = zoomDist;
         }
     }
@@ -839,13 +851,13 @@ class CameraControls extends Script {
      * @param {Vec3} point - The point.
      * @param {Vec3} [start] - The start.
      * @param {number} [zoomDist] - The zoom distance.
-     * @param {boolean} [smoothing] - Whether to smooth the refocus.
+     * @param {boolean} [smooth] - Whether to smooth the refocus.
      */
-    refocus(point, start = null, zoomDist = null, smoothing = true) {
+    refocus(point, start = null, zoomDist = null, smooth = true) {
         if (zoomDist !== null) {
-            this.resetZoom(zoomDist, smoothing);
+            this.resetZoom(zoomDist, smooth);
         }
-        this.focus(point, start, smoothing);
+        this.focus(point, start, smooth);
     }
 
     /**
