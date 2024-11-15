@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PlayCanvas Web Components - Solar System</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <style>
+            body { margin: 0; }
+            
+            #canvas-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: -1;
+            }
+
+            .content {
+                position: relative;
+                z-index: 1;
+            }
+
+            .section {
+                height: 100vh;
+                padding: 2em;
+                display: flex;
+                align-items: center;
+                color: white;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            }
+
+            h1 {
+                font-size: 3em;
+                margin: 0;
+            }
+
+            p {
+                max-width: 600px;
+                font-size: 1.2em;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="canvas-container">
+            <pc-app>
+                <!-- Modules -->
+                <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
+
+                <!-- Load all planet models -->
+                <pc-asset id="sun" src="assets/models/planets/sun.glb" preload></pc-asset>
+                <pc-asset id="mercury" src="assets/models/planets/mercury.glb" preload></pc-asset>
+                <pc-asset id="venus" src="assets/models/planets/venus.glb" preload></pc-asset>
+                <pc-asset id="earth" src="assets/models/planets/earth.glb" preload></pc-asset>
+                <pc-asset id="mars" src="assets/models/planets/mars.glb" preload></pc-asset>
+                <pc-asset id="jupiter" src="assets/models/planets/jupiter.glb" preload></pc-asset>
+                <pc-asset id="saturn" src="assets/models/planets/saturn.glb" preload></pc-asset>
+                <pc-asset id="uranus" src="assets/models/planets/uranus.glb" preload></pc-asset>
+                <pc-asset id="neptune" src="assets/models/planets/neptune.glb" preload></pc-asset>
+                <pc-asset id="planetary-camera" src="scripts/planetary-camera.mjs" preload></pc-asset>
+                <pc-asset id="planetary-motion" src="scripts/planetary-motion.mjs" preload></pc-asset>
+
+                <pc-scene>
+                    <pc-entity name="camera" position="0,0,10">
+                        <pc-camera clear-color="#000000">
+                            <pc-cameraframe>
+                                <pc-vignette intensity="0.5" smoothness="0.5"></pc-vignette>
+                                <pc-bloom strength="0.5" threshold="0.5"></pc-bloom>
+                                <pc-ssao radius="10" bias="0.025" intensity="1"></pc-ssao>
+                            </pc-cameraframe>
+                        </pc-camera>
+                        <pc-scripts>
+                            <pc-script name="planetaryCamera"></pc-script>
+                            <pc-script name="cameraFrame" attribute='{"bloomEnabled": true, "bloomStrength": 0.5, "bloomThreshold": 0.5}'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+
+                    <pc-entity name="light" rotation="45,45,0">
+                        <pc-light type="directional"></pc-light>
+                    </pc-entity>
+
+                    <pc-entity name="solar-system">
+                        <pc-entity name="sun">
+                            <pc-model asset="sun"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="mercury">
+                            <pc-model asset="mercury"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="venus">
+                            <pc-model asset="venus"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="earth">
+                            <pc-model asset="earth"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="mars">
+                            <pc-model asset="mars"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="jupiter">
+                            <pc-model asset="jupiter"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="saturn">
+                            <pc-model asset="saturn"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="uranus">
+                            <pc-model asset="uranus"></pc-model>
+                        </pc-entity>
+
+                        <pc-entity name="neptune">
+                            <pc-model asset="neptune"></pc-model>
+                        </pc-entity>
+
+                        <pc-scripts>
+                            <pc-script name="planetaryMotion"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                </pc-scene>
+            </pc-app>
+        </div>
+
+        <div class="content">
+            <section class="section">
+                <div>
+                    <h1>The Sun</h1>
+                    <p>Our solar system's star, providing light and heat to all the planets. The Sun contains 99.86% of the solar system's mass.</p>
+                </div>
+            </section>
+            
+            <section class="section">
+                <div>
+                    <h1>Mercury</h1>
+                    <p>The smallest and innermost planet, Mercury is also the fastest, orbiting the Sun every 88 Earth days.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Venus</h1>
+                    <p>Often called Earth's sister planet due to their similar size, Venus is the hottest planet due to its thick atmosphere.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Earth</h1>
+                    <p>Our home planet, Earth is the only known world to support life, with its unique atmosphere and liquid water.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Mars</h1>
+                    <p>The Red Planet, Mars has captured human imagination for centuries and is a prime target for future exploration.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Jupiter</h1>
+                    <p>The largest planet in our solar system, Jupiter is a gas giant with a distinctive Great Red Spot storm.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Saturn</h1>
+                    <p>Famous for its beautiful rings, Saturn is a gas giant known for its unique and spectacular appearance.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Uranus</h1>
+                    <p>An ice giant that rotates on its side, Uranus has a unique tilt of nearly 98 degrees.</p>
+                </div>
+            </section>
+
+            <section class="section">
+                <div>
+                    <h1>Neptune</h1>
+                    <p>The windiest planet, Neptune is the most distant planet and has the strongest winds in the solar system.</p>
+                </div>
+            </section>
+        </div>
+
+        <script type="module">
+            document.addEventListener('DOMContentLoaded', async () => {
+                const app = await document.querySelector('pc-app').ready();
+                const planets = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+                let currentPlanetIndex = -1;
+
+                window.addEventListener('scroll', () => {
+                    const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+                    const newPlanetIndex = Math.floor(scrollPercent * planets.length);
+                    
+                    // Only fire event when we change sections
+                    if (newPlanetIndex !== currentPlanetIndex) {
+                        currentPlanetIndex = newPlanetIndex;
+                        app.app.fire('zoom', planets[currentPlanetIndex]);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html> 
