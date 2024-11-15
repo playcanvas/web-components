@@ -1,7 +1,11 @@
-import { ScriptComponent, ScriptType } from 'playcanvas';
+import { ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
+
+const tmpV2 = new Vec2();
+const tmpV3 = new Vec3();
+const tmpV4 = new Vec4();
 
 // Add these interfaces at the top of the file, after the imports
 interface ScriptAttributesChangeEvent extends CustomEvent {
@@ -53,11 +57,27 @@ class ScriptComponentElement extends ComponentElement {
         });
     }
 
-    private applyAttributes(script: ScriptType, attributes: string | null) {
+    private applyAttributes(script: any, attributes: string | null) {
         try {
             // Parse the attributes string into an object and set them on the script
             const attributesObject = attributes ? JSON.parse(attributes) : {};
-            Object.assign(script, attributesObject);
+            for (const key in attributesObject) {
+                const value = attributesObject[key];
+                if (Array.isArray(value) && script[key] instanceof Vec2) {
+                    script[key] = tmpV2.set(value[0], value[1]);
+                    continue;
+                }
+                if (Array.isArray(value) && script[key] instanceof Vec3) {
+                    script[key] = tmpV3.set(value[0], value[1], value[2]);
+                    continue;
+                }
+                if (Array.isArray(value) && script[key] instanceof Vec4) {
+                    script[key] = tmpV4.set(value[0], value[1], value[2], value[3]);
+                    continue;
+                }
+
+                script[key] = value;
+            }
         } catch (error) {
             console.error(`Error parsing attributes JSON string ${attributes}:`, error);
         }
@@ -85,7 +105,7 @@ class ScriptComponentElement extends ComponentElement {
         }
     }
 
-    private createScript(name: string, attributes: string | null): ScriptType | null {
+    private createScript(name: string, attributes: string | null): Script | null {
         if (!this.component) return null;
 
         this.component.on(`create:${name}`, (script) => {
