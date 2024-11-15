@@ -1,4 +1,4 @@
-import { WasmModule } from 'playcanvas';
+import { basisInitialize, WasmModule } from 'playcanvas';
 
 class ModuleElement extends HTMLElement {
     private loadPromise: Promise<void>;
@@ -14,15 +14,23 @@ class ModuleElement extends HTMLElement {
         const wasm = this.getAttribute('wasm')!;
         const fallback = this.getAttribute('fallback')!;
 
-        WasmModule.setConfig(name, {
-            glueUrl: glue,
-            wasmUrl: wasm,
-            fallbackUrl: fallback
-        });
+        if (name === 'Basis') {
+            basisInitialize({
+                glueUrl: glue,
+                wasmUrl: wasm,
+                fallbackUrl: fallback
+            });
+        } else {
+            WasmModule.setConfig(name, {
+                glueUrl: glue,
+                wasmUrl: wasm,
+                fallbackUrl: fallback
+            });
 
-        await new Promise<void>((resolve) => {
-            WasmModule.getInstance(name, () => resolve());
-        });
+            await new Promise<void>((resolve) => {
+                WasmModule.getInstance(name, () => resolve());
+            });
+        }
     }
 
     public getLoadPromise(): Promise<void> {
