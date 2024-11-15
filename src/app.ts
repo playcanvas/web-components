@@ -14,6 +14,12 @@ class AppElement extends AsyncElement {
      */
     private _canvas: HTMLCanvasElement | null = null;
 
+    private _antialias = true;
+
+    private _depth = true;
+
+    private _stencil = true;
+
     private _highResolution = false;
 
     /**
@@ -45,11 +51,15 @@ class AppElement extends AsyncElement {
         // Initialize the PlayCanvas application
         this.app = new Application(this._canvas, {
             graphicsDeviceOptions: {
-                devicePixelRatio: this._highResolution ? window.devicePixelRatio : 1
+                antialias: this._antialias,
+                depth: this._depth,
+                stencil: this._stencil
             },
             keyboard: new Keyboard(window),
             mouse: new Mouse(this._canvas)
         });
+        this.app.graphicsDevice.maxPixelRatio = this._highResolution ? window.devicePixelRatio : 1;
+
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
 
@@ -105,6 +115,38 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Sets the antialias flag.
+     * @param value - The antialias flag.
+     */
+    set antialias(value: boolean) {
+        this._antialias = value;
+    }
+
+    /**
+     * Gets the antialias flag.
+     * @returns The antialias flag.
+     */
+    get antialias() {
+        return this._antialias;
+    }
+
+    /**
+     * Sets the depth flag.
+     * @param value - The depth flag.
+     */
+    set depth(value: boolean) {
+        this._depth = value;
+    }
+
+    /**
+     * Gets the depth flag.
+     * @returns The depth flag.
+     */
+    get depth() {
+        return this._depth;
+    }
+
+    /**
      * Sets the high resolution flag. When true, the application will render at the device's
      * physical resolution. When false, the application will render at CSS resolution.
      * @param value - The high resolution flag.
@@ -124,14 +166,39 @@ class AppElement extends AsyncElement {
         return this._highResolution;
     }
 
-    static get observedAttributes() {
-        return ['high-resolution'];
+    /**
+     * Sets the stencil flag.
+     * @param value - The stencil flag.
+     */
+    set stencil(value: boolean) {
+        this._stencil = value;
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, _newValue: string) {
+    /**
+     * Gets the stencil flag.
+     * @returns The stencil flag.
+     */
+    get stencil() {
+        return this._stencil;
+    }
+
+    static get observedAttributes() {
+        return ['antialias', 'depth', 'stencil', 'high-resolution'];
+    }
+
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
+            case 'antialias':
+                this.antialias = newValue !== 'false';
+                break;
+            case 'depth':
+                this.depth = newValue !== 'false';
+                break;
             case 'high-resolution':
-                this.highResolution = this.hasAttribute(name);
+                this.highResolution = newValue !== 'false';
+                break;
+            case 'stencil':
+                this.stencil = newValue !== 'false';
                 break;
         }
     }
