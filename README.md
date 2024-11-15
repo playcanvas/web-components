@@ -82,7 +82,11 @@ The `pc-app` tag is the root element for your PlayCanvas application. It is used
 
 | Attribute | Description |
 | --- | --- |
-| `high-resolution` | Valueless attribute. If present, enables high-resolution mode. |
+| `alpha` | Boolean attribute. Determines whether the application allocates an alpha channel in the frame buffer. Defaults to `true`. |
+| `antialias` | Boolean attribute. Determines whether the application uses anti-aliasing. Defaults to `true`. |
+| `depth` | Boolean attribute. Determines whether the application allocates a depth buffer. Defaults to `true`. |
+| `high-resolution` | Boolean attribute. Determines whether the application renders using physical resolution or CSS resolution. Defaults to `false`. |
+| `stencil` | Boolean attribute. Determines whether the application allocates a stencil buffer. Defaults to `false`. |
 
 ### pc-asset
 
