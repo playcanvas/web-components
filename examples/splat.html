@@ -17,7 +17,7 @@
     <body>
         <pc-app alpha="false" antialias="false" depth="false" high-resolution="false" stencil="false">
             <!-- Assets -->
-            <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
+            <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
             <pc-asset id="angel" src="assets/splats/angel.compressed.ply" preload></pc-asset>
             <pc-asset id="rotunda" src="assets/sky/sepulchral-chapel-rotunda-8k.webp" preload></pc-asset>
             <!-- Scene -->
@@ -28,8 +28,7 @@
                 <pc-entity name="camera" position="0,2,3.5">
                     <pc-camera></pc-camera>
                     <pc-scripts>
-                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 5, "inertiaFactor": 0.1, "pitchAngleMin": 0, "pitchAngleMax": 90}'></pc-script>
-                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                        <pc-script name="cameraControls" attributes='{"enableFly": false, "enablePan": false, "focusPoint": [0, 2, 0], "pitchRange": [-90, 0], "sceneSize": 3, "zoomMin": 0.5, "zoomMax": 3}'></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Statue -->

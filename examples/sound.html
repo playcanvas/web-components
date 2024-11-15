@@ -17,17 +17,16 @@
     <body>
         <pc-app>
             <!-- Assets -->
-            <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
+            <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
             <pc-asset id="nyan-cat" src="assets/models/nyan-cat.glb" preload></pc-asset>
             <pc-asset id="music" src="assets/sounds/nyan-cat.mp3" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera -->
-                <pc-entity name="camera">
+                <pc-entity name="camera" position="0,0,7">
                     <pc-camera></pc-camera>
                     <pc-scripts>
-                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 10, "inertiaFactor": 0.1}'></pc-script>
-                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                        <pc-script name="cameraControls" attributes='{"focusPoint": [0, 0, 0], "sceneSize": 10}'></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->

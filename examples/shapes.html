@@ -17,7 +17,7 @@
     <body>
         <pc-app>
             <!-- Assets -->
-            <pc-asset id="orbit-camera" src="scripts/orbit-camera.mjs" preload></pc-asset>
+            <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
             <pc-asset id="lake-bed" src="assets/sky/dry-lake-bed-2k.hdr" preload></pc-asset>
             <pc-asset id="metal-diffuse" src="assets/textures/metal-diffuse.jpg" preload></pc-asset>
             <pc-asset id="metal-metalness" src="assets/textures/metal-metalness.jpg" preload></pc-asset>
@@ -32,8 +32,7 @@
                 <pc-entity name="camera" position="0,0,5">
                     <pc-camera clear-color="0.4,0.45,0.5"></pc-camera>
                     <pc-scripts>
-                        <pc-script name="orbitCamera" attributes='{"distanceMin": 1, "distanceMax": 5, "inertiaFactor": 0.1}'></pc-script>
-                        <pc-script name="orbitCameraInputMouse"></pc-script>
+                        <pc-script name="cameraControls" attributes='{"enableFly": false, "enablePan": false, "focusPoint": [0, 0, 0]}'></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
