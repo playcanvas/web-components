@@ -12,7 +12,7 @@ export const parseColor = (value: string): Color => {
         return new Color().fromString(value);
     }
 
-    const components = value.split(',').map(Number);
+    const components = value.split(' ').map(Number);
     return new Color(components);
 };
 
@@ -23,7 +23,7 @@ export const parseColor = (value: string): Color => {
  * @returns The parsed Quat object.
  */
 export const parseQuat = (value: string): Quat => {
-    const [x, y, z] = value.split(',').map(Number);
+    const [x, y, z] = value.split(' ').map(Number);
     const q = new Quat();
     q.setFromEulerAngles(x, y, z);
     return q;
@@ -36,7 +36,7 @@ export const parseQuat = (value: string): Quat => {
  * @returns The parsed Vec2 object.
  */
 export const parseVec2 = (value: string): Vec2 => {
-    const components = value.split(',').map(Number);
+    const components = value.split(' ').map(Number);
     return new Vec2(components);
 };
 
@@ -47,7 +47,7 @@ export const parseVec2 = (value: string): Vec2 => {
  * @returns The parsed Vec3 object.
  */
 export const parseVec3 = (value: string): Vec3 => {
-    const components = value.split(',').map(Number);
+    const components = value.split(' ').map(Number);
     return new Vec3(components);
 };
 
@@ -58,6 +58,6 @@ export const parseVec3 = (value: string): Vec3 => {
  * @returns The parsed Vec4 object.
  */
 export const parseVec4 = (value: string): Vec4 => {
-    const components = value.split(',').map(Number);
+    const components = value.split(' ').map(Number);
     return new Vec4(components);
 };

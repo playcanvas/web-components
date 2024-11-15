@@ -23,16 +23,16 @@
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
-                <pc-sky asset="rotunda" type="dome" center="0,0.1,0" scale="20,20,20"></pc-sky>
+                <pc-sky asset="rotunda" type="dome" center="0 0.1 0" scale="20 20 20"></pc-sky>
                 <!-- Camera -->
-                <pc-entity name="camera" position="0,2,3.5">
+                <pc-entity name="camera" position="0 2 3.5">
                     <pc-camera></pc-camera>
                     <pc-scripts>
                         <pc-script name="cameraControls" attributes='{"enableFly": false, "enablePan": false, "focusPoint": [0, 2, 0], "pitchRange": [-90, 0], "sceneSize": 3, "zoomMin": 0.5, "zoomMax": 3}'></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Statue -->
-                <pc-entity name="statue" position="0,1,0" rotation="0,45,0">
+                <pc-entity name="statue" position="0 1 0" rotation="0 45 0">
                     <pc-splat asset="angel"></pc-splat>
                 </pc-entity>
             </pc-scene>
