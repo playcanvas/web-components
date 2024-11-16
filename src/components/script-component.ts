@@ -59,24 +59,40 @@ class ScriptComponentElement extends ComponentElement {
 
     private applyAttributes(script: any, attributes: string | null) {
         try {
-            // Parse the attributes string into an object and set them on the script
             const attributesObject = attributes ? JSON.parse(attributes) : {};
-            for (const key in attributesObject) {
-                const value = attributesObject[key];
-                if (Array.isArray(value) && script[key] instanceof Vec2) {
-                    script[key] = tmpV2.set(value[0], value[1]);
-                    continue;
-                }
-                if (Array.isArray(value) && script[key] instanceof Vec3) {
-                    script[key] = tmpV3.set(value[0], value[1], value[2]);
-                    continue;
-                }
-                if (Array.isArray(value) && script[key] instanceof Vec4) {
-                    script[key] = tmpV4.set(value[0], value[1], value[2], value[3]);
-                    continue;
+
+            const applyValue = (target: any, key: string, value: any) => {
+                // Handle vectors
+                if (Array.isArray(value)) {
+                    if (target[key] instanceof Vec2) {
+                        target[key] = tmpV2.set(value[0], value[1]);
+                        return;
+                    }
+                    if (target[key] instanceof Vec3) {
+                        target[key] = tmpV3.set(value[0], value[1], value[2]);
+                        return;
+                    }
+                    if (target[key] instanceof Vec4) {
+                        target[key] = tmpV4.set(value[0], value[1], value[2], value[3]);
+                        return;
+                    }
                 }
 
-                script[key] = value;
+                // Handle nested objects
+                if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    if (!target[key] || typeof target[key] !== 'object') {
+                        target[key] = {};
+                    }
+                    for (const nestedKey in value) {
+                        applyValue(target[key], nestedKey, value[nestedKey]);
+                    }
+                } else {
+                    target[key] = value;
+                }
+            };
+
+            for (const key in attributesObject) {
+                applyValue(script, key, attributesObject[key]);
             }
         } catch (error) {
             console.error(`Error parsing attributes JSON string ${attributes}:`, error);

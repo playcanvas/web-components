@@ -20,6 +20,7 @@
             <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
             <!-- Assets -->
             <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
+            <pc-asset id="camera-frame" src="scripts/camera-frame.mjs" preload></pc-asset>
             <pc-asset id="choose-color" src="scripts/choose-color.mjs" preload></pc-asset>
             <pc-asset id="studio" src="assets/sky/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
             <pc-asset id="car" src="assets/models/porsche-911-carrera-4s.glb" preload></pc-asset>
@@ -41,6 +42,27 @@
                                 "sceneSize": 10,
                                 "zoomMin": 0.5,
                                 "zoomMax": 1
+                            }'
+                        ></pc-script>
+                        <pc-script
+                            name="cameraFrame"
+                            attributes='{
+                                "rendering": {
+                                    "sharpness": 0.5,
+                                    "toneMapping": 5
+                                },
+                                "bloom": {
+                                    "enabled": true
+                                },
+                                "ssao": {
+                                    "type": "lighting"
+                                },
+                                "taa": {
+                                    "enabled": true
+                                },
+                                "vignette": {
+                                    "enabled": true
+                                }
                             }'
                         ></pc-script>
                     </pc-scripts>
