@@ -60,7 +60,7 @@ class ScriptComponentElement extends ComponentElement {
     private applyAttributes(script: any, attributes: string | null) {
         try {
             const attributesObject = attributes ? JSON.parse(attributes) : {};
-            
+
             const applyValue = (target: any, key: string, value: any) => {
                 // Handle vectors
                 if (Array.isArray(value)) {
@@ -77,7 +77,7 @@ class ScriptComponentElement extends ComponentElement {
                         return;
                     }
                 }
-                
+
                 // Handle nested objects
                 if (value && typeof value === 'object' && !Array.isArray(value)) {
                     if (!target[key] || typeof target[key] !== 'object') {
