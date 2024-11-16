@@ -11,10 +11,10 @@ PlayCanvas Web Components are a set of custom HTML elements for building 3D inte
 <!-- A lit sphere -->
 <pc-app>
     <pc-scene>
-        <pc-entity name="camera" position="0,0,3">
+        <pc-entity name="camera" position="0 0 3">
             <pc-camera></pc-camera>
         </pc-entity>
-        <pc-entity name="light" rotation="45,45,0">
+        <pc-entity name="light" rotation="45 45 0">
             <pc-light></pc-light>
         </pc-entity>
         <pc-entity name="ball">
@@ -105,7 +105,7 @@ The `pc-camera` tag is used to define a camera component. It must be a direct ch
 
 | Attribute | Description |
 | --- | --- |
-| `clear-color` | The background color of the camera. Can be a comma-separated list of R, G, B, and A values or a hex color code. If unspecified, `0.75,0.75,0.75,1` is used. |
+| `clear-color` | The background color of the camera. Can be a space-separated list of R, G, B, and A values or a hex color code. If unspecified, `0.75,0.75,0.75,1` is used. |
 | `clear-color-buffer` | Boolean attribute. Controls whether the camera clears the color buffer. If unspecified, the color buffer is cleared. |
 | `clear-depth-buffer` | Boolean attribute. Controls whether the camera clears the depth buffer. If unspecified, the depth buffer is cleared. |
 | `clear-stencil-buffer` | Boolean attribute. Controls whether the camera clears the stencil buffer. If unspecified, the stencil buffer is cleared. |
@@ -118,8 +118,8 @@ The `pc-camera` tag is used to define a camera component. It must be a direct ch
 | `orthographic` | Valueless attribute. If present, the camera uses an orthographic projection. If unspecified, the camera uses a perspective projection. |
 | `ortho-height` | The height of the orthographic projection. If unspecified, `10` is used. |
 | `priority` | The priority of the camera. If unspecified, `0` is used. |
-| `rect` | The viewport rectangle of the camera. Specified as a comma-separated list of X, Y, Width, and Height values. If unspecified, `0,0,1,1` is used. |
-| `scissor-rect` | The scissor rectangle of the camera. Specified as a comma-separated list of X, Y, Width, and Height values. If not specified, `0,0,1,1` is used. |
+| `rect` | The viewport rectangle of the camera. Specified as a space-separated list of X, Y, Width, and Height values. If unspecified, `0 0 1 1` is used. |
+| `scissor-rect` | The scissor rectangle of the camera. Specified as a space-separated list of X, Y, Width, and Height values. If not specified, `0 0 1 1` is used. |
 
 ### pc-collision
 
@@ -130,7 +130,7 @@ The `pc-collision` tag is used to define a collision component. It must be a dir
 | `axis` | The axis of the collision component. If not specified, `1` is used (Y-axis). |
 | `convex-hull` | Valueless attribute. If present, the collision component uses a convex hull. |
 | `enabled` | Enabled state of the collision component. If not specified, `true` is used. |
-| `half-extents` | The half-extents of the collision component. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0.5,0.5,0.5` is used. |
+| `half-extents` | The half-extents of the collision component. Specified as a space-separated list of X, Y, and Z values. If not specified, `0.5 0.5 0.5` is used. |
 | `height` | The height of the collision component. If not specified, `2` is used. |
 | `radius` | The radius of the collision component. If not specified, `0.5` is used. |
 | `type` | The type of collision component. Can be `box`, `capsule`, `cone`, `cylinder` or `sphere`. |
@@ -141,13 +141,13 @@ The `pc-element` tag is used to define an element component. It must be a direct
 
 | Attribute | Description |
 | --- | --- |
-| `anchor` | The anchor of the element component. Specified as a comma-separated list of X, Y, Z, and W values. If not specified, `0,0,0,1` is used. |
+| `anchor` | The anchor of the element component. Specified as a space-separated list of X, Y, Z, and W values. If not specified, `0 0 0 1` is used. |
 | `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `font`. |
 | `auto-width` | Valueless attribute. If present, the element component automatically adjusts its width. |
-| `color` | The color of the element component. Can be a comma-separated list of R, G, B, and A values or a hex color code. If not specified, `1,1,1,1` is used. |
+| `color` | The color of the element component. Can be a space-separated list of R, G, B, and A values or a hex color code. If not specified, `1 1 1 1` is used. |
 | `font-size` | The font size of the element component. If not specified, `16` is used. |
 | `line-height` | The line height of the element component. If not specified, `1.2` is used. |
-| `pivot` | The pivot of the element component. Specified as a comma-separated list of X and Y values. If not specified, `0.5,0.5` is used. |
+| `pivot` | The pivot of the element component. Specified as a space-separated list of X and Y values. If not specified, `0.5 0.5` is used. |
 | `text` | The text of the element component. |
 | `type` | The type of element component. Can be `group`, `image` or `text`. If not specified, `group` is used. |
 | `width` | The width of the element component. If not specified, `0` is used. |
@@ -161,10 +161,10 @@ The `pc-entity` tag is used to define an entity. It must be a direct child of `p
 | --- | --- |
 | `enabled` | Enabled state of the entity. If not specified, `true` is used. |
 | `name` | The name of the entity. |
-| `position` | The position of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0,0,0` is used. |
-| `rotation` | The rotation of the entity. Specified as a comma-separated list of X, Y, and Z Euler angles in degrees. If not specified, `0,0,0` is used. |
-| `scale` | The scale of the entity. Specified as a comma-separated list of X, Y, and Z values. If not specified, `1,1,1` is used. |
-| `tags` | A comma-separated list of tags for the entity. |
+| `position` | The position of the entity. Specified as a space-separated list of X, Y, and Z values. If not specified, `0 0 0` is used. |
+| `rotation` | The rotation of the entity. Specified as a space-separated list of X, Y, and Z Euler angles in degrees. If not specified, `0 0 0` is used. |
+| `scale` | The scale of the entity. Specified as a space-separated list of X, Y, and Z values. If not specified, `1 1 1` is used. |
+| `tags` | A space-separated list of tags for the entity. |
 
 ### pc-light
 
@@ -172,7 +172,7 @@ The `pc-light` tag is used to define a light component. It must be a direct chil
 
 | Attribute | Description |
 | --- | --- |
-| `color` | The color of the light. Can be a comma-separated list of R, G, B values or a hex color code. If not specified, `1,1,1` is used. |
+| `color` | The color of the light. Can be a space-separated list of R, G, B values or a hex color code. If not specified, `1 1 1` is used. |
 | `cast-shadows` | Valueless attribute. If present, the light casts shadows. |
 | `inner-cone-angle` | The angle of the light's inner cone. If not specified, `40` is used. |
 | `intensity` | The intensity of the light. If not specified, `1` is used. |
@@ -215,10 +215,10 @@ The `pc-rigidbody` tag is used to define a rigidbody component. It must be a dir
 | Attribute | Description |
 | --- | --- |
 | `angular-damping` | The angular damping of the rigidbody. If not specified, `0` is used. |
-| `angular-factor` | The angular factor of the rigidbody. Specified as a comma-separated list of X, Y, and Z values. If not specified, `1,1,1` is used. |
+| `angular-factor` | The angular factor of the rigidbody. Specified as a space-separated list of X, Y, and Z values. If not specified, `1 1 1` is used. |
 | `friction` | The friction of the rigidbody. If not specified, `0.5` is used. |
 | `linear-damping` | The linear damping of the rigidbody. If not specified, `0` is used. |
-| `linear-factor` | The linear factor of the rigidbody. Specified as a comma-separated list of X, Y, and Z values. If not specified, `1,1,1` is used. |
+| `linear-factor` | The linear factor of the rigidbody. Specified as a space-separated list of X, Y, and Z values. If not specified, `1 1 1` is used. |
 | `mass` | The mass of the rigidbody. If not specified, `1` is used. |
 | `restitution` | The restitution of the rigidbody. If not specified, `0` is used. |
 | `rolling-friction` | The rolling friction of the rigidbody. If not specified, `0` is used. |
@@ -244,8 +244,8 @@ The `pc-screen` tag is used to define a screen component. It must be a direct ch
 | --- | --- |
 | `blend` | Valueless attribute. If present, the screen component blends. |
 | `priority` | The priority of the screen component. Must be an integer between `0` and `255`. If not specified, `0` is used. |
-| `reference-resolution` | The reference resolution of the screen component. Specified as a comma-separated list of Width and Height values. If not specified, `640,320` is used. |
-| `resolution` | The resolution of the screen component. Specified as a comma-separated list of Width and Height values. If not specified, `640,320` is used. |
+| `reference-resolution` | The reference resolution of the screen component. Specified as a space-separated list of Width and Height values. If not specified, `640 320` is used. |
+| `resolution` | The resolution of the screen component. Specified as a space-separated list of Width and Height values. If not specified, `640 320` is used. |
 | `scale-blend` | The scale blend of the screen component. Must be a number between `0` and `1`. If not specified, `0.5` is used. |
 | `screen-space` | Valueless attribute. If present, the screen component is in screen space. |
 
@@ -275,11 +275,11 @@ The `pc-sky` tag is used to define a sky component. It must be a direct child of
 | Attribute | Description |
 | --- | --- |
 | `asset` | A string that should match the `id` of a `pc-asset` tag that has a type of `texture`. |
-| `center` | The center of the sky. Specified as a comma-separated list of X, Y, and Z values in the range 0 to 1. If not specified, `0,0.01,0` is used. |
+| `center` | The center of the sky. Specified as a space-separated list of X, Y, and Z values in the range 0 to 1. If not specified, `0 0.01 0` is used. |
 | `intensity` | The intensity of the sky. If not specified, `1` is used. |
 | `level` | The mipmap level used to render the sky. If not specified, `0` is used (base mip level). |
-| `rotation` | The rotation of the sky. Specified as a comma-separated list of X, Y, and Z values. If not specified, `0,0,0` is used. |
-| `scale` | The scale of the sky. Specified as a comma-separated list of X, Y, and Z values. If not specified, `100,100,100` is used. |
+| `rotation` | The rotation of the sky. Specified as a space-separated list of X, Y, and Z values. If not specified, `0 0 0` is used. |
+| `scale` | The scale of the sky. Specified as a space-separated list of X, Y, and Z values. If not specified, `100 100 100` is used. |
 | `type` | The type of sky component. Can be `box`, `dome`, `infinite` or `none`. |
 
 ### pc-sound
