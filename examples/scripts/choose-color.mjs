@@ -3,8 +3,8 @@ import { math, Script, Color } from 'playcanvas';
 export class ChooseColor extends Script {
     // Define available colors as a static property
     static PAINT_OPTIONS = [
-        { name: 'Guards Red', color: new Color(0.77, 0.12, 0.23), metallic: false },
-        { name: 'Racing Yellow', color: new Color(1, 0.89, 0), metallic: false },
+        { name: 'Guards Red', color: new Color(0.902, 0.004, 0.086), metallic: false },
+        { name: 'Racing Yellow', color: new Color(1, 0.831, 0), metallic: false },
         { name: 'GT Silver', color: new Color(0.82, 0.82, 0.82), metallic: true },
         { name: 'Jet Black', color: new Color(0.05, 0.05, 0.05), metallic: true },
         { name: 'Carrara White', color: new Color(0.95, 0.95, 0.95), metallic: false },
@@ -12,7 +12,7 @@ export class ChooseColor extends Script {
         { name: 'Agate Grey', color: new Color(0.47, 0.47, 0.47), metallic: true },
         { name: 'Shark Blue', color: new Color(0.16, 0.33, 0.47), metallic: true },
         { name: 'Python Green', color: new Color(0.38, 0.45, 0.23), metallic: true },
-        { name: 'Miami Blue', color: new Color(0, 0.57, 0.71), metallic: false }
+        { name: 'Miami Blue', color: new Color(0, 0.67, 0.87), metallic: false }
     ];
 
     // Constants
@@ -23,6 +23,9 @@ export class ChooseColor extends Script {
     };
 
     // Initialize properties
+    /**
+     * @type {import('playcanvas').StandardMaterial}
+     */
     material = null;
     fromColor = new Color();
     toColor = new Color();
@@ -118,8 +121,8 @@ export class ChooseColor extends Script {
     updateMaterial(t) {
         this.material.diffuse.lerp(this.fromColor, this.toColor, t);
         this.material.metalness = math.lerp(this.fromMetalness, this.toMetalness, t);
-        this.material.clearCoat = 0.1;
-        this.material.clearCoatGlossiness = 0.9;
+        this.material.clearCoat = 0.25;
+        this.material.clearCoatGloss = 0.9;
         this.material.update();
     }
 }
