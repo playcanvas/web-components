@@ -2,7 +2,7 @@ body {
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: 250px 1fr;
+    grid-template-columns: minmax(250px, max-content) 1fr;
     height: 100vh;
     font-family: system-ui, -apple-system, sans-serif;
     overflow: hidden;
@@ -14,6 +14,8 @@ body {
     border-right: 1px solid #ddd;
     overflow-y: auto;
     box-sizing: border-box;
+    min-width: 250px;
+    width: max-content;
 }
 
 @supports(padding: max(0px)) {
@@ -37,7 +39,7 @@ body {
         padding-top: max(0px, env(safe-area-inset-top));
         padding-right: max(0px, env(safe-area-inset-right));
         padding-bottom: max(0px, env(safe-area-inset-bottom));
-        padding-left: max(0px, env(safe-area-inset-left));
+        padding-left: 0;
     }
 }
 
