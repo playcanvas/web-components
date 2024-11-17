@@ -20,7 +20,7 @@ export class PlanetaryMotion extends Script {
         const minSpacing = 300; // Increased from 30 to 300 for larger orbits
 
         this.orbitalDistances = new Map([
-            ['mercury', sunRadius + minSpacing],             // 390 units
+            ['mercury', sunRadius + minSpacing],            // 390 units
             ['venus', sunRadius + minSpacing * 2],          // 690 units
             ['earth', sunRadius + minSpacing * 3],          // 990 units
             ['mars', sunRadius + minSpacing * 4],           // 1290 units
@@ -74,11 +74,16 @@ export class PlanetaryMotion extends Script {
     }
 
     update(dt) {
+        const sun = this.planets.get('sun');
+        const render = sun.findComponent('render');
+        const material = render.meshInstances[0].material;
+        material.emissiveIntensity = 100;
+
         // Update each planet's position and rotation
         for (const [planet, entity] of this.planets) {
             // Don't move the sun, but rotate it
             if (planet === 'sun') {
-                entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 60, 0);
+                entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 30, 0);
                 continue;
             }
 
@@ -96,7 +101,7 @@ export class PlanetaryMotion extends Script {
             const z = Math.sin(angle) * distance;
             
             entity.setLocalPosition(x, 0, z);
-            entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 60, 0);
+            entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 30, 0);
         }
     }
 }

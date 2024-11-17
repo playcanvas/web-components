@@ -54,8 +54,11 @@
             <pc-app>
                 <!-- Modules -->
                 <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
-
-                <!-- Load all planet models -->
+                <!-- Assets -->
+                <pc-asset id="camera-frame" src="scripts/camera-frame.mjs" preload></pc-asset>
+                <pc-asset id="planetary-camera" src="scripts/planetary-camera.mjs" preload></pc-asset>
+                <pc-asset id="planetary-motion" src="scripts/planetary-motion.mjs" preload></pc-asset>
+                <pc-asset id="stars" src="assets/sky/stars.png" preload></pc-asset>
                 <pc-asset id="sun" src="assets/models/planets/sun.glb" preload></pc-asset>
                 <pc-asset id="mercury" src="assets/models/planets/mercury.glb" preload></pc-asset>
                 <pc-asset id="venus" src="assets/models/planets/venus.glb" preload></pc-asset>
@@ -65,58 +68,55 @@
                 <pc-asset id="saturn" src="assets/models/planets/saturn.glb" preload></pc-asset>
                 <pc-asset id="uranus" src="assets/models/planets/uranus.glb" preload></pc-asset>
                 <pc-asset id="neptune" src="assets/models/planets/neptune.glb" preload></pc-asset>
-                <pc-asset id="planetary-camera" src="scripts/planetary-camera.mjs" preload></pc-asset>
-                <pc-asset id="planetary-motion" src="scripts/planetary-motion.mjs" preload></pc-asset>
-
+                <!-- Scene -->
                 <pc-scene>
+                    <!-- Sky -->
+                    <pc-sky asset="stars"></pc-sky>
+                    <!-- Camera -->
                     <pc-entity name="camera">
-                        <pc-camera clear-color="#000000"></pc-camera>
+                        <pc-camera clear-color="#000000" far-clip="10000"></pc-camera>
                         <pc-scripts>
                             <pc-script name="planetaryCamera"></pc-script>
+                            <pc-script
+                                name="cameraFrame"
+                                attributes='{
+                                    "bloom": {
+                                        "enabled": true
+                                    }
+                                }'
+                            ></pc-script>
                         </pc-scripts>
                     </pc-entity>
-
-                    <pc-entity name="light" rotation="45 45 0">
-                        <pc-light type="directional"></pc-light>
-                    </pc-entity>
-
+                    <!-- Solar System -->
                     <pc-entity name="solar-system">
                         <pc-entity name="sun">
                             <pc-model asset="sun"></pc-model>
+                            <pc-light type="omni" range="10000"></pc-light>
                         </pc-entity>
-
                         <pc-entity name="mercury">
                             <pc-model asset="mercury"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="venus">
                             <pc-model asset="venus"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="earth">
                             <pc-model asset="earth"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="mars">
                             <pc-model asset="mars"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="jupiter">
                             <pc-model asset="jupiter"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="saturn">
                             <pc-model asset="saturn"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="uranus">
                             <pc-model asset="uranus"></pc-model>
                         </pc-entity>
-
                         <pc-entity name="neptune">
                             <pc-model asset="neptune"></pc-model>
                         </pc-entity>
-
                         <pc-scripts>
                             <pc-script name="planetaryMotion"></pc-script>
                         </pc-scripts>
