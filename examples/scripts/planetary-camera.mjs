@@ -9,8 +9,8 @@ export class PlanetaryCamera extends Script {
             ['venus', new Vec3(-20, 10, 10)],     
             ['earth', new Vec3(-20, 10, 10)],     
             ['mars', new Vec3(-12, 6, 6)],        
-            ['jupiter', new Vec3(-90, 60, 60)],   
-            ['saturn', new Vec3(-80, 55, 55)],    
+            ['jupiter', new Vec3(-90, 30, 60)],   
+            ['saturn', new Vec3(-80, 35, 55)],    
             ['uranus', new Vec3(-40, 30, 30)],    
             ['neptune', new Vec3(-40, 30, 30)]    
         ]);
