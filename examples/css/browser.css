@@ -19,6 +19,7 @@ body {
     position: relative;
     overflow: hidden;
     touch-action: none;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 #example-frame {
@@ -27,6 +28,7 @@ body {
     border: none;
     display: block;
     touch-action: none;
+    margin-bottom: env(safe-area-inset-bottom);
 }
 
 #code-panel {
