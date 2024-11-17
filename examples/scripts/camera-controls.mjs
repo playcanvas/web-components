@@ -867,25 +867,36 @@ class CameraControls extends Script {
         this._camera = camera;
         this._camera.entity.setLocalEulerAngles(0, 0, 0);
 
-        window.addEventListener('wheel', this._onWheel, PASSIVE);
+        // Get the canvas element
+        const canvas = this.app.graphicsDevice.canvas;
+
+        // Attach events to canvas instead of window
+        canvas.addEventListener('wheel', this._onWheel, PASSIVE);
+        canvas.addEventListener('pointerdown', this._onPointerDown);
+        canvas.addEventListener('pointermove', this._onPointerMove);
+        canvas.addEventListener('pointerup', this._onPointerUp);
+        canvas.addEventListener('contextmenu', this._onContextMenu);
+
+        // These can stay on window since they're keyboard events
         window.addEventListener('keydown', this._onKeyDown, false);
         window.addEventListener('keyup', this._onKeyUp, false);
-        window.addEventListener('pointerdown', this._onPointerDown);
-        window.addEventListener('pointermove', this._onPointerMove);
-        window.addEventListener('pointerup', this._onPointerUp);
-        window.addEventListener('contextmenu', this._onContextMenu);
 
         this.root.addChild(camera.entity);
     }
 
     detach() {
-        window.removeEventListener('wheel', this._onWheel, PASSIVE);
+        const canvas = this.app.graphicsDevice.canvas;
+
+        // Remove from canvas instead of window
+        canvas.removeEventListener('wheel', this._onWheel, PASSIVE);
+        canvas.removeEventListener('pointermove', this._onPointerMove);
+        canvas.removeEventListener('pointerdown', this._onPointerDown);
+        canvas.removeEventListener('pointerup', this._onPointerUp);
+        canvas.removeEventListener('contextmenu', this._onContextMenu);
+
+        // Remove keyboard events from window
         window.removeEventListener('keydown', this._onKeyDown, false);
         window.removeEventListener('keyup', this._onKeyUp, false);
-        window.removeEventListener('pointermove', this._onPointerMove);
-        window.removeEventListener('pointerdown', this._onPointerDown);
-        window.removeEventListener('pointerup', this._onPointerUp);
-        window.removeEventListener('contextmenu', this._onContextMenu);
 
         this.root.removeChild(this._camera.entity);
         this._camera = null;
