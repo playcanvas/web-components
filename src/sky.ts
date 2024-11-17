@@ -1,4 +1,4 @@
-import { AppBase, Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
+import { app, AppBase, Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -35,27 +35,29 @@ class SkyElement extends AsyncElement {
         this._unloadSkybox();
     }
 
-    private _generateSkybox(app: AppBase, asset: Asset) {
+    private _generateSkybox(asset: Asset) {
+        if (!this._scene) return;
+
         const source = asset.resource as Texture;
         source.anisotropy = 4;
 
         const skybox = EnvLighting.generateSkyboxCubemap(source);
-        app.scene.skybox = skybox;
+        this._scene.skybox = skybox;
 
         if (this._lighting) {
             const lighting = EnvLighting.generateLightingSource(source);
             const envAtlas = EnvLighting.generateAtlas(lighting);
-            app.scene.envAtlas = envAtlas;
+            this._scene.envAtlas = envAtlas;
         }
 
-        const layer = app.scene.layers.getLayerById(LAYERID_SKYBOX);
+        const layer = this._scene.layers.getLayerById(LAYERID_SKYBOX);
         if (layer) {
             layer.enabled = this._type !== 'none';
         }
 
-        app.scene.sky.type = this._type;
-        app.scene.sky.node.setLocalScale(this._scale);
-        app.scene.sky.center = this._center;
+        this._scene.sky.type = this._type;
+        this._scene.sky.node.setLocalScale(this._scale);
+        this._scene.sky.center = this._center;
     }
 
     private async _loadSkybox() {
@@ -73,27 +75,26 @@ class SkyElement extends AsyncElement {
         this._scene = app.scene;
 
         if (asset.loaded) {
-            this._generateSkybox(app, asset);
+            this._generateSkybox(asset);
         } else {
             asset.once('load', () => {
-                this._generateSkybox(app, asset);
+                this._generateSkybox(asset);
             });
             app.assets.load(asset);
         }
     }
 
     private _unloadSkybox() {
-        const app = this.closestApp!.app;
-        if (!app) {
-            return;
-        }
+        if (!this._scene) return;
 
-        app.scene.skybox?.destroy();
+        this._scene.skybox?.destroy();
         // @ts-ignore
-        app.scene.skybox = null;
-        app.scene.envAtlas?.destroy();
+        this._scene.skybox = null;
+        this._scene.envAtlas?.destroy();
         // @ts-ignore
-        app.scene.envAtlas = null;
+        this._scene.envAtlas = null;
+
+        this._scene = null;
     }
 
     set asset(value: string) {
