@@ -1,5 +1,7 @@
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
+import { CSS_COLORS } from './colors';
+
 /**
  * Parse a color string into a Color object. String can be in the format of '#rgb', '#rgba',
  * '#rrggbb', '#rrggbbaa', or a string of 3 or 4 comma-delimited numbers.
@@ -8,6 +10,12 @@ import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
  * @returns The parsed Color object.
  */
 export const parseColor = (value: string): Color => {
+    // Check if it's a CSS color name first
+    const hexColor = CSS_COLORS[value.toLowerCase()];
+    if (hexColor) {
+        return new Color().fromString(hexColor);
+    }
+
     if (value.startsWith('#')) {
         return new Color().fromString(value);
     }
