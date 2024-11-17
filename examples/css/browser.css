@@ -13,6 +13,16 @@ body {
     padding: 20px;
     border-right: 1px solid #ddd;
     overflow-y: auto;
+    box-sizing: border-box;
+}
+
+@supports(padding: max(0px)) {
+    .sidebar {
+        padding-top: max(20px, env(safe-area-inset-top));
+        padding-right: 20px;
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+        padding-left: max(20px, env(safe-area-inset-left));
+    }
 }
 
 .main {
