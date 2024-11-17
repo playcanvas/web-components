@@ -1,4 +1,4 @@
-import { Script, Vec3 } from 'playcanvas';
+import { Script } from 'playcanvas';
 
 export class PlanetaryMotion extends Script {
     initialize() {
@@ -76,8 +76,10 @@ export class PlanetaryMotion extends Script {
     update(dt) {
         const sun = this.planets.get('sun');
         const render = sun.findComponent('render');
-        const material = render.meshInstances[0].material;
-        material.emissiveIntensity = 100;
+        if (render) {
+            const material = render.meshInstances[0].material;
+            material.emissiveIntensity = 100;
+        }
 
         // Update each planet's position and rotation
         for (const [planet, entity] of this.planets) {
@@ -101,7 +103,20 @@ export class PlanetaryMotion extends Script {
             const z = Math.sin(angle) * distance;
             
             entity.setLocalPosition(x, 0, z);
-            entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 30, 0);
+
+            // Special case for Saturn to keep rings tilted correctly
+            if (planet === 'saturn') {
+                // Set rotation so rings always tilt up relative to the sun
+                const tiltAngle = Math.PI / 12; // 30-degree tilt
+                entity.setLocalEulerAngles(
+                    tiltAngle * 180 / Math.PI,  // Convert to degrees
+                    (this.rotationSpeeds.get(planet) * dt * 30) + (angle * 180 / Math.PI),
+                    0
+                );
+            } else {
+                // Normal rotation for other planets
+                entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 30, 0);
+            }
         }
     }
 }
