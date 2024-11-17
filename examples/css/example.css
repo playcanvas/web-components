@@ -5,8 +5,10 @@ body {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 canvas {
     touch-action: none;
+    margin-bottom: env(safe-area-inset-bottom);
 }
