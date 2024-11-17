@@ -66,8 +66,8 @@ export class ChooseColor extends Script {
         const container = document.createElement('div');
         Object.assign(container.style, {
             position: 'absolute',
-            top: '10px',
-            left: '10px',
+            top: 'max(10px, env(safe-area-inset-top))',
+            left: 'max(10px, env(safe-area-inset-left))',
             zIndex: '1000',
             display: 'grid',
             gridTemplateColumns: 'repeat(5, 1fr)',
