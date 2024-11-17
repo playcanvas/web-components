@@ -19,7 +19,16 @@ body {
     position: relative;
     overflow: hidden;
     touch-action: none;
-    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+}
+
+@supports(padding: max(0px)) {
+    .main {
+        padding-top: max(0px, env(safe-area-inset-top));
+        padding-right: max(0px, env(safe-area-inset-right));
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+        padding-left: max(0px, env(safe-area-inset-left));
+    }
 }
 
 #example-frame {
