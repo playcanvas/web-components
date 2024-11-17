@@ -1,4 +1,4 @@
-import { EnvLighting, LAYERID_SKYBOX, Quat, Texture, Vec3 } from 'playcanvas';
+import { AppBase, Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -24,6 +24,8 @@ class SkyElement extends AsyncElement {
 
     private _type: 'box' | 'dome' | 'infinite' | 'none' = 'infinite';
 
+    private _scene: Scene | null = null;
+
     connectedCallback() {
         this._loadSkybox();
         this._onReady();
@@ -33,43 +35,51 @@ class SkyElement extends AsyncElement {
         this._unloadSkybox();
     }
 
-    getScene() {
-        const app = this.closestApp!.app;
-        if (!app) {
-            return;
+    private _generateSkybox(app: AppBase, asset: Asset) {
+        const source = asset.resource as Texture;
+        source.anisotropy = 4;
+
+        const skybox = EnvLighting.generateSkyboxCubemap(source);
+        app.scene.skybox = skybox;
+
+        if (this._lighting) {
+            const lighting = EnvLighting.generateLightingSource(source);
+            const envAtlas = EnvLighting.generateAtlas(lighting);
+            app.scene.envAtlas = envAtlas;
         }
-        return app.scene;
+
+        const layer = app.scene.layers.getLayerById(LAYERID_SKYBOX);
+        if (layer) {
+            layer.enabled = this._type !== 'none';
+        }
+
+        app.scene.sky.type = this._type;
+        app.scene.sky.node.setLocalScale(this._scale);
+        app.scene.sky.center = this._center;
     }
 
     private async _loadSkybox() {
         const appElement = await this.closestApp?.ready();
         const app = appElement?.app;
+        if (!app) {
+            return;
+        }
 
         const asset = AssetElement.get(this._asset);
         if (!asset) {
             return;
         }
 
-        const source = asset.resource as Texture;
-        source.anisotropy = 4;
+        this._scene = app.scene;
 
-        const skybox = EnvLighting.generateSkyboxCubemap(source);
-        app!.scene.skybox = skybox;
-
-        if (this._lighting) {
-            const lighting = EnvLighting.generateLightingSource(source);
-            const envAtlas = EnvLighting.generateAtlas(lighting);
-            app!.scene.envAtlas = envAtlas;
+        if (asset.loaded) {
+            this._generateSkybox(app, asset);
+        } else {
+            asset.once('load', () => {
+                this._generateSkybox(app, asset);
+            });
+            app.assets.load(asset);
         }
-
-        const layer = app!.scene.layers.getLayerById(LAYERID_SKYBOX);
-        if (layer) {
-            layer.enabled = this._type !== 'none';
-        }
-
-        app!.scene.sky.type = this._type;
-        app!.scene.sky.node.setLocalScale(this._scale);
-        app!.scene.sky.center = this._center;
     }
 
     private _unloadSkybox() {
@@ -78,8 +88,10 @@ class SkyElement extends AsyncElement {
             return;
         }
 
+        app.scene.skybox?.destroy();
         // @ts-ignore
         app.scene.skybox = null;
+        app.scene.envAtlas?.destroy();
         // @ts-ignore
         app.scene.envAtlas = null;
     }
@@ -97,9 +109,8 @@ class SkyElement extends AsyncElement {
 
     set center(value: Vec3) {
         this._center = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.sky.center = this._center;
+        if (this._scene) {
+            this._scene.sky.center = this._center;
         }
     }
 
@@ -109,9 +120,8 @@ class SkyElement extends AsyncElement {
 
     set intensity(value: number) {
         this._intensity = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.skyboxIntensity = this._intensity;
+        if (this._scene) {
+            this._scene.skyboxIntensity = this._intensity;
         }
     }
 
@@ -121,9 +131,8 @@ class SkyElement extends AsyncElement {
 
     set level(value: number) {
         this._level = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.skyboxMip = this._level;
+        if (this._scene) {
+            this._scene.skyboxMip = this._level;
         }
     }
 
@@ -141,9 +150,8 @@ class SkyElement extends AsyncElement {
 
     set rotation(value: Vec3) {
         this._rotation = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.skyboxRotation = new Quat().setFromEulerAngles(value);
+        if (this._scene) {
+            this._scene.skyboxRotation = new Quat().setFromEulerAngles(value);
         }
     }
 
@@ -153,9 +161,8 @@ class SkyElement extends AsyncElement {
 
     set scale(value: Vec3) {
         this._scale = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.sky.node.setLocalScale(this._scale);
+        if (this._scene) {
+            this._scene.sky.node.setLocalScale(this._scale);
         }
     }
 
@@ -165,10 +172,9 @@ class SkyElement extends AsyncElement {
 
     set type(value: 'box' | 'dome' | 'infinite' | 'none') {
         this._type = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.sky.type = this._type;
-            const layer = scene.layers.getLayerById(LAYERID_SKYBOX);
+        if (this._scene) {
+            this._scene.sky.type = this._type;
+            const layer = this._scene.layers.getLayerById(LAYERID_SKYBOX);
             if (layer) {
                 layer.enabled = this._type !== 'none';
             }
