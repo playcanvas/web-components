@@ -18,16 +18,19 @@ class SkyElement extends AsyncElement {
 
     private _level = 0;
 
+    private _lighting = false;
+
     private _scale = new Vec3(100, 100, 100);
 
     private _type: 'box' | 'dome' | 'infinite' | 'none' = 'infinite';
 
-    async connectedCallback() {
-        await this.closestApp?.ready();
-
-        this.asset = this.getAttribute('asset') || '';
-
+    connectedCallback() {
+        this._loadSkybox();
         this._onReady();
+    }
+
+    disconnectedCallback() {
+        this._unloadSkybox();
     }
 
     getScene() {
@@ -38,36 +41,53 @@ class SkyElement extends AsyncElement {
         return app.scene;
     }
 
-    private initSkybox(source: Texture) {
+    private async _loadSkybox() {
+        const appElement = await this.closestApp?.ready();
+        const app = appElement?.app;
+
+        const asset = AssetElement.get(this._asset);
+        if (!asset) {
+            return;
+        }
+
+        const source = asset.resource as Texture;
         source.anisotropy = 4;
 
         const skybox = EnvLighting.generateSkyboxCubemap(source);
-        const lighting = EnvLighting.generateLightingSource(source);
-        const envAtlas = EnvLighting.generateAtlas(lighting);
-        const app = this.closestApp!.app;
-        if (app) {
-            app.scene.envAtlas = envAtlas;
-            app.scene.skybox = skybox;
+        app!.scene.skybox = skybox;
 
-            const layer = app.scene.layers.getLayerById(LAYERID_SKYBOX);
-            if (layer) {
-                layer.enabled = this._type !== 'none';
-            }
-
-            app.scene.sky.type = this._type;
-            app.scene.sky.node.setLocalScale(this._scale);
-            app.scene.sky.center = this._center;
+        if (this._lighting) {
+            const lighting = EnvLighting.generateLightingSource(source);
+            const envAtlas = EnvLighting.generateAtlas(lighting);
+            app!.scene.envAtlas = envAtlas;
         }
+
+        const layer = app!.scene.layers.getLayerById(LAYERID_SKYBOX);
+        if (layer) {
+            layer.enabled = this._type !== 'none';
+        }
+
+        app!.scene.sky.type = this._type;
+        app!.scene.sky.node.setLocalScale(this._scale);
+        app!.scene.sky.center = this._center;
+    }
+
+    private _unloadSkybox() {
+        const app = this.closestApp!.app;
+        if (!app) {
+            return;
+        }
+
+        // @ts-ignore
+        app.scene.skybox = null;
+        // @ts-ignore
+        app.scene.envAtlas = null;
     }
 
     set asset(value: string) {
         this._asset = value;
-        const scene = this.getScene();
-        if (scene) {
-            const asset = AssetElement.get(value);
-            if (asset) {
-                this.initSkybox(asset.resource);
-            }
+        if (this.isConnected) {
+            this._loadSkybox();
         }
     }
 
@@ -99,6 +119,26 @@ class SkyElement extends AsyncElement {
         return this._intensity;
     }
 
+    set level(value: number) {
+        this._level = value;
+        const scene = this.getScene();
+        if (scene) {
+            scene.skyboxMip = this._level;
+        }
+    }
+
+    get level() {
+        return this._level;
+    }
+
+    set lighting(value: boolean) {
+        this._lighting = value;
+    }
+
+    get lighting() {
+        return this._lighting;
+    }
+
     set rotation(value: Vec3) {
         this._rotation = value;
         const scene = this.getScene();
@@ -123,18 +163,6 @@ class SkyElement extends AsyncElement {
         return this._scale;
     }
 
-    set level(value: number) {
-        this._level = value;
-        const scene = this.getScene();
-        if (scene) {
-            scene.skyboxMip = this._level;
-        }
-    }
-
-    get level() {
-        return this._level;
-    }
-
     set type(value: 'box' | 'dome' | 'infinite' | 'none') {
         this._type = value;
         const scene = this.getScene();
@@ -152,7 +180,7 @@ class SkyElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'center', 'intensity', 'level', 'rotation', 'scale', 'type'];
+        return ['asset', 'center', 'intensity', 'level', 'lighting', 'rotation', 'scale', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -166,11 +194,14 @@ class SkyElement extends AsyncElement {
             case 'intensity':
                 this.intensity = parseFloat(newValue);
                 break;
-            case 'rotation':
-                this.rotation = parseVec3(newValue);
-                break;
             case 'level':
                 this.level = parseInt(newValue, 10);
+                break;
+            case 'lighting':
+                this.lighting = this.hasAttribute(name);
+                break;
+            case 'rotation':
+                this.rotation = parseVec3(newValue);
                 break;
             case 'scale':
                 this.scale = parseVec3(newValue);

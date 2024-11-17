@@ -27,17 +27,16 @@
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
-                <pc-sky asset="lake-bed" type="none"></pc-sky>
+                <pc-sky asset="lake-bed" type="none" lighting></pc-sky>
                 <!-- Camera -->
                 <pc-entity name="camera" position="0 0 5">
-                    <pc-camera clear-color="0.4 0.45 0.5"></pc-camera>
+                    <pc-camera></pc-camera>
                     <pc-scripts>
                         <pc-script
                             name="cameraControls"
                             attributes='{
                                 "enableFly": false,
-                                "enablePan": false,
-                                "focusPoint": [0, 0, 0]
+                                "enablePan": false
                             }'
                         ></pc-script>
                     </pc-scripts>
