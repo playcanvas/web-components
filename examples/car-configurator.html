@@ -29,7 +29,7 @@
                 <!-- Sky -->
                 <pc-sky asset="studio" type="none" lighting></pc-sky>
                 <!-- Camera -->
-                <pc-entity name="camera" position="3 1.5 5">
+                <pc-entity name="camera" position="0 1 6">
                     <pc-camera fov="30"></pc-camera>
                     <pc-scripts>
                         <pc-script
@@ -40,39 +40,14 @@
                                 "focusPoint": [0, -0.25, 0],
                                 "pitchRange": [-90, 0],
                                 "sceneSize": 10,
-                                "zoomMin": 0.5,
+                                "zoomMin": 0.25,
                                 "zoomMax": 1
-                            }'
-                        ></pc-script>
-                        <pc-script
-                            name="cameraFrame"
-                            attributes='{
-                                "rendering": {
-                                    "sharpness": 0.5,
-                                    "toneMapping": 5
-                                },
-                                "bloom": {
-                                    "enabled": true
-                                },
-                                "grading": {
-                                    "brightness": 1.2,
-                                    "enabled": true
-                                },
-                                "ssao": {
-                                    "type": "lighting"
-                                },
-                                "taa": {
-                                    "enabled": true
-                                },
-                                "vignette": {
-                                    "enabled": true
-                                }
                             }'
                         ></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Car -->
-                <pc-entity name="car">
+                <pc-entity name="car" rotation="0 -90 0">
                     <pc-model asset="car"></pc-model>
                     <pc-scripts>
                         <pc-script name="chooseColor"></pc-script>
