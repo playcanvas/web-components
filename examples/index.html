@@ -3,11 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-        <title>PlayCanvas Web Components - Examples</title>        <!-- Add Prism CSS and JS -->
-        <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markup.min.js"></script>
+        <title>PlayCanvas Web Components - Examples</title>
         <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
         <link rel="stylesheet" href="css/browser.css">
     </head>
@@ -22,15 +18,8 @@
             <div id="example-list"></div>
         </div>
         <div class="main">
-            <div class="controls">
-                <button onclick="toggleCode()">View Source</button>
-            </div>
             <iframe id="example-frame" allow="fullscreen; xr-spatial-tracking;"></iframe>
-            <div id="code-panel">
-                <pre><code id="source-code" class="language-html"></code></pre>
-            </div>
         </div>
-        <div id="overlay"></div>
         <div id="qr-modal" style="display: none;">
             <div class="qr-modal-content">
                 <div id="qr-code"></div>
@@ -40,7 +29,6 @@
         <script type="module">
             import { examples } from './js/examples.mjs';
             import { showQRCode } from './js/qr-code.mjs';
-            import { setupCodePanel } from './js/code-panel.mjs';
             import { setupNavigation } from './js/navigation.mjs';
             import { loadExample } from './js/example-loader.mjs';
 
@@ -48,9 +36,8 @@
             const frame = document.getElementById('example-frame');
             const exampleList = document.getElementById('example-list');
 
-            // Setup components
-            const { codePanel, sourceCode, toggleCode } = setupCodePanel();
-            const exampleLoader = loadExample(frame, sourceCode, codePanel, Prism);
+            // Setup navigation
+            const exampleLoader = loadExample(frame);
             const { updateURL } = setupNavigation(exampleLoader);
 
             // Create example links

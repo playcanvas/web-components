@@ -8,7 +8,7 @@ export class PlanetaryCamera extends Script {
             ['mercury', new Vec3(-3, 2, 2)],      // Much closer to Mercury
             ['venus', new Vec3(-20, 10, 10)],     
             ['earth', new Vec3(-20, 10, 10)],     
-            ['mars', new Vec3(-12, 6, 6)],        
+            ['mars', new Vec3(-12, 6, 6)],
             ['jupiter', new Vec3(-90, 30, 60)],   
             ['saturn', new Vec3(-80, 35, 55)],    
             ['uranus', new Vec3(-40, 30, 30)],    
