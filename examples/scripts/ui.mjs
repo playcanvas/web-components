@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             margin: '0',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
+            color: '#2c3e50'
         });
 
         const svg = button.querySelector('svg');

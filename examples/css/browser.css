@@ -19,6 +19,7 @@ body {
 /* Hide menu toggle by default */
 .menu-toggle {
     display: none;
+    color: #2c3e50;
 }
 
 /* Sidebar */
