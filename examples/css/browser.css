@@ -86,12 +86,7 @@ body {
     filter: brightness(2);
 }
 
-pre {
-    margin: 0;
-    white-space: pre-wrap;
-}
-
-/* Webkit (Chrome, Safari, newer versions of Opera) */
+/* Webkit scrollbar styles */
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -110,36 +105,10 @@ pre {
     background: rgba(0, 0, 0, 0.4);
 }
 
-/* For Firefox */
+/* Firefox scrollbar styles */
 * {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.3) rgba(0, 0, 0, 0.1);
-}
-
-/* Dark scrollbars for code panel */
-#code-panel::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-#code-panel::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-#code-panel::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-#code-panel {
-    scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1);
-}
-
-#overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: none;
 }
 
 @media (max-width: 768px) {
@@ -220,40 +189,4 @@ pre {
 .qr-button:hover {
     opacity: 1;
     background: rgba(0, 0, 0, 0.1);
-}
-
-/* Remove these elements */
-.controls,
-#code-panel,
-#overlay {
-    display: none;
-}
-
-/* Remove code panel styles */
-#code-panel,
-#code-panel pre,
-#code-panel code,
-#code-panel::-webkit-scrollbar-track,
-#code-panel::-webkit-scrollbar-thumb,
-#code-panel::-webkit-scrollbar-thumb:hover,
-#code-panel {
-    /* Remove these style blocks */
-}
-
-/* Remove media query adjustments for code panel */
-@media (max-width: 768px) {
-    body {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-    }
-
-    .sidebar {
-        max-height: 200px;
-        border-bottom: 1px solid #ddd;
-        border-right: none;
-        width: 100%;
-        min-width: 0;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
 }
