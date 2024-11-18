@@ -8,18 +8,27 @@
         <link rel="stylesheet" href="css/browser.css">
     </head>
     <body>
-        <div class="sidebar">
-            <div class="header">
-                <img src="img/playcanvas.png" alt="PlayCanvas Logo" class="logo">
-                <div>
-                    <h2>PlayCanvas<br>Web Components</h2>
+        <div class="layout-wrapper">
+            <div class="sidebar">
+                <div class="header">
+                    <img src="img/playcanvas.png" alt="PlayCanvas Logo" class="logo">
+                    <div>
+                        <h2>PlayCanvas<br>Web Components</h2>
+                    </div>
                 </div>
+                <div id="example-list"></div>
             </div>
-            <div id="example-list"></div>
+            <div class="main">
+                <iframe id="example-frame" allow="fullscreen; xr-spatial-tracking;"></iframe>
+            </div>
         </div>
-        <div class="main">
-            <iframe id="example-frame" allow="fullscreen; xr-spatial-tracking;"></iframe>
-        </div>
+
+        <button class="menu-toggle" aria-label="Toggle Menu">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/>
+            </svg>
+        </button>
+        <div class="sidebar-overlay"></div>
         <div id="qr-modal" style="display: none;">
             <div class="qr-modal-content">
                 <div id="qr-code"></div>
@@ -30,15 +39,14 @@
             import { examples } from './js/examples.mjs';
             import { showQRCode } from './js/qr-code.mjs';
             import { setupNavigation } from './js/navigation.mjs';
-            import { loadExample } from './js/example-loader.mjs';
 
             // Get DOM elements
             const frame = document.getElementById('example-frame');
             const exampleList = document.getElementById('example-list');
 
             // Setup navigation
-            const exampleLoader = loadExample(frame);
-            const { updateURL } = setupNavigation(exampleLoader);
+            const loadExample = (path) => frame.src = path;
+            const { updateURL } = setupNavigation(loadExample);
 
             // Create example links
             examples.forEach(example => {
@@ -79,7 +87,7 @@
                 link.onclick = (e) => {
                     if (e.target !== openInNew) {
                         e.preventDefault();
-                        exampleLoader(example.path);
+                        loadExample(example.path);
                         updateURL(example.path);
                         document.querySelectorAll('.example-link')
                             .forEach(l => l.classList.remove('active'));
@@ -94,14 +102,35 @@
             if (examples.length > 0) {
                 const hash = window.location.hash.slice(1);
                 if (hash && examples.some(ex => ex.path === hash)) {
-                    exampleLoader(hash);
+                    loadExample(hash);
                     document.querySelector(`a[href="#${hash}"]`)?.classList.add('active');
                 } else {
-                    exampleLoader(examples[0].path);
+                    loadExample(examples[0].path);
                     updateURL(examples[0].path);
                     exampleList.firstChild?.classList.add('active');
                 }
             }
+
+            const menuToggle = document.querySelector('.menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            function toggleMenu() {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('open');
+            }
+
+            menuToggle.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            // Close menu when example is selected
+            document.querySelectorAll('.example-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        toggleMenu();
+                    }
+                });
+            });
         </script>
     </body>
 </html>
