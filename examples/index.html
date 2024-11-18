@@ -39,15 +39,14 @@
             import { examples } from './js/examples.mjs';
             import { showQRCode } from './js/qr-code.mjs';
             import { setupNavigation } from './js/navigation.mjs';
-            import { loadExample } from './js/example-loader.mjs';
 
             // Get DOM elements
             const frame = document.getElementById('example-frame');
             const exampleList = document.getElementById('example-list');
 
             // Setup navigation
-            const exampleLoader = loadExample(frame);
-            const { updateURL } = setupNavigation(exampleLoader);
+            const loadExample = (path) => frame.src = path;
+            const { updateURL } = setupNavigation(loadExample);
 
             // Create example links
             examples.forEach(example => {
@@ -88,7 +87,7 @@
                 link.onclick = (e) => {
                     if (e.target !== openInNew) {
                         e.preventDefault();
-                        exampleLoader(example.path);
+                        loadExample(example.path);
                         updateURL(example.path);
                         document.querySelectorAll('.example-link')
                             .forEach(l => l.classList.remove('active'));
@@ -103,10 +102,10 @@
             if (examples.length > 0) {
                 const hash = window.location.hash.slice(1);
                 if (hash && examples.some(ex => ex.path === hash)) {
-                    exampleLoader(hash);
+                    loadExample(hash);
                     document.querySelector(`a[href="#${hash}"]`)?.classList.add('active');
                 } else {
-                    exampleLoader(examples[0].path);
+                    loadExample(examples[0].path);
                     updateURL(examples[0].path);
                     exampleList.firstChild?.classList.add('active');
                 }
