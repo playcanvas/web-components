@@ -52,32 +52,6 @@ body {
     margin-bottom: env(safe-area-inset-bottom);
 }
 
-#code-panel {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    height: 80%;
-    background: rgba(0, 0, 0, 0.9);
-    padding: 20px;
-    overflow: auto;
-    display: none;
-    backdrop-filter: blur(2px);
-    box-sizing: border-box;
-    z-index: 2;
-}
-
-#code-panel pre {
-    margin: 0;
-    white-space: pre-wrap;
-}
-
-#code-panel code {
-    font-family: 'Fira Code', Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
-    font-size: 14px;
-}
-
 .example-link {
     display: flex;
     align-items: center;
@@ -115,14 +89,6 @@ body {
 pre {
     margin: 0;
     white-space: pre-wrap;
-}
-
-.controls {
-    padding: 10px;
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 1;
 }
 
 /* Webkit (Chrome, Safari, newer versions of Opera) */
@@ -191,11 +157,6 @@ pre {
         padding-left: 20px;
         padding-right: 20px;
     }
-
-    #code-panel {
-        width: 95%;
-        height: 90%;
-    }
 }
 
 .header {
@@ -259,4 +220,40 @@ pre {
 .qr-button:hover {
     opacity: 1;
     background: rgba(0, 0, 0, 0.1);
+}
+
+/* Remove these elements */
+.controls,
+#code-panel,
+#overlay {
+    display: none;
+}
+
+/* Remove code panel styles */
+#code-panel,
+#code-panel pre,
+#code-panel code,
+#code-panel::-webkit-scrollbar-track,
+#code-panel::-webkit-scrollbar-thumb,
+#code-panel::-webkit-scrollbar-thumb:hover,
+#code-panel {
+    /* Remove these style blocks */
+}
+
+/* Remove media query adjustments for code panel */
+@media (max-width: 768px) {
+    body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .sidebar {
+        max-height: 200px;
+        border-bottom: 1px solid #ddd;
+        border-right: none;
+        width: 100%;
+        min-width: 0;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
 }
