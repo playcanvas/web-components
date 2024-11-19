@@ -7,7 +7,7 @@ export function showQRCode(path) {
     const modal = document.getElementById('qr-modal');
     const qrDiv = document.getElementById('qr-code');
     qrDiv.innerHTML = qr.createImgTag(4);
-    
+
     // Add click handler to close on backdrop click
     modal.addEventListener('click', (e) => {
         const rect = modal.getBoundingClientRect();
