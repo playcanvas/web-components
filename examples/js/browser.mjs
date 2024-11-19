@@ -61,7 +61,13 @@ class ExampleBrowser {
     createQRButton(example) {
         const button = document.createElement('button');
         button.className = 'qr-button';
-        button.innerHTML = '📱';
+        button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+            </svg>`;
         button.title = 'View QR code for mobile';
         button.onclick = (e) => {
             e.preventDefault();
@@ -72,14 +78,21 @@ class ExampleBrowser {
     }
 
     createOpenInNewButton(example) {
-        const link = document.createElement('a');
-        link.href = example.path;
-        link.target = '_blank';
-        link.className = 'open-in-new';
-        link.innerHTML = '↗️';
-        link.title = 'Open in new tab';
-        link.onclick = e => e.stopPropagation();
-        return link;
+        const button = document.createElement('button');
+        button.className = 'open-in-new';
+        button.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>`;
+        button.title = 'Open in new tab';
+        button.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(example.path, '_blank');
+        };
+        return button;
     }
 
     handleExampleClick(e, example, link) {

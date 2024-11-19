@@ -74,23 +74,31 @@ body {
     color: white;
 }
 
-.qr-button {
+.qr-button,
+.open-in-new {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0.5;
     padding: 4px;
     border-radius: 4px;
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 16px;
+    color: currentColor;
+    width: 24px;
+    height: 24px;
 }
 
-.qr-button:hover {
+.qr-button:hover,
+.open-in-new:hover {
     opacity: 1;
     background: rgba(0, 0, 0, 0.1);
 }
 
-.open-in-new {
-    opacity: 0.5
+.qr-button svg,
+.open-in-new svg {
+    stroke-width: 2;
 }
 
 /* Main content */
