@@ -152,3 +152,35 @@ body {
         height: 100%;
     }
 }
+
+/* QR Code Modal styles */
+#qr-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    margin: 0;
+}
+
+#qr-modal::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.qr-modal-content {
+    padding: 24px;
+    text-align: center;
+}
+
+.qr-modal-content p {
+    margin-top: 16px;
+    color: #2c3e50;
+}
+
+#qr-code img {
+    display: block;
+    margin: 0 auto;
+}
