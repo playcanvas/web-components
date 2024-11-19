@@ -9,128 +9,34 @@
     </head>
     <body>
         <div class="layout-wrapper">
-            <div class="sidebar">
-                <div class="header">
+            <aside class="sidebar">
+                <header class="header">
                     <img src="img/playcanvas.png" alt="PlayCanvas Logo" class="logo">
                     <div>
                         <h2>PlayCanvas<br>Web Components</h2>
                     </div>
-                </div>
-                <div id="example-list"></div>
-            </div>
-            <div class="main">
+                </header>
+                <nav id="example-list"></nav>
+            </aside>
+            <main class="main">
                 <iframe id="example-frame" allow="fullscreen; xr-spatial-tracking;"></iframe>
-            </div>
+            </main>
         </div>
 
         <button class="menu-toggle" aria-label="Toggle Menu">
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" fill="currentColor"/>
             </svg>
         </button>
-        <div class="sidebar-overlay"></div>
-        <div id="qr-modal" style="display: none;">
+        <div class="sidebar-overlay" role="presentation"></div>
+
+        <dialog id="qr-modal">
             <div class="qr-modal-content">
                 <div id="qr-code"></div>
                 <p>Scan to view on mobile</p>
             </div>
-        </div>
-        <script type="module">
-            import { examples } from './js/examples.mjs';
-            import { showQRCode } from './js/qr-code.mjs';
-            import { setupNavigation } from './js/navigation.mjs';
+        </dialog>
 
-            // Get DOM elements
-            const frame = document.getElementById('example-frame');
-            const exampleList = document.getElementById('example-list');
-
-            // Setup navigation
-            const loadExample = (path) => frame.src = path;
-            const { updateURL } = setupNavigation(loadExample);
-
-            // Create example links
-            examples.forEach(example => {
-                const link = document.createElement('a');
-                link.href = '#' + example.path;
-                link.className = 'example-link';
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = example.name;
-                link.appendChild(nameSpan);
-
-                const buttonContainer = document.createElement('div');
-                buttonContainer.style.display = 'flex';
-                buttonContainer.style.gap = '4px';
-
-                const qrButton = document.createElement('button');
-                qrButton.className = 'qr-button';
-                qrButton.innerHTML = '📱';
-                qrButton.title = 'View QR code for mobile';
-                qrButton.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    showQRCode(example.path, qrcode);
-                };
-                buttonContainer.appendChild(qrButton);
-
-                const openInNew = document.createElement('a');
-                openInNew.href = example.path;
-                openInNew.target = '_blank';
-                openInNew.className = 'open-in-new';
-                openInNew.innerHTML = '↗️';
-                openInNew.title = 'Open in new tab';
-                openInNew.onclick = (e) => e.stopPropagation();
-                buttonContainer.appendChild(openInNew);
-
-                link.appendChild(buttonContainer);
-
-                link.onclick = (e) => {
-                    if (e.target !== openInNew) {
-                        e.preventDefault();
-                        loadExample(example.path);
-                        updateURL(example.path);
-                        document.querySelectorAll('.example-link')
-                            .forEach(l => l.classList.remove('active'));
-                        link.classList.add('active');
-                    }
-                };
-                
-                exampleList.appendChild(link);
-            });
-
-            // Load initial example
-            if (examples.length > 0) {
-                const hash = window.location.hash.slice(1);
-                if (hash && examples.some(ex => ex.path === hash)) {
-                    loadExample(hash);
-                    document.querySelector(`a[href="#${hash}"]`)?.classList.add('active');
-                } else {
-                    loadExample(examples[0].path);
-                    updateURL(examples[0].path);
-                    exampleList.firstChild?.classList.add('active');
-                }
-            }
-
-            const menuToggle = document.querySelector('.menu-toggle');
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-
-            function toggleMenu() {
-                sidebar.classList.toggle('open');
-                overlay.classList.toggle('open');
-            }
-
-            menuToggle.addEventListener('click', toggleMenu);
-            overlay.addEventListener('click', toggleMenu);
-
-            // Close menu when example is selected
-            document.querySelectorAll('.example-link').forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth <= 768) {
-                        toggleMenu();
-                    }
-                });
-            });
-        </script>
+        <script type="module" src="js/browser.mjs"></script>
     </body>
 </html>

@@ -1,26 +1,11 @@
-export function showQRCode(path, qrcodeLib) {
-    const modal = document.getElementById('qr-modal');
-    const qrContainer = document.getElementById('qr-code');
-    const url = `${window.location.origin}${window.location.pathname.replace('index.html', '')}${path}`;
-
-    const qr = qrcodeLib(0, 'M');
+export function showQRCode(path) {
+    const qr = window.qrcode(0, 'L');
+    const url = `${window.location.origin}${window.location.pathname}${path}`;
     qr.addData(url);
     qr.make();
-    qrContainer.innerHTML = qr.createImgTag(5);
 
-    modal.style.display = 'flex';
-
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    };
-
-    const escHandler = (e) => {
-        if (e.key === 'Escape') {
-            modal.style.display = 'none';
-            document.removeEventListener('keydown', escHandler);
-        }
-    };
-    document.addEventListener('keydown', escHandler);
+    const modal = document.getElementById('qr-modal');
+    const qrDiv = document.getElementById('qr-code');
+    qrDiv.innerHTML = qr.createImgTag(4);
+    modal.showModal();
 }
