@@ -1,0 +1,21 @@
+{
+    "name": "PlayCanvas Web Components Examples",
+    "short_name": "PlayCanvas Examples",
+    "description": "Examples showcasing PlayCanvas Web Components capabilities and features",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "icons": [
+        {
+            "src": "img/playcanvas-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "img/playcanvas.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
