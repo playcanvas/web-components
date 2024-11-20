@@ -1,3 +1,5 @@
+import { Vec3 } from 'playcanvas';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const camera = await document.querySelector('pc-camera').ready();
 
@@ -74,6 +76,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             rot = entity.rotation.clone();
             if (entity.entity.script.cameraControls) {
                 entity.entity.script.cameraControls.enabled = false;
+                entity.position = new Vec3(0, 0, 0);
+                entity.rotation = new Vec3(0, 0, 0);
             }
         });
         app.xr.on('end', () => {
