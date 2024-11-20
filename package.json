@@ -1,6 +1,6 @@
 {
   "name": "@playcanvas/web-components",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "Web Components for the PlayCanvas Engine",
