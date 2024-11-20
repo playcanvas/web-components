@@ -55,12 +55,14 @@ class EntityElement extends AsyncElement {
         this.entity = new Entity(this._name, app);
 
         // Initialize from attributes
+        const enabledAttr = this.getAttribute('enabled');
         const nameAttr = this.getAttribute('name');
         const positionAttr = this.getAttribute('position');
         const rotationAttr = this.getAttribute('rotation');
         const scaleAttr = this.getAttribute('scale');
         const tagsAttr = this.getAttribute('tags');
 
+        if (enabledAttr) this.enabled = enabledAttr !== 'false';
         if (nameAttr) this.name = nameAttr;
         if (positionAttr) this.position = parseVec3(positionAttr);
         if (rotationAttr) this.rotation = parseVec3(rotationAttr);

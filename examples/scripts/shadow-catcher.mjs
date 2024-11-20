@@ -73,8 +73,10 @@ export class ShadowCatcher extends Script {
         this.light.light.layers = [this.layer.id];
 
         // add the shadow layer to the camera
-        const camera = this.app.root.findComponent('camera');
-        camera.layers = camera.layers.concat([this.layer.id]);
+        const cameras = this.app.root.findComponents('camera');
+        cameras.forEach((camera) => {
+            camera.layers = camera.layers.concat([this.layer.id]);
+        });
 
         this.entity.findComponents('render').forEach((component) => {
             this.layer.shadowCasters = this.layer.shadowCasters.concat(component.meshInstances);
