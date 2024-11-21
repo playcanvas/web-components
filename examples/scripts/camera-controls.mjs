@@ -301,15 +301,28 @@ class CameraControls extends Script {
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
 
-        const position = new Vec3();
-        const rotation = new Quat();
+        const positionRoot = new Vec3();
+        const rotationRoot = new Quat();
+        const positionCamera = new Vec3();
+        const rotationCamera = new Quat();
+
         this.app.xr.on('start', () => {
-            position.copy(this.entity.getPosition());
-            rotation.copy(this.entity.getRotation());
+            positionRoot.copy(this.root.getPosition());
+            rotationRoot.copy(this.root.getRotation());
+            positionCamera.copy(this.entity.getPosition());
+            rotationCamera.copy(this.entity.getRotation());
+
+            tmpV1.copy(this.entity.getPosition());
+            tmpV1.y = 0;
+            this.root.setPosition(tmpV1);
+
+            this.root.lookAt(Vec3.ZERO, Vec3.UP);
         });
         this.app.xr.on('end', () => {
-            this.entity.setPosition(position);
-            this.entity.setRotation(rotation);
+            this.root.setPosition(positionRoot);
+            this.root.setRotation(rotationRoot);
+            this.entity.setPosition(positionCamera);
+            this.entity.setRotation(rotationCamera);
         });
     }
 
