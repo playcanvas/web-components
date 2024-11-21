@@ -93,9 +93,9 @@ export default class Vr extends Script {
         });
 
         this.app.xr.input.on('remove', (inputSource) => {
-            const entity = this.controllers.get(inputSource);
-            if (entity) {
-                entity.destroy();
+            const controller = this.controllers.get(inputSource);
+            if (controller) {
+                controller.entity.destroy();
                 this.controllers.delete(inputSource);
             }
         });
