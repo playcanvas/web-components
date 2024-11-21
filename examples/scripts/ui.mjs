@@ -69,24 +69,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 camera.endXr();
             }
         });
-
-        let pos, rot;
-        app.xr.on('start', () => {
-            pos = entity.position.clone();
-            rot = entity.rotation.clone();
-            if (entity.entity.script.cameraControls) {
-                entity.entity.script.cameraControls.enabled = false;
-                entity.position = new Vec3(0, 0, 0);
-                entity.rotation = new Vec3(0, 0, 0);
-            }
-        });
-        app.xr.on('end', () => {
-            entity.position = pos;
-            entity.rotation = rot;
-            if (entity.entity.script.cameraControls) {
-                entity.entity.script.cameraControls.enabled = true;
-            }
-        });
     }
 
     // Add fullscreen button if supported
