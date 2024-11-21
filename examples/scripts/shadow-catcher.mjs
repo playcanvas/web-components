@@ -49,7 +49,7 @@ export class ShadowCatcher extends Script {
             castShadows: false,
             material: this.material
         });
-        this.plane.setLocalScale(2 * 4, 1, 2 * 4);
+        this.plane.setLocalScale(2 * 7, 1, 2 * 7);
 
         // create shadow catcher light
         this.light = new Entity('ShadowLight');
