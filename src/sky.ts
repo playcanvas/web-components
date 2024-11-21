@@ -39,9 +39,9 @@ class SkyElement extends AsyncElement {
         if (!this._scene) return;
 
         const source = asset.resource as Texture;
-        source.anisotropy = 4;
 
         const skybox = EnvLighting.generateSkyboxCubemap(source);
+        skybox.anisotropy = 4;
         this._scene.skybox = skybox;
 
         if (this._lighting) {
