@@ -17,11 +17,13 @@
     <body>
         <pc-app>
             <pc-asset id="scroll" src="scripts/scroll.mjs" preload></pc-asset>
+            <pc-asset id="vr" src="scripts/vr.mjs" preload></pc-asset>
             <pc-asset id="trade-gothic" src="assets/fonts/trade gothic lt bold no. 2.json" type="font" preload></pc-asset>
             <pc-scene fog="linear" fog-start="0" fog-end="8" fog-color="black">
                 <!-- Camera -->
                 <pc-entity name="camera">
                     <pc-camera clear-color="black" fov="35"></pc-camera>
+                    <pc-script name="vr"></pc-script>
                 </pc-entity>
                 <!-- Text -->
                 <pc-entity name="crawl text" position="0 -2 0" rotation="-72 0 0">
