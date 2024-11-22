@@ -108,9 +108,7 @@ body {
 
 /* Main content */
 .main {
-    height: 100vh;
-    height: 100dvh;
-    height: -webkit-fill-available;
+    height: 100%;
     overflow: hidden;
 }
 
