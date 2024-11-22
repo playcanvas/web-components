@@ -22,7 +22,7 @@
             <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
             <pc-asset id="camera-frame" src="scripts/camera-frame.mjs" preload></pc-asset>
             <pc-asset id="choose-color" src="scripts/choose-color.mjs" preload></pc-asset>
-            <pc-asset id="vr" src="scripts/vr.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
             <pc-asset id="car" src="assets/models/porsche-911-carrera-4s.glb" preload></pc-asset>
             <!-- Scene -->
@@ -45,7 +45,6 @@
                                 "zoomMax": 1
                             }'
                         ></pc-script>
-                        <pc-script name="vr"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Car -->
@@ -53,6 +52,12 @@
                     <pc-model asset="car"></pc-model>
                     <pc-scripts>
                         <pc-script name="chooseColor"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

@@ -21,7 +21,7 @@
             <!-- Assets -->
             <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
             <pc-asset id="grid" src="scripts/grid.mjs" preload></pc-asset>
-            <pc-asset id="vr" src="scripts/vr.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
             <pc-asset id="cube" src="assets/models/playcanvas-cube.glb" preload></pc-asset>
             <!-- Scene -->
@@ -38,7 +38,6 @@
                                 "sceneSize": 10
                             }'
                         ></pc-script>
-                        <pc-script name="vr"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
@@ -63,6 +62,12 @@
                     <pc-rigidbody></pc-rigidbody>
                     <pc-scripts>
                         <pc-script name="grid"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

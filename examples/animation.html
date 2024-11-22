@@ -18,7 +18,7 @@
         <pc-app antialias="false">
             <!-- Assets -->
             <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
-            <pc-asset id="vr" src="scripts/vr.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="shadow-catcher" src="scripts/shadow-catcher.mjs" preload></pc-asset>
             <pc-asset id="lake-bed" src="assets/skies/dry-lake-bed-2k.hdr" preload></pc-asset>
             <pc-asset id="t-rex" src="assets/models/t-rex.glb" preload></pc-asset>
@@ -40,7 +40,6 @@
                                 "zoomMax": 15
                             }'
                         ></pc-script>
-                        <pc-script name="vr"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- T-Rex -->
@@ -48,6 +47,12 @@
                     <pc-model asset="t-rex"></pc-model>
                     <pc-scripts>
                         <pc-script name="shadowCatcher"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

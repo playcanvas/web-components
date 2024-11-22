@@ -18,7 +18,7 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
-            <pc-asset id="vr" src="scripts/vr.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
             <pc-asset id="shoe" src="assets/models/shoe.glb" preload></pc-asset>
             <!-- Scene -->
@@ -40,7 +40,6 @@
                                 "zoomMax": 0.75
                             }'
                         ></pc-script>
-                        <pc-script name="vr"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
@@ -50,6 +49,12 @@
                 <!-- Shoe -->
                 <pc-entity name="shoe">
                     <pc-model asset="shoe"></pc-model>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>

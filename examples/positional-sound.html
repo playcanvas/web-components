@@ -18,7 +18,7 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="orbit" src="scripts/orbit.mjs" preload></pc-asset>
-            <pc-asset id="vr" src="scripts/vr.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="lake-bed" src="assets/skies/dry-lake-bed-2k.hdr" preload></pc-asset>
             <pc-asset id="robot" src="assets/models/walking-robot.glb" preload></pc-asset>
             <pc-asset id="footsteps" src="assets/sounds/footsteps.mp3" preload></pc-asset>
@@ -30,9 +30,6 @@
                 <pc-entity name="camera" position="0 1 7">
                     <pc-camera clear-color="#8099e6"></pc-camera>
                     <pc-listener></pc-listener>
-                    <pc-scripts>
-                        <pc-script name="vr"></pc-script>
-                    </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="45 0 0">
@@ -46,6 +43,12 @@
                     </pc-sounds>
                     <pc-scripts>
                         <pc-script name="orbit"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

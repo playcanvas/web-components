@@ -9,18 +9,18 @@ const jointIds = [
     'pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-phalanx-intermediate', 'pinky-finger-phalanx-distal', 'pinky-finger-tip'
 ];
 
-export default class Vr extends Script {
+export default class XrControllers extends Script {
+    /**
+     * The base URL for fetching the WebXR input profiles.
+     *
+     * @attribute
+     * @type {string}
+     */
+    basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
+
     controllers = new Map();
 
     initialize() {
-        this.app.on('vr:start', (space) => {
-            this.entity.camera.startXr('immersive-vr', space);
-        });
-
-        this.app.on('vr:end', () => {
-            this.entity.camera.endXr();
-        });
-
         this.app.xr.input.on('add', async (inputSource) => {
             if (!inputSource.profiles?.length) {
                 console.warn('No profiles available for input source');
@@ -28,22 +28,19 @@ export default class Vr extends Script {
             }
 
             // Try each profile in order until one works
-            const basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
-            
             for (const profileId of inputSource.profiles) {
-                const profileUrl = `${basePath}/${profileId}/profile.json`;
+                const profileUrl = `${this.basePath}/${profileId}/profile.json`;
 
                 try {
                     // Fetch the profile
                     const response = await fetch(profileUrl);
                     if (!response.ok) {
-                        console.warn(`Profile ${profileId} not found, trying next...`);
                         continue;
                     }
                     
                     const profile = await response.json();
                     const layoutPath = profile.layouts[inputSource.handedness]?.assetPath || '';
-                    const assetPath = `${basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
+                    const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
 
                     // Try to load the model
                     try {
