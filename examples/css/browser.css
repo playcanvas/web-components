@@ -13,6 +13,8 @@ body {
     display: grid;
     grid-template-columns: minmax(250px, max-content) 1fr;
     height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
     width: 100%;
 }
 
@@ -107,6 +109,8 @@ body {
 /* Main content */
 .main {
     height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
     overflow: hidden;
 }
 
