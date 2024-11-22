@@ -27,9 +27,6 @@ export default class Vr extends Script {
                 return;
             }
 
-            // console.log the profiles
-            console.log(inputSource.profiles);
-
             // Try each profile in order until one works
             const basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
             
@@ -64,16 +61,17 @@ export default class Vr extends Script {
                         const jointMap = new Map();
                         if (inputSource.hand) {
                             for (const jointId of jointIds) {
-                                const jointEntity = entity.findByName(jointId);
                                 const joint = inputSource.hand.getJointById(jointId);
-                                jointMap.set(jointId, { jointEntity, joint });
+                                const jointEntity = entity.findByName(jointId);
+                                if (joint && jointEntity) {
+                                    jointMap.set(joint, jointEntity);
+                                } else {
+                                    console.warn(`Missing ${jointEntity ? 'joint' : 'entity'} for ${jointId}`);
+                                }
                             }
                         }
 
                         this.controllers.set(inputSource, { entity, jointMap });
-
-                        // Successfully loaded a profile, exit the loop
-                        console.log(`Successfully loaded profile: ${profileId}`);
                         return;
 
                     } catch (error) {
@@ -88,8 +86,7 @@ export default class Vr extends Script {
             }
 
             // If we get here, none of the profiles worked
-            console.warn('No compatible profiles found, using basic controller');
-            this.createBasicController(inputSource);
+            console.warn('No compatible profiles found');
         });
 
         this.app.xr.input.on('remove', (inputSource) => {
@@ -105,7 +102,7 @@ export default class Vr extends Script {
         if (this.app.xr.active) {
             for (const [inputSource, { entity, jointMap }] of this.controllers) {
                 if (inputSource.hand) {
-                    for (const [jointId, { jointEntity, joint }] of jointMap) {
+                    for (const [joint, jointEntity] of jointMap) {
                         jointEntity.setPosition(joint.getPosition());
                         jointEntity.setRotation(joint.getRotation());
                     }
