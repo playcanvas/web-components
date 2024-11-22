@@ -1,5 +1,3 @@
-import { Vec3 } from 'playcanvas';
-
 document.addEventListener('DOMContentLoaded', async () => {
     const appElement = await document.querySelector('pc-app').ready();
     const app = appElement.app;
