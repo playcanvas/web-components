@@ -4,6 +4,14 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100vh;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    margin: 0;
+    padding: 0;
+}
+
 /* Base layout */
 body {
     font-family: system-ui, -apple-system, sans-serif;
@@ -12,9 +20,7 @@ body {
 .layout-wrapper {
     display: grid;
     grid-template-columns: minmax(250px, max-content) 1fr;
-    height: 100vh;
-    height: 100dvh;
-    height: -webkit-fill-available;
+    height: 100%;
     width: 100%;
 }
 
