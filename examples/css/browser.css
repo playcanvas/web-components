@@ -26,6 +26,9 @@ body {
 .sidebar {
     background: #f5f5f5;
     padding: 20px;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
     border-right: 1px solid #ddd;
     overflow-y: auto;
     min-width: 250px;
