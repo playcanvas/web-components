@@ -7,13 +7,8 @@
 /* Base layout */
 body {
     font-family: system-ui, -apple-system, sans-serif;
-}
-
-.layout-wrapper {
     display: grid;
     grid-template-columns: minmax(250px, max-content) 1fr;
-    height: 100vh;
-    width: 100%;
 }
 
 /* Hide menu toggle by default */
@@ -33,6 +28,7 @@ body {
     overflow-y: auto;
     min-width: 250px;
     width: max-content;
+    height: 100dvh;
 }
 
 /* Header styles */
@@ -106,7 +102,7 @@ body {
 
 /* Main content */
 .main {
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -118,9 +114,10 @@ body {
 
 /* Mobile styles */
 @media (max-width: 768px) {
-    .layout-wrapper {
+    body {
         display: block;
         height: 100vh;
+        height: 100dvh;
     }
 
     .menu-toggle {
