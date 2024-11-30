@@ -10,5 +10,5 @@ export const examples = [
     { name: 'Solar System', path: 'solar-system.html' },
     { name: 'Sound', path: 'sound.html' },
     { name: 'Text Demo', path: 'text.html' },
-    { name: 'Video Textures', path: 'video-textures.html' }
+    { name: 'Video Texture', path: 'video-texture.html' }
 ];
