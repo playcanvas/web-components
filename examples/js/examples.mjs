@@ -1,6 +1,7 @@
 export const examples = [
     { name: 'Animation', path: 'animation.html' },
     { name: 'Car Configurator', path: 'car-configurator.html' },
+    { name: 'Gaussian Splatting', path: 'splat.html' },
     { name: 'GLB Loader', path: 'glb.html' },
     { name: 'Physics', path: 'physics.html' },
     { name: 'Positional Sound', path: 'positional-sound.html' },
@@ -9,5 +10,5 @@ export const examples = [
     { name: 'Solar System', path: 'solar-system.html' },
     { name: 'Sound', path: 'sound.html' },
     { name: 'Text Demo', path: 'text.html' },
-    { name: '3D Gaussian Splat', path: 'splat.html' }
+    { name: 'Video Textures', path: 'video-textures.html' }
 ];
