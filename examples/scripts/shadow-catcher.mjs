@@ -6,6 +6,30 @@ const endPS = `
 `;
 
 export class ShadowCatcher extends Script {
+    /**
+     * The shadow distance of the shadow catcher light.
+     * @type {number}
+     */
+    shadowDistance = 16;
+
+    /**
+     * The VSM blur size of the shadow catcher light.
+     * @type {number}
+     */
+    vsmBlurSize = 32;
+
+    /**
+     * The width of the shadow catcher.
+     * @type {number}
+     */
+    width = 1;
+
+    /**
+     * The depth of the shadow catcher.
+     * @type {number}
+     */
+    depth = 1;
+
     /** @type {Layer|null} */
     layer = null;
 
@@ -49,7 +73,7 @@ export class ShadowCatcher extends Script {
             castShadows: false,
             material: this.material
         });
-        this.plane.setLocalScale(2 * 7, 1, 2 * 7);
+        this.plane.setLocalScale(this.width, 1, this.depth);
 
         // create shadow catcher light
         this.light = new Entity('ShadowLight');
@@ -58,12 +82,11 @@ export class ShadowCatcher extends Script {
             castShadows: true,
             normalOffsetBias: 0,
             shadowBias: 0,
-            shadowDistance: 16,
+            shadowDistance: this.shadowDistance,
             shadowResolution: 1024,
             shadowType: SHADOW_VSM16,
             shadowUpdateMode: SHADOWUPDATE_REALTIME,
-            vsmBlurSize: 32,
-            enabled: true,
+            vsmBlurSize: 16,
             shadowIntensity: 0.6
         });
 

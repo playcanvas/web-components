@@ -56,7 +56,12 @@
                 <pc-entity name="pc">
                     <pc-model asset="vintage-pc"></pc-model>
                     <pc-scripts>
-                        <pc-script name="shadowCatcher"></pc-script>
+                        <pc-script name="shadowCatcher" attributes='{
+                            "width": 3,
+                            "depth": 3,
+                            "shadowDistance": 4,
+                            "vsmBlurSize": 16
+                        }'></pc-script>
                         <pc-script name="videoTexture" attributes='{
                             "materialName": "Screen",
                             "url": "assets/videos/doom.mp4"
