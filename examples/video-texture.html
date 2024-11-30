@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Video Textures</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
+            <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
+            <pc-asset id="shadow-catcher" src="scripts/shadow-catcher.mjs" preload></pc-asset>
+            <pc-asset id="video-texture" src="scripts/video-texture.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
+            <pc-asset id="vintage-pc" src="assets/models/vintage-pc.glb" preload></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="studio" type="none" intensity="0.5" lighting></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera" position="-0.6 0.3 0.85">
+                    <pc-camera></pc-camera>
+                    <pc-scripts>
+                        <pc-script
+                            name="cameraControls"
+                            attributes='{
+                                "enableFly": false,
+                                "enablePan": false,
+                                "focusPoint": [0, 0.225, 0],
+                                "pitchRange": [-90, 0],
+                                "sceneSize": 1,
+                                "zoomMin": 0.5,
+                                "zoomMax": 3
+                            }'
+                        ></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45 -35 0">
+                    <pc-light cast-shadows shadow-distance="5"></pc-light>
+                </pc-entity>
+                <!-- PC -->
+                <pc-entity name="pc">
+                    <pc-model asset="vintage-pc"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="shadowCatcher"></pc-script>
+                        <pc-script name="videoTexture" attributes='{
+                            "materialName": "Screen",
+                            "url": "assets/videos/doom.mp4"
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="scripts/ui.mjs"></script>
+    </body>
+</html>
