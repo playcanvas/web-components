@@ -141,11 +141,11 @@ export class Text3D extends Script {
     kerning = 1;
 
     /**
-     * Depth of the extrusion applied to the text.
+     * The thickness of the text geometry.
      * @type {number}
      * @attribute
      */
-    depth = 0.1;
+    thickness = 0.1;
 
     /**
      * Maximum number of divisions applied to bezier based path in a font outline.
@@ -272,7 +272,7 @@ export class Text3D extends Script {
         // Generate front vertices
         const vertices = [];
         for (let p = 0; p < vertexData.length; p += 2) {
-            vertices.push(vertexData[p] * scalar, vertexData[p + 1] * scalar, this.depth);
+            vertices.push(vertexData[p] * scalar, vertexData[p + 1] * scalar, this.thickness);
         }
 
         // Generate back vertices
@@ -292,7 +292,7 @@ export class Text3D extends Script {
                 const base = vertices.length / 3;
                 const p1 = poly.points[i];
                 const p2 = poly.points[i + 1];
-                vertices.push(p1.x * scalar, p1.y * scalar, this.depth, p2.x * scalar, p2.y * scalar, this.depth,
+                vertices.push(p1.x * scalar, p1.y * scalar, this.thickness, p2.x * scalar, p2.y * scalar, this.thickness,
                     p1.x * scalar, p1.y * scalar, 0, p2.x * scalar, p2.y * scalar, 0);
                 indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
             }
