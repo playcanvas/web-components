@@ -4,7 +4,9 @@ import { ComponentElement } from './component';
 import { parseQuat, parseVec3 } from '../utils';
 
 /**
- * Represents a collision component in the PlayCanvas engine.
+ * The CollisionComponentElement interface provides properties and methods for manipulating
+ * `<pc-collision>` elements. The CollisionComponentElement interface also inherits the properties
+ * and methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -25,9 +27,7 @@ class CollisionComponentElement extends ComponentElement {
 
     private _type: string = 'box';
 
-    /**
-     * Creates a new CollisionComponentElement.
-     */
+    /** @ignore */
     constructor() {
         super('collision');
     }

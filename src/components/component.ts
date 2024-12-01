@@ -15,8 +15,10 @@ class ComponentElement extends AsyncElement {
     private _component: Component | null = null;
 
     /**
-     * Constructor for the ComponentElement.
+     * Creates a new ComponentElement instance.
+     *
      * @param componentName - The name of the component.
+     * @ignore
      */
     constructor(componentName: string) {
         super();

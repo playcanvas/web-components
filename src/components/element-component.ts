@@ -4,9 +4,10 @@ import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
 import { parseColor, parseVec2, parseVec4 } from '../utils';
 
-
 /**
- * Represents an element component in the PlayCanvas engine.
+ * The ElementComponentElement interface provides properties and methods for manipulating
+ * `<pc-element>` elements. The ElementComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -33,6 +34,7 @@ class ElementComponentElement extends ComponentElement {
 
     private _wrapLines: boolean = false;
 
+    /** @ignore */
     constructor() {
         super('element');
     }

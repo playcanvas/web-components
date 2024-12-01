@@ -4,7 +4,9 @@ import { ComponentElement } from './component';
 import { parseColor } from '../utils';
 
 /**
- * Represents a light component in the PlayCanvas engine.
+ * The LightComponentElement interface provides properties and methods for manipulating
+ * `<pc-light>` elements. The LightComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -31,9 +33,7 @@ class LightComponentElement extends ComponentElement {
 
     private _type = 'directional';
 
-    /**
-     * Creates a new LightComponentElement.
-     */
+    /** @ignore */
     constructor() {
         super('light');
     }

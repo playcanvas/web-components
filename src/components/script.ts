@@ -1,5 +1,7 @@
 /**
- * Represents a script in the PlayCanvas engine.
+ * The ScriptElement interface provides properties and methods for manipulating
+ * `<pc-script>` elements. The ScriptElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  */
 class ScriptElement extends HTMLElement {
     private _attributes: string = '{}';
