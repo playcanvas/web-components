@@ -2,6 +2,7 @@ import { ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
+import { AssetElement } from '../asset';
 
 const tmpV2 = new Vec2();
 const tmpV3 = new Vec3();
@@ -62,6 +63,16 @@ class ScriptComponentElement extends ComponentElement {
             const attributesObject = attributes ? JSON.parse(attributes) : {};
 
             const applyValue = (target: any, key: string, value: any) => {
+                // Handle asset references
+                if (typeof value === 'string' && value.startsWith('asset:')) {
+                    const assetId = value.slice(6);
+                    const assetElement = document.querySelector(`pc-asset#${assetId}`) as AssetElement;
+                    if (assetElement) {
+                        target[key] = assetElement.asset;
+                        return;
+                    }
+                }
+
                 // Handle vectors
                 if (Array.isArray(value)) {
                     if (target[key] instanceof Vec2) {
