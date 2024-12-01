@@ -16,7 +16,7 @@ import {
 // import { Element, ElementType } from './element';
 // import { Serializer } from './serializer';
 
-const vsCode = /* glsl*/ `
+const vsCode = /* glsl */ `
     uniform mat4 camera_matrix;
     uniform vec2 camera_params;
 
@@ -33,7 +33,7 @@ const vsCode = /* glsl*/ `
     }
 `;
 
-const fsCode = /* glsl*/ `
+const fsCode = /* glsl */ `
     uniform vec3 camera_position;
     uniform mat4 camera_viewProjection;
     uniform sampler2D blueNoiseTex32;
