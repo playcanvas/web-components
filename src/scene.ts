@@ -4,7 +4,9 @@ import { AsyncElement } from './async-element';
 import { parseColor } from './utils';
 
 /**
- * Represents a scene in the PlayCanvas engine.
+ * The SceneElement interface provides properties and methods for manipulating
+ * `<pc-scene>` elements. The SceneElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  */
 class SceneElement extends AsyncElement {
     /**

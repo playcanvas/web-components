@@ -5,7 +5,9 @@ import { AsyncElement } from '../async-element';
 import { SoundComponentElement } from './sound-component';
 
 /**
- * Represents a sound slot in the PlayCanvas engine.
+ * The SoundSlotElement interface provides properties and methods for manipulating
+ * `<pc-sound>` elements. The SoundSlotElement interface also inherits the properties and
+ * methods of the {@link AsyncElement} interface.
  */
 class SoundSlotElement extends AsyncElement {
     private _asset: string = '';

@@ -3,11 +3,14 @@ import { AudioListenerComponent } from 'playcanvas';
 import { ComponentElement } from './component';
 
 /**
- * Represents a audio listener component in the PlayCanvas engine.
+ * The ListenerComponentElement interface provides properties and methods for manipulating
+ * `<pc-listener>` elements. The ListenerComponentElement interface also inherits the properties
+ * and methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
 class ListenerComponentElement extends ComponentElement {
+    /** @ignore */
     constructor() {
         super('audiolistener');
     }

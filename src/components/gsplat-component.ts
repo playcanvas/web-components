@@ -4,13 +4,16 @@ import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
 
 /**
- * Represents a gsplat component in the PlayCanvas engine.
+ * The GSplatComponentElement interface provides properties and methods for manipulating
+ * `<pc-splat>` elements. The GSplatComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
 class GSplatComponentElement extends ComponentElement {
     private _asset: string = '';
 
+    /** @ignore */
     constructor() {
         super('gsplat');
     }

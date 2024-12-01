@@ -4,7 +4,9 @@ import { ComponentElement } from './component';
 import { parseVec3 } from '../utils';
 
 /**
- * Represents a rigidbody component in the PlayCanvas engine.
+ * The RigidBodyComponentElement interface provides properties and methods for manipulating
+ * `<pc-rigidbody>` elements. The RigidBodyComponentElement interface also inherits the properties
+ * and methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -54,9 +56,7 @@ class RigidBodyComponentElement extends ComponentElement {
      */
     private _type: string = 'static';
 
-    /**
-     * Creates a new RigidBodyComponentElement.
-     */
+    /** @ignore */
     constructor() {
         super('rigidbody');
     }

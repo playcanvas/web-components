@@ -2,13 +2,14 @@ import { AppElement } from './app';
 import { EntityElement } from './entity';
 
 /**
- * Base class for all PlayCanvas web components that initialize asynchronously.
+ * Base class for all PlayCanvas Web Components that initialize asynchronously.
  */
 class AsyncElement extends HTMLElement {
     private _readyPromise: Promise<void>;
 
     private _readyResolve!: () => void;
 
+    /** @ignore */
     constructor() {
         super();
         this._readyPromise = new Promise<void>((resolve) => {

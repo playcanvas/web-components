@@ -4,7 +4,9 @@ import { ComponentElement } from './component';
 import { parseColor, parseVec4 } from '../utils';
 
 /**
- * Represents a camera component in the PlayCanvas engine.
+ * The CameraComponentElement interface provides properties and methods for manipulating
+ * `<pc-camera>` elements. The CameraComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -39,9 +41,7 @@ class CameraComponentElement extends ComponentElement {
 
     private _scissorRect = new Vec4(0, 0, 1, 1);
 
-    /**
-     * Creates a new CameraComponentElement.
-     */
+    /** @ignore */
     constructor() {
         super('camera');
     }

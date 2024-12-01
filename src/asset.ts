@@ -21,7 +21,9 @@ const extToType = new Map([
 ]);
 
 /**
- * Loads an asset into the PlayCanvas engine.
+ * The AssetElement interface provides properties and methods for manipulating
+ * `<pc-asset>` elements. The AssetElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  */
 class AssetElement extends HTMLElement {
     private _preload: boolean = false;

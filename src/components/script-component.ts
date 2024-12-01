@@ -26,13 +26,16 @@ declare global {
 }
 
 /**
- * Represents a script component in the PlayCanvas engine.
+ * The ScriptComponentElement interface provides properties and methods for manipulating
+ * `<pc-scripts>` elements. The ScriptComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
 class ScriptComponentElement extends ComponentElement {
     private observer: MutationObserver;
 
+    /** @ignore */
     constructor() {
         super('script');
 

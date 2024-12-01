@@ -4,7 +4,9 @@ import { ComponentElement } from './component';
 import { parseVec2 } from '../utils';
 
 /**
- * Represents a screen component in the PlayCanvas engine.
+ * The ScreenComponentElement interface provides properties and methods for manipulating
+ * `<pc-screen>` elements. The ScreenComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -21,6 +23,7 @@ class ScreenComponentElement extends ComponentElement {
 
     private _scaleBlend = 0.5;
 
+    /** @ignore */
     constructor() {
         super('screen');
     }

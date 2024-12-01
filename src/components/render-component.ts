@@ -4,7 +4,9 @@ import { ComponentElement } from './component';
 import { MaterialElement } from '../material';
 
 /**
- * Represents a render component in the PlayCanvas engine.
+ * The RenderComponentElement interface provides properties and methods for manipulating
+ * `<pc-render>` elements. The RenderComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -17,6 +19,7 @@ class RenderComponentElement extends ComponentElement {
 
     private _type: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'asset';
 
+    /** @ignore */
     constructor() {
         super('render');
     }

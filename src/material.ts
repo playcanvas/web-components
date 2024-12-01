@@ -4,7 +4,9 @@ import { AssetElement } from './asset';
 import { parseColor } from './utils';
 
 /**
- * Represents a material in the PlayCanvas engine.
+ * The MaterialElement interface provides properties and methods for manipulating
+ * `<pc-material>` elements. The MaterialElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  */
 class MaterialElement extends HTMLElement {
     private _diffuse = new Color(1, 1, 1);

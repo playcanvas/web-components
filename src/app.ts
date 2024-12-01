@@ -30,7 +30,9 @@ class AppElement extends AsyncElement {
     app: Application | null = null;
 
     /**
-     * Creates a new AppElement.
+     * Creates a new AppElement instance.
+     *
+     * @ignore
      */
     constructor() {
         super();

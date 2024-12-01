@@ -5,7 +5,9 @@ import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
 
 /**
- * Represents a sky in the PlayCanvas engine.
+ * The SkyElement interface provides properties and methods for manipulating
+ * `<pc-sky>` elements. The SkyElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  */
 class SkyElement extends AsyncElement {
     private _asset = '';

@@ -3,7 +3,9 @@ import { SoundComponent } from 'playcanvas';
 import { ComponentElement } from './component';
 
 /**
- * Represents a sound component in the PlayCanvas engine.
+ * The SoundComponentElement interface provides properties and methods for manipulating
+ * `<pc-sounds>` elements. The SoundComponentElement interface also inherits the properties and
+ * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
@@ -22,6 +24,7 @@ class SoundComponentElement extends ComponentElement {
 
     private _volume: number = 1;
 
+    /** @ignore */
     constructor() {
         super('sound');
     }
