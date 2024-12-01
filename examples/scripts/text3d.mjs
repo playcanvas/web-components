@@ -1,5 +1,5 @@
 import earcut from 'earcut';
-import opentype from 'opentype.js';
+import { parse } from 'opentype.js';
 import { Entity, Mesh, MeshInstance, Script, StandardMaterial, Vec2, calculateNormals } from 'playcanvas';
 
 const BEZIER_STEP_SIZE = 3;
@@ -173,7 +173,7 @@ export class Text3D extends Script {
         this.fontData = null;
 
         if (this.font) {
-            this.fontData = opentype.parse(this.font.resource);
+            this.fontData = parse(this.font.resource);
             this.createText();
         }
 
@@ -181,7 +181,7 @@ export class Text3D extends Script {
             if (value !== prev) {
                 if (name === 'font') {
                     if (this.font) {
-                        this.fontData = opentype.parse(this.font.resource);
+                        this.fontData = parse(this.font.resource);
                     } else {
                         this.fontData = null;
                         this.destroyCharacters();
@@ -196,7 +196,7 @@ export class Text3D extends Script {
 
     parseCommands(commands) {
         // Convert all outlines for the character to polygons
-        var polygons = [];
+        const polygons = [];
         commands.forEach(({ type, x, y, x1, y1, x2, y2 }) => {
             switch (type) {
                 case 'M':
@@ -308,15 +308,15 @@ export class Text3D extends Script {
         const scalar = this.characterSize / font.unitsPerEm;
 
         let width = 0;
-        for (var i = 0; i < this.text.length; i++) {
+        for (let i = 0; i < this.text.length; i++) {
             const char = this.text.charAt(i);
             width += font.charToGlyph(char).advanceWidth * scalar;
 
             if (i < this.text.length - 1) {
                 width += this.characterSpacing;
 
-                var glyph = font.charToGlyph(char);
-                var nextGlyph = font.charToGlyph(this.text.charAt(i + 1));
+                const glyph = font.charToGlyph(char);
+                const nextGlyph = font.charToGlyph(this.text.charAt(i + 1));
                 width += font.getKerningValue(glyph, nextGlyph) * this.kerning * scalar;
             }
         }
@@ -324,7 +324,7 @@ export class Text3D extends Script {
     }
 
     destroyCharacters() {
-        this.characters.forEach(character => {
+        this.characters.forEach((character) => {
             character.destroy();
         });
         this.characters.length = 0;
@@ -336,7 +336,7 @@ export class Text3D extends Script {
         const font = this.fontData;
         const scalar = this.characterSize / font.unitsPerEm;
 
-        let w = this.calculateWidth();
+        const w = this.calculateWidth();
         let cursor = 0;
         switch (this.alignment) {
             case 'left': break;

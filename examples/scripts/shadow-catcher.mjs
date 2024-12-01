@@ -41,7 +41,7 @@ export class ShadowCatcher extends Script {
 
     /** @type {Entity|null} */
     light = null;
-    
+
     initialize() {
         // create and add the shadow layer
         this.layer = new Layer({

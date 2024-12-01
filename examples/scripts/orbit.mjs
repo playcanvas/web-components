@@ -1,8 +1,10 @@
 import { Script } from 'playcanvas';
 
-export class Orbit extends Script { 
+export class Orbit extends Script {
     radius = 4;
+
     speed = 0.4;
+
     time = 0;
 
     update(dt) {

@@ -6,7 +6,7 @@ import globals from 'globals';
 export default [
     ...playcanvasConfig,
     {
-        files: ['examples/js/**/*.mjs'],
+        files: ['examples/js/**/*.mjs', 'examples/scripts/**/*.mjs'],
         languageOptions: {
             globals: {
                 ...globals.browser

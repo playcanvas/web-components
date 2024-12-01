@@ -29,7 +29,7 @@
     "build": "rollup -c",
     "develop": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
-    "lint": "eslint examples/js src",
+    "lint": "eslint examples/js examples/scripts src",
     "serve": "serve",
     "test": "echo \"Error: no test specified\" && exit 1",
     "type-check": "tsc --noEmit",
