@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - 3D Text</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "earcut": "../node_modules/earcut/src/earcut.js",
+                    "opentype.js": "../node_modules/opentype.js/dist/opentype.module.js",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset id="camera-controls" src="scripts/camera-controls.mjs" preload></pc-asset>
+            <pc-asset id="grid" src="scripts/grid.mjs" preload></pc-asset>
+            <pc-asset id="text3d" src="scripts/text3d.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="scripts/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="arial" src="assets/fonts/arial.ttf" type="binary" preload></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="-2 1 5">
+                    <pc-camera clear-color="black"></pc-camera>
+                    <pc-scripts>
+                        <pc-script
+                            name="cameraControls"
+                            attributes='{
+                                "focusPoint": [0, 0.5, 0],
+                                "sceneSize": 10,
+                                "zoomMin": 0.1,
+                                "zoomMax": 10
+                            }'
+                        ></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45 -35 0">
+                    <pc-light cast-shadows shadow-distance="5"></pc-light>
+                </pc-entity>
+                <!-- Text -->
+                <pc-entity name="3d text">
+                    <pc-scripts>
+                        <pc-script name="text3D" attributes='{
+                            "font": "asset:arial",
+                            "text": "3D Text"
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Ground -->
+                <pc-entity name="grid">
+                    <pc-scripts>
+                        <pc-script name="grid"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- XR -->
+                <pc-entity name="xr">
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="scripts/ui.mjs"></script>
+    </body>
+</html>
