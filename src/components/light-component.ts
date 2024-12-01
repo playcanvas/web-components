@@ -27,6 +27,8 @@ class LightComponentElement extends ComponentElement {
 
     private _shadowDistance = 16;
 
+    private _shadowResolution = 1024;
+
     private _type = 'directional';
 
     /**
@@ -47,6 +49,7 @@ class LightComponentElement extends ComponentElement {
             range: this._range,
             shadowBias: this._shadowBias,
             shadowDistance: this._shadowDistance,
+            shadowResolution: this._shadowResolution,
             type: this._type
         };
     }
@@ -231,6 +234,25 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the shadow resolution of the light.
+     * @param value - The shadow resolution.
+     */
+    set shadowResolution(value: number) {
+        this._shadowResolution = value;
+        if (this.component) {
+            this.component.shadowResolution = value;
+        }
+    }
+
+    /**
+     * Gets the shadow resolution of the light.
+     * @returns The shadow resolution.
+     */
+    get shadowResolution() {
+        return this._shadowResolution;
+    }
+
+    /**
      * Sets the type of the light.
      * @param value - The type.
      */
@@ -266,6 +288,7 @@ class LightComponentElement extends ComponentElement {
             'range',
             'shadow-bias',
             'shadow-distance',
+            'shadow-resolution',
             'type'
         ];
     }
@@ -300,6 +323,9 @@ class LightComponentElement extends ComponentElement {
                 break;
             case 'shadow-distance':
                 this.shadowDistance = Number(newValue);
+                break;
+            case 'shadow-resolution':
+                this.shadowResolution = Number(newValue);
                 break;
             case 'type':
                 this.type = newValue;
