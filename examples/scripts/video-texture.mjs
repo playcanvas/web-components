@@ -21,6 +21,18 @@ export class VideoTexture extends Script {
      */
     video;
 
+    /**
+     * The material that the video texture is applied to.
+     * @type {Material}
+     */
+    material;
+
+    /**
+     * The handler for the can play through event.
+     * @type {Function}
+     */
+    _canPlayThroughHandler;
+
     initialize() {
         // Create HTML Video Element to play the video
         const video = document.createElement('video');
@@ -33,7 +45,7 @@ export class VideoTexture extends Script {
         video.playsInline = true;
 
         // needed because the video is being hosted on a different server url
-        video.crossOrigin = "anonymous";
+        video.crossOrigin = 'anonymous';
 
         // autoplay the video
         video.autoplay = true;
@@ -50,7 +62,7 @@ export class VideoTexture extends Script {
 
         document.body.appendChild(video);
 
-        // Create a texture to hold the video frame data            
+        // Create a texture to hold the video frame data
         this.videoTexture = new Texture(this.app.graphicsDevice, {
             format: PIXELFORMAT_R8_G8_B8,
             minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
@@ -60,22 +72,27 @@ export class VideoTexture extends Script {
             mipmaps: true
         });
 
-        video.addEventListener('canplaythrough', () => {
+        // Store reference to bound handler
+        this._canPlayThroughHandler = () => {
             const renderComponents = this.entity.findComponents('render');
-            renderComponents.forEach(renderComponent => {
-                renderComponent.meshInstances.forEach(meshInstance => {
+            renderComponents.forEach((renderComponent) => {
+                renderComponent.meshInstances.forEach((meshInstance) => {
                     const material = meshInstance.material;
                     if (material.name === this.materialName) {
                         material.emissiveMap = this.videoTexture;
                         material.emissive = Color.WHITE;
                         material.update();
+
+                        this.material = material;
                     }
                 });
             });
 
             this.videoTexture.setSource(video);
             video.play();
-        });
+        };
+
+        video.addEventListener('canplaythrough', this._canPlayThroughHandler);
 
         // set video source
         video.src = this.url;
@@ -85,12 +102,37 @@ export class VideoTexture extends Script {
     }
 
     destroy() {
-        this.videoTexture.destroy();
-        this.video.remove();
+        if (this.material) {
+            this.material.emissiveMap = null;
+            this.material.emissive = Color.BLACK;
+            this.material.update();
+        }
+
+        this.videoTexture?.destroy();
+        this.videoTexture = null;
+
+        // Stop video playback
+        if (this.video) {
+            // Remove event listeners
+            this.video.removeEventListener('canplaythrough', this._canPlayThroughHandler);
+
+            // Stop loading/playing
+            this.video.pause();
+
+            // Clear source and buffer
+            this.video.removeAttribute('src');
+            this.video.load(); // Triggers cleanup of media resources
+
+            // Remove from DOM
+            this.video.remove();
+
+            // Clear reference
+            this.video = null;
+        }
     }
 
     update() {
         // Transfer the latest video frame to the video texture
-        this.videoTexture.upload();
+        this.videoTexture?.upload();
     }
 }

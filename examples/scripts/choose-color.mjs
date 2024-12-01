@@ -17,6 +17,7 @@ export class ChooseColor extends Script {
 
     // Constants
     static TRANSITION_SPEED = 2;  // 0.5 seconds transition
+
     static METALNESS = {
         METALLIC: 0.9,
         NON_METALLIC: 0
@@ -27,11 +28,17 @@ export class ChooseColor extends Script {
      * @type {import('playcanvas').StandardMaterial}
      */
     material = null;
+
     fromColor = new Color();
+
     toColor = new Color();
+
     fromMetalness = 0;
+
     toMetalness = 0;
+
     lerpTime = 0;
+
     isTransitioning = false;
 
     initialize() {
@@ -56,7 +63,7 @@ export class ChooseColor extends Script {
 
     createUI() {
         const container = this.createContainer();
-        ChooseColor.PAINT_OPTIONS.forEach(color => {
+        ChooseColor.PAINT_OPTIONS.forEach((color) => {
             container.appendChild(this.createColorButton(color));
         });
         document.body.appendChild(container);
@@ -98,8 +105,8 @@ export class ChooseColor extends Script {
         this.fromColor.copy(this.material.diffuse);
         this.toColor.copy(color.color);
         this.fromMetalness = this.material.metalness;
-        this.toMetalness = color.metallic ? 
-            ChooseColor.METALNESS.METALLIC : 
+        this.toMetalness = color.metallic ?
+            ChooseColor.METALNESS.METALLIC :
             ChooseColor.METALNESS.NON_METALLIC;
         this.lerpTime = 0;
         this.isTransitioning = true;
@@ -110,7 +117,7 @@ export class ChooseColor extends Script {
 
         this.lerpTime += dt * ChooseColor.TRANSITION_SPEED;
         const t = Math.min(this.lerpTime, 1);
-        
+
         this.updateMaterial(t);
 
         if (t >= 1) {

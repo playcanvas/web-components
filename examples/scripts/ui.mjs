@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const button = document.createElement('button');
         button.innerHTML = icon;
         button.title = title;
-        
+
         Object.assign(button.style, {
             display: 'flex',
             position: 'relative',
@@ -42,8 +42,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             svg.style.margin = 'auto';
         }
 
-        button.onmouseenter = () => button.style.background = 'rgba(255, 255, 255, 1)';
-        button.onmouseleave = () => button.style.background = 'rgba(255, 255, 255, 0.9)';
+        button.onmouseenter = () => {
+            button.style.background = 'rgba(255, 255, 255, 1)';
+        };
+
+        button.onmouseleave = () => {
+            button.style.background = 'rgba(255, 255, 255, 0.9)';
+        };
+
         if (onClick) button.onclick = onClick;
 
         return button;

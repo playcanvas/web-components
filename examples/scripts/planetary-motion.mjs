@@ -58,11 +58,11 @@ export class PlanetaryMotion extends Script {
         // Scale factors - adjusted for planet sizes
         this.distanceScale = 3;     // Base scale for distances
         this.timeScale = 0.1;       // Speed up the orbital periods
-        
+
         // Get references to all planets
         this.planets = new Map();
-        ['sun', 'mercury', 'venus', 'earth', 'mars', 
-         'jupiter', 'saturn', 'uranus', 'neptune'].forEach(name => {
+        ['sun', 'mercury', 'venus', 'earth', 'mars',
+            'jupiter', 'saturn', 'uranus', 'neptune'].forEach((name) => {
             this.planets.set(name, this.entity.findByName(name));
         });
 
@@ -92,16 +92,16 @@ export class PlanetaryMotion extends Script {
             // Update orbital position
             const currentAngle = this.orbitalAngles.get(planet);
             this.orbitalAngles.set(
-                planet, 
+                planet,
                 currentAngle + (dt * this.timeScale / this.orbitalPeriods.get(planet))
             );
-            
+
             // Calculate orbital position
             const distance = this.orbitalDistances.get(planet);
             const angle = this.orbitalAngles.get(planet);
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
-            
+
             entity.setLocalPosition(x, 0, z);
 
             // Special case for Saturn to keep rings tilted correctly

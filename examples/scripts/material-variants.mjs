@@ -17,12 +17,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // create a button for each variant
-        variants.forEach(variant => {
+        variants.forEach((variant) => {
             const button = document.createElement('button');
             button.textContent = variant.split('-')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-            
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
             Object.assign(button.style, {
                 display: 'flex',
                 position: 'relative',
@@ -42,13 +42,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 fontFamily: 'sans-serif'
             });
 
-            button.onmouseenter = () => button.style.background = 'rgba(255, 255, 255, 1)';
-            button.onmouseleave = () => button.style.background = 'rgba(255, 255, 255, 0.9)';
-            
+            button.onmouseenter = () => {
+                button.style.background = 'rgba(255, 255, 255, 1)';
+            };
+
+            button.onmouseleave = () => {
+                button.style.background = 'rgba(255, 255, 255, 0.9)';
+            };
+
             button.addEventListener('click', () => {
                 resource.applyMaterialVariant(entityElement.entity, variant);
             });
-            
+
             buttonContainer.appendChild(button);
         });
 
