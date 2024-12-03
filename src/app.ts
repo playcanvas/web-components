@@ -2,9 +2,9 @@ import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } f
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
+import { EntityElement } from './entity';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
-import { EntityElement } from './entity';
 
 /**
  * The main application element.

@@ -86,10 +86,10 @@ class EntityElement extends AsyncElement {
 
             // Handle any child entities that might exist
             const childEntities = this.querySelectorAll<EntityElement>('pc-entity');
-            childEntities.forEach(child => {
+            childEntities.forEach((child) => {
                 child.createEntity(app);
             });
-            childEntities.forEach(child => {
+            childEntities.forEach((child) => {
                 child.buildHierarchy(app);
             });
         }
