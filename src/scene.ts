@@ -50,11 +50,11 @@ class SceneElement extends AsyncElement {
 
     updateSceneSettings() {
         if (this.scene) {
-            this.scene.rendering.fog = this._fog;
-            this.scene.rendering.fogColor = this._fogColor;
-            this.scene.rendering.fogDensity = this._fogDensity;
-            this.scene.rendering.fogStart = this._fogStart;
-            this.scene.rendering.fogEnd = this._fogEnd;
+            this.scene.fog.type = this._fog;
+            this.scene.fog.color = this._fogColor;
+            this.scene.fog.density = this._fogDensity;
+            this.scene.fog.start = this._fogStart;
+            this.scene.fog.end = this._fogEnd;
             // ... set other properties on the scene as well
         }
     }
@@ -66,7 +66,7 @@ class SceneElement extends AsyncElement {
     set fog(value) {
         this._fog = value;
         if (this.scene) {
-            this.scene.rendering.fog = value;
+            this.scene.fog.type = value;
         }
     }
 
@@ -85,7 +85,7 @@ class SceneElement extends AsyncElement {
     set fogColor(value: Color) {
         this._fogColor = value;
         if (this.scene) {
-            this.scene.rendering.fogColor = value;
+            this.scene.fog.color = value;
         }
     }
 
@@ -104,7 +104,7 @@ class SceneElement extends AsyncElement {
     set fogDensity(value: number) {
         this._fogDensity = value;
         if (this.scene) {
-            this.scene.rendering.fogDensity = value;
+            this.scene.fog.density = value;
         }
     }
 
@@ -123,7 +123,7 @@ class SceneElement extends AsyncElement {
     set fogStart(value: number) {
         this._fogStart = value;
         if (this.scene) {
-            this.scene.rendering.fogStart = value;
+            this.scene.fog.start = value;
         }
     }
 
@@ -142,7 +142,7 @@ class SceneElement extends AsyncElement {
     set fogEnd(value: number) {
         this._fogEnd = value;
         if (this.scene) {
-            this.scene.rendering.fogEnd = value;
+            this.scene.fog.end = value;
         }
     }
 
