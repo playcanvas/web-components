@@ -18,28 +18,32 @@
         <pc-app antialias="false">
             <!-- Assets -->
             <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs" preload></pc-asset>
-            <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="shadow-catcher" src="scripts/shadow-catcher.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="xr-navigation" src="scripts/xr-navigation.mjs" preload></pc-asset>
             <pc-asset id="lake-bed" src="assets/skies/dry-lake-bed-2k.hdr" preload></pc-asset>
             <pc-asset id="t-rex" src="assets/models/t-rex.glb" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
                 <pc-sky asset="lake-bed" type="dome" lighting></pc-sky>
-                <!-- Camera -->
-                <pc-entity name="camera" position="3 1.5 5">
-                    <pc-camera></pc-camera>
-                    <pc-scripts>
-                        <pc-script
-                            name="cameraControls"
-                            attributes='{
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="3 1.5 5">
+                        <pc-camera></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
                                 "focusPoint": [0, 1.75, 2],
                                 "pitchRange": [-90, 0],
                                 "sceneSize": 15,
                                 "zoomMin": 0.5,
                                 "zoomMax": 15
-                            }'
-                        ></pc-script>
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- T-Rex -->
@@ -50,12 +54,6 @@
                             "width": 14,
                             "depth": 14
                         }'></pc-script>
-                    </pc-scripts>
-                </pc-entity>
-                <!-- XR -->
-                <pc-entity name="xr">
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>
