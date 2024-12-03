@@ -4,6 +4,7 @@ import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
+import { EntityElement } from './entity';
 
 /**
  * The main application element.
@@ -23,6 +24,8 @@ class AppElement extends AsyncElement {
     private _stencil = true;
 
     private _highResolution = false;
+
+    private _hierarchyReady = false;
 
     /**
      * The PlayCanvas application instance.
@@ -83,6 +86,19 @@ class AppElement extends AsyncElement {
         Array.from(materialElements).forEach((materialElement) => {
             materialElement.createMaterial();
         });
+
+        // Create all entities
+        const entityElements = this.querySelectorAll<EntityElement>('pc-entity');
+        Array.from(entityElements).forEach((entityElement) => {
+            entityElement.createEntity(this.app!);
+        });
+
+        // Build hierarchy
+        entityElements.forEach((entityElement) => {
+            entityElement.buildHierarchy(this.app!);
+        });
+
+        this._hierarchyReady = true;
 
         // Load assets before starting the application
         this.app.preload(() => {
@@ -165,6 +181,15 @@ class AppElement extends AsyncElement {
      */
     get depth() {
         return this._depth;
+    }
+
+    /**
+     * Gets the hierarchy ready flag.
+     * @returns The hierarchy ready flag.
+     * @ignore
+     */
+    get hierarchyReady() {
+        return this._hierarchyReady;
     }
 
     /**

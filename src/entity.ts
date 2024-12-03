@@ -1,4 +1,4 @@
-import { Entity, Vec3 } from 'playcanvas';
+import { Application, Entity, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
@@ -44,53 +44,65 @@ class EntityElement extends AsyncElement {
      */
     entity: Entity | null = null;
 
-    async connectedCallback() {
-        const closestApp = this.closestApp;
-        if (!closestApp) return;
-
-        // Wait for the app to complete initialization
-        await closestApp.ready();
-
-        const app = closestApp.app!;
-
+    // Add new method to create entity
+    createEntity(app: Application) {
         // Create a new entity
         this.entity = new Entity(this._name, app);
 
         // Initialize from attributes
-        const enabledAttr = this.getAttribute('enabled');
-        const nameAttr = this.getAttribute('name');
-        const positionAttr = this.getAttribute('position');
-        const rotationAttr = this.getAttribute('rotation');
-        const scaleAttr = this.getAttribute('scale');
-        const tagsAttr = this.getAttribute('tags');
+        if (this._enabled !== true) this.entity.enabled = this._enabled;
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+        if (this._tags.length > 0) {
+            this.entity.tags.add(this._tags);
+        }
+    }
 
-        if (enabledAttr) this.enabled = enabledAttr !== 'false';
-        if (nameAttr) this.name = nameAttr;
-        if (positionAttr) this.position = parseVec3(positionAttr);
-        if (rotationAttr) this.rotation = parseVec3(rotationAttr);
-        if (scaleAttr) this.scale = parseVec3(scaleAttr);
-        if (tagsAttr) this.tags = tagsAttr.split(',').map(tag => tag.trim());
+    buildHierarchy(app: Application) {
+        if (!this.entity) return;
 
         const closestEntity = this.closestEntity;
-        if (closestEntity) {
-            closestEntity.ready().then(() => {
-                closestEntity.entity!.addChild(this.entity!);
-                this._onReady();
-            });
+        if (closestEntity?.entity) {
+            closestEntity.entity.addChild(this.entity);
         } else {
             app.root.addChild(this.entity);
-            this._onReady();
+        }
+
+        this._onReady();
+    }
+
+    connectedCallback() {
+        // Wait for app to be ready
+        const closestApp = this.closestApp;
+        if (!closestApp) return;
+
+        // If app is already running, create entity immediately
+        if (closestApp.hierarchyReady) {
+            const app = closestApp.app!;
+
+            this.createEntity(app);
+            this.buildHierarchy(app);
+
+            // Handle any child entities that might exist
+            const childEntities = this.querySelectorAll<EntityElement>('pc-entity');
+            childEntities.forEach(child => {
+                child.createEntity(app);
+            });
+            childEntities.forEach(child => {
+                child.buildHierarchy(app);
+            });
         }
     }
 
     disconnectedCallback() {
         if (this.entity) {
-            // Notify all children that their entities are about to become invalid
-            const children = this.querySelectorAll('pc-entity');
-            children.forEach((child) => {
-                (child as EntityElement).entity = null;
-            });
+            // Remove from hierarchy
+            if (this.entity.parent) {
+                this.entity.parent.removeChild(this.entity);
+            }
 
+            // Destroy the entity
             this.entity.destroy();
             this.entity = null;
         }
