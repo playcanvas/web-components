@@ -97,10 +97,11 @@ class EntityElement extends AsyncElement {
 
     disconnectedCallback() {
         if (this.entity) {
-            // Remove from hierarchy
-            if (this.entity.parent) {
-                this.entity.parent.removeChild(this.entity);
-            }
+            // Notify all children that their entities are about to become invalid
+            const children = this.querySelectorAll('pc-entity');
+            children.forEach((child) => {
+                (child as EntityElement).entity = null;
+            });
 
             // Destroy the entity
             this.entity.destroy();
