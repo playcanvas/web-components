@@ -1,4 +1,4 @@
-import { Script, Entity, Layer, StandardMaterial, BLEND_NORMAL, CHUNKAPI_1_65, SHADOW_VSM16, SHADOWUPDATE_REALTIME } from 'playcanvas';
+import { Script, Entity, Layer, StandardMaterial, BLEND_NORMAL, CHUNKAPI_1_65, SHADOW_VSM_16F, SHADOWUPDATE_REALTIME } from 'playcanvas';
 
 const endPS = `
     litArgs_opacity = mix(light0_shadowIntensity, 0.0, shadow0);
@@ -84,7 +84,7 @@ export class ShadowCatcher extends Script {
             shadowBias: 0,
             shadowDistance: this.shadowDistance,
             shadowResolution: 1024,
-            shadowType: SHADOW_VSM16,
+            shadowType: SHADOW_VSM_16F,
             shadowUpdateMode: SHADOWUPDATE_REALTIME,
             vsmBlurSize: 16,
             shadowIntensity: 0.6
