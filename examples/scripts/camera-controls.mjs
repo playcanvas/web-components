@@ -1,4 +1,5 @@
-import { Vec2, Vec3, Ray, Plane, Mat4, Quat, Script, math } from 'playcanvas';
+/* eslint-disable-next-line import/no-unresolved */
+import { math, Mat4, Plane, Quat, Ray, Script, Vec2, Vec3 } from 'playcanvas';
 
 /** @import { CameraComponent } from 'playcanvas' */
 
@@ -314,6 +315,23 @@ class CameraControls extends Script {
         this.pitchRange = pitchRange ?? this.pitchRange;
         this.zoomMin = zoomMin ?? this.zoomMin;
         this.zoomMax = zoomMax ?? this.zoomMax;
+
+        const position = new Vec3();
+        const rotation = new Quat();
+        this.app.xr.on('start', () => {
+            // Store the position and rotation of the camera
+            position.copy(this.entity.getPosition());
+            rotation.copy(this.entity.getRotation());
+
+            // Set the camera's position to the ground
+            const pos = this.entity.getPosition();
+            this.entity.setPosition(pos.x, 0, pos.z);
+        });
+        this.app.xr.on('end', () => {
+            // Restore the camera's position and rotation
+            this.entity.setPosition(position);
+            this.entity.setRotation(rotation);
+        });
     }
 
     /**
@@ -950,6 +968,10 @@ class CameraControls extends Script {
      * @param {number} dt - The delta time.
      */
     update(dt) {
+        if (this.app.xr.active) {
+            return;
+        }
+
         if (!this._camera) {
             return;
         }
