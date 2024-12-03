@@ -1,10 +1,8 @@
-import { Color, Vec3, Script } from 'playcanvas';
+import { Color, InputSource, Script, Vec3 } from 'playcanvas';
 
 export class XrNavigation extends Script {
+    /** @type {Set<InputSource>} */
     inputSources = new Set();
-
-    // Reusable objects to avoid garbage collection
-    hitPoint = new Vec3();
 
     validColor = new Color(0, 1, 0);    // Green for valid teleport
 
