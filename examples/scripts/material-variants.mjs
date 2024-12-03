@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const entityElement = await document.querySelector('pc-entity[name="shoe"]').ready();
+    await document.querySelector('pc-app').ready();
+
+    const entityElement = document.querySelector('pc-entity[name="shoe"]');
     const assetElement = document.querySelector('pc-asset#shoe');
 
     if (entityElement && assetElement) {

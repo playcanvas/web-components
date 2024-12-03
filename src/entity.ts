@@ -46,23 +46,27 @@ class EntityElement extends AsyncElement {
 
     createEntity(app: Application) {
         // Create a new entity
-        this.entity = new Entity(
-            this.getAttribute('name') || this._name,
-            app
-        );
+        this.entity = new Entity(this.getAttribute('name') || this._name, app);
 
-        // Initialize from attributes first, falling back to member variable defaults
         const enabled = this.getAttribute('enabled');
-        this.entity.enabled = enabled !== null ? enabled !== 'false' : this._enabled;
+        if (enabled) {
+            this.entity.enabled = enabled !== 'false';
+        }
 
         const position = this.getAttribute('position');
-        this.entity.setLocalPosition(position ? parseVec3(position) : this._position);
+        if (position) {
+            this.entity.setLocalPosition(parseVec3(position));
+        }
 
         const rotation = this.getAttribute('rotation');
-        this.entity.setLocalEulerAngles(rotation ? parseVec3(rotation) : this._rotation);
+        if (rotation) {
+            this.entity.setLocalEulerAngles(parseVec3(rotation));
+        }
 
         const scale = this.getAttribute('scale');
-        this.entity.setLocalScale(scale ? parseVec3(scale) : this._scale);
+        if (scale) {
+            this.entity.setLocalScale(parseVec3(scale));
+        }
 
         const tags = this.getAttribute('tags');
         if (tags) {
