@@ -6,14 +6,21 @@ export class XrNavigation extends Script {
     /** @type {Set<XrInputSource>} */
     inputSources = new Set();
 
+    /** @type {Map<XrInputSource, boolean>} */
+    activePointers = new Map();
+
     validColor = new Color(0, 1, 0);    // Green for valid teleport
 
     invalidColor = new Color(1, 0, 0);   // Red for invalid teleport
 
     initialize() {
         this.app.xr.input.on('add', (inputSource) => {
+            // Add select start/end handlers
+            inputSource.on('selectstart', () => {
+                this.activePointers.set(inputSource, true);
+            });
             inputSource.on('selectend', () => {
-                console.log('selectend');
+                this.activePointers.set(inputSource, false);
                 // Find the other input source (for teleporting to where it points)
                 const otherSource = Array.from(this.inputSources).find(source => source !== inputSource);
                 if (otherSource) {
@@ -24,7 +31,9 @@ export class XrNavigation extends Script {
         });
 
         this.app.xr.input.on('remove', (inputSource) => {
+            inputSource.off('selectstart');
             inputSource.off('selectend');
+            this.activePointers.delete(inputSource);
             this.inputSources.delete(inputSource);
         });
     }
@@ -58,6 +67,9 @@ export class XrNavigation extends Script {
 
     update() {
         for (const inputSource of this.inputSources) {
+            // Only show ray when trigger is pressed
+            if (!this.activePointers.get(inputSource)) continue;
+
             const start = inputSource.getOrigin();
             const direction = inputSource.getDirection();
 
