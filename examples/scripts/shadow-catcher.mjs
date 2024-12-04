@@ -9,24 +9,28 @@ export class ShadowCatcher extends Script {
     /**
      * The shadow distance of the shadow catcher light.
      * @type {number}
+     * @attribute
      */
     shadowDistance = 16;
 
     /**
      * The VSM blur size of the shadow catcher light.
      * @type {number}
+     * @attribute
      */
-    vsmBlurSize = 32;
+    blurSize = 32;
 
     /**
      * The width of the shadow catcher.
      * @type {number}
+     * @attribute
      */
     width = 1;
 
     /**
      * The depth of the shadow catcher.
      * @type {number}
+     * @attribute
      */
     depth = 1;
 
@@ -86,7 +90,7 @@ export class ShadowCatcher extends Script {
             shadowResolution: 1024,
             shadowType: SHADOW_VSM_16F,
             shadowUpdateMode: SHADOWUPDATE_REALTIME,
-            vsmBlurSize: 16,
+            vsmBlurSize: this.blurSize,
             shadowIntensity: 0.6
         });
 

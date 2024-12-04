@@ -18,6 +18,7 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs" preload></pc-asset>
+            <pc-asset id="shadow-catcher" src="scripts/shadow-catcher.mjs" preload></pc-asset>
             <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
             <pc-asset id="xr-navigation" src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs" preload></pc-asset>
             <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
@@ -28,7 +29,7 @@
                 <pc-sky asset="studio" type="none" lighting></pc-sky>
                 <!-- Camera (with XR support) -->
                 <pc-entity name="camera root">
-                    <pc-entity name="camera" position="0.5 0.2 0.5">
+                    <pc-entity name="camera" position="0.2 0.15 0.3">
                         <pc-camera></pc-camera>
                         <pc-scripts>
                             <pc-script name="cameraControls" attributes='{
@@ -37,7 +38,7 @@
                                 "focusPoint": [0, 0.05, 0],
                                 "sceneSize": 0.5,
                                 "zoomMin": 0.25,
-                                "zoomMax": 0.75
+                                "zoomMax": 1
                             }'></pc-script>
                         </pc-scripts>
                     </pc-entity>
@@ -46,13 +47,16 @@
                         <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- Light -->
-                <pc-entity name="light" rotation="45 0 0">
-                    <pc-light></pc-light>
-                </pc-entity>
                 <!-- Shoe -->
                 <pc-entity name="shoe">
                     <pc-model asset="shoe"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="shadowCatcher" attributes='{
+                            "width": 0.5,
+                            "depth": 0.5,
+                            "shadowDistance": 1
+                        }'></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>
