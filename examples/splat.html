@@ -19,19 +19,19 @@
             <!-- Assets -->
             <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs" preload></pc-asset>
             <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="xr-navigation" src="scripts/xr-navigation.mjs" preload></pc-asset>
             <pc-asset id="angel" src="assets/splats/angel.compressed.ply" preload></pc-asset>
             <pc-asset id="rotunda" src="assets/skies/sepulchral-chapel-rotunda-4k.webp" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
                 <pc-sky asset="rotunda" type="dome" center="0 0.1 0" scale="20 20 20"></pc-sky>
-                <!-- Camera -->
-                <pc-entity name="camera" position="0 2 3.5">
-                    <pc-camera></pc-camera>
-                    <pc-scripts>
-                        <pc-script
-                            name="cameraControls"
-                            attributes='{
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="0 2 3.5">
+                        <pc-camera></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
                                 "enableFly": false,
                                 "enablePan": false,
                                 "focusPoint": [0, 2, 0],
@@ -39,19 +39,17 @@
                                 "sceneSize": 3,
                                 "zoomMin": 0.5,
                                 "zoomMax": 3
-                            }'
-                        ></pc-script>
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Statue -->
                 <pc-entity name="statue" position="0 1 0" rotation="0 45 0">
                     <pc-splat asset="angel"></pc-splat>
-                </pc-entity>
-                <!-- XR -->
-                <pc-entity name="xr">
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>

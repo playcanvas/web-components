@@ -23,22 +23,26 @@
             <pc-asset id="grid" src="scripts/grid.mjs" preload></pc-asset>
             <pc-asset id="text3d" src="scripts/text3d.mjs" preload></pc-asset>
             <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="xr-navigation" src="scripts/xr-navigation.mjs" preload></pc-asset>
             <pc-asset id="arial" src="assets/fonts/arial.ttf" type="binary" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
-                <!-- Camera -->
-                <pc-entity name="camera" position="-2 1 5">
-                    <pc-camera clear-color="black"></pc-camera>
-                    <pc-scripts>
-                        <pc-script
-                            name="cameraControls"
-                            attributes='{
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="-2 1 5">
+                        <pc-camera clear-color="black"></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
                                 "focusPoint": [0, 0.5, 0],
                                 "sceneSize": 10,
                                 "zoomMin": 0.1,
                                 "zoomMax": 10
-                            }'
-                        ></pc-script>
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
@@ -59,12 +63,6 @@
                 <pc-entity name="grid" scale="1000 1000 1000">
                     <pc-scripts>
                         <pc-script name="grid"></pc-script>
-                    </pc-scripts>
-                </pc-entity>
-                <!-- XR -->
-                <pc-entity name="xr">
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

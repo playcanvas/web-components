@@ -24,19 +24,19 @@
             <pc-asset id="shadow-catcher" src="scripts/shadow-catcher.mjs" preload></pc-asset>
             <pc-asset id="video-texture" src="scripts/video-texture.mjs" preload></pc-asset>
             <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="xr-navigation" src="scripts/xr-navigation.mjs" preload></pc-asset>
             <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
             <pc-asset id="vintage-pc" src="assets/models/vintage-pc.glb" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
                 <pc-sky asset="studio" type="none" intensity="0.5" lighting></pc-sky>
-                <!-- Camera -->
-                <pc-entity name="camera" position="-0.6 0.3 0.85">
-                    <pc-camera></pc-camera>
-                    <pc-scripts>
-                        <pc-script
-                            name="cameraControls"
-                            attributes='{
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="-0.6 0.3 0.85">
+                        <pc-camera></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
                                 "enableFly": false,
                                 "enablePan": false,
                                 "focusPoint": [0, 0.225, 0],
@@ -44,8 +44,12 @@
                                 "sceneSize": 1,
                                 "zoomMin": 0.5,
                                 "zoomMax": 3
-                            }'
-                        ></pc-script>
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
@@ -66,12 +70,6 @@
                             "materialName": "Screen",
                             "url": "assets/videos/doom.mp4"
                         }'></pc-script>
-                    </pc-scripts>
-                </pc-entity>
-                <!-- XR -->
-                <pc-entity name="xr">
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>
