@@ -13,26 +13,36 @@ export class XrNavigation extends Script {
 
     invalidColor = new Color(1, 0, 0);   // Red for invalid teleport
 
+    /** @type {Map<XrInputSource, { handleSelectStart: Function, handleSelectEnd: Function }>} */
+    inputHandlers = new Map();
+
     initialize() {
         this.app.xr.input.on('add', (inputSource) => {
-            // Add select start/end handlers
-            inputSource.on('selectstart', () => {
+            const handleSelectStart = () => {
                 this.activePointers.set(inputSource, true);
-            });
-            inputSource.on('selectend', () => {
+            };
+
+            const handleSelectEnd = () => {
                 this.activePointers.set(inputSource, false);
-                // Find the other input source (for teleporting to where it points)
-                const otherSource = Array.from(this.inputSources).find(source => source !== inputSource);
-                if (otherSource) {
-                    this.tryTeleport(otherSource);
-                }
-            });
+                this.tryTeleport(inputSource);
+            };
+
+            // Attach the handlers
+            inputSource.on('selectstart', handleSelectStart);
+            inputSource.on('selectend', handleSelectEnd);
+
+            // Store the handlers in the map
+            this.inputHandlers.set(inputSource, { handleSelectStart, handleSelectEnd });
             this.inputSources.add(inputSource);
         });
 
         this.app.xr.input.on('remove', (inputSource) => {
-            inputSource.off('selectstart');
-            inputSource.off('selectend');
+            const handlers = this.inputHandlers.get(inputSource);
+            if (handlers) {
+                inputSource.off('selectstart', handlers.handleSelectStart);
+                inputSource.off('selectend', handlers.handleSelectEnd);
+                this.inputHandlers.delete(inputSource);
+            }
             this.activePointers.delete(inputSource);
             this.inputSources.delete(inputSource);
         });
@@ -58,9 +68,8 @@ export class XrNavigation extends Script {
 
         const hitPoint = this.findPlaneIntersection(origin, direction);
         if (hitPoint) {
-            // Get the camera's current height to maintain it after teleport
             const cameraY = this.entity.getPosition().y;
-            hitPoint.y = cameraY;  // Maintain camera height
+            hitPoint.y = cameraY;
             this.entity.setPosition(hitPoint);
         }
     }
