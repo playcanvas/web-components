@@ -1,4 +1,4 @@
-import { Script, Entity, Layer, StandardMaterial, BLEND_NORMAL, CHUNKAPI_1_65, SHADOW_VSM_16F, SHADOWUPDATE_REALTIME } from 'playcanvas';
+import { Script, Entity, Layer, StandardMaterial, Vec2, BLEND_NORMAL, CHUNKAPI_1_65, SHADOW_VSM_16F, SHADOWUPDATE_REALTIME } from 'playcanvas';
 
 const endPS = `
     litArgs_opacity = mix(light0_shadowIntensity, 0.0, shadow0);
@@ -22,17 +22,10 @@ export class ShadowCatcher extends Script {
 
     /**
      * The width of the shadow catcher.
-     * @type {number}
+     * @type {Vec2}
      * @attribute
      */
-    width = 1;
-
-    /**
-     * The depth of the shadow catcher.
-     * @type {number}
-     * @attribute
-     */
-    depth = 1;
+    size = new Vec2(1, 1);
 
     /** @type {Layer|null} */
     layer = null;
@@ -77,7 +70,7 @@ export class ShadowCatcher extends Script {
             castShadows: false,
             material: this.material
         });
-        this.plane.setLocalScale(this.width, 1, this.depth);
+        this.plane.setLocalScale(this.size.x, 1, this.size.y);
 
         // create shadow catcher light
         this.light = new Entity('ShadowLight');
