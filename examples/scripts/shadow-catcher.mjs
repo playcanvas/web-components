@@ -21,7 +21,7 @@ export class ShadowCatcher extends Script {
     blurSize = 32;
 
     /**
-     * The width of the shadow catcher.
+     * The size of the shadow catcher.
      * @type {Vec2}
      * @attribute
      */
