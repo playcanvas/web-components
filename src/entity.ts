@@ -40,11 +40,14 @@ class EntityElement extends AsyncElement {
     private _tags: string[] = [];
 
     /**
+     * The pointer event listeners for the entity.
+     */
+    private _listeners: { [key: string]: EventListener[] } = {};
+
+    /**
      * The PlayCanvas entity instance.
      */
     entity: Entity | null = null;
-
-    private _listeners: { [key: string]: EventListener[] } = {};
 
     createEntity(app: Application) {
         // Create a new entity
@@ -87,7 +90,16 @@ class EntityElement extends AsyncElement {
         pointerEvents.forEach((eventName) => {
             const handler = this.getAttribute(eventName);
             if (handler) {
-                this.addEventListener(eventName.substring(2), new Function('event', handler) as EventListener);
+                const eventType = eventName.substring(2); // remove 'on' prefix
+                const eventHandler = (event: Event) => {
+                    try {
+                        /* eslint-disable-next-line no-new-func */
+                        new Function('event', 'this', handler).call(this, event);
+                    } catch (e) {
+                        console.error('Error in event handler:', e);
+                    }
+                };
+                this.addEventListener(eventType, eventHandler);
             }
         });
     }
@@ -303,6 +315,7 @@ class EntityElement extends AsyncElement {
                     // Use Function.prototype.bind to avoid new Function
                     const handler = (event: Event) => {
                         try {
+                            /* eslint-disable-next-line no-new-func */
                             new Function('event', 'this', newValue).call(this, event);
                         } catch (e) {
                             console.error('Error in event handler:', e);

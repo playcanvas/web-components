@@ -18,7 +18,10 @@ export default [
         languageOptions: {
             parser: tsParser,
             globals: {
-                ...globals.browser
+                ...globals.browser,
+                AddEventListenerOptions: true,
+                EventListener: true,
+                EventListenerOptions: true
             }
         },
         plugins: {
