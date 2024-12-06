@@ -1,4 +1,4 @@
-import { Application, FILLMODE_FILL_WINDOW, Keyboard, Mouse, RESOLUTION_AUTO } from 'playcanvas';
+import { Application, CameraComponent, FILLMODE_FILL_WINDOW, Keyboard, Mouse, Picker, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -26,6 +26,24 @@ class AppElement extends AsyncElement {
     private _highResolution = false;
 
     private _hierarchyReady = false;
+
+    private _picker: Picker | null = null;
+
+    private _hasPointerListeners: { [key: string]: boolean } = {
+        pointerenter: false,
+        pointerleave: false,
+        pointerdown: false,
+        pointerup: false,
+        pointermove: false
+    };
+
+    private _hoveredEntity: EntityElement | null = null;
+
+    private _pointerHandlers: { [key: string]: EventListener | null } = {
+        pointermove: null,
+        pointerdown: null,
+        pointerup: null
+    };
 
     /**
      * The PlayCanvas application instance.
@@ -71,6 +89,8 @@ class AppElement extends AsyncElement {
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
 
+        this._pickerCreate();
+
         // Get all pc-asset elements that are direct children of the pc-app element
         const assetElements = this.querySelectorAll<AssetElement>(':scope > pc-asset');
         Array.from(assetElements).forEach((assetElement) => {
@@ -113,6 +133,8 @@ class AppElement extends AsyncElement {
     }
 
     disconnectedCallback() {
+        this._pickerDestroy();
+
         // Clean up the application
         if (this.app) {
             this.app.destroy();
@@ -132,6 +154,150 @@ class AppElement extends AsyncElement {
     _onWindowResize() {
         if (this.app) {
             this.app.resizeCanvas();
+        }
+    }
+
+    _pickerCreate() {
+        const { width, height } = this.app!.graphicsDevice;
+        this._picker = new Picker(this.app!, width, height);
+        
+        // Create bound handlers but don't attach them yet
+        this._pointerHandlers.pointermove = this._onPointerMove.bind(this) as EventListener;
+        this._pointerHandlers.pointerdown = this._onPointerDown.bind(this) as EventListener;
+        this._pointerHandlers.pointerup = this._onPointerUp.bind(this) as EventListener;
+
+        // Listen for pointer listeners being added/removed
+        ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'].forEach(type => {
+            this.addEventListener(`${type}:connect`, () => this._onPointerListenerAdded(type));
+            this.addEventListener(`${type}:disconnect`, () => this._onPointerListenerRemoved(type));
+        });
+    }
+
+    _pickerDestroy() {
+        if (this._canvas) {
+            Object.entries(this._pointerHandlers).forEach(([type, handler]) => {
+                if (handler) {
+                    this._canvas!.removeEventListener(type, handler);
+                }
+            });
+        }
+
+        this._picker = null;
+        this._pointerHandlers = {
+            pointermove: null,
+            pointerdown: null,
+            pointerup: null
+        };
+    }
+
+    _onPointerMove(event: PointerEvent) {
+        if (!this._picker || !this.app) return;
+
+        const camera = this.app!.root.findComponent('camera') as CameraComponent;
+        if (!camera) return;
+
+        const canvasRect = this._canvas!.getBoundingClientRect();
+        const x = event.clientX - canvasRect.left;
+        const y = event.clientY - canvasRect.top;
+
+        this._picker.prepare(camera, this.app!.scene);
+        const selection = this._picker.getSelection(x, y);
+
+        // Get the currently hovered entity (if any)
+        const newHoverEntity = selection.length > 0 
+            ? this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement
+            : null;
+
+        // Handle enter/leave events
+        if (this._hoveredEntity !== newHoverEntity) {
+            if (this._hoveredEntity && this._hoveredEntity.hasListeners('pointerleave')) {
+                this._hoveredEntity.dispatchEvent(new PointerEvent('pointerleave', event));
+            }
+            if (newHoverEntity && newHoverEntity.hasListeners('pointerenter')) {
+                newHoverEntity.dispatchEvent(new PointerEvent('pointerenter', event));
+            }
+        }
+
+        // Update hover state
+        this._hoveredEntity = newHoverEntity;
+
+        // Handle pointermove event
+        if (newHoverEntity && newHoverEntity.hasListeners('pointermove')) {
+            newHoverEntity.dispatchEvent(new PointerEvent('pointermove', event));
+        }
+    }
+
+    _onPointerDown(event: PointerEvent) {
+        if (!this._picker || !this.app) return;
+
+        const camera = this.app!.root.findComponent('camera') as CameraComponent;
+        if (!camera) return;
+
+        const canvasRect = this._canvas!.getBoundingClientRect();
+        const x = event.clientX - canvasRect.left;
+        const y = event.clientY - canvasRect.top;
+
+        this._picker.prepare(camera, this.app!.scene);
+        const selection = this._picker.getSelection(x, y);
+
+        if (selection.length > 0) {
+            const entityElement = this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement;
+            if (entityElement && entityElement.hasListeners('pointerdown')) {
+                entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
+            }
+        }
+    }
+
+    _onPointerUp(event: PointerEvent) {
+        if (!this._picker || !this.app) return;
+
+        const camera = this.app!.root.findComponent('camera') as CameraComponent;
+        if (!camera) return;
+
+        const canvasRect = this._canvas!.getBoundingClientRect();
+        const x = event.clientX - canvasRect.left;
+        const y = event.clientY - canvasRect.top;
+
+        this._picker.prepare(camera, this.app!.scene);
+        const selection = this._picker.getSelection(x, y);
+
+        if (selection.length > 0) {
+            const entityElement = this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement;
+            if (entityElement && entityElement.hasListeners('pointerup')) {
+                entityElement.dispatchEvent(new PointerEvent('pointerup', event));
+            }
+        }
+    }
+
+    _onPointerListenerAdded(type: string) {
+        if (!this._hasPointerListeners[type] && this._canvas) {
+            this._hasPointerListeners[type] = true;
+            
+            // For enter/leave events, we need the move handler
+            const handler = (type === 'pointerenter' || type === 'pointerleave') 
+                ? this._pointerHandlers.pointermove 
+                : this._pointerHandlers[type];
+
+            if (handler) {
+                this._canvas.addEventListener(type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type, handler);
+            }
+        }
+    }
+
+    _onPointerListenerRemoved(type: string) {
+        const hasListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity'))
+            .some(entity => entity.hasListeners(type));
+
+        if (!hasListeners && this._canvas) {
+            this._hasPointerListeners[type] = false;
+            
+            const handler = (type === 'pointerenter' || type === 'pointerleave') 
+                ? this._pointerHandlers.pointermove 
+                : this._pointerHandlers[type];
+
+            if (handler) {
+                this._canvas.removeEventListener(type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type, handler);
+            }
         }
     }
 

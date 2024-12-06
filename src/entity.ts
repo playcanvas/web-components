@@ -44,6 +44,8 @@ class EntityElement extends AsyncElement {
      */
     entity: Entity | null = null;
 
+    private _listeners: { [key: string]: EventListener[] } = {};
+
     createEntity(app: Application) {
         // Create a new entity
         this.entity = new Entity(this.getAttribute('name') || this._name, app);
@@ -72,6 +74,22 @@ class EntityElement extends AsyncElement {
         if (tags) {
             this.entity.tags.add(tags.split(',').map(tag => tag.trim()));
         }
+
+        // Handle pointer events
+        const pointerEvents = [
+            'onpointerenter',
+            'onpointerleave',
+            'onpointerdown',
+            'onpointerup',
+            'onpointermove'
+        ];
+
+        pointerEvents.forEach(eventName => {
+            const handler = this.getAttribute(eventName);
+            if (handler) {
+                this.addEventListener(eventName.substring(2), new Function('event', handler) as EventListener);
+            }
+        });
     }
 
     buildHierarchy(app: Application) {
@@ -240,7 +258,19 @@ class EntityElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags'];
+        return [
+            'enabled',
+            'name',
+            'position',
+            'rotation',
+            'scale',
+            'tags',
+            'onpointerenter',
+            'onpointerleave',
+            'onpointerdown',
+            'onpointerup',
+            'onpointermove'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -263,7 +293,42 @@ class EntityElement extends AsyncElement {
             case 'tags':
                 this.tags = newValue.split(',').map(tag => tag.trim());
                 break;
+            case 'onpointerenter':
+            case 'onpointerleave':
+            case 'onpointerdown':
+            case 'onpointerup':
+            case 'onpointermove':
+                if (newValue) {
+                    const eventName = name.substring(2); // remove 'on' prefix
+                    this.addEventListener(eventName, new Function('event', newValue) as EventListener);
+                }
+                break;
         }
+    }
+
+    addEventListener(type: string, listener: EventListener, options?: boolean | AddEventListenerOptions) {
+        if (!this._listeners[type]) {
+            this._listeners[type] = [];
+        }
+        this._listeners[type].push(listener);
+        super.addEventListener(type, listener, options);
+        if (type.startsWith('pointer')) {
+            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
+        }
+    }
+
+    removeEventListener(type: string, listener: EventListener, options?: boolean | EventListenerOptions) {
+        if (this._listeners[type]) {
+            this._listeners[type] = this._listeners[type].filter(l => l !== listener);
+        }
+        super.removeEventListener(type, listener, options);
+        if (type.startsWith('pointer')) {
+            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
+        }
+    }
+
+    hasListeners(type: string): boolean {
+        return Boolean(this._listeners[type]?.length);
     }
 }
 
