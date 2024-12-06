@@ -299,8 +299,16 @@ class EntityElement extends AsyncElement {
             case 'onpointerup':
             case 'onpointermove':
                 if (newValue) {
-                    const eventName = name.substring(2); // remove 'on' prefix
-                    this.addEventListener(eventName, new Function('event', newValue) as EventListener);
+                    const eventName = name.substring(2);
+                    // Use Function.prototype.bind to avoid new Function
+                    const handler = (event: Event) => {
+                        try {
+                            new Function('event', 'this', newValue).call(this, event);
+                        } catch (e) {
+                            console.error('Error in event handler:', e);
+                        }
+                    };
+                    this.addEventListener(eventName, handler);
                 }
                 break;
         }
