@@ -84,7 +84,7 @@ class EntityElement extends AsyncElement {
             'onpointermove'
         ];
 
-        pointerEvents.forEach(eventName => {
+        pointerEvents.forEach((eventName) => {
             const handler = this.getAttribute(eventName);
             if (handler) {
                 this.addEventListener(eventName.substring(2), new Function('event', handler) as EventListener);

@@ -160,14 +160,14 @@ class AppElement extends AsyncElement {
     _pickerCreate() {
         const { width, height } = this.app!.graphicsDevice;
         this._picker = new Picker(this.app!, width, height);
-        
+
         // Create bound handlers but don't attach them yet
         this._pointerHandlers.pointermove = this._onPointerMove.bind(this) as EventListener;
         this._pointerHandlers.pointerdown = this._onPointerDown.bind(this) as EventListener;
         this._pointerHandlers.pointerup = this._onPointerUp.bind(this) as EventListener;
 
         // Listen for pointer listeners being added/removed
-        ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'].forEach(type => {
+        ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'].forEach((type) => {
             this.addEventListener(`${type}:connect`, () => this._onPointerListenerAdded(type));
             this.addEventListener(`${type}:disconnect`, () => this._onPointerListenerRemoved(type));
         });
@@ -204,9 +204,9 @@ class AppElement extends AsyncElement {
         const selection = this._picker.getSelection(x, y);
 
         // Get the currently hovered entity (if any)
-        const newHoverEntity = selection.length > 0 
-            ? this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement
-            : null;
+        const newHoverEntity = selection.length > 0 ?
+            this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement :
+            null;
 
         // Handle enter/leave events
         if (this._hoveredEntity !== newHoverEntity) {
@@ -272,11 +272,11 @@ class AppElement extends AsyncElement {
     _onPointerListenerAdded(type: string) {
         if (!this._hasPointerListeners[type] && this._canvas) {
             this._hasPointerListeners[type] = true;
-            
+
             // For enter/leave events, we need the move handler
-            const handler = (type === 'pointerenter' || type === 'pointerleave') 
-                ? this._pointerHandlers.pointermove 
-                : this._pointerHandlers[type];
+            const handler = (type === 'pointerenter' || type === 'pointerleave') ?
+                this._pointerHandlers.pointermove :
+                this._pointerHandlers[type];
 
             if (handler) {
                 this._canvas.addEventListener(type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type, handler);
@@ -286,14 +286,14 @@ class AppElement extends AsyncElement {
 
     _onPointerListenerRemoved(type: string) {
         const hasListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity'))
-            .some(entity => entity.hasListeners(type));
+        .some(entity => entity.hasListeners(type));
 
         if (!hasListeners && this._canvas) {
             this._hasPointerListeners[type] = false;
-            
-            const handler = (type === 'pointerenter' || type === 'pointerleave') 
-                ? this._pointerHandlers.pointermove 
-                : this._pointerHandlers[type];
+
+            const handler = (type === 'pointerenter' || type === 'pointerleave') ?
+                this._pointerHandlers.pointermove :
+                this._pointerHandlers[type];
 
             if (handler) {
                 this._canvas.removeEventListener(type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type, handler);

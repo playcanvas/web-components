@@ -46,27 +46,45 @@
                     <pc-light></pc-light>
                 </pc-entity>
                 <!-- Box-->
-                <pc-entity name="box" position="-1.2 1 0">
+                <pc-entity name="box" position="-1.2 1 0"
+                    onpointerenter="this.setAttribute('scale', '1.2 1.2 1.2')"
+                    onpointerleave="this.setAttribute('scale', '1 1 1')"
+                    onpointerdown="this.setAttribute('position', '-1.2 2 0')">
                     <pc-render type="box" material="metal"></pc-render>
                 </pc-entity>
                 <!-- Capsule -->
-                <pc-entity name="capsule" position="0 1 0">
+                <pc-entity name="capsule" position="0 1 0"
+                    onpointerenter="this.setAttribute('scale', '1.2 1.2 1.2')"
+                    onpointerleave="this.setAttribute('scale', '1 1 1')"
+                    onpointerdown="this.setAttribute('position', '0 2 0')">
                     <pc-render type="capsule" material="metal"></pc-render>
                 </pc-entity>
                 <!-- Cone -->
-                <pc-entity name="cone" position="1.2 1 0">
+                <pc-entity name="cone" position="1.2 1 0"
+                    onpointerenter="this.setAttribute('scale', '1.2 1.2 1.2')"
+                    onpointerleave="this.setAttribute('scale', '1 1 1')"
+                    onpointerdown="this.setAttribute('position', '1.2 2 0')">
                     <pc-render type="cone" material="metal"></pc-render>
                 </pc-entity>
                 <!-- Cylinder -->
-                <pc-entity name="cylinder" position="-1.2 -1 0">
+                <pc-entity name="cylinder" position="-1.2 -1 0"
+                    onpointerenter="this.setAttribute('scale', '1.2 1.2 1.2')"
+                    onpointerleave="this.setAttribute('scale', '1 1 1')"
+                    onpointerdown="this.setAttribute('position', '-1.2 -2 0')">
                     <pc-render type="cylinder" material="metal"></pc-render>
                 </pc-entity>
                 <!-- Plane -->
-                <pc-entity name="plane" position="0 -1 0">
+                <pc-entity name="plane" position="0 -1 0"
+                    onpointerenter="this.setAttribute('scale', '1.2 1.2 1.2')"
+                    onpointerleave="this.setAttribute('scale', '1 1 1')"
+                    onpointerdown="this.setAttribute('position', '0 -2 0')">
                     <pc-render type="plane" material="metal"></pc-render>
                 </pc-entity>
                 <!-- Sphere -->
-                <pc-entity name="sphere" position="1.2 -1 0">
+                <pc-entity name="sphere" position="1.2 -1 0"
+                    onpointerenter="this.setAttribute('scale', '1.2 1.2 1.2')"
+                    onpointerleave="this.setAttribute('scale', '1 1 1')"
+                    onpointerdown="this.setAttribute('position', '1.2 -2 0')">
                     <pc-render type="sphere" material="metal"></pc-render>
                 </pc-entity>
             </pc-scene>
