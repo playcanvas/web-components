@@ -19,9 +19,9 @@ export default [
             parser: tsParser,
             globals: {
                 ...globals.browser,
-                AddEventListenerOptions: true,
-                EventListener: true,
-                EventListenerOptions: true
+                AddEventListenerOptions: "readonly",
+                EventListener: "readonly",
+                EventListenerOptions: "readonly"
             }
         },
         plugins: {
