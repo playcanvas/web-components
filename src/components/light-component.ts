@@ -1,7 +1,19 @@
-import { Color, LightComponent } from 'playcanvas';
+import { Color, LightComponent, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { parseColor } from '../utils';
+
+const shadowTypes = new Map([
+    ['pcf1-16f', SHADOW_PCF1_16F],
+    ['pcf1-32f', SHADOW_PCF1_32F],
+    ['pcf3-16f', SHADOW_PCF3_16F],
+    ['pcf3-32f', SHADOW_PCF3_32F],
+    ['pcf5-16f', SHADOW_PCF5_16F],
+    ['pcf5-32f', SHADOW_PCF5_32F],
+    ['vsm-16f', SHADOW_VSM_16F],
+    ['vsm-32f', SHADOW_VSM_32F],
+    ['pcss-32f', SHADOW_PCSS_32F]
+]);
 
 /**
  * The LightComponentElement interface provides properties and methods for manipulating
@@ -29,9 +41,15 @@ class LightComponentElement extends ComponentElement {
 
     private _shadowDistance = 16;
 
+    private _shadowIntensity = 1;
+
     private _shadowResolution = 1024;
 
+    private _shadowType: 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f' = 'pcf3-32f';
+
     private _type = 'directional';
+
+    private _vsmBias = 0.01;
 
     /** @ignore */
     constructor() {
@@ -49,8 +67,11 @@ class LightComponentElement extends ComponentElement {
             range: this._range,
             shadowBias: this._shadowBias,
             shadowDistance: this._shadowDistance,
+            shadowIntensity: this._shadowIntensity,
             shadowResolution: this._shadowResolution,
-            type: this._type
+            shadowType: shadowTypes.get(this._shadowType),
+            type: this._type,
+            vsmBias: this._vsmBias
         };
     }
 
@@ -234,6 +255,25 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the shadow intensity of the light.
+     * @param value - The shadow intensity.
+     */
+    set shadowIntensity(value: number) {
+        this._shadowIntensity = value;
+        if (this.component) {
+            this.component.shadowIntensity = value;
+        }
+    }
+
+    /**
+     * Gets the shadow intensity of the light.
+     * @returns The shadow intensity.
+     */
+    get shadowIntensity() {
+        return this._shadowIntensity;
+    }
+
+    /**
      * Sets the shadow resolution of the light.
      * @param value - The shadow resolution.
      */
@@ -250,6 +290,35 @@ class LightComponentElement extends ComponentElement {
      */
     get shadowResolution() {
         return this._shadowResolution;
+    }
+
+    /**
+     * Sets the shadow type of the light.
+     * @param value - The shadow type. Can be:
+     *
+     * - `pcf1-16f` - 1-tap percentage-closer filtered shadow map with 16-bit depth.
+     * - `pcf1-32f` - 1-tap percentage-closer filtered shadow map with 32-bit depth.
+     * - `pcf3-16f` - 3-tap percentage-closer filtered shadow map with 16-bit depth.
+     * - `pcf3-32f` - 3-tap percentage-closer filtered shadow map with 32-bit depth.
+     * - `pcf5-16f` - 5-tap percentage-closer filtered shadow map with 16-bit depth.
+     * - `pcf5-32f` - 5-tap percentage-closer filtered shadow map with 32-bit depth.
+     * - `vsm-16f` - Variance shadow map with 16-bit depth.
+     * - `vsm-32f` - Variance shadow map with 32-bit depth.
+     * - `pcss-32f` - Percentage-closer soft shadow with 32-bit depth.
+     */
+    set shadowType(value: 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f') {
+        this._shadowType = value;
+        if (this.component) {
+            this.component.shadowType = shadowTypes.get(value) ?? SHADOW_PCF3_32F;
+        }
+    }
+
+    /**
+     * Gets the shadow type of the light.
+     * @returns The shadow type.
+     */
+    get shadowType() {
+        return this._shadowType;
     }
 
     /**
@@ -276,6 +345,25 @@ class LightComponentElement extends ComponentElement {
         return this._type;
     }
 
+    /**
+     * Sets the VSM bias of the light.
+     * @param value - The VSM bias.
+     */
+    set vsmBias(value: number) {
+        this._vsmBias = value;
+        if (this.component) {
+            this.component.vsmBias = value;
+        }
+    }
+
+    /**
+     * Gets the VSM bias of the light.
+     * @returns The VSM bias.
+     */
+    get vsmBias() {
+        return this._vsmBias;
+    }
+
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
@@ -288,8 +376,11 @@ class LightComponentElement extends ComponentElement {
             'range',
             'shadow-bias',
             'shadow-distance',
+            'shadow-intensity',
             'shadow-resolution',
-            'type'
+            'shadow-type',
+            'type',
+            'vsm-bias'
         ];
     }
 
@@ -327,8 +418,17 @@ class LightComponentElement extends ComponentElement {
             case 'shadow-resolution':
                 this.shadowResolution = Number(newValue);
                 break;
+            case 'shadow-intensity':
+                this.shadowIntensity = Number(newValue);
+                break;
+            case 'shadow-type':
+                this.shadowType = newValue as 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f';
+                break;
             case 'type':
                 this.type = newValue;
+                break;
+            case 'vsm-bias':
+                this.vsmBias = Number(newValue);
                 break;
         }
     }
