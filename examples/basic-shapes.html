@@ -18,6 +18,8 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs" preload></pc-asset>
+            <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
+            <pc-asset id="xr-navigation" src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs" preload></pc-asset>
             <!-- Materials -->
             <pc-material id="crimson" diffuse="crimson"></pc-material>
             <pc-material id="mediumseagreen" diffuse="mediumseagreen"></pc-material>
@@ -27,16 +29,22 @@
             <pc-material id="lightgrey" diffuse="lightgrey"></pc-material>
             <!-- Scene -->
             <pc-scene>
-                <!-- Camera -->
-                <pc-entity name="camera" position="-3 2 -3.25">
-                    <pc-camera></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="cameraControls" attributes='{
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="-3 2 -3.25">
+                        <pc-camera></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
                                 "enableFly": false,
                                 "enablePan": false,
                                 "focusPoint": [0, 0.5, 0],
                                 "pitchRange": [-90, 0]
-                        }'></pc-script>
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Key Light (Spot) -->
