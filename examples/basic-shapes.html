@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Primitive Shapes</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs" preload></pc-asset>
+            <!-- Materials -->
+            <pc-material id="crimson" diffuse="crimson"></pc-material>
+            <pc-material id="mediumseagreen" diffuse="mediumseagreen"></pc-material>
+            <pc-material id="steelblue" diffuse="steelblue"></pc-material>
+            <pc-material id="hotpink" diffuse="hotpink"></pc-material>
+            <pc-material id="goldenrod" diffuse="goldenrod"></pc-material>
+            <pc-material id="lightgrey" diffuse="lightgrey"></pc-material>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="-3 2 -3.25">
+                    <pc-camera></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraControls" attributes='{
+                                "enableFly": false,
+                                "enablePan": false,
+                                "focusPoint": [0, 0.5, 0],
+                                "pitchRange": [-90, 0]
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Key Light (Spot) -->
+                <pc-entity name="keyLight" position="3 5 -3" rotation="-45 -45 0">
+                    <pc-light type="spot" intensity="2" cast-shadows shadow-resolution="2048"></pc-light>
+                </pc-entity>
+                <!-- Fill Light (Omni) -->
+                <pc-entity name="fillLight" position="-4 3 4">
+                    <pc-light type="omni" intensity="0.5"></pc-light>
+                </pc-entity>
+                <!-- Rim Light (Spot) -->
+                <pc-entity name="rimLight" position="-2 4 -4" rotation="-40 45 0">
+                    <pc-light type="spot" intensity="1.5" cast-shadows shadow-resolution="2048"></pc-light>
+                </pc-entity>
+                <!-- Box-->
+                <pc-entity name="box" position="1.5 0.5 0">
+                    <pc-render type="box" material="crimson"></pc-render>
+                </pc-entity>
+                <!-- Capsule -->
+                <pc-entity name="capsule" position="0.464 1 1.425">
+                    <pc-render type="capsule" material="mediumseagreen"></pc-render>
+                </pc-entity>
+                <!-- Cylinder -->
+                <pc-entity name="cylinder" position="-1.213 0.5 0.881">
+                    <pc-render type="cylinder" material="hotpink"></pc-render>
+                </pc-entity>
+                <!-- Cone -->
+                <pc-entity name="cone" position="-1.213 0.5 -0.881">
+                    <pc-render type="cone" material="steelblue"></pc-render>
+                </pc-entity>
+                <!-- Sphere -->
+                <pc-entity name="sphere" position="0.464 0.5 -1.425">
+                    <pc-render type="sphere" material="goldenrod"></pc-render>
+                </pc-entity>
+                <!-- Plane -->
+                <pc-entity name="plane" position="0 0 0" scale="7 1 7">
+                    <pc-render type="plane" material="lightgrey"></pc-render>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="scripts/ui.mjs"></script>
+    </body>
+</html>

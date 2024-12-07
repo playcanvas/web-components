@@ -23,8 +23,8 @@ class MaterialElement extends HTMLElement {
 
     createMaterial() {
         this.material = new StandardMaterial();
-        this.material.glossInvert = true;
-        this.material.useMetalness = true;
+        this.material.glossInvert = false;
+        this.material.useMetalness = false;
         this.material.diffuse = this._diffuse;
         this.diffuseMap = this._diffuseMap;
         this.metalnessMap = this._metalnessMap;
