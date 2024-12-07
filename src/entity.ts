@@ -40,6 +40,11 @@ class EntityElement extends AsyncElement {
     private _tags: string[] = [];
 
     /**
+     * The pointer event listeners for the entity.
+     */
+    private _listeners: { [key: string]: EventListener[] } = {};
+
+    /**
      * The PlayCanvas entity instance.
      */
     entity: Entity | null = null;
@@ -72,6 +77,31 @@ class EntityElement extends AsyncElement {
         if (tags) {
             this.entity.tags.add(tags.split(',').map(tag => tag.trim()));
         }
+
+        // Handle pointer events
+        const pointerEvents = [
+            'onpointerenter',
+            'onpointerleave',
+            'onpointerdown',
+            'onpointerup',
+            'onpointermove'
+        ];
+
+        pointerEvents.forEach((eventName) => {
+            const handler = this.getAttribute(eventName);
+            if (handler) {
+                const eventType = eventName.substring(2); // remove 'on' prefix
+                const eventHandler = (event: Event) => {
+                    try {
+                        /* eslint-disable-next-line no-new-func */
+                        new Function('event', 'this', handler).call(this, event);
+                    } catch (e) {
+                        console.error('Error in event handler:', e);
+                    }
+                };
+                this.addEventListener(eventType, eventHandler);
+            }
+        });
     }
 
     buildHierarchy(app: Application) {
@@ -240,7 +270,19 @@ class EntityElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags'];
+        return [
+            'enabled',
+            'name',
+            'position',
+            'rotation',
+            'scale',
+            'tags',
+            'onpointerenter',
+            'onpointerleave',
+            'onpointerdown',
+            'onpointerup',
+            'onpointermove'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -263,7 +305,51 @@ class EntityElement extends AsyncElement {
             case 'tags':
                 this.tags = newValue.split(',').map(tag => tag.trim());
                 break;
+            case 'onpointerenter':
+            case 'onpointerleave':
+            case 'onpointerdown':
+            case 'onpointerup':
+            case 'onpointermove':
+                if (newValue) {
+                    const eventName = name.substring(2);
+                    // Use Function.prototype.bind to avoid new Function
+                    const handler = (event: Event) => {
+                        try {
+                            /* eslint-disable-next-line no-new-func */
+                            new Function('event', 'this', newValue).call(this, event);
+                        } catch (e) {
+                            console.error('Error in event handler:', e);
+                        }
+                    };
+                    this.addEventListener(eventName, handler);
+                }
+                break;
         }
+    }
+
+    addEventListener(type: string, listener: EventListener, options?: boolean | AddEventListenerOptions) {
+        if (!this._listeners[type]) {
+            this._listeners[type] = [];
+        }
+        this._listeners[type].push(listener);
+        super.addEventListener(type, listener, options);
+        if (type.startsWith('pointer')) {
+            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
+        }
+    }
+
+    removeEventListener(type: string, listener: EventListener, options?: boolean | EventListenerOptions) {
+        if (this._listeners[type]) {
+            this._listeners[type] = this._listeners[type].filter(l => l !== listener);
+        }
+        super.removeEventListener(type, listener, options);
+        if (type.startsWith('pointer')) {
+            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
+        }
+    }
+
+    hasListeners(type: string): boolean {
+        return Boolean(this._listeners[type]?.length);
     }
 }
 
