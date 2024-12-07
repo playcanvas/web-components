@@ -1,7 +1,17 @@
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, CameraComponent, Color, Vec4, XRTYPE_VR } from 'playcanvas';
+import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { parseColor, parseVec4 } from '../utils';
+
+const tonemaps = new Map([
+    ['none', TONEMAP_NONE],
+    ['linear', TONEMAP_LINEAR],
+    ['filmic', TONEMAP_FILMIC],
+    ['hejl', TONEMAP_HEJL],
+    ['aces', TONEMAP_ACES],
+    ['aces2', TONEMAP_ACES2],
+    ['neutral', TONEMAP_NEUTRAL]
+]);
 
 /**
  * The CameraComponentElement interface provides properties and methods for manipulating
@@ -29,6 +39,8 @@ class CameraComponentElement extends ComponentElement {
 
     private _frustumCulling = true;
 
+    private _gamma: 'none' | 'srgb' = 'srgb';
+
     private _nearClip = 0.1;
 
     private _orthographic = false;
@@ -40,6 +52,8 @@ class CameraComponentElement extends ComponentElement {
     private _rect = new Vec4(0, 0, 1, 1);
 
     private _scissorRect = new Vec4(0, 0, 1, 1);
+
+    private _tonemap: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' = 'none';
 
     /** @ignore */
     constructor() {
@@ -57,12 +71,14 @@ class CameraComponentElement extends ComponentElement {
             flipFaces: this._flipFaces,
             fov: this._fov,
             frustumCulling: this._frustumCulling,
+            gammaCorrection: this._gamma === 'srgb' ? GAMMA_SRGB : GAMMA_NONE,
             nearClip: this._nearClip,
             orthographic: this._orthographic,
             orthoHeight: this._orthoHeight,
             priority: this._priority,
             rect: this._rect,
-            scissorRect: this._scissorRect
+            scissorRect: this._scissorRect,
+            toneMapping: tonemaps.get(this._tonemap)
         };
     }
 
@@ -267,6 +283,25 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets the gamma correction of the camera.
+     * @param value - The gamma correction.
+     */
+    set gamma(value: 'none' | 'srgb') {
+        this._gamma = value;
+        if (this.component) {
+            this.component.gammaCorrection = value === 'srgb' ? GAMMA_SRGB : GAMMA_NONE;
+        }
+    }
+
+    /**
+     * Gets the gamma correction of the camera.
+     * @returns The gamma correction.
+     */
+    get gamma(): 'none' | 'srgb' {
+        return this._gamma;
+    }
+
+    /**
      * Sets the near clip distance of the camera.
      * @param value - The near clip distance.
      */
@@ -380,6 +415,25 @@ class CameraComponentElement extends ComponentElement {
         return this._scissorRect;
     }
 
+    /**
+     * Sets the tone mapping of the camera.
+     * @param value - The tone mapping.
+     */
+    set tonemap(value: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral') {
+        this._tonemap = value;
+        if (this.component) {
+            this.component.toneMapping = tonemaps.get(value) ?? TONEMAP_NONE;
+        }
+    }
+
+    /**
+     * Gets the tone mapping of the camera.
+     * @returns The tone mapping.
+     */
+    get tonemap(): 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' {
+        return this._tonemap;
+    }
+
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
@@ -392,12 +446,14 @@ class CameraComponentElement extends ComponentElement {
             'flip-faces',
             'fov',
             'frustum-culling',
+            'gamma',
             'near-clip',
             'orthographic',
             'ortho-height',
             'priority',
             'rect',
-            'scissor-rect'
+            'scissor-rect',
+            'tonemap'
         ];
     }
 
@@ -432,6 +488,9 @@ class CameraComponentElement extends ComponentElement {
             case 'frustum-culling':
                 this.frustumCulling = newValue !== 'false';
                 break;
+            case 'gamma':
+                this.gamma = newValue as 'none' | 'srgb';
+                break;
             case 'near-clip':
                 this.nearClip = parseFloat(newValue);
                 break;
@@ -449,6 +508,9 @@ class CameraComponentElement extends ComponentElement {
                 break;
             case 'scissor-rect':
                 this.scissorRect = parseVec4(newValue);
+                break;
+            case 'tonemap':
+                this.tonemap = newValue as 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral';
                 break;
         }
     }
