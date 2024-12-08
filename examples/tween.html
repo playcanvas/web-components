@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Tweening</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs",
+                    "@tweenjs/tween.js": "../node_modules/@tweenjs/tween.js/dist/tween.esm.js"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <pc-asset id="tweener" src="scripts/tweener.mjs" preload></pc-asset>
+            <pc-asset id="studio" src="assets/skies/octagon-lamps-photo-studio-2k.hdr" preload></pc-asset>
+            <pc-asset id="star" src="assets/models/star.glb" preload></pc-asset>
+            <!-- Scene -->
+            <pc-scene></pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="studio" type="none" lighting></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 0 3">
+                    <pc-camera clear-color="#8099e6"></pc-camera>
+                </pc-entity>
+                <!-- Cube -->
+                <pc-entity name="box" onpointerenter="this.entity.script.tweener.play(0)" onpointerleave="this.entity.script.tweener.play(1)" onpointerdown="this.entity.script.tweener.play(2)">
+                    <pc-model asset="star"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="tweener" attributes='{
+                            "tweens": [
+                                {
+                                    "path": "localScale",
+                                    "start": [1, 1, 1, 0],
+                                    "end": [1.2, 1.2, 1.2, 0],
+                                    "duration": 500,
+                                    "easingFunction": "Elastic",
+                                    "easingType": "Out"
+                                },
+                                {
+                                    "path": "localScale",
+                                    "start": [1.2, 1.2, 1.2, 0],
+                                    "end": [1, 1, 1, 0],
+                                    "duration": 500,
+                                    "easingFunction": "Elastic",
+                                    "easingType": "Out"
+                                },
+                                {
+                                    "path": "localEulerAngles",
+                                    "start": [0, 0, 0, 0],
+                                    "end": [0, 360, 0, 0],
+                                    "duration": 2000,
+                                    "easingFunction": "Elastic",
+                                    "easingType": "Out"
+                                }
+                            ]
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="scripts/ui.mjs"></script>
+    </body>
+</html>
