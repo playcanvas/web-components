@@ -316,7 +316,8 @@ class EntityElement extends AsyncElement {
                     const handler = (event: Event) => {
                         try {
                             /* eslint-disable-next-line no-new-func */
-                            new Function('event', handler).call(this, event);
+                            const handlerStr = this.getAttribute(eventName) || '';
+                            new Function('event', handlerStr).call(this, event);
                         } catch (e) {
                             console.error('Error in event handler:', e);
                         }
