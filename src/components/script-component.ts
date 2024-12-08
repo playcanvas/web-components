@@ -76,7 +76,7 @@ class ScriptComponentElement extends ComponentElement {
                 if (value && typeof value === 'object' && Array.isArray(value)) {
                     // If it's an array of objects, recursively apply to each object
                     if (value.length > 0 && typeof value[0] === 'object') {
-                        target[key] = value.map(item => {
+                        target[key] = value.map((item) => {
                             const obj = {};
                             for (const itemKey in item) {
                                 applyValue(obj, itemKey, item[itemKey]);

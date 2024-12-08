@@ -315,8 +315,8 @@ class EntityElement extends AsyncElement {
                     // Use Function.prototype.bind to avoid new Function
                     const handler = (event: Event) => {
                         try {
-                            /* eslint-disable-next-line no-new-func */
                             const handlerStr = this.getAttribute(eventName) || '';
+                            /* eslint-disable-next-line no-new-func */
                             new Function('event', handlerStr).call(this, event);
                         } catch (e) {
                             console.error('Error in event handler:', e);

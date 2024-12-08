@@ -1,5 +1,5 @@
-import { Material, Script, Vec2, Vec3, Vec4, Color, Quat } from 'playcanvas';
 import { Tween, Easing } from '@tweenjs/tween.js';
+import { Material, Script, Vec2, Vec3, Vec4, Color } from 'playcanvas';
 
 /** @enum {enum} */
 const EasingTypes = {
@@ -24,7 +24,7 @@ const EasingFunctions = {
 };
 
 /** @interface */
-class TweenDescriptor {
+class TweenDescriptor { /* eslint-disable-line no-unused-vars */
     /**
      * Path to the property to tween
      * @type {string}
@@ -105,7 +105,7 @@ class TweenDescriptor {
     /**
      * Event to fire when tween stops
      * @type {string}
-     * @attributes
+     * @attribute
      */
     stopEvent;
 
@@ -243,47 +243,47 @@ export class Tweener extends Script {
 
         // Create and start the tween
         this.tweenInstances[idx] = new Tween(startValue)
-            .to(endValue, tween.duration)
-            .easing(this.getEasingFunction(tween))
-            .onStart(() => {
-                if (tween.startEvent) {
-                    this.app.fire(tween.startEvent);
-                }
-            })
-            .onStop(() => {
-                if (tween.stopEvent) {
-                    this.app.fire(tween.stopEvent);
-                }
-                this.tweenInstances[idx] = null;
-            })
-            .onUpdate((obj) => {
-                propertyOwner[propertyName] = isNumber ? obj.x : obj;
-                this.handleSpecialProperties(propertyName, propertyOwner, obj);
+        .to(endValue, tween.duration)
+        .easing(this.getEasingFunction(tween))
+        .onStart(() => {
+            if (tween.startEvent) {
+                this.app.fire(tween.startEvent);
+            }
+        })
+        .onStop(() => {
+            if (tween.stopEvent) {
+                this.app.fire(tween.stopEvent);
+            }
+            this.tweenInstances[idx] = null;
+        })
+        .onUpdate((obj) => {
+            propertyOwner[propertyName] = isNumber ? obj.x : obj;
+            this.handleSpecialProperties(propertyName, propertyOwner, obj);
 
-                if (propertyOwner instanceof Material) {
-                    propertyOwner.update();
-                }
+            if (propertyOwner instanceof Material) {
+                propertyOwner.update();
+            }
 
-                if (tween.updateEvent) {
-                    this.app.fire(tween.updateEvent);
-                }
-            })
-            .onComplete(() => {
-                if (tween.completeEvent) {
-                    this.app.fire(tween.completeEvent);
-                }
-                this.tweenInstances[idx] = null;
-            })
-            .onRepeat(() => {
-                if (tween.repeatEvent) {
-                    this.app.fire(tween.repeatEvent);
-                }
-            })
-            .repeat(tween.repeat)
-            .repeatDelay(tween.repeatDelay)
-            .yoyo(tween.yoyo)
-            .delay(tween.delay)
-            .start();
+            if (tween.updateEvent) {
+                this.app.fire(tween.updateEvent);
+            }
+        })
+        .onComplete(() => {
+            if (tween.completeEvent) {
+                this.app.fire(tween.completeEvent);
+            }
+            this.tweenInstances[idx] = null;
+        })
+        .onRepeat(() => {
+            if (tween.repeatEvent) {
+                this.app.fire(tween.repeatEvent);
+            }
+        })
+        .repeat(tween.repeat)
+        .repeatDelay(tween.repeatDelay)
+        .yoyo(tween.yoyo)
+        .delay(tween.delay)
+        .start();
     }
 
     stop(idx) {
@@ -292,7 +292,7 @@ export class Tweener extends Script {
     }
 
     update(dt) {
-        this.tweenInstances.forEach(tween => {
+        this.tweenInstances.forEach((tween) => {
             tween?.update();
         });
     }
