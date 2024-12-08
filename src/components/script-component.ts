@@ -4,10 +4,6 @@ import { ComponentElement } from './component';
 import { ScriptElement } from './script';
 import { AssetElement } from '../asset';
 
-const tmpV2 = new Vec2();
-const tmpV3 = new Vec3();
-const tmpV4 = new Vec4();
-
 // Add these interfaces at the top of the file, after the imports
 interface ScriptAttributesChangeEvent extends CustomEvent {
     detail: { attributes: any };
@@ -76,23 +72,36 @@ class ScriptComponentElement extends ComponentElement {
                     }
                 }
 
-                // Handle vectors
-                if (Array.isArray(value)) {
-                    if (target[key] instanceof Vec2) {
-                        target[key] = tmpV2.set(value[0], value[1]);
+                // Handle arrays
+                if (value && typeof value === 'object' && Array.isArray(value)) {
+                    // If it's an array of objects, recursively apply to each object
+                    if (value.length > 0 && typeof value[0] === 'object') {
+                        target[key] = value.map((item) => {
+                            const obj = {};
+                            for (const itemKey in item) {
+                                applyValue(obj, itemKey, item[itemKey]);
+                            }
+                            return obj;
+                        });
                         return;
                     }
-                    if (target[key] instanceof Vec3) {
-                        target[key] = tmpV3.set(value[0], value[1], value[2]);
+
+                    // Handle vectors
+                    if (value.length === 2 && typeof value[0] === 'number') {
+                        target[key] = new Vec2(value[0], value[1]);
                         return;
                     }
-                    if (target[key] instanceof Vec4) {
-                        target[key] = tmpV4.set(value[0], value[1], value[2], value[3]);
+                    if (value.length === 3 && typeof value[0] === 'number') {
+                        target[key] = new Vec3(value[0], value[1], value[2]);
+                        return;
+                    }
+                    if (value.length === 4 && typeof value[0] === 'number') {
+                        target[key] = new Vec4(value[0], value[1], value[2], value[3]);
                         return;
                     }
                 }
 
-                // Handle nested objects
+                // Handle nested objects (non-array)
                 if (value && typeof value === 'object' && !Array.isArray(value)) {
                     if (!target[key] || typeof target[key] !== 'object') {
                         target[key] = {};
