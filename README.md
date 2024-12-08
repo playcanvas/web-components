@@ -43,13 +43,13 @@ Or you can include it directly in your HTML file from a CDN.
 ES Modules:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.5/dist/pwc.mjs"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.9/dist/pwc.mjs"></script>
 ```
 
 UMD:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.5"></script>
+<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.9"></script>
 ```
 
 ## Tag Reference 📖
