@@ -203,10 +203,18 @@ class AppElement extends AsyncElement {
         this._picker.prepare(camera, this.app!.scene);
         const selection = this._picker.getSelection(x, y);
 
-        // Get the currently hovered entity (if any)
-        const newHoverEntity = selection.length > 0 ?
-            this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement :
-            null;
+        // Get the currently hovered entity by walking up the hierarchy
+        let newHoverEntity = null;
+        if (selection.length > 0) {
+            let node = selection[0].node;
+            while (node && !newHoverEntity) {
+                const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
+                if (entityElement) {
+                    newHoverEntity = entityElement;
+                }
+                node = node.parent;
+            }
+        }
 
         // Handle enter/leave events
         if (this._hoveredEntity !== newHoverEntity) {
@@ -241,9 +249,14 @@ class AppElement extends AsyncElement {
         const selection = this._picker.getSelection(x, y);
 
         if (selection.length > 0) {
-            const entityElement = this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement;
-            if (entityElement && entityElement.hasListeners('pointerdown')) {
-                entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
+            let node = selection[0].node;
+            while (node) {
+                const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
+                if (entityElement && entityElement.hasListeners('pointerdown')) {
+                    entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
+                    break;
+                }
+                node = node.parent;
             }
         }
     }

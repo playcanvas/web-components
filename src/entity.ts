@@ -94,7 +94,7 @@ class EntityElement extends AsyncElement {
                 const eventHandler = (event: Event) => {
                     try {
                         /* eslint-disable-next-line no-new-func */
-                        new Function('event', 'this', handler).call(this, event);
+                        new Function('event', handler).call(this, event);
                     } catch (e) {
                         console.error('Error in event handler:', e);
                     }
@@ -316,7 +316,7 @@ class EntityElement extends AsyncElement {
                     const handler = (event: Event) => {
                         try {
                             /* eslint-disable-next-line no-new-func */
-                            new Function('event', 'this', newValue).call(this, event);
+                            new Function('event', handler).call(this, event);
                         } catch (e) {
                             console.error('Error in event handler:', e);
                         }
