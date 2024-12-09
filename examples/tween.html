@@ -30,13 +30,32 @@
                 </pc-entity>
                 <!-- Star -->
                 <pc-entity name="star"
-                           onpointerenter="this.entity.script.tweener.play(0)"
-                           onpointerleave="this.entity.script.tweener.play(1)"
-                           onpointerdown="this.entity.script.tweener.play(2)">
+                           onpointerenter="this.entity.script.tweener.play(2)"
+                           onpointerleave="this.entity.script.tweener.play(3)"
+                           onpointerdown="this.entity.script.tweener.play(0);this.entity.script.tweener.play(1)">
                     <pc-model asset="star"></pc-model>
                     <pc-scripts>
                         <pc-script name="tweener" attributes='{
                             "tweens": [
+                                {
+                                    "path": "localPosition",
+                                    "start": [0, 0, 0, 0],
+                                    "end": [0, 0.2, 0, 0],
+                                    "duration": 1500,
+                                    "easingFunction": "Sinusoidal",
+                                    "easingType": "InOut",
+                                    "yoyo": true,
+                                    "repeat": -1
+                                }, {
+                                    "path": "localEulerAngles",
+                                    "start": [0, 0, 0, 0],
+                                    "end": [0, 10, 0, 0],
+                                    "duration": 2000,
+                                    "easingFunction": "Sinusoidal",
+                                    "easingType": "InOut",
+                                    "yoyo": true,
+                                    "repeat": -1
+                                },
                                 {
                                     "path": "localScale",
                                     "start": [1, 1, 1, 0],
