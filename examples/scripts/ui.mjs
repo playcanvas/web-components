@@ -94,8 +94,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add AR button if available
     if (app.xr.isAvailable('immersive-ar')) {
         const arButton = createButton({
-            icon: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path d="M12 3 L9.3 4.5 M6.6 6 L4 7.5 M4 7.5 L4 10.5 M4 13.5 L4 16.5 M4 16.5 L6.6 18 M9.3 19.5 L12 21 M12 21 L14.7 19.5 M17.4 18 L20 16.5 M20 16.5 L20 13.5 M20 10.5 L20 7.5 M20 7.5 L17.4 6 M14.7 4.5 L12 3 M12 21 L12 18.3 M12 14.7 L12 12 M4 7.5 L6.6 9 M9.3 10.5 L12 12 M12 12 L14.7 10.5 M17.4 9 L20 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            icon: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <g transform="translate(12 12) scale(0.8) translate(-12 -12)">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-2.25-1.313M21 7.5v2.25m0-2.25-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3 2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75 2.25-1.313M12 21.75V19.5m0 2.25-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25"/>
+                </g>
             </svg>`,
             title: 'Enter AR',
             onClick: () => app.xr.start(app.root.findComponent('camera'), 'immersive-ar', 'local-floor')
@@ -106,8 +108,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Add VR button if available
     if (app.xr.isAvailable('immersive-vr')) {
         const vrButton = createButton({
-            icon: `<svg width="32" height="32" viewBox="0 0 48 48">
-                <path d="M30,34 L26,30 L22,30 L18,34 L14,34 C11.7908610,34 10,32.2091390 10,30 L10,18 C10,15.7908610 11.7908610,14 14,14 L34,14 C36.2091390,14 38,15.7908610 38,18 L38,30 C38,32.2091390 36.2091390,34 34,34 L30,34 Z M44,28 C44,29.1045694 43.1045694,30 42,30 C40.8954306,30 40,29.1045694 40,28 L40,20 C40,18.8954305 40.8954306,18 42,18 C43.1045694,18 44,18.8954305 44,20 L44,28 Z M8,28 C8,29.1045694 7.10456940,30 6,30 C4.89543060,30 4,29.1045694 4,28 L4,20 C4,18.8954305 4.89543060,18 6,18 C7.10456940,18 8,18.8954305 8,20 L8,28 Z" fill="currentColor">
+            icon: `<svg width="40" height="40" viewBox="0 0 24 24">
+                <g transform="translate(12 12) scale(0.8) translate(-12 -12)">
+                    <path d="M15 17L13 15L11 15L9 17L7 17C5.9 17 5 16.1 5 15L5 9C5 7.9 5.9 7 7 7L17 7C18.1 7 19 7.9 19 9L19 15C19 16.1 18.1 17 17 17L15 17ZM22 14C22 14.6 21.6 15 21 15C20.4 15 20 14.6 20 14L20 10C20 9.4 20.4 9 21 9C21.6 9 22 9.4 22 10L22 14ZM4 14C4 14.6 3.6 15 3 15C2.4 15 2 14.6 2 14L2 10C2 9.4 2.4 9 3 9C3.6 9 4 9.4 4 10L4 14Z" fill="currentColor"/>
+                </g>
             </svg>`,
             title: 'Enter VR',
             onClick: () => app.xr.start(app.root.findComponent('camera'), 'immersive-vr', 'local-floor')
@@ -123,11 +127,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Add fullscreen button if supported
     if (document.documentElement.requestFullscreen && document.exitFullscreen) {
-        const enterFullscreenIcon = `<svg width="32" height="32" viewBox="0 0 24 24">
-            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" fill="currentColor"/>
+        const enterFullscreenIcon = `<svg width="40" height="40" viewBox="0 0 24 24">
+            <g transform="translate(12 12) scale(0.8) translate(-12 -12)">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" fill="currentColor"/>
+            </g>
         </svg>`;
-        const exitFullscreenIcon = `<svg width="32" height="32" viewBox="0 0 24 24">
-            <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" fill="currentColor"/>
+        const exitFullscreenIcon = `<svg width="40" height="40" viewBox="0 0 24 24">
+            <g transform="translate(12 12) scale(0.8) translate(-12 -12)">
+                <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" fill="currentColor"/>
+            </g>
         </svg>`;
 
         const fullscreenButton = createButton({
