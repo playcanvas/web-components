@@ -1,3 +1,5 @@
+import { Color } from 'playcanvas';
+
 document.addEventListener('DOMContentLoaded', async () => {
     const appElement = await document.querySelector('pc-app').ready();
     const app = appElement.app;
@@ -55,6 +57,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         return button;
     }
 
+    // On entering/exiting AR, we need to set the camera clear color to transparent black
+    let cameraEntity;
+    const clearColor = new Color();
+
+    app.xr.on('start', () => {
+        if (app.xr.type === 'immersive-ar') {
+            cameraEntity = app.xr.camera;
+            clearColor.copy(cameraEntity.camera.clearColor);
+            cameraEntity.camera.clearColor = new Color(0, 0, 0, 0);
+        }
+    });
+
+    app.xr.on('end', () => {
+        if (app.xr.type === 'immersive-ar') {
+            cameraEntity.camera.clearColor = clearColor;
+        }
+    });
+
+    // Add AR button if available
+    if (app.xr.isAvailable('immersive-ar')) {
+        const arButton = createButton({
+            icon: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3 L9.3 4.5 M6.6 6 L4 7.5 M4 7.5 L4 10.5 M4 13.5 L4 16.5 M4 16.5 L6.6 18 M9.3 19.5 L12 21 M12 21 L14.7 19.5 M17.4 18 L20 16.5 M20 16.5 L20 13.5 M20 10.5 L20 7.5 M20 7.5 L17.4 6 M14.7 4.5 L12 3 M12 21 L12 18.3 M12 14.7 L12 12 M4 7.5 L6.6 9 M9.3 10.5 L12 12 M12 12 L14.7 10.5 M17.4 9 L20 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>`,
+            title: 'Enter AR',
+            onClick: () => app.xr.start(app.root.findComponent('camera'), 'immersive-ar', 'local-floor')
+        });
+        container.appendChild(arButton);
+    }
+
     // Add VR button if available
     if (app.xr.isAvailable('immersive-vr')) {
         const vrButton = createButton({
@@ -65,13 +97,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             onClick: () => app.xr.start(app.root.findComponent('camera'), 'immersive-vr', 'local-floor')
         });
         container.appendChild(vrButton);
-
-        window.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                app.xr.end();
-            }
-        });
     }
+
+    window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && app.xr.active) {
+            app.xr.end();
+        }
+    });
 
     // Add fullscreen button if supported
     if (document.documentElement.requestFullscreen && document.exitFullscreen) {
