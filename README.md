@@ -32,27 +32,23 @@ See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-c
 
 ## Usage 🚧
 
-### NPM
-
 PlayCanvas Web Components is available as a package on [NPM](https://www.npmjs.com/package/@playcanvas/web-components). 
-If you are using a bundler (e.g. Rollup), you can install it (and the PlayCanvas Engine):
+You can install it (and the PlayCanvas Engine) as follows:
 
 ```bash
 npm install playcanvas @playcanvas/web-components --save-dev
 ```
 
-Or you can include it directly in your HTML file from a CDN.
+You can then use a bundler (such as Webpack or Rollup) to build your application. Or you can import the components as follows:
 
-### ES Modules:
+```html
+<script type="module" src="/node_modules/@playcanvas/web-components/dist/pwc.mjs"></script>
+```
+
+Instead of loading the library from a local package, you can instead opt to load it from a CDN.
 
 ```html
 <script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.10/dist/pwc.mjs"></script>
-```
-
-### UMD:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@0.1.10"></script>
 ```
 
 ## Tag Reference 📖
