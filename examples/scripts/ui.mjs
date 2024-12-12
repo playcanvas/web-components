@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const fullscreenButton = createButton({
             icon: enterFullscreenIcon,
-            title: 'Toggle Fullscreen',
+            title: 'Enter Fullscreen',
             onClick: () => {
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen();
