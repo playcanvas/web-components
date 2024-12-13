@@ -1,5 +1,4 @@
-/* eslint-disable-next-line import/no-unresolved */
-import { Color, Script, Vec3 } from 'playcanvas';
+import { Color, Quat, Script, Vec3 } from 'playcanvas';
 
 /** @import { XrInputSource } from 'playcanvas' */
 
