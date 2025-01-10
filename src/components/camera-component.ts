@@ -41,6 +41,8 @@ class CameraComponentElement extends ComponentElement {
 
     private _gamma: 'none' | 'srgb' = 'srgb';
 
+    private _horizontalFov = false;
+
     private _nearClip = 0.1;
 
     private _orthographic = false;
@@ -72,6 +74,7 @@ class CameraComponentElement extends ComponentElement {
             fov: this._fov,
             frustumCulling: this._frustumCulling,
             gammaCorrection: this._gamma === 'srgb' ? GAMMA_SRGB : GAMMA_NONE,
+            horizontalFov: this._horizontalFov,
             nearClip: this._nearClip,
             orthographic: this._orthographic,
             orthoHeight: this._orthoHeight,
@@ -302,6 +305,26 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
+     * Sets whether the camera's field of view (fov) is horizontal or vertical. Defaults to false
+     * (meaning it is vertical be default).
+     * @param value - Whether the camera's field of view is horizontal.
+     */
+    set horizontalFov(value: boolean) {
+        this._horizontalFov = value;
+        if (this.component) {
+            this.component.horizontalFov = value;
+        }
+    }
+
+    /**
+     * Gets whether the camera's field of view (fov) is horizontal or vertical.
+     * @returns Whether the camera's field of view is horizontal.
+     */
+    get horizontalFov(): boolean {
+        return this._horizontalFov;
+    }
+
+    /**
      * Sets the near clip distance of the camera.
      * @param value - The near clip distance.
      */
@@ -447,6 +470,7 @@ class CameraComponentElement extends ComponentElement {
             'fov',
             'frustum-culling',
             'gamma',
+            'horizontal-fov',
             'near-clip',
             'orthographic',
             'ortho-height',
@@ -490,6 +514,9 @@ class CameraComponentElement extends ComponentElement {
                 break;
             case 'gamma':
                 this.gamma = newValue as 'none' | 'srgb';
+                break;
+            case 'horizontal-fov':
+                this.horizontalFov = this.hasAttribute('horizontal-fov');
                 break;
             case 'near-clip':
                 this.nearClip = parseFloat(newValue);
