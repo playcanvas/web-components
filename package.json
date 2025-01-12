@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "develop": "concurrently \"npm run watch\" \"npm run serve\"",
+    "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
     "lint": "eslint examples/js examples/scripts src",
     "serve": "serve",
