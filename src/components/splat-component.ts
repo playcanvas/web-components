@@ -4,13 +4,13 @@ import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
 
 /**
- * The GSplatComponentElement interface provides properties and methods for manipulating
- * `<pc-splat>` elements. The GSplatComponentElement interface also inherits the properties and
+ * The SplatComponentElement interface provides properties and methods for manipulating
+ * `<pc-splat>` elements. The SplatComponentElement interface also inherits the properties and
  * methods of the {@link HTMLElement} interface.
  *
  * @category Components
  */
-class GSplatComponentElement extends ComponentElement {
+class SplatComponentElement extends ComponentElement {
     private _asset: string = '';
 
     /** @ignore */
@@ -59,6 +59,6 @@ class GSplatComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-splat', GSplatComponentElement);
+customElements.define('pc-splat', SplatComponentElement);
 
-export { GSplatComponentElement };
+export { SplatComponentElement };

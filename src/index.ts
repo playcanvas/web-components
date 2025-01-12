@@ -20,7 +20,7 @@ import { CameraComponentElement } from './components/camera-component';
 import { CollisionComponentElement } from './components/collision-component';
 import { ComponentElement } from './components/component';
 import { ElementComponentElement } from './components/element-component';
-import { GSplatComponentElement } from './components/gsplat-component';
+import { SplatComponentElement } from './components/splat-component';
 import { LightComponentElement } from './components/light-component';
 import { RenderComponentElement } from './components/render-component';
 import { RigidBodyComponentElement } from './components/rigidbody-component';
@@ -44,7 +44,7 @@ export {
     CollisionComponentElement,
     ComponentElement,
     ElementComponentElement,
-    GSplatComponentElement,
+    SplatComponentElement,
     LightComponentElement,
     ListenerComponentElement,
     RenderComponentElement,
