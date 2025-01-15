@@ -1,4 +1,4 @@
-import { examples } from './examples.mjs';
+import { examples } from './example-list.mjs';
 
 export function setupNavigation(loadExample) {
     function updateURL(path) {
