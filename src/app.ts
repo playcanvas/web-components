@@ -7,7 +7,10 @@ import { MaterialElement } from './material';
 import { ModuleElement } from './module';
 
 /**
- * The main application element.
+ * The AppElement interface provides properties and methods for manipulating
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-app/ | `<pc-app>`} elements.
+ * The AppElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  */
 class AppElement extends AsyncElement {
     /**

@@ -4,8 +4,9 @@ import { ComponentElement } from './component';
 
 /**
  * The ListenerComponentElement interface provides properties and methods for manipulating
- * `<pc-listener>` elements. The ListenerComponentElement interface also inherits the properties
- * and methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-listener/ | `<pc-listener>`} elements.
+ * The ListenerComponentElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  *
  * @category Components
  */

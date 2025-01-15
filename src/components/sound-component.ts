@@ -4,8 +4,9 @@ import { ComponentElement } from './component';
 
 /**
  * The SoundComponentElement interface provides properties and methods for manipulating
- * `<pc-sounds>` elements. The SoundComponentElement interface also inherits the properties and
- * methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-sounds/ | `<pc-sounds>`} elements.
+ * The SoundComponentElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  *
  * @category Components
  */
