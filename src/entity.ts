@@ -5,8 +5,9 @@ import { parseVec3 } from './utils';
 
 /**
  * The EntityElement interface provides properties and methods for manipulating
- * `<pc-entity>` elements. The EntityElement interface also inherits the properties and
- * methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-entity/ | `<pc-entity>`} elements.
+ * The EntityElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  */
 class EntityElement extends AsyncElement {
     /**

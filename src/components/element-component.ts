@@ -6,8 +6,9 @@ import { parseColor, parseVec2, parseVec4 } from '../utils';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating
- * `<pc-element>` elements. The ElementComponentElement interface also inherits the properties and
- * methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-element/ | `<pc-element>`} elements.
+ * The ElementComponentElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  *
  * @category Components
  */

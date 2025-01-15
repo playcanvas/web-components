@@ -22,8 +22,9 @@ const extToType = new Map([
 
 /**
  * The AssetElement interface provides properties and methods for manipulating
- * `<pc-asset>` elements. The AssetElement interface also inherits the properties and
- * methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-asset/ | `<pc-asset>`} elements.
+ * The AssetElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  */
 class AssetElement extends HTMLElement {
     private _preload: boolean = false;

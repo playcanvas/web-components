@@ -5,8 +5,9 @@ import { AsyncElement } from './async-element';
 
 /**
  * The ModelElement interface provides properties and methods for manipulating
- * `<pc-model>` elements. The ModelElement interface also inherits the properties and
- * methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-model/ | `<pc-model>`} elements.
+ * The ModelElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  */
 class ModelElement extends AsyncElement {
     private _asset: string = '';

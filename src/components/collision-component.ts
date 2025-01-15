@@ -5,8 +5,9 @@ import { parseQuat, parseVec3 } from '../utils';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating
- * `<pc-collision>` elements. The CollisionComponentElement interface also inherits the properties
- * and methods of the {@link HTMLElement} interface.
+ * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-collision/ | `<pc-collision>`} elements.
+ * The CollisionComponentElement interface also inherits the properties and methods of the
+ * {@link HTMLElement} interface.
  *
  * @category Components
  */
