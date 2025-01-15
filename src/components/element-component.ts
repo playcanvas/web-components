@@ -60,13 +60,17 @@ class ElementComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the element component.
+     * Gets the underlying PlayCanvas element component.
      * @returns The element component.
      */
     get component(): ElementComponent | null {
         return super.component as ElementComponent | null;
     }
 
+    /**
+     * Sets the anchor of the element component.
+     * @param value - The anchor.
+     */
     set anchor(value: Vec4) {
         this._anchor = value;
         if (this.component) {
@@ -74,10 +78,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the anchor of the element component.
+     * @returns The anchor.
+     */
     get anchor() {
         return this._anchor;
     }
 
+    /**
+     * Sets the id of the `pc-asset` to use for the font.
+     * @param value - The asset ID.
+     */
     set asset(value: string) {
         this._asset = value;
         const asset = AssetElement.get(value);
@@ -86,10 +98,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the id of the `pc-asset` to use for the font.
+     * @returns The asset ID.
+     */
     get asset() {
         return this._asset;
     }
 
+    /**
+     * Sets whether the element component should automatically adjust its width.
+     * @param value - Whether to automatically adjust the width.
+     */
     set autoWidth(value: boolean) {
         this._autoWidth = value;
         if (this.component) {
@@ -97,10 +117,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets whether the element component should automatically adjust its width.
+     * @returns Whether to automatically adjust the width.
+     */
     get autoWidth() {
         return this._autoWidth;
     }
 
+    /**
+     * Sets the color of the element component.
+     * @param value - The color.
+     */
     set color(value: Color) {
         this._color = value;
         if (this.component) {
@@ -108,10 +136,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the color of the element component.
+     * @returns The color.
+     */
     get color() {
         return this._color;
     }
 
+    /**
+     * Sets the font size of the element component.
+     * @param value - The font size.
+     */
     set fontSize(value: number) {
         this._fontSize = value;
         if (this.component) {
@@ -119,10 +155,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the font size of the element component.
+     * @returns The font size.
+     */
     get fontSize() {
         return this._fontSize;
     }
 
+    /**
+     * Sets the line height of the element component.
+     * @param value - The line height.
+     */
     set lineHeight(value: number) {
         this._lineHeight = value;
         if (this.component) {
@@ -130,10 +174,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the line height of the element component.
+     * @returns The line height.
+     */
     get lineHeight() {
         return this._lineHeight;
     }
 
+    /**
+     * Sets the pivot of the element component.
+     * @param value - The pivot.
+     */
     set pivot(value: Vec2) {
         this._pivot = value;
         if (this.component) {
@@ -141,10 +193,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the pivot of the element component.
+     * @returns The pivot.
+     */
     get pivot() {
         return this._pivot;
     }
 
+    /**
+     * Sets the text of the element component.
+     * @param value - The text.
+     */
     set text(value: string) {
         this._text = value;
         if (this.component) {
@@ -152,6 +212,10 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the text of the element component.
+     * @returns The text.
+     */
     get text() {
         return this._text;
     }
@@ -175,6 +239,10 @@ class ElementComponentElement extends ComponentElement {
         return this._type;
     }
 
+    /**
+     * Sets the width of the element component.
+     * @param value - The width.
+     */
     set width(value: number) {
         this._width = value;
         if (this.component) {
@@ -182,10 +250,18 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the width of the element component.
+     * @returns The width.
+     */
     get width() {
         return this._width;
     }
 
+    /**
+     * Sets whether the element component should wrap lines.
+     * @param value - Whether to wrap lines.
+     */
     set wrapLines(value: boolean) {
         this._wrapLines = value;
         if (this.component) {
@@ -193,6 +269,10 @@ class ElementComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets whether the element component should wrap lines.
+     * @returns Whether to wrap lines.
+     */
     get wrapLines() {
         return this._wrapLines;
     }

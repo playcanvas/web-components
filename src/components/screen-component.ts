@@ -40,7 +40,7 @@ class ScreenComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the screen component.
+     * Gets the underlying PlayCanvas screen component.
      * @returns The screen component.
      */
     get component(): ScreenComponent | null {

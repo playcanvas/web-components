@@ -100,6 +100,10 @@ class SkyElement extends AsyncElement {
         this._scene = null;
     }
 
+    /**
+     * Sets the id of the `pc-asset` to use for the skybox.
+     * @param value - The asset ID.
+     */
     set asset(value: string) {
         this._asset = value;
         if (this.isConnected) {
@@ -107,10 +111,18 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the id of the `pc-asset` to use for the skybox.
+     * @returns The asset ID.
+     */
     get asset() {
         return this._asset;
     }
 
+    /**
+     * Sets the center of the skybox.
+     * @param value - The center.
+     */
     set center(value: Vec3) {
         this._center = value;
         if (this._scene) {
@@ -118,10 +130,18 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the center of the skybox.
+     * @returns The center.
+     */
     get center() {
         return this._center;
     }
 
+    /**
+     * Sets the intensity of the skybox.
+     * @param value - The intensity.
+     */
     set intensity(value: number) {
         this._intensity = value;
         if (this._scene) {
@@ -129,10 +149,18 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the intensity of the skybox.
+     * @returns The intensity.
+     */
     get intensity() {
         return this._intensity;
     }
 
+    /**
+     * Sets the mip level of the skybox.
+     * @param value - The mip level.
+     */
     set level(value: number) {
         this._level = value;
         if (this._scene) {
@@ -140,18 +168,34 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the mip level of the skybox.
+     * @returns The mip level.
+     */
     get level() {
         return this._level;
     }
 
+    /**
+     * Sets whether the skybox is used as a light source.
+     * @param value - Whether to use lighting.
+     */
     set lighting(value: boolean) {
         this._lighting = value;
     }
 
+    /**
+     * Gets whether the skybox is used as a light source.
+     * @returns Whether to use lighting.
+     */
     get lighting() {
         return this._lighting;
     }
 
+    /**
+     * Sets the Euler rotation of the skybox.
+     * @param value - The rotation.
+     */
     set rotation(value: Vec3) {
         this._rotation = value;
         if (this._scene) {
@@ -159,10 +203,18 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the Euler rotation of the skybox.
+     * @returns The rotation.
+     */
     get rotation() {
         return this._rotation;
     }
 
+    /**
+     * Sets the scale of the skybox.
+     * @param value - The scale.
+     */
     set scale(value: Vec3) {
         this._scale = value;
         if (this._scene) {
@@ -170,10 +222,18 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the scale of the skybox.
+     * @returns The scale.
+     */
     get scale() {
         return this._scale;
     }
 
+    /**
+     * Sets the type of the skybox.
+     * @param value - The type.
+     */
     set type(value: 'box' | 'dome' | 'infinite' | 'none') {
         this._type = value;
         if (this._scene) {
@@ -185,6 +245,10 @@ class SkyElement extends AsyncElement {
         }
     }
 
+    /**
+     * Gets the type of the skybox.
+     * @returns The type.
+     */
     get type() {
         return this._type;
     }

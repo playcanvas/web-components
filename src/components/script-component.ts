@@ -189,7 +189,7 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the script component.
+     * Gets the underlying PlayCanvas script component.
      * @returns The script component.
      */
     get component(): ScriptComponent | null {

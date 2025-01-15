@@ -107,7 +107,7 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the camera component.
+     * Gets the underlying PlayCanvas camera component.
      * @returns The camera component.
      */
     get component(): CameraComponent | null {

@@ -76,7 +76,7 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the light component.
+     * Gets the underlying PlayCanvas light component.
      * @returns The light component.
      */
     get component(): LightComponent | null {
