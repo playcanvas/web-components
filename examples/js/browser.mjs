@@ -1,4 +1,4 @@
-import { examples } from './examples.mjs';
+import { examples } from './example-list.mjs';
 import { setupNavigation } from './navigation.mjs';
 import { showQRCode } from './qr-code.mjs';
 
