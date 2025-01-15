@@ -1,4 +1,4 @@
-import { Application, CameraComponent, FILLMODE_FILL_WINDOW, Keyboard, Mouse, Picker, RESOLUTION_AUTO } from 'playcanvas';
+import { Application, CameraComponent, FILLMODE_FILL_WINDOW, GraphNode, Keyboard, Mouse, Picker, RESOLUTION_AUTO } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -209,13 +209,14 @@ class AppElement extends AsyncElement {
         // Get the currently hovered entity by walking up the hierarchy
         let newHoverEntity = null;
         if (selection.length > 0) {
-            let node = selection[0].node;
-            while (node && !newHoverEntity) {
-                const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
+            let currentNode: GraphNode | null = selection[0].node;
+            while (currentNode !== null) {
+                const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
                 if (entityElement) {
                     newHoverEntity = entityElement;
+                    break;
                 }
-                node = node.parent;
+                currentNode = currentNode.parent;
             }
         }
 
@@ -252,14 +253,14 @@ class AppElement extends AsyncElement {
         const selection = this._picker.getSelection(x, y);
 
         if (selection.length > 0) {
-            let node = selection[0].node;
-            while (node) {
-                const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
+            let currentNode: GraphNode | null = selection[0].node;
+            while (currentNode !== null) {
+                const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
                 if (entityElement && entityElement.hasListeners('pointerdown')) {
                     entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
                     break;
                 }
-                node = node.parent;
+                currentNode = currentNode.parent;
             }
         }
     }
