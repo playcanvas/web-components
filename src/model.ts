@@ -59,10 +59,10 @@ class ModelElement extends AsyncElement {
         }
 
         if (asset.loaded) {
-            this._instantiate(asset.resource);
+            this._instantiate(asset.resource as ContainerResource);
         } else {
             asset.once('load', () => {
-                this._instantiate(asset.resource);
+                this._instantiate(asset.resource as ContainerResource);
             });
             app!.assets.load(asset);
         }

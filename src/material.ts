@@ -1,4 +1,4 @@
-import { Color, StandardMaterial } from 'playcanvas';
+import { Color, StandardMaterial, Texture } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { parseColor } from './utils';
@@ -45,11 +45,11 @@ class MaterialElement extends HTMLElement {
             const asset = AssetElement.get(map);
             if (asset) {
                 if (asset.loaded) {
-                    this.material[property] = asset.resource;
+                    this.material[property] = asset.resource as Texture;
                     this.material[property]!.anisotropy = 4;
                 } else {
                     asset.once('load', () => {
-                        this.material![property] = asset.resource;
+                        this.material![property] = asset.resource as Texture;
                         this.material![property]!.anisotropy = 4;
                         this.material!.update();
                     });
