@@ -74,7 +74,7 @@ class ModelElement extends AsyncElement {
     }
 
     /**
-     * Sets the asset ID of the model.
+     * Sets the id of the `pc-asset` to use for the model.
      * @param value - The asset ID.
      */
     set asset(value: string) {
@@ -85,8 +85,8 @@ class ModelElement extends AsyncElement {
     }
 
     /**
-     * Gets the source URL of the model.
-     * @returns The source URL of the model.
+     * Gets the id of the `pc-asset` to use for the model.
+     * @returns The asset ID.
      */
     get asset(): string {
         return this._asset;

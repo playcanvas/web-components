@@ -16,7 +16,7 @@ class ListenerComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the audio listener component.
+     * Gets the underlying PlayCanvas audio listener component.
      * @returns The audio listener component.
      */
     get component(): AudioListenerComponent | null {

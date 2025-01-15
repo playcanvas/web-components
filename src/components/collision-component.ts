@@ -46,7 +46,7 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the collision component.
+     * Gets the underlying PlayCanvas collision component.
      * @returns The collision component.
      */
     get component(): CollisionComponent | null {

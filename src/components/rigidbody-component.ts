@@ -76,8 +76,8 @@ class RigidBodyComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the collision component.
-     * @returns The collision component.
+     * Gets the underlying PlayCanvas rigidbody component.
+     * @returns The rigidbody component.
      */
     get component(): RigidBodyComponent | null {
         return super.component as RigidBodyComponent | null;

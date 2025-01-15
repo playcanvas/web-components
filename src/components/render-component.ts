@@ -34,7 +34,7 @@ class RenderComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the render component.
+     * Gets the underlying PlayCanvas render component.
      * @returns The render component.
      */
     get component(): RenderComponent | null {

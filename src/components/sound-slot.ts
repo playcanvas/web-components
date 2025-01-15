@@ -71,7 +71,7 @@ class SoundSlotElement extends AsyncElement {
     }
 
     /**
-     * Sets the asset of the sound slot.
+     * Sets the id of the `pc-asset` to use for the sound slot.
      * @param value - The asset.
      */
     set asset(value: string) {
@@ -85,7 +85,7 @@ class SoundSlotElement extends AsyncElement {
     }
 
     /**
-     * Gets the asset of the sound slot.
+     * Gets the id of the `pc-asset` to use for the sound slot.
      * @returns The asset.
      */
     get asset() {

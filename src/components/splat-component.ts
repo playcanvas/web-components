@@ -25,13 +25,17 @@ class SplatComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the gsplat component.
-     * @returns The gsplat component.
+     * Gets the underlying PlayCanvas splat component.
+     * @returns The splat component.
      */
     get component(): GSplatComponent | null {
         return super.component as GSplatComponent | null;
     }
 
+    /**
+     * Sets id of the `pc-asset` to use for the splat.
+     * @param value - The asset ID.
+     */
     set asset(value: string) {
         this._asset = value;
         const asset = AssetElement.get(value);
@@ -40,6 +44,10 @@ class SplatComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets the id of the `pc-asset` to use for the splat.
+     * @returns The asset ID.
+     */
     get asset() {
         return this._asset;
     }
