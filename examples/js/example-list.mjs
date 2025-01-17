@@ -2,6 +2,7 @@ export const examples = [
     { name: 'Animation', path: 'animation.html' },
     { name: 'Basic Shapes', path: 'basic-shapes.html' },
     { name: 'Car Configurator', path: 'car-configurator.html' },
+    { name: 'FPS Controller', path: 'fps-controller.html' },
     { name: 'Gaussian Splatting', path: 'splat.html' },
     { name: 'GLB Loader', path: 'glb.html' },
     { name: 'Physics', path: 'physics.html' },
