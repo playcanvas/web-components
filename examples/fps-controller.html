@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-        <title>PlayCanvas Web Components - First Person Camera</title>
+        <title>PlayCanvas Web Components - First Person Controller</title>
         <script type="importmap">
             {
                 "imports": {
@@ -22,12 +22,12 @@
             <!-- Assets -->
             <pc-asset id="first-person-camera" src="../node_modules/playcanvas/scripts/esm/first-person-controller.mjs" preload></pc-asset>
             <pc-asset id="static-body" src="scripts/static-body.mjs" preload></pc-asset>
-            <pc-asset id="lake-bed" src="assets/skies/autumn-field-puresky.webp" preload></pc-asset>
+            <pc-asset id="blue-sky" src="assets/skies/autumn-field-puresky.webp" preload></pc-asset>
             <pc-asset id="map" src="assets/models/fps-map.glb" preload></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
-                <pc-sky asset="lake-bed" lighting></pc-sky>
+                <pc-sky asset="blue-sky" lighting></pc-sky>
                 <!-- Camera (with XR support) -->
                 <pc-entity name="camera controller" position="5 2 10">
                     <pc-entity id="camera" position="0 0.8 0">
