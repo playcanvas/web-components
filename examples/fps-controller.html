@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - First Person Camera</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset id="first-person-camera" src="../node_modules/playcanvas/scripts/esm/first-person-controller.mjs" preload></pc-asset>
+            <pc-asset id="static-body" src="scripts/static-body.mjs" preload></pc-asset>
+            <pc-asset id="lake-bed" src="assets/skies/dry-lake-bed-2k.hdr" preload></pc-asset>
+            <pc-asset id="map" src="assets/models/fps-map.glb" preload></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="lake-bed" lighting></pc-sky>
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera controller" position="5 2 10">
+                    <pc-entity id="camera" position="0 0.9 0">
+                        <pc-camera></pc-camera>
+                    </pc-entity>
+                    <pc-collision type="capsule" radius="0.5" height="2"></pc-collision>
+                    <pc-rigidbody type="dynamic" angular-factor="0 0 0" mass="100" friction="0.5" restitution="0"></pc-rigidbody>
+                    <pc-scripts>
+                        <pc-script name="firstPersonController"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45 0 0">
+                    <pc-light></pc-light>
+                </pc-entity>
+                <!-- Map -->
+                <pc-entity name="map">
+                    <pc-model asset="map"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="staticBody"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example-ui.mjs"></script>
+    </body>
+</html>
