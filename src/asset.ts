@@ -27,7 +27,7 @@ const extToType = new Map([
  * {@link HTMLElement} interface.
  */
 class AssetElement extends HTMLElement {
-    private _preload: boolean = false;
+    private _lazy: boolean = false;
 
     /**
      * The asset that is loaded.
@@ -55,7 +55,7 @@ class AssetElement extends HTMLElement {
         }
 
         this.asset = new Asset(id, type, { url: src });
-        this.asset.preload = this.preload;
+        this.asset.preload = !this._lazy;
     }
 
     destroyAsset() {
@@ -66,22 +66,22 @@ class AssetElement extends HTMLElement {
     }
 
     /**
-     * Sets the preload flag of the asset.
-     * @param value - The preload flag.
+     * Sets whether the asset should be loaded lazily.
+     * @param value - The lazy loading flag.
      */
-    set preload(value: boolean) {
-        this._preload = value;
+    set lazy(value: boolean) {
+        this._lazy = value;
         if (this.asset) {
-            this.asset.preload = value;
+            this.asset.preload = !value;
         }
     }
 
     /**
-     * Gets the preload flag of the asset.
-     * @returns The preload flag.
+     * Gets whether the asset should be loaded lazily.
+     * @returns The lazy loading flag.
      */
-    get preload() {
-        return this._preload;
+    get lazy() {
+        return this._lazy;
     }
 
     static get(id: string) {
@@ -90,12 +90,12 @@ class AssetElement extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['preload'];
+        return ['lazy'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, _newValue: string) {
-        if (name === 'preload') {
-            this.preload = this.hasAttribute('preload');
+        if (name === 'lazy') {
+            this.lazy = this.hasAttribute('lazy');
         }
     }
 }
