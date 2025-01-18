@@ -28,9 +28,9 @@
             <pc-scene>
                 <!-- Sky -->
                 <pc-sky asset="blue-sky" lighting></pc-sky>
-                <!-- Camera (with XR support) -->
-                <pc-entity name="camera controller" position="5 2 10">
-                    <pc-entity id="camera" position="0 0.8 0">
+                <!-- First Person Controller -->
+                <pc-entity name="controller" position="5 2 10">
+                    <pc-entity name="camera" position="0 0.8 0">
                         <pc-camera></pc-camera>
                     </pc-entity>
                     <pc-collision type="capsule" radius="0.5" height="1.8"></pc-collision>
