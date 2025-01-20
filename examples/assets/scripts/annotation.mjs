@@ -1,8 +1,29 @@
-import { CULLFACE_NONE, FILTER_LINEAR, PIXELFORMAT_RGBA8, BlendState, Color, Entity, Layer, Mesh, MeshInstance, PlaneGeometry, Script, StandardMaterial, Texture } from 'playcanvas';
+import {
+    CULLFACE_NONE,
+    FILTER_LINEAR,
+    PIXELFORMAT_RGBA8,
+    BlendState,
+    Color,
+    Entity,
+    Layer,
+    Mesh,
+    MeshInstance,
+    PlaneGeometry,
+    Script,
+    StandardMaterial,
+    Texture
+} from 'playcanvas';
 
 /** @import { Application, CameraComponent } from 'playcanvas' */
 
-/** @type {HTMLDivElement | null} */
+/**
+ * A script for creating interactive 3D annotations in a scene. Each annotation consists of:
+ *
+ * - A 3D hotspot that maintains constant screen-space size. The hotspot is rendered with muted
+ * appearance when obstructed by geometry but is still clickable. The hotspot relies on an
+ * invisible DOM element that matches the hotspot's size and position to detect clicks.
+ * - An annotation panel that shows title and description text.
+ */
 export class Annotation extends Script {
     /** @type {HTMLDivElement | null} */
     static _activeTooltip = null;
@@ -299,7 +320,7 @@ export class Annotation extends Script {
         }, 200); // Match the transition duration
     }
 
-    update() {
+    update(dt) {
         if (!this.camera) return;
 
         // Convert world position to screen space
