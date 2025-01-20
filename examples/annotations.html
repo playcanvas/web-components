@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Annotations</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
+            <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/annotation.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/shadow-catcher.mjs"></pc-asset>
+            <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
+            <pc-asset src="assets/models/jet-fighter.glb" id="jet-fighter"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="shanghai" type="dome" center="0 0.1 0" scale="50 50 50" lighting></pc-sky>
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="0 1.75 8">
+                        <pc-camera clear-color="black"></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
+                                "focusPoint": [0, 1.75, 0],
+                                "pitchRange": [-90, 0],
+                                "sceneSize": 2
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45 0 0">
+                    <pc-light></pc-light>
+                </pc-entity>
+                <!-- Jet Fighter -->
+                <pc-entity name="jet-fighter" position="-2 1.6 0" rotation="0 0 3">
+                    <pc-model asset="jet-fighter"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="shadowCatcher" attributes='{
+                            "size": [14, 14]
+                        }'></pc-script>
+                    </pc-scripts>
+                    <pc-entity name="annotation1" position="5.5 1.2 0">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Cockpit Canopy",
+                                "text": "Transparent canopy offering visibility and housing the pilot\u0027s controls."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="annotation2" position="8 0.25 0">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Nose Cone & Radar",
+                                "text": "Houses the advanced radar system for targeting and navigation."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="annotation3" position="5 -0.5 0">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Inlet Ducts",
+                                "text": "Provides airflow to the engines, crucial for maintaining thrust."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="annotation4" position="0.5 0 5.1">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Wingtip Missile Rails",
+                                "text": "Can be equipped with AIM-9 Sidewinder missiles for air-to-air combat."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="annotation5" position="-4 0 0">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Jet Engine Nozzles",
+                                "text": "Dual afterburning turbofan engines for high-speed performance."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="annotation6" position="1 -1 -1">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Main Landing Gear",
+                                "text": "Retractable gear for safe takeoff and landing on runways."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="annotation7" position="2 0 -3.1">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "title": "Forward Leading-Edge Flaps",
+                                "text": "Enhance maneuverability during high-speed or low-speed flight."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example-ui.mjs"></script>
+    </body>
+</html>
