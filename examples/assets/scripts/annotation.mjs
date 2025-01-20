@@ -68,7 +68,7 @@ export class Annotation extends Script {
      * @param {number} [borderWidth] - The border width in pixels
      * @returns {Texture} The hotspot texture
      */
-    static createHotspotTexture(app, alpha = 0.8, size = 64, fillColor = '#202020', strokeColor = '#a0a0a0', borderWidth = 6) {
+    static createHotspotTexture(app, alpha = 0.8, size = 64, fillColor = '#000000', strokeColor = '#939393', borderWidth = 6) {
         // Create canvas for hotspot texture
         const canvas = document.createElement('canvas');
         canvas.width = size;
