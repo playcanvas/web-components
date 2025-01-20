@@ -1,5 +1,6 @@
 export const examples = [
     { name: 'Animation', path: 'animation.html' },
+    { name: 'Annotations', path: 'annotations.html' },
     { name: 'Basic Shapes', path: 'basic-shapes.html' },
     { name: 'Car Configurator', path: 'car-configurator.html' },
     { name: 'FPS Controller', path: 'fps-controller.html' },
