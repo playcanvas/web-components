@@ -157,8 +157,8 @@ export class Annotation extends Script {
         Object.assign(this._hotspot.style, {
             display: 'none',
             position: 'absolute',
-            width: '18px',
-            height: '18px',
+            width: '30px',
+            height: '30px',
             // backgroundColor: 'white',
             // border: '2px solid black',
             // borderRadius: '50%',
