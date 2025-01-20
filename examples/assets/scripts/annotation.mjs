@@ -55,10 +55,11 @@ export class Annotation extends Script {
     /**
      * Creates a circular hotspot texture
      * @param {import('playcanvas').Application} app - The PlayCanvas application
-     * @param {number} [size=64] - The texture size (should be power of 2)
-     * @param {string} [fillColor='#404040'] - The circle fill color
-     * @param {string} [strokeColor='#a0a0a0'] - The border color
-     * @param {number} [borderWidth=3] - The border width in pixels
+     * @param alpha
+     * @param {number} [size] - The texture size (should be power of 2)
+     * @param {string} [fillColor] - The circle fill color
+     * @param {string} [strokeColor] - The border color
+     * @param {number} [borderWidth] - The border width in pixels
      * @returns {import('playcanvas').Texture}
      */
     static createHotspotTexture(app, alpha = 0.8, size = 64, fillColor = '#202020', strokeColor = '#a0a0a0', borderWidth = 6) {
@@ -196,7 +197,7 @@ export class Annotation extends Script {
                 const idx = this.app.scene.layers.getTransparentIndex(worldLayer);
                 this.app.scene.layers.insert(layer, idx + 1);
                 return layer;
-            }
+            };
             Annotation.layerMuted = createLayer('HotspotMuted');
             Annotation.layerNormal = createLayer('HotspotNormal');
 
