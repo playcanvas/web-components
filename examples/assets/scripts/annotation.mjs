@@ -225,6 +225,7 @@ export class Annotation extends Script {
             Annotation.materialNormal.emissiveMap = textureNormal;
             Annotation.materialNormal.opacityMap = textureNormal;
             Annotation.materialNormal.blendState = BlendState.ALPHABLEND;
+            Annotation.materialNormal.alphaTest = 0.01;
             Annotation.materialNormal.depthTest = true;
             Annotation.materialNormal.depthWrite = true;
             Annotation.materialNormal.cull = CULLFACE_NONE;
@@ -237,6 +238,7 @@ export class Annotation extends Script {
             Annotation.materialMuted.emissiveMap = textureMuted;
             Annotation.materialMuted.opacityMap = textureMuted;
             Annotation.materialMuted.opacity = 0.25;
+            Annotation.materialMuted.alphaTest = 0.01;
             Annotation.materialMuted.blendState = BlendState.ALPHABLEND;
             Annotation.materialMuted.depthWrite = true;
             Annotation.materialMuted.depthTest = false;
