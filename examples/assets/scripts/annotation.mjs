@@ -1,6 +1,6 @@
 import { CULLFACE_NONE, FILTER_LINEAR, PIXELFORMAT_RGBA8, BlendState, Color, Entity, Layer, Mesh, MeshInstance, PlaneGeometry, Script, StandardMaterial, Texture } from 'playcanvas';
 
-/** @import { CameraComponent } from 'playcanvas' */
+/** @import { Application, CameraComponent } from 'playcanvas' */
 
 /** @type {HTMLDivElement | null} */
 export class Annotation extends Script {
@@ -41,6 +41,12 @@ export class Annotation extends Script {
     text;
 
     /**
+     * @type {CameraComponent}
+     * @private
+     */
+    camera;
+
+    /**
      * @type {HTMLDivElement}
      * @private
      */
@@ -54,13 +60,13 @@ export class Annotation extends Script {
 
     /**
      * Creates a circular hotspot texture
-     * @param {import('playcanvas').Application} app - The PlayCanvas application
-     * @param alpha
+     * @param {Application} app - The PlayCanvas application
+     * @param {number} [alpha] - The opacity of the hotspot
      * @param {number} [size] - The texture size (should be power of 2)
      * @param {string} [fillColor] - The circle fill color
      * @param {string} [strokeColor] - The border color
      * @param {number} [borderWidth] - The border width in pixels
-     * @returns {import('playcanvas').Texture}
+     * @returns {Texture} The hotspot texture
      */
     static createHotspotTexture(app, alpha = 0.8, size = 64, fillColor = '#202020', strokeColor = '#a0a0a0', borderWidth = 6) {
         // Create canvas for hotspot texture
@@ -127,7 +133,7 @@ export class Annotation extends Script {
             whiteSpace: 'normal',
             width: 'fit-content',
             opacity: '0',  // Start hidden
-            transition: 'opacity 0.2s ease-in-out',  // Add fade transition
+            transition: 'opacity 0.2s ease-in-out',
             visibility: 'hidden'  // Hide from interactions when faded out
         });
 
@@ -270,18 +276,16 @@ export class Annotation extends Script {
 
     /**
      * @private
-     * @param {HTMLElement} tooltip
+     * @param {HTMLDivElement} tooltip - The tooltip element
      */
     _showTooltip(tooltip) {
         tooltip.style.visibility = 'visible';
-        // Force a reflow to ensure the transition happens
-        tooltip.offsetHeight;
         tooltip.style.opacity = '1';
     }
 
     /**
      * @private
-     * @param {HTMLElement} tooltip
+     * @param {HTMLDivElement} tooltip - The tooltip element
      */
     _hideTooltip(tooltip) {
         tooltip.style.opacity = '0';
