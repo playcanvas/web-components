@@ -249,15 +249,20 @@ export class Annotation extends Script {
         // Add click handlers
         this._hotspot.addEventListener('click', (e) => {
             e.stopPropagation();
+
+            // Hide any other active tooltip
             if (Annotation._activeTooltip && Annotation._activeTooltip !== this._tooltip) {
                 this._hideTooltip(Annotation._activeTooltip);
             }
-            if (this._tooltip.style.visibility === 'hidden') {
-                this._showTooltip(this._tooltip);
-            } else {
+
+            // Toggle this tooltip
+            if (Annotation._activeTooltip === this._tooltip) {
                 this._hideTooltip(this._tooltip);
+                Annotation._activeTooltip = null;
+            } else {
+                this._showTooltip(this._tooltip);
+                Annotation._activeTooltip = this._tooltip;
             }
-            Annotation._activeTooltip = this._tooltip.style.visibility === 'hidden' ? null : this._tooltip;
         });
 
         document.addEventListener('click', () => {
