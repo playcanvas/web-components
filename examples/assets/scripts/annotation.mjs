@@ -14,7 +14,7 @@ import {
     Texture
 } from 'playcanvas';
 
-/** @import { Application, CameraComponent } from 'playcanvas' */
+/** @import { Application, CameraComponent, Quat, Vec3 } from 'playcanvas' */
 
 /**
  * A script for creating interactive 3D annotations in a scene. Each annotation consists of:
@@ -79,8 +79,61 @@ export class Annotation extends Script {
      */
     _hotspot;
 
+    /** @type {HTMLStyleElement | null} */
+    static _styleSheet = null;
+
     /**
-     * Creates a circular hotspot texture
+     * Injects required CSS styles into the document
+     * @private
+     */
+    static _injectStyles() {
+        if (this._styleSheet) return;
+
+        const css = `
+            .pc-annotation {
+                display: block;
+                position: absolute;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+                pointer-events: none;
+                max-width: 200px;
+                word-wrap: break-word;
+                overflow-x: visible;
+                white-space: normal;
+                width: fit-content;
+                opacity: 0;
+                transition: opacity 0.2s ease-in-out;
+                visibility: hidden;
+            }
+
+            .pc-annotation-title {
+                font-weight: bold;
+                margin-bottom: 4px;
+            }
+
+            .pc-annotation-hotspot {
+                display: none;
+                position: absolute;
+                width: 30px;
+                height: 30px;
+                opacity: 0;
+                cursor: pointer;
+                transform: translate(-50%, -50%);
+            }
+        `;
+
+        const style = document.createElement('style');
+        style.textContent = css;
+        document.head.appendChild(style);
+        this._styleSheet = style;
+    }
+
+    /**
+     * Creates a circular hotspot texture.
      * @param {Application} app - The PlayCanvas application
      * @param {number} [alpha] - The opacity of the hotspot
      * @param {number} [size] - The texture size (should be power of 2)
@@ -134,36 +187,53 @@ export class Annotation extends Script {
         return texture;
     }
 
+    /**
+     * Creates a material for hotspot rendering.
+     * @param {Texture} texture - The texture to use for emissive and opacity
+     * @param {object} [options] - Material options
+     * @param {number} [options.opacity] - Base opacity multiplier
+     * @param {boolean} [options.depthTest] - Whether to perform depth testing
+     * @param {boolean} [options.depthWrite] - Whether to write to depth buffer
+     * @returns {StandardMaterial} The configured material
+     * @private
+     */
+    static _createHotspotMaterial(texture, { opacity = 1, depthTest = true, depthWrite = true } = {}) {
+        const material = new StandardMaterial();
+
+        // Base properties
+        material.diffuse = Color.BLACK;
+        material.emissive = Color.WHITE;
+        material.emissiveMap = texture;
+        material.opacityMap = texture;
+
+        // Alpha properties
+        material.opacity = opacity;
+        material.alphaTest = 0.01;
+        material.blendState = BlendState.ALPHABLEND;
+
+        // Depth properties
+        material.depthTest = depthTest;
+        material.depthWrite = depthWrite;
+
+        // Rendering properties
+        material.cull = CULLFACE_NONE;
+        material.useLighting = false;
+
+        material.update();
+        return material;
+    }
+
     initialize() {
+        // Ensure styles are injected
+        Annotation._injectStyles();
+
         // Create tooltip element
         this._tooltip = document.createElement('div');
         this._tooltip.className = 'pc-annotation';
-        Object.assign(this._tooltip.style, {
-            display: 'block',  // Changed from 'none' to always be in layout
-            position: 'absolute',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            color: 'white',
-            padding: '8px',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
-            pointerEvents: 'none',
-            maxWidth: '200px',
-            wordWrap: 'break-word',
-            overflowX: 'visible',
-            whiteSpace: 'normal',
-            width: 'fit-content',
-            opacity: '0',  // Start hidden
-            transition: 'opacity 0.2s ease-in-out',
-            visibility: 'hidden'  // Hide from interactions when faded out
-        });
 
         // Add title
         const titleElement = document.createElement('div');
-        Object.assign(titleElement.style, {
-            fontWeight: 'bold',
-            marginBottom: '4px'
-        });
+        titleElement.className = 'pc-annotation-title';
         titleElement.textContent = this.title;
         this._tooltip.appendChild(titleElement);
 
@@ -175,18 +245,6 @@ export class Annotation extends Script {
         // Create hotspot element
         this._hotspot = document.createElement('div');
         this._hotspot.className = 'pc-annotation-hotspot';
-        Object.assign(this._hotspot.style, {
-            display: 'none',
-            position: 'absolute',
-            width: '30px',
-            height: '30px',
-            // backgroundColor: 'white',
-            // border: '2px solid black',
-            // borderRadius: '50%',
-            opacity: '0',  // Make invisible
-            cursor: 'pointer',
-            transform: 'translate(-50%, -50%)'  // Center the hotspot
-        });
 
         // Add click handlers
         this._hotspot.addEventListener('click', (e) => {
@@ -235,37 +293,22 @@ export class Annotation extends Script {
                 Annotation.layerMuted.id
             ];
 
-            // Create texture for both materials
-            const textureNormal = Annotation.createHotspotTexture(this.app, 0.8);
+            // Create textures
+            const textureNormal = Annotation.createHotspotTexture(this.app, 0.9);
             const textureMuted = Annotation.createHotspotTexture(this.app, 0.25);
 
-            // Create materials
-            Annotation.materialNormal = new StandardMaterial();
-            Annotation.materialNormal.diffuse = Color.BLACK;
-            Annotation.materialNormal.emissive = Color.WHITE;
-            Annotation.materialNormal.emissiveMap = textureNormal;
-            Annotation.materialNormal.opacityMap = textureNormal;
-            Annotation.materialNormal.blendState = BlendState.ALPHABLEND;
-            Annotation.materialNormal.alphaTest = 0.01;
-            Annotation.materialNormal.depthTest = true;
-            Annotation.materialNormal.depthWrite = true;
-            Annotation.materialNormal.cull = CULLFACE_NONE;
-            Annotation.materialNormal.useLighting = false;
-            Annotation.materialNormal.update();
+            // Create materials using helper
+            Annotation.materialNormal = Annotation._createHotspotMaterial(textureNormal, {
+                opacity: 1,
+                depthTest: true,
+                depthWrite: true
+            });
 
-            Annotation.materialMuted = new StandardMaterial();
-            Annotation.materialMuted.diffuse = Color.BLACK;
-            Annotation.materialMuted.emissive = Color.WHITE;
-            Annotation.materialMuted.emissiveMap = textureMuted;
-            Annotation.materialMuted.opacityMap = textureMuted;
-            Annotation.materialMuted.opacity = 0.25;
-            Annotation.materialMuted.alphaTest = 0.01;
-            Annotation.materialMuted.blendState = BlendState.ALPHABLEND;
-            Annotation.materialMuted.depthWrite = true;
-            Annotation.materialMuted.depthTest = false;
-            Annotation.materialMuted.cull = CULLFACE_NONE;
-            Annotation.materialMuted.useLighting = false;
-            Annotation.materialMuted.update();
+            Annotation.materialMuted = Annotation._createHotspotMaterial(textureMuted, {
+                opacity: 0.25,
+                depthTest: false,
+                depthWrite: true
+            });
 
             Annotation.mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry());
         }
@@ -323,44 +366,85 @@ export class Annotation extends Script {
     update(dt) {
         if (!this.camera) return;
 
-        // Convert world position to screen space
-        const { x, y, z } = this.camera.worldToScreen(this.entity.getPosition());
+        const position = this.entity.getPosition();
+        const screenPos = this.camera.worldToScreen(position);
 
-        // Check if annotation is in front of camera
-        if (z > 0) {
-            // Show and position hotspot
-            this._hotspot.style.display = 'block';
-            this._hotspot.style.left = `${x}px`;
-            this._hotspot.style.top = `${y}px`;
+        if (screenPos.z <= 0) {
+            this._hideElements();
+            return;
+        }
 
-            // Position tooltip
-            this._tooltip.style.left = `${x}px`;
-            this._tooltip.style.top = `${y}px`;
+        this._updatePositions(screenPos);
+        this._updateRotationAndScale();
+    }
 
-            // Copy camera rotation to align with view plane
-            const cameraRotation = this.camera.entity.getRotation();
-            this.hotspotNormal.setRotation(cameraRotation);
-            this.hotspotNormal.rotateLocal(90, 0, 0);
-            this.hotspotMuted.setRotation(cameraRotation);
-            this.hotspotMuted.rotateLocal(90, 0, 0);
-
-            // Calculate scale based on distance to near plane to maintain constant screen size
-            const cameraPos = this.camera.entity.getPosition();
-            const cameraForward = this.camera.entity.forward;
-            const toAnnotation = this.entity.getPosition().sub(cameraPos);
-            const distanceToNearPlane = toAnnotation.dot(cameraForward);
-            const scale = distanceToNearPlane * Math.tan(this.camera.fov * Math.PI / 180) * 0.025;
-            this.hotspotNormal.setLocalScale(scale, scale, scale);
-            this.hotspotMuted.setLocalScale(scale, scale, scale);
-        } else {
-            // Hide both if behind camera
-            this._hotspot.style.display = 'none';
-            if (this._tooltip.style.visibility !== 'hidden') {
-                this._hideTooltip(this._tooltip);
-                if (Annotation._activeTooltip === this._tooltip) {
-                    Annotation._activeTooltip = null;
-                }
+    /**
+     * Hide all elements when annotation is behind camera.
+     * @private
+     */
+    _hideElements() {
+        this._hotspot.style.display = 'none';
+        if (this._tooltip.style.visibility !== 'hidden') {
+            this._hideTooltip(this._tooltip);
+            if (Annotation._activeTooltip === this._tooltip) {
+                Annotation._activeTooltip = null;
             }
         }
+    }
+
+    /**
+     * Update screen-space positions of HTML elements.
+     * @param {Vec3} screenPos - Screen coordinate
+     * @private
+     */
+    _updatePositions(screenPos) {
+        // Show and position hotspot
+        this._hotspot.style.display = 'block';
+        this._hotspot.style.left = `${screenPos.x}px`;
+        this._hotspot.style.top = `${screenPos.y}px`;
+
+        // Position tooltip
+        this._tooltip.style.left = `${screenPos.x}px`;
+        this._tooltip.style.top = `${screenPos.y}px`;
+    }
+
+    /**
+     * Update 3D rotation and scale of hotspot planes.
+     * @private
+     */
+    _updateRotationAndScale() {
+        // Copy camera rotation to align with view plane
+        const cameraRotation = this.camera.entity.getRotation();
+        this._updateHotspotTransform(this.hotspotNormal, cameraRotation);
+        this._updateHotspotTransform(this.hotspotMuted, cameraRotation);
+
+        // Calculate scale based on distance to maintain constant screen size
+        const scale = this._calculateScreenSpaceScale();
+        this.hotspotNormal.setLocalScale(scale, scale, scale);
+        this.hotspotMuted.setLocalScale(scale, scale, scale);
+    }
+
+    /**
+     * Update rotation of a single hotspot entity.
+     * @param {Entity} hotspot - The hotspot entity to update
+     * @param {Quat} cameraRotation - The camera's current rotation
+     * @private
+     */
+    _updateHotspotTransform(hotspot, cameraRotation) {
+        hotspot.setRotation(cameraRotation);
+        hotspot.rotateLocal(90, 0, 0);
+    }
+
+    /**
+     * Calculate scale factor to maintain constant screen-space size.
+     * @returns {number} The scale to apply to hotspot entities
+     * @private
+     */
+    _calculateScreenSpaceScale() {
+        const cameraPos = this.camera.entity.getPosition();
+        const cameraForward = this.camera.entity.forward;
+        const toAnnotation = this.entity.getPosition().sub(cameraPos);
+        const distanceToNearPlane = toAnnotation.dot(cameraForward);
+        return distanceToNearPlane * Math.tan(this.camera.fov * Math.PI / 180) * 0.025;
     }
 }
