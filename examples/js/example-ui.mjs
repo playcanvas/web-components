@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const positionRoot = new Vec3();
     const rotationRoot = new Quat();
     const positionCamera = new Vec3();
-    const rotationCamera = new Quat(); 
+    const rotationCamera = new Quat();
 
     const cameraRootEntity = cameraElement.parentElement.parentElement.entity;
     const cameraEntity = cameraElement.parentElement.entity;
