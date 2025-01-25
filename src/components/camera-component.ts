@@ -91,6 +91,11 @@ class CameraComponentElement extends ComponentElement {
         return xrManager && xrManager.supported && xrManager.isAvailable(XRTYPE_VR);
     }
 
+    /**
+     * Starts the camera in XR mode.
+     * @param type - The type of XR mode to start.
+     * @param space - The space to start the camera in.
+     */
     startXr(type: 'immersive-ar' | 'immersive-vr', space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer') {
         if (this.component && this.xrAvailable) {
             this.component.startXr(type, space, {
@@ -101,6 +106,9 @@ class CameraComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Ends the camera's XR mode.
+     */
     endXr() {
         if (this.component) {
             this.component.endXr();
