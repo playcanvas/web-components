@@ -92,11 +92,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cameraEntity = cameraElement.parentElement.entity;
 
     app.xr.on('start', () => {
+        // Cache original camera rig positions and rotations
         positionRoot.copy(cameraRootEntity.getPosition());
         rotationRoot.copy(cameraRootEntity.getRotation());
         positionCamera.copy(cameraEntity.getPosition());
         rotationCamera.copy(cameraEntity.getRotation());
 
+        // Set camera to the position of the camera root
         cameraRootEntity.setPosition(positionCamera.x, 0, positionCamera.z);
         cameraRootEntity.setRotation(rotationCamera);
 
@@ -108,6 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     app.xr.on('end', () => {
+        // Restore original camera rig positions and rotations
         cameraRootEntity.setPosition(positionRoot);
         cameraRootEntity.setRotation(rotationRoot);
         cameraEntity.setPosition(positionCamera);
@@ -141,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && app.xr.active) {
-            app.xr.end();
+            cameraElement.endXr();
         }
     });
 
