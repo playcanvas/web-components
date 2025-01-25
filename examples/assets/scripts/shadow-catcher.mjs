@@ -98,8 +98,8 @@ export class ShadowCatcher extends Script {
             camera.layers = camera.layers.concat([this.layer.id]);
         });
 
-        this.entity.findComponents('render').forEach((component) => {
-            this.layer.shadowCasters = this.layer.shadowCasters.concat(component.meshInstances);
+        this.entity.findComponents('render').forEach((render) => {
+            render.layers = render.layers.concat([this.layer.id]);
         });
     }
 }
