@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Video Encoder</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@ffmpeg/ffmpeg": "../node_modules/@ffmpeg/ffmpeg/dist/esm/index.js",
+                    "@ffmpeg/util": "../node_modules/@ffmpeg/util/dist/esm/index.js",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <pc-asset src="assets/scripts/rotate.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/video-encoder.mjs"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 0 3">
+                    <pc-camera clear-color="#8099e6"></pc-camera>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45 0 0">
+                    <pc-light></pc-light>
+                </pc-entity>
+                <!-- Cube -->
+                <pc-entity name="cube">
+                    <pc-render type="box"></pc-render>
+                    <pc-scripts>
+                        <pc-script name="rotate"></pc-script>
+                        <pc-script name="videoEncoder"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example-ui.mjs"></script>
+    </body>
+</html>

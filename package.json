@@ -30,13 +30,15 @@
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
     "lint": "eslint examples/js examples/assets/scripts src",
-    "serve": "serve",
+    "serve": "serve --config serve.json",
     "test": "echo \"Error: no test specified\" && exit 1",
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
     "watch": "rollup -c -w"
   },
   "devDependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@playcanvas/eslint-config": "2.0.8",
     "@rollup/plugin-commonjs": "28.0.2",
     "@rollup/plugin-node-resolve": "16.0.0",
