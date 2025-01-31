@@ -1,5 +1,5 @@
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
-import { Script } from 'playcanvas';
+import { FILLMODE_KEEP_ASPECT, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO, RESOLUTION_FIXED, Script } from 'playcanvas';
 
 /** @enum {number} */
 const Resolutions = {
@@ -21,7 +21,7 @@ export class VideoRecorder extends Script {
      * @attribute
      * @type {FrameRates}
      */
-    frameRate = FrameRates['30'];
+    frameRate = FrameRates['60'];
 
     /**
      * The resolution to record at.
@@ -29,7 +29,7 @@ export class VideoRecorder extends Script {
      * @attribute
      * @type {Resolutions}
      */
-    resolution = Resolutions['480p'];
+    resolution = Resolutions['1080p'];
 
     /**
      * @type {VideoEncoder|null}
@@ -50,7 +50,11 @@ export class VideoRecorder extends Script {
     recording = false;
 
     /** @private */
-    _originalUpdate = null;
+    originalUpdate = null;
+
+    initialize() {
+        this.createUI();
+    }
 
     getResolutionDimensions() {
         switch (this.resolution) {
@@ -62,41 +66,6 @@ export class VideoRecorder extends Script {
             default:
                 return { width: 854, height: 480 };
         }
-    }
-
-    initialize() {
-        const { width, height } = this.getResolutionDimensions();
-
-        this.muxer = new Muxer({
-            target: new ArrayBufferTarget(),
-            video: {
-                codec: 'avc',
-                width: width,
-                height: height
-            },
-            fastStart: 'in-memory',
-            firstTimestampBehavior: 'offset'
-        });
-
-        this.encoder = new VideoEncoder({
-            output: (chunk, meta) => this.muxer.addVideoChunk(chunk, meta),
-            error: e => console.error(e)
-        });
-
-        this.encoder.configure({
-            codec: 'avc1.42001f',
-            width: width,
-            height: height,
-            bitrate: 1e6
-        });
-
-        this.app.on('frameend', () => {
-            if (this.recording) {
-                this.captureFrame();
-            }
-        });
-
-        this.createUI();
     }
 
     captureFrame() {
@@ -113,25 +82,80 @@ export class VideoRecorder extends Script {
     }
 
     startRecording() {
-        if (!this.recording) {
-            this.recording = true;
-            this.framesGenerated = 0;
-            this.replaceUpdate();
-            console.log('Recording started...');
-        }
+        if (this.recording) return;
+        this.recording = true;
+        this.framesGenerated = 0;
+
+        const { width, height } = this.getResolutionDimensions();
+
+        // Create video frame muxer
+        this.muxer = new Muxer({
+            target: new ArrayBufferTarget(),
+            video: {
+                codec: 'avc',
+                width,
+                height
+            },
+            fastStart: 'in-memory',
+            firstTimestampBehavior: 'offset'
+        });
+
+        // Create video frame encoder
+        this.encoder = new VideoEncoder({
+            output: (chunk, meta) => this.muxer.addVideoChunk(chunk, meta),
+            error: e => console.error(e)
+        });
+
+        this.encoder.configure({
+            codec: 'avc1.420028', // 'avc1.42001f',
+            width,
+            height,
+            bitrate: 8_000_000
+        });
+
+        // Set canvas to video frame resolution
+        this.app.setCanvasFillMode(FILLMODE_KEEP_ASPECT);
+        this.app.setCanvasResolution(RESOLUTION_FIXED, width, height);
+
+        // Start capturing frames
+        this.app.on('frameend', this.captureFrame, this);
+
+        // Replace update function to fix dt
+        this.replaceUpdate();
+
+        console.log('Recording started...');
     }
 
     async stopRecording() {
-        if (this.recording) {
-            this.recording = false;
-            await this.encoder.flush();
-            this.muxer.finalize();
-            const { buffer } = this.muxer.target;
-            this.downloadBlob(new Blob([buffer], { type: 'video/mp4' }));
-            this.encoder.close();
-            this.restoreUpdate();
-            console.log('Recording stopped.');
-        }
+        if (!this.recording) return;
+        this.recording = false;
+
+        // Restore update function
+        this.restoreUpdate();
+
+        // Stop capturing frames
+        this.app.off('frameend', this.captureFrame, this);
+
+        // Restore canvas fill mode and resolution
+        this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+        this.app.setCanvasResolution(RESOLUTION_AUTO);
+
+        // Flush and finalize muxer
+        await this.encoder.flush();
+        this.muxer.finalize();
+
+        // Download video
+        const { buffer } = this.muxer.target;
+        this.downloadBlob(new Blob([buffer], { type: 'video/mp4' }));
+
+        // Free encoder
+        this.encoder.close();
+        this.encoder = null;
+
+        // Free muxer
+        this.muxer = null;
+
+        console.log('Recording stopped.');
     }
 
     downloadBlob(blob) {
@@ -175,16 +199,16 @@ export class VideoRecorder extends Script {
 
     replaceUpdate() {
         // Store the original update function in the instance
-        this._originalUpdate = this.app.update;
+        this.originalUpdate = this.app.update;
 
         // Monkey patch with fixed dt based on the requested frame rate
-        this.app.update = () => this._originalUpdate.call(this.app, 1 / this.frameRate);
+        this.app.update = () => this.originalUpdate.call(this.app, 1 / this.frameRate);
     }
 
     restoreUpdate() {
-        if (this._originalUpdate) {
-            this.app.update = this._originalUpdate;
-            this._originalUpdate = null;
+        if (this.originalUpdate) {
+            this.app.update = this.originalUpdate;
+            this.originalUpdate = null;
         }
     }
 }
