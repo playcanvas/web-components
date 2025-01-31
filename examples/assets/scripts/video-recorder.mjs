@@ -52,7 +52,6 @@ export class VideoRecorder extends Script {
     /** @private */
     _originalUpdate = null;
 
-    /** @private */
     getResolutionDimensions() {
         switch (this.resolution) {
             case Resolutions['1080p']:
@@ -100,7 +99,7 @@ export class VideoRecorder extends Script {
         this.createUI();
     }
 
-    async captureFrame() {
+    captureFrame() {
         console.log('Capturing frame...');
 
         const frame = new VideoFrame(this.app.graphicsDevice.canvas, {
@@ -184,7 +183,7 @@ export class VideoRecorder extends Script {
     restoreUpdate() {
         if (this._originalUpdate) {
             this.app.update = this._originalUpdate;
-            this._originalUpdate = null;  // Clean up reference
+            this._originalUpdate = null;
         }
     }
 }
