@@ -1,17 +1,17 @@
-import { Script } from 'playcanvas';
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
+import { Script } from 'playcanvas';
 
 /** @enum {number} */
 const Resolutions = {
-    "480p": 0,
-    "720p": 1,
-    "1080p": 2
+    '480p': 0,
+    '720p': 1,
+    '1080p': 2
 };
 
 /** @enum {number} */
 const FrameRates = {
-    "30": 30,
-    "60": 60
+    '30': 30,
+    '60': 60
 };
 
 export class VideoRecorder extends Script {
@@ -21,7 +21,7 @@ export class VideoRecorder extends Script {
      * @attribute
      * @type {FrameRates}
      */
-    frameRate = FrameRates["30"];
+    frameRate = FrameRates['30'];
 
     /**
      * The resolution to record at.
@@ -29,7 +29,7 @@ export class VideoRecorder extends Script {
      * @attribute
      * @type {Resolutions}
      */
-    resolution = Resolutions["480p"];
+    resolution = Resolutions['480p'];
 
     /**
      * @type {VideoEncoder|null}
@@ -55,11 +55,11 @@ export class VideoRecorder extends Script {
     /** @private */
     getResolutionDimensions() {
         switch (this.resolution) {
-            case Resolutions["1080p"]:
+            case Resolutions['1080p']:
                 return { width: 1920, height: 1080 };
-            case Resolutions["720p"]:
+            case Resolutions['720p']:
                 return { width: 1280, height: 720 };
-            case Resolutions["480p"]:
+            case Resolutions['480p']:
             default:
                 return { width: 854, height: 480 };
         }
@@ -76,7 +76,7 @@ export class VideoRecorder extends Script {
                 height: height
             },
             fastStart: 'in-memory',
-            firstTimestampBehavior : 'offset'
+            firstTimestampBehavior: 'offset'
         });
 
         this.encoder = new VideoEncoder({
@@ -101,7 +101,7 @@ export class VideoRecorder extends Script {
     }
 
     async captureFrame() {
-        console.log("Capturing frame...");
+        console.log('Capturing frame...');
 
         const frame = new VideoFrame(this.app.graphicsDevice.canvas, {
             timestamp: this.framesGenerated * 1e6 / this.frameRate,
@@ -117,7 +117,7 @@ export class VideoRecorder extends Script {
         if (!this.recording) {
             this.recording = true;
             this.replaceUpdate();
-            console.log("Recording started...");
+            console.log('Recording started...');
         }
     }
 
@@ -130,16 +130,16 @@ export class VideoRecorder extends Script {
             this.downloadBlob(new Blob([buffer], { type: 'video/mp4' }));
             this.encoder.close();
             this.restoreUpdate();
-            console.log("Recording stopped.");
+            console.log('Recording stopped.');
         }
     }
 
     downloadBlob(blob) {
         const url = URL.createObjectURL(blob);
 
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
-        a.download = "playcanvas-recording.mp4";
+        a.download = 'playcanvas-recording.mp4';
         a.click();
 
         URL.revokeObjectURL(url);
@@ -158,7 +158,7 @@ export class VideoRecorder extends Script {
         const button = document.createElement('button');
         button.textContent = 'Start Recording';
         button.style.padding = '10px 20px';
-        
+
         button.addEventListener('click', () => {
             if (this.recording) {
                 this.stopRecording();
