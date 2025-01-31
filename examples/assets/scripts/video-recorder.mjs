@@ -115,6 +115,7 @@ export class VideoRecorder extends Script {
     startRecording() {
         if (!this.recording) {
             this.recording = true;
+            this.framesGenerated = 0;
             this.replaceUpdate();
             console.log('Recording started...');
         }
