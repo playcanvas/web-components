@@ -30,7 +30,7 @@
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
     "lint": "eslint examples/js examples/assets/scripts src",
-    "serve": "serve --config serve.json",
+    "serve": "serve",
     "test": "echo \"Error: no test specified\" && exit 1",
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
