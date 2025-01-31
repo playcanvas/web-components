@@ -7,8 +7,7 @@
         <script type="importmap">
             {
                 "imports": {
-                    "@ffmpeg/ffmpeg": "../node_modules/@ffmpeg/ffmpeg/dist/esm/index.js",
-                    "@ffmpeg/util": "../node_modules/@ffmpeg/util/dist/esm/index.js",
+                    "mp4-muxer": "../node_modules/mp4-muxer/build/mp4-muxer.mjs",
                     "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
                 }
             }
@@ -19,7 +18,7 @@
     <body>
         <pc-app>
             <pc-asset src="assets/scripts/rotate.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/video-encoder.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/video-recorder.mjs"></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera -->
@@ -35,7 +34,7 @@
                     <pc-render type="box"></pc-render>
                     <pc-scripts>
                         <pc-script name="rotate"></pc-script>
-                        <pc-script name="videoEncoder"></pc-script>
+                        <pc-script name="videoRecorder"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

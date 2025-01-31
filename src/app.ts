@@ -82,7 +82,6 @@ class AppElement extends AsyncElement {
                 alpha: this._alpha,
                 antialias: this._antialias,
                 depth: this._depth,
-                preserveDrawingBuffer: true,
                 stencil: this._stencil
             },
             keyboard: new Keyboard(window),
