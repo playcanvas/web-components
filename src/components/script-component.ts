@@ -1,8 +1,9 @@
 import { Color, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
-import { ComponentElement } from './component';
-import { ScriptElement } from './script';
 import { AssetElement } from '../asset';
+import { ComponentElement } from './component';
+import { EntityElement } from '../entity';
+import { ScriptElement } from './script';
 
 // Add these interfaces at the top of the file, after the imports
 interface ScriptAttributesChangeEvent extends CustomEvent {
@@ -73,14 +74,14 @@ class ScriptComponentElement extends ComponentElement {
         if (typeof item === 'string') {
             if (item.startsWith('asset:')) {
                 const assetId = item.slice(6);
-                const assetElement = document.querySelector(`pc-asset#${assetId}`) as any;
+                const assetElement = document.querySelector(`pc-asset#${assetId}`) as AssetElement;
                 if (assetElement) {
                     return assetElement.asset;
                 }
             }
             if (item.startsWith('entity:')) {
                 const entityId = item.slice(7);
-                const entityElement = document.querySelector(`pc-entity[name="${entityId}"]`) as any;
+                const entityElement = document.querySelector(`pc-entity[name="${entityId}"]`) as EntityElement;
                 if (entityElement) {
                     return entityElement.entity;
                 }
