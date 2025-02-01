@@ -52,7 +52,13 @@ export class VideoRecorder extends Script {
     muxer = null;
 
     /** @private */
-    framesGenerated = 0;
+    totalFrames = 0;
+
+    /** @private */
+    framesEncoded = 0;
+
+    /** @private */
+    framesEncodedAtFlush = 0;
 
     /** @private */
     recording = false;
@@ -95,13 +101,13 @@ export class VideoRecorder extends Script {
 
     captureFrame() {
         const frame = new VideoFrame(this.app.graphicsDevice.canvas, {
-            timestamp: this.framesGenerated * 1e6 / this.frameRate,
+            timestamp: this.totalFrames * 1e6 / this.frameRate,
             duration: 1e6 / this.frameRate
         });
         this.encoder.encode(frame);
         frame.close();
 
-        this.framesGenerated++;
+        this.totalFrames++;
     }
 
     /**
@@ -110,7 +116,9 @@ export class VideoRecorder extends Script {
     record() {
         if (this.recording) return;
         this.recording = true;
-        this.framesGenerated = 0;
+        this.totalFrames = 0;
+        this.framesEncoded = 0;
+        this.framesEncodedAtFlush = 0;
 
         const { width, height } = this.getResolutionDimensions();
 
@@ -128,7 +136,13 @@ export class VideoRecorder extends Script {
 
         // Create video frame encoder
         this.encoder = new VideoEncoder({
-            output: (chunk, meta) => this.muxer.addVideoChunk(chunk, meta),
+            output: (chunk, meta) => {
+                this.framesEncoded++;
+                this.muxer.addVideoChunk(chunk, meta);
+                if (!this.recording) {
+                    this.app.fire('encode:progress', (this.framesEncoded - this.framesEncodedAtFlush) / (this.totalFrames - this.framesEncodedAtFlush));
+                }
+            },
             error: e => console.error(e)
         });
 
@@ -158,9 +172,16 @@ export class VideoRecorder extends Script {
     async stop() {
         if (!this.recording) return;
         this.recording = false;
+        this.framesEncodedAtFlush = this.framesEncoded;
+
+        this.app.fire('encode:begin');
 
         // Restore update function
         this.restoreUpdate();
+
+        // Disable auto render - this allows CPU/GPU resources to be directed towards encoding
+        const originalAutoRender = this.app.autoRender;
+        this.app.autoRender = false;
 
         // Stop capturing frames
         this.app.off('frameend', this.captureFrame, this);
@@ -168,37 +189,26 @@ export class VideoRecorder extends Script {
         // Restore canvas fill mode and resolution
         this.app.setCanvasResolution(RESOLUTION_AUTO);
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+        console.log('Restored canvas resolution and fill mode');
 
         // Flush and finalize muxer
         await this.encoder.flush();
+        console.log('Flushed encoder');
         this.muxer.finalize();
+        console.log('Finalized muxer');
 
         // Download video
         const { buffer } = this.muxer.target;
-        this.downloadBlob(new Blob([buffer], { type: 'video/mp4' }));
+        this.app.fire('encode:end', buffer);
 
         // Free resources
         this.encoder.close();
         this.encoder = null;
         this.muxer = null;
 
-        console.log(`Recording stopped. Captured ${this.framesGenerated} frames.`);
-    }
+        // Restore auto render state
+        this.app.autoRender = originalAutoRender;
 
-    /**
-     * Download the recorded video.
-     *
-     * @param {Blob} blob - The recorded video blob.
-     * @private
-     */
-    downloadBlob(blob) {
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'recording.mp4';
-        a.click();
-
-        URL.revokeObjectURL(url);
+        console.log(`Recording stopped. Captured ${this.totalFrames} frames.`);
     }
 }
