@@ -2,25 +2,25 @@ import { Tween, Easing } from '@tweenjs/tween.js';
 import { Material, Script, Vec2, Vec3, Vec4, Color } from 'playcanvas';
 
 /** @enum {enum} */
-const EasingTypes = {
-    In: 'In',
-    Out: 'Out',
-    InOut: 'InOut'
+const EasingType = {
+    IN: 'In',
+    OUT: 'Out',
+    INOUT: 'InOut'
 };
 
 /** @enum {enum} */
-const EasingFunctions = {
-    Linear: 'Linear',
-    Quadratic: 'Quadratic',
-    Cubic: 'Cubic',
-    Quartic: 'Quartic',
-    Quintic: 'Quintic',
-    Sinusoidal: 'Sinusoidal',
-    Exponential: 'Exponential',
-    Circular: 'Circular',
-    Elastic: 'Elastic',
-    Back: 'Back',
-    Bounce: 'Bounce'
+const EasingFunction = {
+    LINEAR: 'Linear',
+    QUADRATIC: 'Quadratic',
+    CUBIC: 'Cubic',
+    QUARTIC: 'Quartic',
+    QUINTIC: 'Quintic',
+    SINUSOIDAL: 'Sinusoidal',
+    EXPONENTIAL: 'Exponential',
+    CIRCULAR: 'Circular',
+    ELASTIC: 'Elastic',
+    BACK: 'Back',
+    BOUNCE: 'Bounce'
 };
 
 /** @interface */
@@ -83,17 +83,17 @@ class TweenDescriptor { /* eslint-disable-line no-unused-vars */
 
     /**
      * Index of the easing function to use
-     * @type {EasingFunctions}
+     * @type {EasingFunction}
      * @attribute
      */
-    easingFunction = EasingFunctions.Linear;
+    easingFunction = EasingFunction.LINEAR;
 
     /**
      * Index of the easing type to use
-     * @type {EasingTypes}
+     * @type {EasingType}
      * @attribute
      */
-    easingType = EasingTypes.InOut;
+    easingType = EasingType.INOUT;
 
     /**
      * Event to fire when tween starts
@@ -144,6 +144,22 @@ export class Tweener extends Script {
      * @type {Tween[]}
      */
     tweenInstances = [];
+
+    /**
+     * Whether to activate the tween immediately on initialize.
+     * @type {boolean}
+     * @attribute
+     */
+    activate = false;
+
+    postInitialize() {
+        // If the "activate" attribute is true, play every tween immediately.
+        if (this.activate) {
+            for (let i = 0; i < this.tweens.length; i++) {
+                this.play(i);
+            }
+        }
+    }
 
     getEasingFunction(tween) {
         if (tween.easingFunction === 'Linear') {
