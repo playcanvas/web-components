@@ -68,9 +68,22 @@ export class VideoRecorder extends Script {
         }
     }
 
-    captureFrame() {
-        console.log('Capturing frame...');
+    replaceUpdate() {
+        // Store the original update function in the instance
+        this.originalUpdate = this.app.update;
 
+        // Monkey patch with fixed dt based on the requested frame rate
+        this.app.update = () => this.originalUpdate.call(this.app, 1 / this.frameRate);
+    }
+
+    restoreUpdate() {
+        if (this.originalUpdate) {
+            this.app.update = this.originalUpdate;
+            this.originalUpdate = null;
+        }
+    }
+
+    captureFrame() {
         const frame = new VideoFrame(this.app.graphicsDevice.canvas, {
             timestamp: this.framesGenerated * 1e6 / this.frameRate,
             duration: 1e6 / this.frameRate
@@ -107,7 +120,7 @@ export class VideoRecorder extends Script {
         });
 
         this.encoder.configure({
-            codec: 'avc1.420028', // 'avc1.42001f',
+            codec: 'avc1.420028',
             width,
             height,
             bitrate: 8_000_000
@@ -155,7 +168,7 @@ export class VideoRecorder extends Script {
         // Free muxer
         this.muxer = null;
 
-        console.log('Recording stopped.');
+        console.log(`Recording stopped. Captured ${this.framesGenerated} frames.`);
     }
 
     downloadBlob(blob) {
@@ -195,20 +208,5 @@ export class VideoRecorder extends Script {
 
         container.appendChild(button);
         document.body.appendChild(container);
-    }
-
-    replaceUpdate() {
-        // Store the original update function in the instance
-        this.originalUpdate = this.app.update;
-
-        // Monkey patch with fixed dt based on the requested frame rate
-        this.app.update = () => this.originalUpdate.call(this.app, 1 / this.frameRate);
-    }
-
-    restoreUpdate() {
-        if (this.originalUpdate) {
-            this.app.update = this.originalUpdate;
-            this.originalUpdate = null;
-        }
     }
 }
