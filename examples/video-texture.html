@@ -39,8 +39,8 @@
                             <pc-script name="cameraControls" attributes='{
                                 "enableFly": false,
                                 "enablePan": false,
-                                "focusPoint": [0, 0.225, 0],
-                                "pitchRange": [-90, 0],
+                                "focusPoint": "vec3:0,0.225,0",
+                                "pitchRange": "vec2:-90,0",
                                 "sceneSize": 1,
                                 "zoomMin": 0.5,
                                 "zoomMax": 3
@@ -61,7 +61,7 @@
                     <pc-model asset="vintage-pc"></pc-model>
                     <pc-scripts>
                         <pc-script name="shadowCatcher" attributes='{
-                            "size": [3, 3],
+                            "size": "vec2:3,3",
                             "shadowDistance": 4,
                             "blurSize": 16
                         }'></pc-script>
