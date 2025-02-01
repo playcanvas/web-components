@@ -66,6 +66,8 @@ class ScriptComponentElement extends ComponentElement {
      * - "vec3:1,2,3" → new Vec3(1,2,3)
      * - "vec4:1,2,3,4" → new Vec4(1,2,3,4)
      * - "color:1,0.5,0.5,1" → new Color(1,0.5,0.5,1)
+     * @param item - The item to convert.
+     * @returns The converted item.
      */
     private convertAttributes(item: any): any {
         if (typeof item === 'string') {
@@ -132,6 +134,8 @@ class ScriptComponentElement extends ComponentElement {
 
     /**
      * Preprocess the attributes object by converting its values.
+     * @param attrs - The attributes object to preprocess.
+     * @returns The preprocessed attributes object.
      */
     private preprocessAttributes(attrs: any): any {
         return this.convertAttributes(attrs);
@@ -139,6 +143,9 @@ class ScriptComponentElement extends ComponentElement {
 
     /**
      * Recursively merge properties from source into target.
+     * @param target - The target object to merge into.
+     * @param source - The source object to merge from.
+     * @returns The merged object.
      */
     private mergeDeep(target: any, source: any): any {
         for (const key in source) {
@@ -160,6 +167,8 @@ class ScriptComponentElement extends ComponentElement {
 
     /**
      * Update script attributes by merging preprocessed values into the script.
+     * @param script - The script to update.
+     * @param attributes - The attributes to merge into the script.
      */
     private applyAttributes(script: any, attributes: string | null) {
         try {
