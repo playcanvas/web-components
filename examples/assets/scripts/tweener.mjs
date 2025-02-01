@@ -58,28 +58,28 @@ class TweenDescriptor { /* eslint-disable-line no-unused-vars */
      * @type {number}
      * @attribute
      */
-    delay;
+    delay = 0;
 
     /**
      * Number of times to repeat the tween
      * @type {number}
      * @attribute
      */
-    repeat;
+    repeat = 0;
 
     /**
      * Delay between repeats in milliseconds
      * @type {number}
      * @attribute
      */
-    repeatDelay;
+    repeatDelay = 0;
 
     /**
      * Whether to reverse the tween on repeat
      * @type {boolean}
      * @attribute
      */
-    yoyo;
+    yoyo = false;
 
     /**
      * Index of the easing function to use
@@ -152,7 +152,9 @@ export class Tweener extends Script {
      */
     activate = false;
 
-    postInitialize() {
+    time = 0;
+
+    initialize() {
         // If the "activate" attribute is true, play every tween immediately.
         if (this.activate) {
             for (let i = 0; i < this.tweens.length; i++) {
@@ -308,8 +310,10 @@ export class Tweener extends Script {
     }
 
     update(dt) {
+        this.time += dt * 1000;
         this.tweenInstances.forEach((tween) => {
-            tween?.update();
+            tween?.update(this.time);
+            tween?.update(this.time); // Remove this when https://github.com/tweenjs/tween.js/issues/677 is fixed
         });
     }
 }

@@ -8,7 +8,8 @@
             {
                 "imports": {
                     "mp4-muxer": "../node_modules/mp4-muxer/build/mp4-muxer.mjs",
-                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs",
+                    "@tweenjs/tween.js": "../node_modules/@tweenjs/tween.js/dist/tween.esm.js"
                 }
             }
         </script>
@@ -17,25 +18,57 @@
     </head>
     <body>
         <pc-app>
-            <pc-asset src="assets/scripts/rotate.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/tweener.mjs"></pc-asset>
             <pc-asset src="assets/scripts/video-recorder.mjs"></pc-asset>
             <pc-asset src="assets/scripts/video-recorder-ui.mjs"></pc-asset>
+            <pc-asset src="assets/splats/biker.compressed.ply" id="biker"></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera -->
-                <pc-entity name="camera" position="0 0 3">
-                    <pc-camera clear-color="#8099e6"></pc-camera>
-                </pc-entity>
-                <!-- Light -->
-                <pc-entity name="light" rotation="45 0 0">
-                    <pc-light></pc-light>
-                </pc-entity>
-                <!-- Cube -->
-                <pc-entity name="cube">
-                    <pc-render type="box"></pc-render>
+                <pc-entity name="camera grandparent">
+                    <pc-entity name="camera parent">
+                        <pc-entity name="camera" position="0 1.5 1">
+                            <pc-camera></pc-camera>
+                        </pc-entity>
+                        <pc-scripts>
+                            <pc-script name="tweener" attributes='{
+                                "activate": true,
+                                "tweens": [
+                                    {
+                                        "path": "localEulerAngles",
+                                        "start": "vec4:-10,0,0,0",
+                                        "end": "vec4:10,0,0,0",
+                                        "duration": 7500,
+                                        "easingFunction": "Sinusoidal",
+                                        "easingType": "InOut",
+                                        "repeat": 1000,
+                                        "yoyo": true
+                                    }
+                                ]
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
                     <pc-scripts>
-                        <pc-script name="rotate"></pc-script>
+                        <pc-script name="tweener" attributes='{
+                            "activate": true,
+                            "tweens": [
+                                {
+                                    "path": "localEulerAngles",
+                                    "start": "vec4:0,0,0,0",
+                                    "end": "vec4:0,-180,0,0",
+                                    "duration": 5000,
+                                    "easingFunction": "Cubic",
+                                    "easingType": "InOut",
+                                    "repeat": 1000,
+                                    "yoyo": true
+                                }
+                            ]
+                        }'></pc-script>
                     </pc-scripts>
+                </pc-entity>
+                <!-- Biker -->
+                <pc-entity name="biker" rotation="180 0 0">
+                    <pc-splat asset="biker"></pc-splat>
                 </pc-entity>
                 <!-- Video Recorder -->
                 <pc-entity name="recorder">
