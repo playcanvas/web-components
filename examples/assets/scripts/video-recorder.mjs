@@ -72,15 +72,15 @@ export class VideoRecorder extends Script {
         }
     }
 
-    getResolutionDimensions() {
+    getVideoSettings() {
         switch (this.resolution) {
             case Resolution.FULLHD:
-                return { width: 1920, height: 1080 };
+                return { width: 1920, height: 1080, bitrate: 8_000_000 }; // 8 Mbps for 1080p
             case Resolution.HD:
-                return { width: 1280, height: 720 };
+                return { width: 1280, height: 720, bitrate: 5_000_000 }; // 5 Mbps for 720p
             case Resolution.SD:
             default:
-                return { width: 854, height: 480 };
+                return { width: 854, height: 480, bitrate: 2_000_000 }; // 2 Mbps for 480p
         }
     }
 
@@ -120,7 +120,7 @@ export class VideoRecorder extends Script {
         this.framesEncoded = 0;
         this.framesEncodedAtFlush = 0;
 
-        const { width, height } = this.getResolutionDimensions();
+        const { width, height, bitrate } = this.getVideoSettings();
 
         // Create video frame muxer
         this.muxer = new Muxer({
@@ -146,11 +146,12 @@ export class VideoRecorder extends Script {
             error: e => console.error(e)
         });
 
+        // Configure encoder with video settings
         this.encoder.configure({
             codec: 'avc1.420028', // H.264 codec
             width,
             height,
-            bitrate: 8_000_000 // 8 Mbps
+            bitrate
         });
 
         // Set canvas to video frame resolution
