@@ -189,13 +189,10 @@ export class VideoRecorder extends Script {
         // Restore canvas fill mode and resolution
         this.app.setCanvasResolution(RESOLUTION_AUTO);
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
-        console.log('Restored canvas resolution and fill mode');
 
         // Flush and finalize muxer
         await this.encoder.flush();
-        console.log('Flushed encoder');
         this.muxer.finalize();
-        console.log('Finalized muxer');
 
         // Download video
         const { buffer } = this.muxer.target;
