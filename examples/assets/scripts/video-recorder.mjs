@@ -2,34 +2,42 @@ import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import { FILLMODE_KEEP_ASPECT, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO, RESOLUTION_FIXED, Script } from 'playcanvas';
 
 /** @enum {number} */
-const Resolutions = {
-    '480p': 0,
-    '720p': 1,
-    '1080p': 2
+const Resolution = {
+    SD: 0,      // 480p
+    HD: 1,      // 720p
+    FULLHD: 2   // 1080p
 };
 
 /** @enum {number} */
-const FrameRates = {
-    '30': 30,
-    '60': 60
+const FrameRate = {
+    FPS_30: 30,
+    FPS_60: 60
 };
 
 export class VideoRecorder extends Script {
     /**
+     * Whether to activate the recorder on initialization.
+     *
+     * @attribute
+     * @type {boolean}
+     */
+    activate = false;
+
+    /**
      * The frame rate to record at.
      *
      * @attribute
-     * @type {FrameRates}
+     * @type {FrameRate}
      */
-    frameRate = FrameRates['60'];
+    frameRate = FrameRate.FPS_60;
 
     /**
      * The resolution to record at.
      *
      * @attribute
-     * @type {Resolutions}
+     * @type {Resolution}
      */
-    resolution = Resolutions['1080p'];
+    resolution = Resolution.FULLHD;
 
     /**
      * @type {VideoEncoder|null}
@@ -53,16 +61,18 @@ export class VideoRecorder extends Script {
     originalUpdate = null;
 
     initialize() {
-        this.createUI();
+        if (this.activate) {
+            this.record();
+        }
     }
 
     getResolutionDimensions() {
         switch (this.resolution) {
-            case Resolutions['1080p']:
+            case Resolution.FULLHD:
                 return { width: 1920, height: 1080 };
-            case Resolutions['720p']:
+            case Resolution.HD:
                 return { width: 1280, height: 720 };
-            case Resolutions['480p']:
+            case Resolution.SD:
             default:
                 return { width: 854, height: 480 };
         }
@@ -94,7 +104,10 @@ export class VideoRecorder extends Script {
         this.framesGenerated++;
     }
 
-    startRecording() {
+    /**
+     * Start recording.
+     */
+    record() {
         if (this.recording) return;
         this.recording = true;
         this.framesGenerated = 0;
@@ -120,10 +133,10 @@ export class VideoRecorder extends Script {
         });
 
         this.encoder.configure({
-            codec: 'avc1.420028',
+            codec: 'avc1.420028', // H.264 codec
             width,
             height,
-            bitrate: 8_000_000
+            bitrate: 8_000_000 // 8 Mbps
         });
 
         // Set canvas to video frame resolution
@@ -139,7 +152,10 @@ export class VideoRecorder extends Script {
         console.log('Recording started...');
     }
 
-    async stopRecording() {
+    /**
+     * Stop recording.
+     */
+    async stop() {
         if (!this.recording) return;
         this.recording = false;
 
@@ -161,52 +177,28 @@ export class VideoRecorder extends Script {
         const { buffer } = this.muxer.target;
         this.downloadBlob(new Blob([buffer], { type: 'video/mp4' }));
 
-        // Free encoder
+        // Free resources
         this.encoder.close();
         this.encoder = null;
-
-        // Free muxer
         this.muxer = null;
 
         console.log(`Recording stopped. Captured ${this.framesGenerated} frames.`);
     }
 
+    /**
+     * Download the recorded video.
+     *
+     * @param {Blob} blob - The recorded video blob.
+     * @private
+     */
     downloadBlob(blob) {
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'playcanvas-recording.mp4';
+        a.download = 'recording.mp4';
         a.click();
 
         URL.revokeObjectURL(url);
-    }
-
-    createUI() {
-        const container = document.createElement('div');
-        container.style.position = 'fixed';
-        container.style.bottom = '20px';
-        container.style.left = '20px';
-        container.style.zIndex = '1000';
-        container.style.display = 'flex';
-        container.style.gap = '10px';
-        container.style.alignItems = 'center';
-
-        const button = document.createElement('button');
-        button.textContent = 'Start Recording';
-        button.style.padding = '10px 20px';
-
-        button.addEventListener('click', () => {
-            if (this.recording) {
-                this.stopRecording();
-                button.textContent = 'Start Recording';
-            } else {
-                this.startRecording();
-                button.textContent = 'Stop Recording';
-            }
-        });
-
-        container.appendChild(button);
-        document.body.appendChild(container);
     }
 }

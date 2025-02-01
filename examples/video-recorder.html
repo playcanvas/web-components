@@ -19,6 +19,7 @@
         <pc-app>
             <pc-asset src="assets/scripts/rotate.mjs"></pc-asset>
             <pc-asset src="assets/scripts/video-recorder.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/video-recorder-ui.mjs"></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera -->
@@ -34,7 +35,13 @@
                     <pc-render type="box"></pc-render>
                     <pc-scripts>
                         <pc-script name="rotate"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Video Recorder -->
+                <pc-entity name="recorder">
+                    <pc-scripts>
                         <pc-script name="videoRecorder"></pc-script>
+                        <pc-script name="videoRecorderUI"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>
