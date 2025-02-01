@@ -37,8 +37,8 @@
                         <pc-camera clear-color="black"></pc-camera>
                         <pc-scripts>
                             <pc-script name="cameraControls" attributes='{
-                                "focusPoint": [0, 1.75, 0],
-                                "pitchRange": [-90, 0],
+                                "focusPoint": "vec3:0,1.75,0",
+                                "pitchRange": "vec2:-90,0",
                                 "sceneSize": 2
                             }'></pc-script>
                         </pc-scripts>
@@ -53,7 +53,7 @@
                     <pc-model asset="jet-fighter"></pc-model>
                     <pc-scripts>
                         <pc-script name="shadowCatcher" attributes='{
-                            "size": [14, 14]
+                            "size": "vec2:14,14"
                         }'></pc-script>
                     </pc-scripts>
                     <pc-entity name="annotation1" position="5.5 1.2 0">

@@ -33,8 +33,8 @@
                         <pc-camera></pc-camera>
                         <pc-scripts>
                             <pc-script name="cameraControls" attributes='{
-                                "focusPoint": [0, 1.75, 2],
-                                "pitchRange": [-90, 0],
+                                "focusPoint": "vec3:0,1.75,2",
+                                "pitchRange": "vec2:-90,0",
                                 "sceneSize": 15,
                                 "zoomMin": 0.5,
                                 "zoomMax": 15
@@ -51,7 +51,7 @@
                     <pc-model asset="t-rex"></pc-model>
                     <pc-scripts>
                         <pc-script name="shadowCatcher" attributes='{
-                            "size": [14, 14]
+                            "size": "vec2:14,14"
                         }'></pc-script>
                     </pc-scripts>
                 </pc-entity>

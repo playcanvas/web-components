@@ -1,4 +1,4 @@
-import { ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { Color, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
@@ -58,66 +58,114 @@ class ScriptComponentElement extends ComponentElement {
         });
     }
 
+    /**
+     * Recursively converts raw attribute data into proper PlayCanvas types. Supported conversions:
+     * - "asset:assetId" → resolves to an Asset instance
+     * - "entity:entityId" → resolves to an Entity instance
+     * - "vec2:1,2" → new Vec2(1,2)
+     * - "vec3:1,2,3" → new Vec3(1,2,3)
+     * - "vec4:1,2,3,4" → new Vec4(1,2,3,4)
+     * - "color:1,0.5,0.5,1" → new Color(1,0.5,0.5,1)
+     */
+    private convertAttributes(item: any): any {
+        if (typeof item === 'string') {
+            if (item.startsWith('asset:')) {
+                const assetId = item.slice(6);
+                const assetElement = document.querySelector(`pc-asset#${assetId}`) as any;
+                if (assetElement) {
+                    return assetElement.asset;
+                }
+            }
+            if (item.startsWith('entity:')) {
+                const entityId = item.slice(7);
+                const entityElement = document.querySelector(`pc-entity[name="${entityId}"]`) as any;
+                if (entityElement) {
+                    return entityElement.entity;
+                }
+            }
+            if (item.startsWith('vec2:')) {
+                const parts = item.slice(5).split(',').map(Number);
+                if (parts.length === 2 && parts.every(v => !isNaN(v))) {
+                    return new Vec2(parts[0], parts[1]);
+                }
+            }
+            if (item.startsWith('vec3:')) {
+                const parts = item.slice(5).split(',').map(Number);
+                if (parts.length === 3 && parts.every(v => !isNaN(v))) {
+                    return new Vec3(parts[0], parts[1], parts[2]);
+                }
+            }
+            if (item.startsWith('vec4:')) {
+                const parts = item.slice(5).split(',').map(Number);
+                if (parts.length === 4 && parts.every(v => !isNaN(v))) {
+                    return new Vec4(parts[0], parts[1], parts[2], parts[3]);
+                }
+            }
+            if (item.startsWith('color:')) {
+                const parts = item.slice(6).split(',').map(Number);
+                if (parts.length === 4 && parts.every(v => !isNaN(v))) {
+                    return new Color(parts[0], parts[1], parts[2], parts[3]);
+                }
+            }
+            return item;
+        }
+
+        if (Array.isArray(item)) {
+            // If it's an array of objects, convert each element individually.
+            if (item.length > 0 && typeof item[0] === 'object') {
+                return item.map((el: any) => this.convertAttributes(el));
+            }
+            // Otherwise, leave the numeric array unchanged but process each element.
+            return item.map((el: any) => this.convertAttributes(el));
+        }
+
+        if (item && typeof item === 'object') {
+            const result: any = {};
+            for (const key in item) {
+                result[key] = this.convertAttributes(item[key]);
+            }
+            return result;
+        }
+
+        return item;
+    }
+
+    /**
+     * Preprocess the attributes object by converting its values.
+     */
+    private preprocessAttributes(attrs: any): any {
+        return this.convertAttributes(attrs);
+    }
+
+    /**
+     * Recursively merge properties from source into target.
+     */
+    private mergeDeep(target: any, source: any): any {
+        for (const key in source) {
+            if (
+                source[key] &&
+                typeof source[key] === 'object' &&
+                !Array.isArray(source[key])
+            ) {
+                if (!target[key] || typeof target[key] !== 'object') {
+                    target[key] = {};
+                }
+                this.mergeDeep(target[key], source[key]);
+            } else {
+                target[key] = source[key];
+            }
+        }
+        return target;
+    }
+
+    /**
+     * Update script attributes by merging preprocessed values into the script.
+     */
     private applyAttributes(script: any, attributes: string | null) {
         try {
             const attributesObject = attributes ? JSON.parse(attributes) : {};
-
-            const applyValue = (target: any, key: string, value: any) => {
-                // Handle asset references
-                if (typeof value === 'string' && value.startsWith('asset:')) {
-                    const assetId = value.slice(6);
-                    const assetElement = document.querySelector(`pc-asset#${assetId}`) as AssetElement;
-                    if (assetElement) {
-                        target[key] = assetElement.asset;
-                        return;
-                    }
-                }
-
-                // Handle arrays
-                if (value && typeof value === 'object' && Array.isArray(value)) {
-                    // If it's an array of objects, recursively apply to each object
-                    if (value.length > 0 && typeof value[0] === 'object') {
-                        target[key] = value.map((item) => {
-                            const obj = {};
-                            for (const itemKey in item) {
-                                applyValue(obj, itemKey, item[itemKey]);
-                            }
-                            return obj;
-                        });
-                        return;
-                    }
-
-                    // Handle vectors
-                    if (value.length === 2 && typeof value[0] === 'number') {
-                        target[key] = new Vec2(value[0], value[1]);
-                        return;
-                    }
-                    if (value.length === 3 && typeof value[0] === 'number') {
-                        target[key] = new Vec3(value[0], value[1], value[2]);
-                        return;
-                    }
-                    if (value.length === 4 && typeof value[0] === 'number') {
-                        target[key] = new Vec4(value[0], value[1], value[2], value[3]);
-                        return;
-                    }
-                }
-
-                // Handle nested objects (non-array)
-                if (value && typeof value === 'object' && !Array.isArray(value)) {
-                    if (!target[key] || typeof target[key] !== 'object') {
-                        target[key] = {};
-                    }
-                    for (const nestedKey in value) {
-                        applyValue(target[key], nestedKey, value[nestedKey]);
-                    }
-                } else {
-                    target[key] = value;
-                }
-            };
-
-            for (const key in attributesObject) {
-                applyValue(script, key, attributesObject[key]);
-            }
+            const converted = this.convertAttributes(attributesObject);
+            this.mergeDeep(script, converted);
         } catch (error) {
             console.error(`Error parsing attributes JSON string ${attributes}:`, error);
         }
@@ -148,10 +196,19 @@ class ScriptComponentElement extends ComponentElement {
     private createScript(name: string, attributes: string | null): Script | null {
         if (!this.component) return null;
 
-        this.component.on(`create:${name}`, (script) => {
-            this.applyAttributes(script, attributes);
+        let attributesObject = {};
+        if (attributes) {
+            try {
+                attributesObject = JSON.parse(attributes);
+                // Preprocess attributes: convert arrays or strings into vectors, colors, asset references, etc.
+                attributesObject = this.preprocessAttributes(attributesObject);
+            } catch (error) {
+                console.error(`Error parsing attributes JSON string ${attributes}:`, error);
+            }
+        }
+        return this.component.create(name, {
+            properties: attributesObject
         });
-        return this.component.create(name);
     }
 
     private destroyScript(name: string): void {
