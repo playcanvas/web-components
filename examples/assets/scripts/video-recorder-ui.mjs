@@ -6,15 +6,20 @@ export class VideoRecorderUI extends Script {
     }
 
     createUI() {
+        // Set a fixed container width to align the rows and button
         const container = document.createElement('div');
         container.style.position = 'fixed';
-        container.style.bottom = '20px';
-        container.style.left = '20px';
+        container.style.bottom = '16px';
+        container.style.left = '16px';
         container.style.zIndex = '1000';
+        container.style.width = '150px';
         container.style.display = 'flex';
         container.style.flexDirection = 'column';
         container.style.gap = '10px';
-        container.style.alignItems = 'flex-start';
+        container.style.alignItems = 'stretch';
+        // Apply a consistent font family and font size to all elements.
+        container.style.fontFamily = 'Arial, sans-serif';
+        container.style.fontSize = '14px';  // Set a common font size
 
         // Create options container to hold resolution and framerate selectors.
         // Stacking them vertically.
@@ -22,73 +27,85 @@ export class VideoRecorderUI extends Script {
         optionsContainer.style.display = 'flex';
         optionsContainer.style.flexDirection = 'column';
         optionsContainer.style.gap = '10px';
-        optionsContainer.style.alignItems = 'flex-start';
+        optionsContainer.style.alignItems = 'stretch';
 
-        // Resolution select control with label to the left.
-        const resolutionContainer = document.createElement('div');
-        resolutionContainer.style.display = 'flex';
-        resolutionContainer.style.flexDirection = 'row';
-        resolutionContainer.style.alignItems = 'center';
-        resolutionContainer.style.gap = '10px';
-        
-        const resolutionLabel = document.createElement('label');
-        resolutionLabel.textContent = 'Resolution: ';
-        const resolutionSelect = document.createElement('select');
-        const resolutionOptions = [
-            { value: 'SD', text: '480p' },
-            { value: 'HD', text: '720p' },
-            { value: 'FULLHD', text: '1080p' }
-        ];
-        resolutionOptions.forEach((opt) => {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.text;
-            resolutionSelect.appendChild(option);
-        });
-        resolutionSelect.value = 'FULLHD';
+        // Create a function to style each row for aligned labels and dropdowns.
+        const createRow = (labelText, dropdownOptions, defaultValue) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.flexDirection = 'row';
+            row.style.alignItems = 'center';
+            row.style.gap = '5px';
+            row.style.width = '100%';
 
-        resolutionContainer.appendChild(resolutionLabel);
-        resolutionContainer.appendChild(resolutionSelect);
+            const label = document.createElement('label');
+            label.textContent = labelText;
+            label.style.width = '100px';  // Fixed width for alignment
+            label.style.color = '#fff';   // Very light grey
 
-        // Framerate select control with label to the left.
-        const frameRateContainer = document.createElement('div');
-        frameRateContainer.style.display = 'flex';
-        frameRateContainer.style.flexDirection = 'row';
-        frameRateContainer.style.alignItems = 'center';
-        frameRateContainer.style.gap = '10px';
+            const select = document.createElement('select');
+            select.style.width = '75px';
 
-        const frameRateLabel = document.createElement('label');
-        frameRateLabel.textContent = 'Frame Rate: ';
-        const frameRateSelect = document.createElement('select');
-        const frameRateOptions = [
-            { value: 'FPS_30', text: '30 FPS' },
-            { value: 'FPS_60', text: '60 FPS' }
-        ];
-        frameRateOptions.forEach((opt) => {
-            const option = document.createElement('option');
-            option.value = opt.value;
-            option.textContent = opt.text;
-            frameRateSelect.appendChild(option);
-        });
-        frameRateSelect.value = 'FPS_60';
+            dropdownOptions.forEach((opt) => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.text;
+                select.appendChild(option);
+            });
+            select.value = defaultValue;
 
-        frameRateContainer.appendChild(frameRateLabel);
-        frameRateContainer.appendChild(frameRateSelect);
+            row.appendChild(label);
+            row.appendChild(select);
+            return { row, select };
+        };
 
-        // Append resolution and framerate controls in vertical order.
-        optionsContainer.appendChild(resolutionContainer);
-        optionsContainer.appendChild(frameRateContainer);
+        // Create resolution row (480p, 720p, 1080p)
+        const resolutionData = {
+            label: 'Resolution:',
+            options: [
+                { value: 'SD', text: '480p' },
+                { value: 'HD', text: '720p' },
+                { value: 'FULLHD', text: '1080p' }
+            ],
+            default: 'FULLHD'
+        };
+        const { row: resolutionRow, select: resolutionSelect } = createRow(
+            resolutionData.label,
+            resolutionData.options,
+            resolutionData.default
+        );
+
+        // Create framerate row (30 FPS, 60 FPS)
+        const frameRateData = {
+            label: 'Frame Rate:',
+            options: [
+                { value: 'FPS_30', text: '30' },
+                { value: 'FPS_60', text: '60' }
+            ],
+            default: 'FPS_60'
+        };
+        const { row: frameRateRow, select: frameRateSelect } = createRow(
+            frameRateData.label,
+            frameRateData.options,
+            frameRateData.default
+        );
+
+        // Append the rows to the options container.
+        optionsContainer.appendChild(resolutionRow);
+        optionsContainer.appendChild(frameRateRow);
 
         // Create the start/stop recording button.
         const button = document.createElement('button');
-        button.textContent = 'Start Recording';
+        button.textContent = 'Record';
         button.style.padding = '10px 20px';
+        button.style.width = '100%';  // Make button same width as rows
+        button.style.fontSize = 'inherit';
 
         button.addEventListener('click', () => {
             const videoRecorder = this.entity.script.videoRecorder;
             if (videoRecorder.recording) {
                 videoRecorder.stop();
-                button.textContent = 'Start Recording';
+                button.textContent = 'Record';
             } else {
                 switch (resolutionSelect.value) {
                     case 'HD':
@@ -114,7 +131,7 @@ export class VideoRecorderUI extends Script {
                 }
 
                 videoRecorder.record();
-                button.textContent = 'Stop Recording';
+                button.textContent = 'Stop';
             }
         });
 
