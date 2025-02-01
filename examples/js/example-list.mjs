@@ -14,5 +14,6 @@ export const examples = [
     { name: 'Text Elements', path: 'text.html' },
     { name: 'Text 3D', path: 'text3d.html' },
     { name: 'Tweening', path: 'tween.html' },
+    { name: 'Video Recorder', path: 'video-recorder.html' },
     { name: 'Video Texture', path: 'video-texture.html' }
 ];
