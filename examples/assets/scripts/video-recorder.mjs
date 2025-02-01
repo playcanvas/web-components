@@ -142,6 +142,7 @@ export class VideoRecorder extends Script {
         // Set canvas to video frame resolution
         this.app.setCanvasFillMode(FILLMODE_KEEP_ASPECT);
         this.app.setCanvasResolution(RESOLUTION_FIXED, width, height);
+        this.app.resizeCanvas(width, height);
 
         // Start capturing frames
         this.app.on('frameend', this.captureFrame, this);
