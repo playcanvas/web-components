@@ -3,6 +3,10 @@ import { Script } from 'playcanvas';
 export class VideoRecorderUI extends Script {
     initialize() {
         this.createUI();
+        // Listen to video recording progress events
+        this.app.on('encode:begin', this.onEncodeBegin, this);
+        this.app.on('encode:progress', this.onEncodeProgress, this);
+        this.app.on('encode:end', this.onEncodeEnd, this);
     }
 
     createUI() {
@@ -40,8 +44,8 @@ export class VideoRecorderUI extends Script {
 
             const label = document.createElement('label');
             label.textContent = labelText;
-            label.style.width = '100px';  // Fixed width for alignment
-            label.style.color = '#fff';   // Very light grey
+            label.style.width = '100px';
+            label.style.color = '#fff';
 
             const select = document.createElement('select');
             select.style.width = '75px';
@@ -101,6 +105,9 @@ export class VideoRecorderUI extends Script {
         button.style.width = '100%';  // Make button same width as rows
         button.style.fontSize = 'inherit';
 
+        // Store the button reference on the instance for later access.
+        this.recordButton = button;
+
         button.addEventListener('click', () => {
             const videoRecorder = this.entity.script.videoRecorder;
             if (videoRecorder.recording) {
@@ -135,8 +142,56 @@ export class VideoRecorderUI extends Script {
             }
         });
 
+        // Create a simple progress indicator (could be a div styled as a progress bar)
+        this.progressBar = document.createElement('div');
+        this.progressBar.style.height = '10px';
+        this.progressBar.style.background = '#ccc';
+        this.progressBar.style.width = '0%';
+        this.progressBar.style.transition = 'width 0.2s';
+        container.appendChild(this.progressBar);
+
         container.appendChild(optionsContainer);
         container.appendChild(button);
         document.body.appendChild(container);
+    }
+
+    onEncodeBegin() {
+        // Show the progress bar and disable the Record/Stop button once encoding begins.
+        this.progressBar.style.display = 'block';
+        this.recordButton.disabled = true;
+    }
+
+    onEncodeProgress(progress) {
+        // progress is a value between 0 and 1
+        // Update our progress bar width accordingly.
+        const percent = Math.min(Math.max(progress * 100, 0), 100);
+        this.progressBar.style.width = `${percent}%`;
+    }
+
+    onEncodeEnd(buffer) {
+        // Hide the progress bar and re-enable the Record/Stop button once encoding is complete.
+        this.progressBar.style.display = 'none';
+        this.recordButton.disabled = false;
+
+        // Download the recorded video.
+        const blob = new Blob([buffer], { type: 'video/mp4' });
+        this.downloadBlob(blob);
+    }
+
+    /**
+     * Download the recorded video.
+     *
+     * @param {Blob} blob - The recorded video blob.
+     * @private
+     */
+    downloadBlob(blob) {
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'recording.mp4';
+        a.click();
+
+        URL.revokeObjectURL(url);
     }
 }
