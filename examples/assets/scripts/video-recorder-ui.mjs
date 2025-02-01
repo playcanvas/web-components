@@ -105,6 +105,9 @@ export class VideoRecorderUI extends Script {
         button.style.width = '100%';  // Make button same width as rows
         button.style.fontSize = 'inherit';
 
+        // Store the button reference on the instance for later access.
+        this.recordButton = button;
+
         button.addEventListener('click', () => {
             const videoRecorder = this.entity.script.videoRecorder;
             if (videoRecorder.recording) {
@@ -153,20 +156,22 @@ export class VideoRecorderUI extends Script {
     }
 
     onEncodeBegin() {
-        // Show the progress bar once encoding is complete.
+        // Show the progress bar and disable the Record/Stop button once encoding begins.
         this.progressBar.style.display = 'block';
+        this.recordButton.disabled = true;
     }
 
     onEncodeProgress(progress) {
         // progress is a value between 0 and 1
         // Update our progress bar width accordingly.
         const percent = Math.min(Math.max(progress * 100, 0), 100);
-        this.progressBar.style.width = percent + '%';
+        this.progressBar.style.width = `${percent}%`;
     }
 
     onEncodeEnd(buffer) {
-        // Hide the progress bar once encoding is complete.
+        // Hide the progress bar and re-enable the Record/Stop button once encoding is complete.
         this.progressBar.style.display = 'none';
+        this.recordButton.disabled = false;
 
         // Download the recorded video.
         const blob = new Blob([buffer], { type: 'video/mp4' });
