@@ -140,8 +140,8 @@ export class VideoRecorder extends Script {
         });
 
         // Set canvas to video frame resolution
-        this.app.setCanvasFillMode(FILLMODE_KEEP_ASPECT);
         this.app.setCanvasResolution(RESOLUTION_FIXED, width, height);
+        this.app.setCanvasFillMode(FILLMODE_KEEP_ASPECT);
 
         // Start capturing frames
         this.app.on('frameend', this.captureFrame, this);
@@ -166,8 +166,8 @@ export class VideoRecorder extends Script {
         this.app.off('frameend', this.captureFrame, this);
 
         // Restore canvas fill mode and resolution
-        this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
+        this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 
         // Flush and finalize muxer
         await this.encoder.flush();
