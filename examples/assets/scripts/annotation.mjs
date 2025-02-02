@@ -446,10 +446,19 @@ export class Annotation extends Script {
      * @private
      */
     _calculateScreenSpaceScale() {
+        const DESIRED_PIXEL_SIZE = 25; // Match this to your hotspot DOM element size
+
         const cameraPos = this.camera.entity.getPosition();
-        const cameraForward = this.camera.entity.forward;
         const toAnnotation = this.entity.getPosition().sub(cameraPos);
-        const distanceToNearPlane = toAnnotation.dot(cameraForward);
-        return distanceToNearPlane * Math.tan(this.camera.fov * Math.PI / 180) * 0.025;
+        const distance = toAnnotation.length();
+
+        // Get the camera's projection matrix vertical scale factor
+        const projMatrix = this.camera.projectionMatrix;
+        const screenHeight = this.app.graphicsDevice.height;
+
+        // Calculate world size needed for desired pixel size
+        const worldSize = (DESIRED_PIXEL_SIZE / screenHeight) * (2 * distance / projMatrix.data[5]);
+
+        return worldSize;
     }
 }
