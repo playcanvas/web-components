@@ -1,8 +1,14 @@
-import { Color, Quat, Vec3 } from 'playcanvas';
+import { Color, MiniStats, Quat, Vec3 } from 'playcanvas';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const appElement = await document.querySelector('pc-app').ready();
     const app = appElement.app;
+
+    // Add MiniStats if query parameter is present
+    if (new URLSearchParams(window.location.search).has('ministats')) {
+        /* eslint-disable-next-line no-unused-vars */
+        const stats = new MiniStats(app);
+    }
 
     // Create container for buttons
     const container = document.createElement('div');
