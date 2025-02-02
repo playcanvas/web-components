@@ -446,7 +446,7 @@ export class Annotation extends Script {
      * @private
      */
     _calculateScreenSpaceScale() {
-        const DESIRED_PIXEL_SIZE = 25; // Match this to your hotspot DOM element size
+        const DESIRED_PIXEL_SIZE = 25;
 
         const cameraPos = this.camera.entity.getPosition();
         const toAnnotation = this.entity.getPosition().sub(cameraPos);
