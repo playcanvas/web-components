@@ -62,6 +62,14 @@ export class Annotation extends Script {
     text;
 
     /**
+     * The desired size of the hotspot in screen pixels.
+     *
+     * @type {number}
+     * @attribute
+     */
+    hotspotSize = 25;
+
+    /**
      * @type {CameraComponent}
      * @private
      */
@@ -86,7 +94,7 @@ export class Annotation extends Script {
      * Injects required CSS styles into the document
      * @private
      */
-    static _injectStyles() {
+    static _injectStyles(size) {
         if (this._styleSheet) return;
 
         const css = `
@@ -118,8 +126,8 @@ export class Annotation extends Script {
             .pc-annotation-hotspot {
                 display: none;
                 position: absolute;
-                width: 30px;
-                height: 30px;
+                width: ${size + 5}px;
+                height: ${size + 5}px;
                 opacity: 0;
                 cursor: pointer;
                 transform: translate(-50%, -50%);
@@ -225,7 +233,7 @@ export class Annotation extends Script {
 
     initialize() {
         // Ensure styles are injected
-        Annotation._injectStyles();
+        Annotation._injectStyles(this.hotspotSize);
 
         // Create tooltip element
         this._tooltip = document.createElement('div');
@@ -446,18 +454,17 @@ export class Annotation extends Script {
      * @private
      */
     _calculateScreenSpaceScale() {
-        const DESIRED_PIXEL_SIZE = 25;
-
         const cameraPos = this.camera.entity.getPosition();
         const toAnnotation = this.entity.getPosition().sub(cameraPos);
         const distance = toAnnotation.length();
 
+        // Use the canvas's CSS/client height instead of graphics device height
         const canvas = this.app.graphicsDevice.canvas;
         const screenHeight = canvas.clientHeight;
 
         // Get the camera's projection matrix vertical scale factor
         const projMatrix = this.camera.projectionMatrix;
-        const worldSize = (DESIRED_PIXEL_SIZE / screenHeight) * (2 * distance / projMatrix.data[5]);
+        const worldSize = (this.hotspotSize / screenHeight) * (2 * distance / projMatrix.data[5]);
 
         return worldSize;
     }
