@@ -91,7 +91,8 @@ export class Annotation extends Script {
     static _styleSheet = null;
 
     /**
-     * Injects required CSS styles into the document
+     * Injects required CSS styles into the document.
+     * @param {number} size - The size of the hotspot in screen pixels.
      * @private
      */
     static _injectStyles(size) {
