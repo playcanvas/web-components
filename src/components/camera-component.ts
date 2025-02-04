@@ -40,7 +40,7 @@ class CameraComponentElement extends ComponentElement {
 
     private _frustumCulling = true;
 
-    private _gamma: 'none' | 'srgb' = 'srgb';
+    private _gamma: 'linear' | 'srgb' = 'srgb';
 
     private _horizontalFov = false;
 
@@ -298,7 +298,7 @@ class CameraComponentElement extends ComponentElement {
      * Sets the gamma correction of the camera.
      * @param value - The gamma correction.
      */
-    set gamma(value: 'none' | 'srgb') {
+    set gamma(value: 'linear' | 'srgb') {
         this._gamma = value;
         if (this.component) {
             this.component.gammaCorrection = value === 'srgb' ? GAMMA_SRGB : GAMMA_NONE;
@@ -309,7 +309,7 @@ class CameraComponentElement extends ComponentElement {
      * Gets the gamma correction of the camera.
      * @returns The gamma correction.
      */
-    get gamma(): 'none' | 'srgb' {
+    get gamma(): 'linear' | 'srgb' {
         return this._gamma;
     }
 
@@ -522,7 +522,7 @@ class CameraComponentElement extends ComponentElement {
                 this.frustumCulling = newValue !== 'false';
                 break;
             case 'gamma':
-                this.gamma = newValue as 'none' | 'srgb';
+                this.gamma = newValue as 'linear' | 'srgb';
                 break;
             case 'horizontal-fov':
                 this.horizontalFov = this.hasAttribute('horizontal-fov');
