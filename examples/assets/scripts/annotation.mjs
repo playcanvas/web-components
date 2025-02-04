@@ -452,11 +452,11 @@ export class Annotation extends Script {
         const toAnnotation = this.entity.getPosition().sub(cameraPos);
         const distance = toAnnotation.length();
 
+        const canvas = this.app.graphicsDevice.canvas;
+        const screenHeight = canvas.clientHeight;
+
         // Get the camera's projection matrix vertical scale factor
         const projMatrix = this.camera.projectionMatrix;
-        const screenHeight = this.app.graphicsDevice.height;
-
-        // Calculate world size needed for desired pixel size
         const worldSize = (DESIRED_PIXEL_SIZE / screenHeight) * (2 * distance / projMatrix.data[5]);
 
         return worldSize;
