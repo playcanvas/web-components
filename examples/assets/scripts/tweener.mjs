@@ -301,7 +301,7 @@ export class Tweener extends Script {
         .repeatDelay(tween.repeatDelay)
         .yoyo(tween.yoyo)
         .delay(tween.delay)
-        .start();
+        .start(this.time);
     }
 
     stop(idx) {
