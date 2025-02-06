@@ -32,20 +32,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const clearColor = new Color();
     let originalSkyType = null;
 
-    function handleSky(entering) {
+    function disableSky() {
         const sky = document.querySelector('pc-sky');
         if (!sky) return;
 
-        if (entering) {
-            // Store original type only if we haven't already
-            if (!originalSkyType) {
-                originalSkyType = sky.hasAttribute('type') ? sky.type : null;
-            }
-            sky.type = 'none';
-        } else if (originalSkyType) {
-            // Restore original type
+        // Save the original sky type (if any) if it hasn't been recorded yet.
+        if (originalSkyType === null) {
+            originalSkyType = sky.getAttribute('type'); // May be null if not set.
+        }
+        // Hide the sky by setting its type to "none".
+        sky.setAttribute('type', 'none');
+    }
+
+    function restoreSky() {
+        const sky = document.querySelector('pc-sky');
+        if (!sky) return;
+
+        // If an original type was recorded, restore it.
+        if (originalSkyType !== null) {
             if (originalSkyType) {
-                sky.type = originalSkyType;
+                sky.setAttribute('type', originalSkyType);
             } else {
                 sky.removeAttribute('type');
             }
@@ -75,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (app.xr.type === 'immersive-ar') {
             clearColor.copy(cameraElement.clearColor);
             cameraElement.clearColor = new Color(0, 0, 0, 0);
-            handleSky(true);
+            disableSky();
         }
     });
 
@@ -88,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (app.xr.type === 'immersive-ar') {
             cameraElement.clearColor = clearColor;
-            handleSky(false);
+            restoreSky();
         }
     });
 
