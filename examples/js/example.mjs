@@ -10,60 +10,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         const stats = new MiniStats(app);
     }
 
-    // Create container for buttons
+    // Create container for buttons using the external CSS class
     const container = document.createElement('div');
-    Object.assign(container.style, {
-        position: 'absolute',
-        bottom: 'max(16px, env(safe-area-inset-bottom))',
-        right: 'max(16px, env(safe-area-inset-right))',
-        display: 'flex',
-        gap: '8px'
-    });
+    container.classList.add('example-button-container');
 
     function createButton({ icon, title, onClick }) {
         const button = document.createElement('button');
         button.innerHTML = icon;
         button.title = title;
+        // Assign the external CSS class to style the button
+        button.classList.add('example-button');
 
-        Object.assign(button.style, {
-            display: 'flex',
-            position: 'relative',
-            width: '40px',
-            height: '40px',
-            background: 'rgba(255, 255, 255, 0.9)',
-            border: '1px solid #ddd',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0',
-            margin: '0',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            transition: 'background-color 0.2s',
-            color: '#2c3e50'
-        });
-
-        const svg = button.querySelector('svg');
-        if (svg) {
-            svg.style.display = 'block';
-            svg.style.margin = 'auto';
+        if (onClick) {
+            button.onclick = onClick;
         }
-
-        button.onmouseenter = () => {
-            button.style.background = 'rgba(255, 255, 255, 1)';
-        };
-
-        button.onmouseleave = () => {
-            button.style.background = 'rgba(255, 255, 255, 0.9)';
-        };
-
-        if (onClick) button.onclick = onClick;
 
         return button;
     }
 
-    /** @type {import('../../dist/pwc.mjs').CameraComponentElement*/
+    /** @type {import('../../dist/pwc.mjs').CameraComponentElement} */
     const cameraElement = await document.querySelector('pc-camera').ready();
     const clearColor = new Color();
     let originalSkyType = null;

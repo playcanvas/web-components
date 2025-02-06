@@ -14,3 +14,34 @@ body {
 canvas {
     touch-action: none;
 }
+
+.example-button-container {
+    position: absolute;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    right: max(16px, env(safe-area-inset-right));
+    display: flex;
+    gap: 8px;
+}
+
+.example-button {
+    display: flex;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background-color 0.2s;
+    color: #2c3e50;
+}
+
+.example-button:hover {
+    background: rgba(255, 255, 255, 1);
+}
