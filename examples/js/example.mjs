@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const stats = new MiniStats(app);
     }
 
-    // Create container for buttons using the external CSS class
+    // Create container for buttons
     const container = document.createElement('div');
     container.classList.add('example-button-container');
 
@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const button = document.createElement('button');
         button.innerHTML = icon;
         button.title = title;
-        // Assign the external CSS class to style the button
         button.classList.add('example-button');
 
         if (onClick) {
