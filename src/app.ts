@@ -193,21 +193,33 @@ class AppElement extends AsyncElement {
         };
     }
 
+    // New helper to convert CSS coordinates to canvas (picker) coordinates
+    private _getPickerCoordinates(event: PointerEvent): { x: number, y: number } {
+        // Get the canvas' bounding rectangle in CSS pixels.
+        const canvasRect = this._canvas!.getBoundingClientRect();
+        // Compute scale factors based on canvas actual resolution vs. its CSS display size.
+        const scaleX = this._canvas!.width / canvasRect.width;
+        const scaleY = this._canvas!.height / canvasRect.height;
+        // Convert the client coordinates accordingly.
+        const x = (event.clientX - canvasRect.left) * scaleX;
+        const y = (event.clientY - canvasRect.top) * scaleY;
+        return { x, y };
+    }
+
     _onPointerMove(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
         const camera = this.app!.root.findComponent('camera') as CameraComponent;
         if (!camera) return;
 
-        const canvasRect = this._canvas!.getBoundingClientRect();
-        const x = event.clientX - canvasRect.left;
-        const y = event.clientY - canvasRect.top;
+        // Use the helper to convert event coordinates into canvas/picker coordinates.
+        const { x, y } = this._getPickerCoordinates(event);
 
         this._picker.prepare(camera, this.app!.scene);
         const selection = this._picker.getSelection(x, y);
 
         // Get the currently hovered entity by walking up the hierarchy
-        let newHoverEntity = null;
+        let newHoverEntity: EntityElement | null = null;
         if (selection.length > 0) {
             let currentNode: GraphNode | null = selection[0].node;
             while (currentNode !== null) {
@@ -245,9 +257,8 @@ class AppElement extends AsyncElement {
         const camera = this.app!.root.findComponent('camera') as CameraComponent;
         if (!camera) return;
 
-        const canvasRect = this._canvas!.getBoundingClientRect();
-        const x = event.clientX - canvasRect.left;
-        const y = event.clientY - canvasRect.top;
+        // Convert the event's pointer coordinates
+        const { x, y } = this._getPickerCoordinates(event);
 
         this._picker.prepare(camera, this.app!.scene);
         const selection = this._picker.getSelection(x, y);
@@ -271,9 +282,8 @@ class AppElement extends AsyncElement {
         const camera = this.app!.root.findComponent('camera') as CameraComponent;
         if (!camera) return;
 
-        const canvasRect = this._canvas!.getBoundingClientRect();
-        const x = event.clientX - canvasRect.left;
-        const y = event.clientY - canvasRect.top;
+        // Convert CSS coordinates to picker coordinates
+        const { x, y } = this._getPickerCoordinates(event);
 
         this._picker.prepare(camera, this.app!.scene);
         const selection = this._picker.getSelection(x, y);
