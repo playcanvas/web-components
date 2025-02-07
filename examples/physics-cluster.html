@@ -22,7 +22,6 @@
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/scripts/gravity.mjs"></pc-asset>
             <pc-asset src="assets/scripts/physical-pointer.mjs"></pc-asset>
-            <pc-material id="hotpink" diffuse="hotpink"></pc-material>
             <pc-material id="mediumseagreen" diffuse="mediumseagreen"></pc-material>
             <!-- Scene -->
             <pc-scene gravity="0 0 0">
@@ -30,7 +29,7 @@
                 <pc-sky asset="studio" type="none" lighting></pc-sky>
                 <!-- Camera -->
                 <pc-entity name="camera" position="0 0 5">
-                    <pc-camera clear-color="#cccccc" tonemap="neutral"></pc-camera>
+                    <pc-camera clear-color="lightgray" tonemap="neutral"></pc-camera>
                 </pc-entity>
                 <!-- Physical Sphere Template -->
                 <template id="sphere-template">
@@ -69,10 +68,8 @@
                     const sphereEntity = clone.querySelector('pc-entity');
 
                     // Set a random start position
-                    const x = (Math.random() - 0.5) * 10;
-                    const y = (Math.random() - 0.5) * 10;
-                    const z = (Math.random() - 0.5) * 10;
-                    sphereEntity.setAttribute('position', `${x} ${y} ${z}`);
+                    const rnd = (max) => (Math.random() - 0.5) * max;
+                    sphereEntity.setAttribute('position', `${rnd(10)} ${rnd(10)} ${rnd(10)}`);
 
                     // Append the clone to the scene
                     scene.appendChild(clone);
