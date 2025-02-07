@@ -26,7 +26,7 @@ class AppElement extends AsyncElement {
 
     private _stencil = true;
 
-    private _highResolution = false;
+    private _highResolution = true;
 
     private _hierarchyReady = false;
 
