@@ -117,11 +117,26 @@ export class Annotation extends Script {
                 opacity: 0;
                 transition: opacity 0.2s ease-in-out;
                 visibility: hidden;
+                transform: translate(25px, -50%);
             }
 
             .pc-annotation-title {
                 font-weight: bold;
                 margin-bottom: 4px;
+            }
+
+            /* Add a little triangular arrow on the left edge of the tooltip */
+            .pc-annotation::before {
+                content: "";
+                position: absolute;
+                left: -8px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0;
+                height: 0;
+                border-top: 8px solid transparent;
+                border-bottom: 8px solid transparent;
+                border-right: 8px solid rgba(0, 0, 0, 0.8);
             }
 
             .pc-annotation-hotspot {
