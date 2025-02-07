@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Physics Cluster</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <pc-asset src="assets/scripts/gravity.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/physical-pointer.mjs"></pc-asset>
+            <pc-material id="hotpink" diffuse="hotpink"></pc-material>
+            <pc-material id="mediumseagreen" diffuse="mediumseagreen"></pc-material>
+            <!-- Scene -->
+            <pc-scene gravity="0 0 0">
+                <!-- Sky -->
+                <pc-sky asset="studio" type="none" lighting></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 0 5">
+                    <pc-camera clear-color="#cccccc" tonemap="neutral"></pc-camera>
+                </pc-entity>
+                <!-- Physical Sphere Template -->
+                <template id="sphere-template">
+                    <pc-entity>
+                        <pc-render type="sphere" material="mediumseagreen"></pc-render>
+                        <pc-collision type="sphere"></pc-collision>
+                        <pc-rigidbody type="dynamic" angular-damping="0.9" linear-damping="0.9" restitution="0.9"></pc-rigidbody>
+                        <pc-scripts>
+                            <pc-script name="gravity"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                </template>
+                <!-- Physical Pointer -->
+                <pc-entity name="pointer" position="0 0 0">
+                    <pc-entity scale="0.5 0.5 0.5">
+                        <pc-render type="sphere"></pc-render>
+                    </pc-entity>
+                    <pc-light type="omni" cast-shadows></pc-light>
+                    <pc-collision type="sphere" radius="0.25"></pc-collision>
+                    <pc-rigidbody type="kinematic" restitution="0.9"></pc-rigidbody>
+                    <pc-scripts>
+                        <pc-script name="physicalPointer"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const scene = document.querySelector('pc-scene');
+                const sphereTemplate = document.getElementById('sphere-template');
+
+                // Clone and append 40 spheres
+                for (let i = 0; i < 40; i++) {
+                    // Clone the sphere template
+                    const clone = document.importNode(sphereTemplate.content, true);
+                    const sphereEntity = clone.querySelector('pc-entity');
+
+                    // Set a random start position
+                    const x = (Math.random() - 0.5) * 10;
+                    const y = (Math.random() - 0.5) * 10;
+                    const z = (Math.random() - 0.5) * 10;
+                    sphereEntity.setAttribute('position', `${x} ${y} ${z}`);
+
+                    // Append the clone to the scene
+                    scene.appendChild(clone);
+                }
+            });
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

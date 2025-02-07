@@ -7,6 +7,7 @@ export const examples = [
     { name: 'Gaussian Splatting', path: 'splat.html' },
     { name: 'GLB Loader', path: 'glb.html' },
     { name: 'Physics', path: 'physics.html' },
+    { name: 'Physics Cluster', path: 'physics-cluster.html' },
     { name: 'Positional Sound', path: 'positional-sound.html' },
     { name: 'Shoe Configurator', path: 'shoe-configurator.html' },
     { name: 'Solar System', path: 'solar-system.html' },
