@@ -28,7 +28,7 @@ PlayCanvas Web Components are a set of custom HTML elements for building 3D inte
 
 ## Examples
 
-[![image](https://github.com/user-attachments/assets/6106ec23-30ab-4662-8370-c3b286386ce9)](https://playcanvas.github.io/web-components/examples)
+[![image](https://github.com/user-attachments/assets/25ac8dd3-abc9-4d65-8950-3d72ed1f7152)](https://playcanvas.github.io/web-components/examples)
 
 See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-components/examples
 
