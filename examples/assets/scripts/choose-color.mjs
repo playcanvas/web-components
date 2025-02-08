@@ -71,15 +71,10 @@ export class ChooseColor extends Script {
 
     createContainer() {
         const container = document.createElement('div');
-        Object.assign(container.style, {
-            position: 'absolute',
-            top: 'max(16px, env(safe-area-inset-top))',
-            right: 'max(16px, env(safe-area-inset-right))',
-            zIndex: '1000',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gap: '8px'
-        });
+        container.classList.add('example-button-container', 'top-right');
+        container.style.display = 'grid';
+        container.style.gridTemplateColumns = 'repeat(5, 1fr)';
+        container.style.gap = '8px';
         return container;
     }
 
