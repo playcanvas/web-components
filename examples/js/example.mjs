@@ -19,13 +19,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Create container for buttons
     const container = document.createElement('div');
-    container.classList.add('example-button-container');
+    container.classList.add('example-button-container', 'bottom-right');
 
     function createButton({ icon, title, onClick }) {
         const button = document.createElement('button');
         button.innerHTML = icon;
         button.title = title;
-        button.classList.add('example-button');
+        button.classList.add('example-button', 'icon');
 
         if (onClick) {
             button.onclick = onClick;
