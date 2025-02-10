@@ -39,12 +39,10 @@ export class FaceLandmarks extends Script {
 
                     if (detections.faceBlendshapes.length > 0) {
                         const { categories } = detections.faceBlendshapes[0];
-                        const transform = detections.facialTransformationMatrixes[0];
-                        this.app.fire('face:blendshapes', categories, transform);
+                        this.app.fire('face:blendshapes', categories);
                     }
                 }
             }
         }
     }
-
 }
