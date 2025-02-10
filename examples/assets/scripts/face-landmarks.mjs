@@ -24,11 +24,13 @@ export class FaceLandmarks extends Script {
     update(dt) {
         if (this.faceLandmarker) {
             const video = document.querySelector('video');
-            const detections = this.faceLandmarker.detectForVideo(video, Date.now());
-            if (detections && detections.faceBlendshapes) {
-                if (detections.faceBlendshapes.length > 0) {
-                    const { categories } = detections.faceBlendshapes[0];
-                    this.app.fire('face:blendshapes', categories);
+            if (video && video.width > 0 && video.height > 0) {
+                const detections = this.faceLandmarker.detectForVideo(video, Date.now());
+                if (detections && detections.faceBlendshapes) {
+                    if (detections.faceBlendshapes.length > 0) {
+                        const { categories } = detections.faceBlendshapes[0];
+                        this.app.fire('face:blendshapes', categories);
+                    }
                 }
             }
         }
