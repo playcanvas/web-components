@@ -2,8 +2,29 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Mat4, Script } from 'playcanvas';
 
 export class FaceDetection extends Script {
-    /** @type {FaceLandmarker} */
+    /**
+     * @type {FaceLandmarker}
+     * @private
+     */
     faceLandmarker;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    mirror = true;
+
+    /**
+     * @type {HTMLCanvasElement}
+     * @private
+     */
+    offscreenCanvas = null;
+
+    /**
+     * @type {CanvasRenderingContext2D}
+     * @private
+     */
+    offscreenCtx = null;
 
     async initialize() {
         const wasmFileset = await FilesetResolver.forVisionTasks(
@@ -24,9 +45,35 @@ export class FaceDetection extends Script {
     update(dt) {
         if (this.faceLandmarker) {
             const video = document.querySelector('video');
+            // Only process if the video has enough data.
             if (video && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-                const detections = this.faceLandmarker.detectForVideo(video, Date.now());
-                if (detections && detections.faceBlendshapes) {
+                let inputElement = video;
+
+                // If we want the detection to work in the mirrored space,
+                // draw the video frame into an off-screen canvas that flips it.
+                if (this.mirror) {
+                    if (!this.offscreenCanvas) {
+                        this.offscreenCanvas = document.createElement('canvas');
+                        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
+                    }
+                    // Update canvas dimensions (in case they change).
+                    this.offscreenCanvas.width = video.videoWidth;
+                    this.offscreenCanvas.height = video.videoHeight;
+
+                    // Draw the video frame flipped horizontally:
+                    this.offscreenCtx.save();
+                    this.offscreenCtx.scale(-1, 1);
+                    // Drawing at negative width flips the image.
+                    this.offscreenCtx.drawImage(video, -video.videoWidth, 0, video.videoWidth, video.videoHeight);
+                    this.offscreenCtx.restore();
+
+                    // Feed the flipped image to MediaPipe.
+                    inputElement = this.offscreenCanvas;
+                }
+
+                const detections = this.faceLandmarker.detectForVideo(inputElement, Date.now());
+                if (detections) {
+                    // Example: apply head transform using facial transformation matrix
                     if (detections.facialTransformationMatrixes.length > 0) {
                         const { data } = detections.facialTransformationMatrixes[0];
                         const matrix = new Mat4();
