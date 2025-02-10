@@ -1,5 +1,7 @@
 import { Asset } from 'playcanvas';
 
+import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
+
 const extToType = new Map([
     ['bin', 'binary'],
     ['css', 'css'],
@@ -19,6 +21,45 @@ const extToType = new Map([
     ['vert', 'shader'],
     ['webp', 'texture']
 ]);
+
+
+// provide buffer view callback so we can handle models compressed with MeshOptimizer
+// https://github.com/zeux/meshoptimizer
+const processBufferView = (
+    gltfBuffer: any,
+    buffers: Array<any>,
+    continuation: (err: string, result: any) => void
+) => {
+    if (gltfBuffer.extensions && gltfBuffer.extensions.EXT_meshopt_compression) {
+        const extensionDef = gltfBuffer.extensions.EXT_meshopt_compression;
+
+        Promise.all([MeshoptDecoder.ready, buffers[extensionDef.buffer]]).then((promiseResult) => {
+            const buffer = promiseResult[1];
+
+            const byteOffset = extensionDef.byteOffset || 0;
+            const byteLength = extensionDef.byteLength || 0;
+
+            const count = extensionDef.count;
+            const stride = extensionDef.byteStride;
+
+            const result = new Uint8Array(count * stride);
+            const source = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
+
+            MeshoptDecoder.decodeGltfBuffer(
+                result,
+                count,
+                stride,
+                source,
+                extensionDef.mode,
+                extensionDef.filter
+            );
+
+            continuation(null, result);
+        });
+    } else {
+        continuation(null, null);
+    }
+};
 
 /**
  * The AssetElement interface provides properties and methods for manipulating
@@ -54,9 +95,20 @@ class AssetElement extends HTMLElement {
             return;
         }
 
-        this.asset = new Asset(id, type, { url: src });
+        if (type === 'container') {
+            this.asset = new Asset(id, type, { url: src }, undefined, {
+                // @ts-ignore TODO no definition in pc
+                bufferView: {
+                    processAsync: processBufferView.bind(this)
+                }
+            });
+        } else {
+            this.asset = new Asset(id, type, { url: src });
+        }
+
         this.asset.preload = !this._lazy;
     }
+
 
     destroyAsset() {
         if (this.asset) {
