@@ -37,6 +37,7 @@
     "watch": "rollup -c -w"
   },
   "devDependencies": {
+    "@mediapipe/tasks-vision": "^0.10.21",
     "@playcanvas/eslint-config": "2.0.9",
     "@rollup/plugin-commonjs": "28.0.2",
     "@rollup/plugin-node-resolve": "16.0.0",
