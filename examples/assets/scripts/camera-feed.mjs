@@ -13,7 +13,7 @@ export class CameraFeed extends Script {
      * @type {boolean}
      * @attribute
      */
-    mirror = true;
+    mirror = false;
 
     /**
      * @type {HTMLVideoElement|null}
