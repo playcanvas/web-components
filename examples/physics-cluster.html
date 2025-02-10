@@ -21,7 +21,7 @@
             <!-- Assets -->
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/scripts/gravity.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/physical-pointer.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/follow-pointer.mjs"></pc-asset>
             <pc-material id="mediumseagreen" diffuse="mediumseagreen"></pc-material>
             <!-- Scene -->
             <pc-scene gravity="0 0 0">
@@ -51,7 +51,7 @@
                     <pc-collision type="sphere" radius="0.25"></pc-collision>
                     <pc-rigidbody type="kinematic" restitution="0.9"></pc-rigidbody>
                     <pc-scripts>
-                        <pc-script name="physicalPointer"></pc-script>
+                        <pc-script name="followPointer"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>
