@@ -24,7 +24,7 @@ export class FaceLandmarks extends Script {
     update(dt) {
         if (this.faceLandmarker) {
             const video = document.querySelector('video');
-            if (video) {
+            if (video && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
                 const detections = this.faceLandmarker.detectForVideo(video, Date.now());
                 if (detections && detections.faceBlendshapes) {
                     if (detections.faceBlendshapes.length > 0) {
