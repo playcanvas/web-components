@@ -1,7 +1,7 @@
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Mat4, Script } from 'playcanvas';
 
-export class FaceLandmarks extends Script {
+export class FaceDetection extends Script {
     /** @type {FaceLandmarker} */
     faceLandmarker;
 
