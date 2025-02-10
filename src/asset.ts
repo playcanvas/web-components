@@ -94,7 +94,7 @@ class AssetElement extends HTMLElement {
             console.warn(`Unsupported asset type: ${src}`);
             return;
         }
-        
+
         if (type === 'container') {
             this.asset = new Asset(id, type, { url: src }, undefined, {
                 // @ts-ignore TODO no definition in pc

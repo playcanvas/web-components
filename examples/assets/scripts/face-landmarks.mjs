@@ -1,5 +1,5 @@
+import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Script } from 'playcanvas';
-import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 
 export class FaceLandmarks extends Script {
     /** @type {FaceLandmarker} */
@@ -7,16 +7,16 @@ export class FaceLandmarks extends Script {
 
     async initialize() {
         const wasmFileset = await FilesetResolver.forVisionTasks(
-            "../node_modules/@mediapipe/tasks-vision/wasm"
+            '../node_modules/@mediapipe/tasks-vision/wasm'
         );
         this.faceLandmarker = await FaceLandmarker.createFromOptions(wasmFileset, {
             baseOptions: {
-                modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-                delegate: "GPU"
+                modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                delegate: 'GPU'
             },
             outputFaceBlendshapes: true,
             outputFacialTransformationMatrixes: true,
-            runningMode: "VIDEO",
+            runningMode: 'VIDEO',
             numFaces: 1
         });
     }
