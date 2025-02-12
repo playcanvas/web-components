@@ -22,6 +22,7 @@
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/scripts/gravity.mjs"></pc-asset>
             <pc-asset src="assets/scripts/follow-pointer.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
             <pc-material id="mediumseagreen" diffuse="mediumseagreen"></pc-material>
             <!-- Scene -->
             <pc-scene gravity="0 0 0">
@@ -30,6 +31,20 @@
                 <!-- Camera -->
                 <pc-entity name="camera" position="0 0 5">
                     <pc-camera clear-color="lightgray" tonemap="neutral"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraFrame" attributes='{
+                            "ssao": {
+                                "type": "combine",
+                                "blurEnabled": true,
+                                "intensity": 0.5,
+                                "radius": 30,
+                                "samples": 12,
+                                "power": 6,
+                                "minAngle": 20,
+                                "scale": 1
+                            }
+                        }'></pc-script>
+                    </pc-entity>
                 </pc-entity>
                 <!-- Physical Sphere Template -->
                 <template id="sphere-template">
