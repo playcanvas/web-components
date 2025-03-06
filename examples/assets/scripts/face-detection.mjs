@@ -43,53 +43,57 @@ export class FaceDetection extends Script {
     }
 
     update(dt) {
-        if (this.faceLandmarker) {
-            const video = document.querySelector('video');
-            // Only process if the video has enough data.
-            if (video && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
-                let inputElement = video;
+        if (!this.faceLandmarker) return;
 
-                // If we want the detection to work in the mirrored space,
-                // draw the video frame into an off-screen canvas that flips it.
-                if (this.mirror) {
-                    if (!this.offscreenCanvas) {
-                        this.offscreenCanvas = document.createElement('canvas');
-                        this.offscreenCtx = this.offscreenCanvas.getContext('2d');
-                    }
-                    // Update canvas dimensions (in case they change).
-                    this.offscreenCanvas.width = video.videoWidth;
-                    this.offscreenCanvas.height = video.videoHeight;
+        const video = document.querySelector('video');
 
-                    // Draw the video frame flipped horizontally:
-                    this.offscreenCtx.save();
-                    this.offscreenCtx.scale(-1, 1);
-                    // Drawing at negative width flips the image.
-                    this.offscreenCtx.drawImage(video, -video.videoWidth, 0, video.videoWidth, video.videoHeight);
-                    this.offscreenCtx.restore();
+        // Only process if the video has enough data.
+        if (!video || video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) return;
 
-                    // Feed the flipped image to MediaPipe.
-                    inputElement = this.offscreenCanvas;
-                }
+        let inputElement = video;
 
-                const detections = this.faceLandmarker.detectForVideo(inputElement, Date.now());
-                if (detections) {
-                    // Example: apply head transform using facial transformation matrix
-                    if (detections.facialTransformationMatrixes.length > 0) {
-                        const { data } = detections.facialTransformationMatrixes[0];
-                        const matrix = new Mat4();
-                        matrix.set(data).invert();
-                        const position = matrix.getTranslation();
-                        const rotation = matrix.getEulerAngles();
-                        this.entity.setPosition(position);
-                        this.entity.setEulerAngles(rotation);
-                    }
-
-                    if (detections.faceBlendshapes.length > 0) {
-                        const { categories } = detections.faceBlendshapes[0];
-                        this.app.fire('face:blendshapes', categories);
-                    }
-                }
+        // If we want the detection to work in the mirrored space,
+        // draw the video frame into an off-screen canvas that flips it.
+        if (this.mirror) {
+            if (!this.offscreenCanvas) {
+                this.offscreenCanvas = document.createElement('canvas');
+                this.offscreenCtx = this.offscreenCanvas.getContext('2d');
             }
+            // Update canvas dimensions (in case they change).
+            this.offscreenCanvas.width = video.videoWidth;
+            this.offscreenCanvas.height = video.videoHeight;
+
+            // Draw the video frame flipped horizontally.
+            this.offscreenCtx.save();
+            this.offscreenCtx.scale(-1, 1);
+            // Drawing at negative width flips the image.
+            this.offscreenCtx.drawImage(video, -video.videoWidth, 0, video.videoWidth, video.videoHeight);
+            this.offscreenCtx.restore();
+
+            // Feed the flipped image to MediaPipe.
+            inputElement = this.offscreenCanvas;
+        }
+
+        const detections = this.faceLandmarker.detectForVideo(inputElement, Date.now());
+
+        if (!detections) return;
+
+        // Process facial transformation matrix
+        if (detections.facialTransformationMatrixes && detections.facialTransformationMatrixes.length > 0) {
+            // Apply head transform using facial transformation matrix
+            const { data } = detections.facialTransformationMatrixes[0];
+            const matrix = new Mat4();
+            matrix.set(data).invert();
+            const position = matrix.getTranslation();
+            const rotation = matrix.getEulerAngles();
+            this.entity.setPosition(position);
+            this.entity.setEulerAngles(rotation);
+        }
+
+        // Process blendshapes
+        if (detections.faceBlendshapes && detections.faceBlendshapes.length > 0) {
+            const { categories } = detections.faceBlendshapes[0];
+            this.app.fire('face:blendshapes', categories);
         }
     }
 }
