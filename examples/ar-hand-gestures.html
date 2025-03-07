@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - AR Hand Gestures</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs",
+                    "@mediapipe/tasks-vision": "../node_modules/@mediapipe/tasks-vision/vision_bundle.mjs"
+                }
+            }
+        </script>
+
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/hand-gestures.mjs"></pc-asset>
+            <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="shanghai" type="none" lighting></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera">
+                    <pc-camera clear-color="0 0 0 0" fov="80"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraFeed"></pc-script>
+                        <pc-script name="handGestureController"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module">
+            document.addEventListener('DOMContentLoaded', async () => {
+                const app = await document.querySelector('pc-app').ready();
+
+                app.app.on('hand:gesture', (handIndex, gesture, score) => {
+                    console.log(`Hand ${handIndex} detected gesture: ${gesture} (score: ${score})`);
+                });
+
+                app.app.on('hand:position', (handIndex, position) => {
+                    console.log(`Hand ${handIndex} position: ${position}`);
+                });
+            });
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
