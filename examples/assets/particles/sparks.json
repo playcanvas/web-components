@@ -1,0 +1,40 @@
+{
+    "numParticles": 200,
+    "lifetime": 2,
+    "rate": 0.01,
+    "colorMapAsset": "spark",
+    "colorGraph": {
+        "keys": [
+            [0, 1, 0.25, 1, 0.375, 0.5, 0.5, 0],
+            [0, 0, 0.125, 0.25, 0.25, 0.5, 0.375, 0.75, 0.5, 1],
+            [0, 0, 1, 0]
+        ]
+    },
+    "localVelocityGraph": {
+        "keys": [
+            [0, 0, 1, 8],
+            [0, 0, 1, 6],
+            [0, 0, 1, 0]
+        ]
+    },
+    "localVelocityGraph2": {
+        "keys": [
+            [0, 0, 1, -8],
+            [0, 0, 1, -6],
+            [0, 0, 1, 0]
+        ]
+    },
+    "rotationSpeedGraph": {
+        "keys": [0, 360]
+    },
+    "scaleGraph": {
+        "keys": [0, 0, 0.5, 0.3, 0.8, 0.2, 1, 0.1]
+    },
+    "velocityGraph": {
+        "keys": [
+            [0, 0],
+            [0, 0, 0.2, 6, 1, -48],
+            [0, 0]
+        ]
+    }
+}

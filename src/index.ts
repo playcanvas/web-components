@@ -20,8 +20,8 @@ import { CameraComponentElement } from './components/camera-component';
 import { CollisionComponentElement } from './components/collision-component';
 import { ComponentElement } from './components/component';
 import { ElementComponentElement } from './components/element-component';
-import { SplatComponentElement } from './components/splat-component';
 import { LightComponentElement } from './components/light-component';
+import { ParticleSystemComponentElement } from './components/particlesystem-component';
 import { RenderComponentElement } from './components/render-component';
 import { RigidBodyComponentElement } from './components/rigidbody-component';
 import { ScreenComponentElement } from './components/screen-component';
@@ -29,6 +29,7 @@ import { ScriptComponentElement } from './components/script-component';
 import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
+import { SplatComponentElement } from './components/splat-component';
 import { MaterialElement } from './material';
 import { ModelElement } from './model';
 import { SceneElement } from './scene';
@@ -44,7 +45,7 @@ export {
     CollisionComponentElement,
     ComponentElement,
     ElementComponentElement,
-    SplatComponentElement,
+    ParticleSystemComponentElement,
     LightComponentElement,
     ListenerComponentElement,
     RenderComponentElement,
@@ -54,6 +55,7 @@ export {
     ScriptElement,
     SoundComponentElement,
     SoundSlotElement,
+    SplatComponentElement,
     MaterialElement,
     ModelElement,
     SceneElement,
