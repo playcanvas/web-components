@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Basic Particles</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="assets/particles/snowflake.png" id="snowflake"></pc-asset>
+            <pc-asset src="assets/particles/spark.png" id="spark"></pc-asset>
+            <pc-asset src="assets/particles/snow.json" id="snow"></pc-asset>
+            <pc-asset src="assets/particles/sparks.json" id="sparks"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 0 10">
+                    <pc-camera clear-color="black"></pc-camera>
+                </pc-entity>
+                <!-- Snow -->
+                <pc-entity name="snow" position="0 5 0">
+                    <pc-particles asset="snow"></pc-particles>
+                </pc-entity>
+                <!-- Sparks -->
+                <pc-entity name="sparks">
+                    <pc-particles asset="sparks"></pc-particles>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
