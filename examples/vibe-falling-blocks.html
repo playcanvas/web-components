@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Vibe-Coded Falling Blocks Game</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            #game-ui {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                font-family: Arial, sans-serif;
+            }
+
+            #score, #level, #lines {
+                position: absolute;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-size: 18px;
+            }
+
+            #score {
+                top: 20px;
+                right: 20px;
+            }
+
+            #level {
+                top: 70px;
+                right: 20px;
+            }
+
+            #lines {
+                top: 120px;
+                right: 20px;
+            }
+
+            #game-over {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 30px;
+                border-radius: 10px;
+                text-align: center;
+                pointer-events: auto;
+                display: none;
+            }
+
+            #restart-button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 20px 0 0 0;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+
+            #restart-button:hover {
+                background-color: #45a049;
+            }
+
+            #controls {
+                position: absolute;
+                bottom: 20px;
+                left: 20px;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="assets/scripts/falling-blocks.mjs"></pc-asset>
+            <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
+            <pc-asset src="assets/sounds/clear1.mp3" id="clear1-sound"></pc-asset>
+            <pc-asset src="assets/sounds/clear4.mp3" id="clear4-sound"></pc-asset>
+            <pc-asset src="assets/sounds/rotate.mp3" id="rotate-sound"></pc-asset>
+            <pc-asset src="assets/sounds/drop.mp3" id="drop-sound"></pc-asset>
+            <pc-asset src="assets/sounds/gameover.mp3" id="gameover-sound"></pc-asset>
+            <pc-asset src="assets/models/rounded-box.glb" id="rounded-box"></pc-asset>
+
+            <!-- Materials for Blocks -->
+            <pc-material id="block-i" diffuse="0 1 1"></pc-material>
+            <pc-material id="block-j" diffuse="0 0 1"></pc-material>
+            <pc-material id="block-l" diffuse="1 0.5 0"></pc-material>
+            <pc-material id="block-o" diffuse="1 1 0"></pc-material>
+            <pc-material id="block-s" diffuse="0 1 0"></pc-material>
+            <pc-material id="block-t" diffuse="0.5 0 0.5"></pc-material>
+            <pc-material id="block-z" diffuse="1 0 0"></pc-material>
+            <pc-material id="block-grid" diffuse="0.2 0.2 0.2"></pc-material>
+            <pc-material id="block-wall" diffuse="0.3 0.3 0.3"></pc-material>
+
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="shanghai" type="infinite" level="3" lighting></pc-sky>
+
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 9.5 27">
+                    <pc-camera></pc-camera>
+                </pc-entity>
+
+                <pc-entity name="ambient">
+                    <pc-light type="ambient" intensity="0.2"></pc-light>
+                </pc-entity>
+
+                <!-- Game Board -->
+                <pc-entity name="game-board" position="0 0 0">
+                    <pc-scripts>
+                        <pc-script name="fallingBlocksGame" attributes='{
+                            "boardWidth": 10,
+                            "boardHeight": 20,
+                            "blockSize": 1
+                        }'></pc-script>
+                    </pc-scripts>
+                    <pc-sounds>
+                        <pc-sound name="clear1" asset="clear1-sound" overlap></pc-sound>
+                        <pc-sound name="clear4" asset="clear4-sound" overlap></pc-sound>
+                        <pc-sound name="rotate" asset="rotate-sound" overlap></pc-sound>
+                        <pc-sound name="drop" asset="drop-sound" overlap></pc-sound>
+                        <pc-sound name="gameover" asset="gameover-sound" overlap></pc-sound>
+                    </pc-sounds>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        
+        <!-- UI Overlay -->
+        <div id="game-ui">
+            <div id="score">Score: <span id="score-value">0</span></div>
+            <div id="level">Level: <span id="level-value">1</span></div>
+            <div id="lines">Lines: <span id="lines-value">0</span></div>
+            
+            <div id="controls">
+                <div>← → : Move left/right</div>
+                <div>↑ : Rotate</div>
+                <div>↓ : Soft drop</div>
+                <div>Space : Hard drop</div>
+                <div>P : Pause</div>
+            </div>
+            
+            <div id="game-over">
+                <h2>Game Over</h2>
+                <p>Final Score: <span id="final-score">0</span></p>
+                <button id="restart-button">Play Again</button>
+            </div>
+        </div>
+        
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html> 
