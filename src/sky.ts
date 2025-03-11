@@ -61,6 +61,7 @@ class SkyElement extends AsyncElement {
         this._scene.sky.node.setLocalScale(this._scale);
         this._scene.sky.center = this._center;
         this._scene.skyboxIntensity = this._intensity;
+        this._scene.skyboxMip = this._level;
     }
 
     private async _loadSkybox() {
