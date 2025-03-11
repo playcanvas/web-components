@@ -50,7 +50,6 @@ class SoundSlotElement extends AsyncElement {
 
         this.soundSlot = this.soundElement!.component!.addSlot(this._name, options);
         this.asset = this._asset;
-        this.soundSlot!.play();
 
         this._onReady();
     }
@@ -245,13 +244,16 @@ class SoundSlotElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'autoPlay', 'duration', 'loop', 'name', 'overlap', 'pitch', 'startTime', 'volume'];
+        return ['asset', 'auto-play', 'duration', 'loop', 'name', 'overlap', 'pitch', 'start-time', 'volume'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'asset':
                 this.asset = newValue;
+                break;
+            case 'auto-play':
+                this.autoPlay = this.hasAttribute('auto-play');
                 break;
             case 'duration':
                 this.duration = parseFloat(newValue);
@@ -268,7 +270,7 @@ class SoundSlotElement extends AsyncElement {
             case 'pitch':
                 this.pitch = parseFloat(newValue);
                 break;
-            case 'startTime':
+            case 'start-time':
                 this.startTime = parseFloat(newValue);
                 break;
             case 'volume':
