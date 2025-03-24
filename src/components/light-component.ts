@@ -52,6 +52,8 @@ class LightComponentElement extends ComponentElement {
 
     private _vsmBias = 0.01;
 
+    private _vsmBlurSize = 11;
+
     /** @ignore */
     constructor() {
         super('light');
@@ -72,7 +74,8 @@ class LightComponentElement extends ComponentElement {
             shadowResolution: this._shadowResolution,
             shadowType: shadowTypes.get(this._shadowType),
             type: this._type,
-            vsmBias: this._vsmBias
+            vsmBias: this._vsmBias,
+            vsmBlurSize: this._vsmBlurSize
         };
     }
 
@@ -365,6 +368,25 @@ class LightComponentElement extends ComponentElement {
         return this._vsmBias;
     }
 
+    /**
+     * Sets the VSM blur size of the light. Minimum is 1, maximum is 25. Default is 11.
+     * @param value - The VSM blur size.
+     */
+    set vsmBlurSize(value: number) {
+        this._vsmBlurSize = value;
+        if (this.component) {
+            this.component.vsmBlurSize = value;
+        }
+    }
+
+    /**
+     * Gets the VSM blur size of the light.
+     * @returns The VSM blur size.
+     */
+    get vsmBlurSize() {
+        return this._vsmBlurSize;
+    }
+
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
@@ -381,7 +403,8 @@ class LightComponentElement extends ComponentElement {
             'shadow-resolution',
             'shadow-type',
             'type',
-            'vsm-bias'
+            'vsm-bias',
+            'vsm-blur-size'
         ];
     }
 
@@ -430,6 +453,9 @@ class LightComponentElement extends ComponentElement {
                 break;
             case 'vsm-bias':
                 this.vsmBias = Number(newValue);
+                break;
+            case 'vsm-blur-size':
+                this.vsmBlurSize = Number(newValue);
                 break;
         }
     }

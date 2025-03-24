@@ -20,7 +20,7 @@
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/shadow-catcher.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/models/shoe.glb" id="shoe"></pc-asset>
             <!-- Scene -->
@@ -47,13 +47,19 @@
                         <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light">
+                    <pc-light type="directional" cast-shadows shadow-distance="1" shadow-intensity="0.6" shadow-resolution="1024" shadow-type="vsm-16f"></pc-light>
+                </pc-entity>
                 <!-- Shoe -->
                 <pc-entity name="shoe">
                     <pc-model asset="shoe"></pc-model>
+                </pc-entity>
+                <!-- Shadow Catcher -->
+                <pc-entity name="shadow catcher">
                     <pc-scripts>
                         <pc-script name="shadowCatcher" attributes='{
-                            "size": "vec2:0.5,0.5",
-                            "shadowDistance": 1
+                            "scale": "vec3:0.5,0.5,0.5"
                         }'></pc-script>
                     </pc-scripts>
                 </pc-entity>
