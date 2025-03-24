@@ -28,7 +28,7 @@ const extToType = new Map([
 const processBufferView = (
     gltfBuffer: any,
     buffers: Array<any>,
-    continuation: (err: string, result: any) => void
+    continuation: (err: string | null, result: any) => void
 ) => {
     if (gltfBuffer.extensions && gltfBuffer.extensions.EXT_meshopt_compression) {
         const extensionDef = gltfBuffer.extensions.EXT_meshopt_compression;
