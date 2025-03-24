@@ -23,8 +23,8 @@
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="assets/scripts/annotation.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
             <pc-asset src="assets/models/jet-fighter.glb" id="jet-fighter"></pc-asset>
             <!-- Scene -->
@@ -48,14 +48,13 @@
                         <pc-script name="xrNavigation"></pc-script>
                     </pc-scripts>
                 </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light">
+                    <pc-light cast-shadows shadow-distance="30" shadow-intensity="0.6" shadow-resolution="1024" shadow-type="vsm-16f"></pc-light>
+                </pc-entity>
                 <!-- Jet Fighter -->
                 <pc-entity name="jet-fighter" position="-2 1.6 0" rotation="0 0 3">
                     <pc-model asset="jet-fighter"></pc-model>
-                    <pc-scripts>
-                        <pc-script name="shadowCatcher" attributes='{
-                            "size": "vec2:14,14"
-                        }'></pc-script>
-                    </pc-scripts>
                     <pc-entity name="annotation1" position="5.5 1.2 0">
                         <pc-scripts>
                             <pc-script name="annotation" attributes='{
@@ -112,6 +111,14 @@
                             }'></pc-script>
                         </pc-scripts>
                     </pc-entity>
+                </pc-entity>
+                <!-- Shadow Catcher -->
+                <pc-entity name="shadow catcher">
+                    <pc-scripts>
+                        <pc-script name="shadowCatcher" attributes='{
+                            "scale": "vec3:15,15,15"
+                        }'></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>
