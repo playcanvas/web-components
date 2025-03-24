@@ -74,7 +74,8 @@ class LightComponentElement extends ComponentElement {
             shadowResolution: this._shadowResolution,
             shadowType: shadowTypes.get(this._shadowType),
             type: this._type,
-            vsmBias: this._vsmBias
+            vsmBias: this._vsmBias,
+            vsmBlurSize: this._vsmBlurSize
         };
     }
 
