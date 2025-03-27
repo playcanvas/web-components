@@ -1,21 +1,56 @@
 {
-    "compilerOptions": {
-        "allowSyntheticDefaultImports": true,
-        "checkJs": false,
-        "typeRoots": [ "./node_modules/@types" ]
-    },
-    "entryPoints": [ "./src/index.ts" ],
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "./src/index.ts"
+    ],
+    "exclude": [
+        "**/node_modules/**"
+    ],
     "excludeNotDocumented": true,
-    "githubPages": false,
-    "name": "PlayCanvas Web Components",
+    "externalSymbolLinkMappings": {
+        "playcanvas": {
+            "Application": "https://api.playcanvas.com/engine/classes/Application.html",
+            "Asset": "https://api.playcanvas.com/engine/classes/Asset.html",
+            "AudioListenerComponent": "https://api.playcanvas.com/engine/classes/AudioListenerComponent.html",
+            "CameraComponent": "https://api.playcanvas.com/engine/classes/CameraComponent.html",
+            "CollisionComponent": "https://api.playcanvas.com/engine/classes/CollisionComponent.html",
+            "Color": "https://api.playcanvas.com/engine/classes/Color.html",
+            "ElementComponent": "https://api.playcanvas.com/engine/classes/ElementComponent.html",
+            "Entity": "https://api.playcanvas.com/engine/classes/Entity.html",
+            "GSplatComponent": "https://api.playcanvas.com/engine/classes/GSplatComponent.html",
+            "LightComponent": "https://api.playcanvas.com/engine/classes/LightComponent.html",
+            "ParticleSystemComponent": "https://api.playcanvas.com/engine/classes/ParticleSystemComponent.html",
+            "RenderComponent": "https://api.playcanvas.com/engine/classes/RenderComponent.html",
+            "RigidBodyComponent": "https://api.playcanvas.com/engine/classes/RigidBodyComponent.html",
+            "Scene": "https://api.playcanvas.com/engine/classes/Scene.html",
+            "ScreenComponent": "https://api.playcanvas.com/engine/classes/ScreenComponent.html",
+            "ScriptComponent": "https://api.playcanvas.com/engine/classes/ScriptComponent.html",
+            "SoundComponent": "https://api.playcanvas.com/engine/classes/SoundComponent.html",
+            "SoundSlot": "https://api.playcanvas.com/engine/classes/SoundSlot.html",
+            "Vec2": "https://api.playcanvas.com/engine/classes/Vec2.html",
+            "Vec3": "https://api.playcanvas.com/engine/classes/Vec3.html",
+            "Vec4": "https://api.playcanvas.com/engine/classes/Vec4.html"
+        }
+    },
+    "favicon": "utils/typedoc/favicon.ico",
+    "hostedBaseUrl": "https://api.playcanvas.com/web-components/",
+    "includeVersion": true,
+    "name": "Web Components API Reference",
     "navigationLinks": {
         "Developer Site": "https://developer.playcanvas.com/",
+        "Blog": "https://blog.playcanvas.com/",
         "Discord": "https://discord.gg/RSaMRzg",
         "Forum": "https://forum.playcanvas.com/",
-        "GitHub": "https://github.com/playcanvas/engine"
+        "GitHub": "https://github.com/playcanvas/web-components"
+    },
+    "sidebarLinks": {
+        "Home": "/"
     },
     "plugin": [
         "typedoc-plugin-mdn-links"
     ],
-    "readme": "none"
+    "readme": "none",
+    "searchGroupBoosts": {
+        "Classes": 2
+    }
 }
