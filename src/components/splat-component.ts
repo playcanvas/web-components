@@ -12,7 +12,9 @@ import { AssetElement } from '../asset';
  * @category Components
  */
 class SplatComponentElement extends ComponentElement {
-    private _asset: string = '';
+    private _asset = '';
+
+    private _castShadows = false;
 
     /** @ignore */
     constructor() {
@@ -21,7 +23,8 @@ class SplatComponentElement extends ComponentElement {
 
     getInitialComponentData() {
         return {
-            asset: AssetElement.get(this._asset)
+            asset: AssetElement.get(this._asset),
+            castShadows: this._castShadows
         };
     }
 
@@ -53,8 +56,31 @@ class SplatComponentElement extends ComponentElement {
         return this._asset;
     }
 
+    /**
+     * Sets whether the splat casts shadows.
+     * @param value - Whether the splat casts shadows.
+     */
+    set castShadows(value: boolean) {
+        this._castShadows = value;
+        if (this.component) {
+            this.component.castShadows = value;
+        }
+    }
+
+    /**
+     * Gets whether the splat casts shadows.
+     * @returns Whether the splat casts shadows.
+     */
+    get castShadows() {
+        return this._castShadows;
+    }
+
     static get observedAttributes() {
-        return [...super.observedAttributes, 'asset'];
+        return [
+            ...super.observedAttributes,
+            'asset',
+            'cast-shadows'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -63,6 +89,9 @@ class SplatComponentElement extends ComponentElement {
         switch (name) {
             case 'asset':
                 this.asset = newValue;
+                break;
+            case 'cast-shadows':
+                this.castShadows = this.hasAttribute('cast-shadows');
                 break;
         }
     }
