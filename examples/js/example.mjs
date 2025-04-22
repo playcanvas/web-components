@@ -110,6 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         title: 'Enter AR',
         onClick: () => cameraElement.startXr('immersive-ar', 'local-floor')
     });
+    arButton.style.display = app.xr.isAvailable('immersive-ar') ? 'block' : 'none';
     container.appendChild(arButton);
 
     const vrButton = createButton({
@@ -117,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         title: 'Enter VR',
         onClick: () => cameraElement.startXr('immersive-vr', 'local-floor')
     });
+    vrButton.style.display = app.xr.isAvailable('immersive-vr') ? 'block' : 'none';
     container.appendChild(vrButton);
 
     app.xr.on('available:immersive-ar', (available) => {
