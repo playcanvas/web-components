@@ -105,25 +105,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // Add AR button if available
-    if (app.xr.isAvailable('immersive-ar')) {
-        const arButton = createButton({
-            icon: AR_ICON,
-            title: 'Enter AR',
-            onClick: () => cameraElement.startXr('immersive-ar', 'local-floor')
-        });
-        container.appendChild(arButton);
-    }
+    const arButton = createButton({
+        icon: AR_ICON,
+        title: 'Enter AR',
+        onClick: () => cameraElement.startXr('immersive-ar', 'local-floor')
+    });
+    arButton.style.display = app.xr.isAvailable('immersive-ar') ? 'block' : 'none';
+    container.appendChild(arButton);
 
-    // Add VR button if available
-    if (app.xr.isAvailable('immersive-vr')) {
-        const vrButton = createButton({
-            icon: VR_ICON,
-            title: 'Enter VR',
-            onClick: () => cameraElement.startXr('immersive-vr', 'local-floor')
-        });
-        container.appendChild(vrButton);
-    }
+    const vrButton = createButton({
+        icon: VR_ICON,
+        title: 'Enter VR',
+        onClick: () => cameraElement.startXr('immersive-vr', 'local-floor')
+    });
+    vrButton.style.display = app.xr.isAvailable('immersive-vr') ? 'block' : 'none';
+    container.appendChild(vrButton);
+
+    app.xr.on('available:immersive-ar', (available) => {
+        arButton.style.display = available ? 'block' : 'none';
+    });
+
+    app.xr.on('available:immersive-vr', (available) => {
+        vrButton.style.display = available ? 'block' : 'none';
+    });
 
     window.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && app.xr.active) {
