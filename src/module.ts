@@ -17,22 +17,15 @@ class ModuleElement extends HTMLElement {
 
     private async loadModule(): Promise<void> {
         const name = this.getAttribute('name')!;
-        const glue = this.getAttribute('glue')!;
-        const wasm = this.getAttribute('wasm')!;
-        const fallback = this.getAttribute('fallback')!;
+        const glueUrl = this.getAttribute('glue')!;
+        const wasmUrl = this.getAttribute('wasm')!;
+        const fallbackUrl = this.getAttribute('fallback')!;
+        const config = { glueUrl, wasmUrl, fallbackUrl };
 
         if (name === 'Basis') {
-            basisInitialize({
-                glueUrl: glue,
-                wasmUrl: wasm,
-                fallbackUrl: fallback
-            });
+            basisInitialize(config);
         } else {
-            WasmModule.setConfig(name, {
-                glueUrl: glue,
-                wasmUrl: wasm,
-                fallbackUrl: fallback
-            });
+            WasmModule.setConfig(name, config);
 
             await new Promise<void>((resolve) => {
                 WasmModule.getInstance(name, () => resolve());
