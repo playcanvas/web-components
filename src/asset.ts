@@ -103,6 +103,7 @@ class AssetElement extends HTMLElement {
                 }
             });
         } else {
+            // @ts-ignore
             this.asset = new Asset(id, type, { url: src });
         }
 
