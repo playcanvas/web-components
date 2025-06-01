@@ -5,7 +5,7 @@ import { parseVec3 } from '../utils';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-rigidbody/ | `<pc-rigidbody>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-rigidbody/ | `<pc-rigidbody>`} elements.
  * The RigidBodyComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *

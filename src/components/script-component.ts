@@ -24,7 +24,7 @@ declare global {
 
 /**
  * The ScriptComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-scripts/ | `<pc-scripts>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-scripts/ | `<pc-scripts>`} elements.
  * The ScriptComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *

@@ -5,7 +5,7 @@ import { AsyncElement } from './async-element';
 
 /**
  * The ModelElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-model/ | `<pc-model>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-model/ | `<pc-model>`} elements.
  * The ModelElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  */

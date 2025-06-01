@@ -6,7 +6,7 @@ import { parseColor, parseVec3 } from './utils';
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-scene/ | `<pc-scene>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-scene/ | `<pc-scene>`} elements.
  * The SceneElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  */

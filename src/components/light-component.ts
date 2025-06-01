@@ -17,7 +17,7 @@ const shadowTypes = new Map([
 
 /**
  * The LightComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-light/ | `<pc-light>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-light/ | `<pc-light>`} elements.
  * The LightComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *

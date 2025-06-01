@@ -5,7 +5,7 @@ import { parseVec2 } from '../utils';
 
 /**
  * The ScreenComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-screen/ | `<pc-screen>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-screen/ | `<pc-screen>`} elements.
  * The ScreenComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *

@@ -15,7 +15,7 @@ const tonemaps = new Map([
 
 /**
  * The CameraComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-camera/ | `<pc-camera>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-camera/ | `<pc-camera>`} elements.
  * The CameraComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *

@@ -5,7 +5,7 @@ import { AssetElement } from '../asset';
 
 /**
  * The SplatComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-splat/ | `<pc-splat>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-splat/ | `<pc-splat>`} elements.
  * The SplatComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *

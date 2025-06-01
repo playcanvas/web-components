@@ -2,7 +2,7 @@ import { basisInitialize, WasmModule } from 'playcanvas';
 
 /**
  * The ModuleElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/engine/web-components/tags/pc-module/ | `<pc-module>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-module/ | `<pc-module>`} elements.
  * The ModuleElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  */
