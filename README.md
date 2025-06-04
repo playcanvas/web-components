@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/npm/l/@playcanvas/web-components.svg)](https://github.com/playcanvas/web-components/blob/main/LICENSE)
 [![GitHub Actions Build Status](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml/badge.svg)](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml)
 
-| [User Guide](https://developer.playcanvas.com/user-manual/engine/web-components) | [API Reference](https://api.playcanvas.com/web-components/) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com/) | [Forum](https://forum.playcanvas.com/) | [Discord](https://discord.gg/RSaMRzg) |
+| [User Guide](https://developer.playcanvas.com/user-manual/web-components) | [API Reference](https://api.playcanvas.com/web-components/) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com/) | [Forum](https://forum.playcanvas.com/) | [Discord](https://discord.gg/RSaMRzg) |
 
 PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website. Check out this simple example:
 
