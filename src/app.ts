@@ -159,7 +159,7 @@ class AppElement extends AsyncElement {
             AudioListenerComponentSystem,
             ButtonComponentSystem,
             CameraComponentSystem,
-            CollisionComponentSystem,  
+            CollisionComponentSystem,
             ElementComponentSystem,
             GSplatComponentSystem,
             JointComponentSystem,
@@ -209,7 +209,7 @@ class AppElement extends AsyncElement {
         createOptions.lightmapper = Lightmapper;
         createOptions.batchManager = BatchManager;
         createOptions.xr = XrManager;
-        
+
         this.app = new AppBase(this._canvas);
         this.app.init(createOptions);
 
