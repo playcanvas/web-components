@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const cameraRootEntity = cameraElement.parentElement.parentElement.entity;
     const cameraEntity = cameraElement.parentElement.entity;
 
-    app.xr.on('start', () => {
+    app.xr?.on('start', () => {
         // Cache original camera rig positions and rotations
         positionRoot.copy(cameraRootEntity.getPosition());
         rotationRoot.copy(cameraRootEntity.getRotation());
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    app.xr.on('end', () => {
+    app.xr?.on('end', () => {
         // Restore original camera rig positions and rotations
         cameraRootEntity.setPosition(positionRoot);
         cameraRootEntity.setRotation(rotationRoot);
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         title: 'Enter AR',
         onClick: () => cameraElement.startXr('immersive-ar', 'local-floor')
     });
-    arButton.style.display = app.xr.isAvailable('immersive-ar') ? 'block' : 'none';
+    arButton.style.display = app.xr?.isAvailable('immersive-ar') ? 'block' : 'none';
     container.appendChild(arButton);
 
     const vrButton = createButton({
@@ -118,19 +118,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         title: 'Enter VR',
         onClick: () => cameraElement.startXr('immersive-vr', 'local-floor')
     });
-    vrButton.style.display = app.xr.isAvailable('immersive-vr') ? 'block' : 'none';
+    vrButton.style.display = app.xr?.isAvailable('immersive-vr') ? 'block' : 'none';
     container.appendChild(vrButton);
 
-    app.xr.on('available:immersive-ar', (available) => {
+    app.xr?.on('available:immersive-ar', (available) => {
         arButton.style.display = available ? 'block' : 'none';
     });
 
-    app.xr.on('available:immersive-vr', (available) => {
+    app.xr?.on('available:immersive-vr', (available) => {
         vrButton.style.display = available ? 'block' : 'none';
     });
 
     window.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && app.xr.active) {
+        if (event.key === 'Escape' && app.xr?.active) {
             cameraElement.endXr();
         }
     });

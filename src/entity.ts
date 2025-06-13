@@ -1,4 +1,4 @@
-import { Application, Entity, Vec3 } from 'playcanvas';
+import { AppBase, Entity, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
@@ -50,7 +50,7 @@ class EntityElement extends AsyncElement {
      */
     entity: Entity | null = null;
 
-    createEntity(app: Application) {
+    createEntity(app: AppBase) {
         // Create a new entity
         this.entity = new Entity(this.getAttribute('name') || this._name, app);
 
@@ -105,7 +105,7 @@ class EntityElement extends AsyncElement {
         });
     }
 
-    buildHierarchy(app: Application) {
+    buildHierarchy(app: AppBase) {
         if (!this.entity) return;
 
         const closestEntity = this.closestEntity;
