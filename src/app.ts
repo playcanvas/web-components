@@ -1,4 +1,67 @@
-import { Application, CameraComponent, FILLMODE_FILL_WINDOW, GraphNode, Keyboard, Mouse, Picker, RESOLUTION_AUTO } from 'playcanvas';
+import {
+    AppBase,
+    AppOptions,
+    CameraComponent,
+    createGraphicsDevice,
+    FILLMODE_FILL_WINDOW,
+    GraphNode,
+    Keyboard,
+    Mouse,
+    Picker,
+    RESOLUTION_AUTO,
+    AnimComponentSystem,
+    AnimationComponentSystem,
+    AudioListenerComponentSystem,
+    ButtonComponentSystem,
+    CameraComponentSystem,
+    CollisionComponentSystem,
+    ElementComponentSystem,
+    GSplatComponentSystem,
+    JointComponentSystem,
+    LayoutChildComponentSystem,
+    LayoutGroupComponentSystem,
+    LightComponentSystem,
+    ModelComponentSystem,
+    ParticleSystemComponentSystem,
+    RenderComponentSystem,
+    RigidBodyComponentSystem,
+    ScriptComponentSystem,
+    ScreenComponentSystem,
+    ScrollbarComponentSystem,
+    ScrollViewComponentSystem,
+    SoundComponentSystem,
+    SpriteComponentSystem,
+    ZoneComponentSystem,
+    RenderHandler,
+    AnimationHandler,
+    AnimClipHandler,
+    AnimStateGraphHandler,
+    AudioHandler,
+    BinaryHandler,
+    ContainerHandler,
+    CssHandler,
+    CubemapHandler,
+    FolderHandler,
+    FontHandler,
+    GSplatHandler,
+    HierarchyHandler,
+    HtmlHandler,
+    JsonHandler,
+    MaterialHandler,
+    ModelHandler,
+    SceneHandler,
+    ScriptHandler,
+    ShaderHandler,
+    SpriteHandler,
+    TemplateHandler,
+    TextHandler,
+    TextureHandler,
+    TextureAtlasHandler,
+    BatchManager,
+    SoundManager,
+    Lightmapper,
+    XrManager
+} from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -51,7 +114,7 @@ class AppElement extends AsyncElement {
     /**
      * The PlayCanvas application instance.
      */
-    app: Application | null = null;
+    app: AppBase | null = null;
 
     /**
      * Creates a new AppElement instance.
@@ -76,18 +139,79 @@ class AppElement extends AsyncElement {
         this._canvas = document.createElement('canvas');
         this.appendChild(this._canvas);
 
-        // Initialize the PlayCanvas application
-        this.app = new Application(this._canvas, {
-            graphicsDeviceOptions: {
-                alpha: this._alpha,
-                antialias: this._antialias,
-                depth: this._depth,
-                stencil: this._stencil
-            },
-            keyboard: new Keyboard(window),
-            mouse: new Mouse(this._canvas)
+        const device = await createGraphicsDevice(this._canvas, {
+            // @ts-ignore - alpha needs to be documented
+            alpha: this._alpha,
+            antialias: this._antialias,
+            depth: this._depth,
+            deviceTypes: ['webgl2'],
+            stencil: this._stencil
         });
-        this.app.graphicsDevice.maxPixelRatio = this._highResolution ? window.devicePixelRatio : 1;
+        device.maxPixelRatio = this._highResolution ? window.devicePixelRatio : 1;
+
+        const createOptions = new AppOptions();
+        createOptions.graphicsDevice = device;
+        createOptions.keyboard = new Keyboard(window);
+        createOptions.mouse = new Mouse(this._canvas);
+        createOptions.componentSystems = [
+            AnimComponentSystem,
+            AnimationComponentSystem,
+            AudioListenerComponentSystem,
+            ButtonComponentSystem,
+            CameraComponentSystem,
+            CollisionComponentSystem,  
+            ElementComponentSystem,
+            GSplatComponentSystem,
+            JointComponentSystem,
+            LayoutChildComponentSystem,
+            LayoutGroupComponentSystem,
+            LightComponentSystem,
+            ModelComponentSystem,
+            ParticleSystemComponentSystem,
+            RenderComponentSystem,
+            RigidBodyComponentSystem,
+            ScreenComponentSystem,
+            ScriptComponentSystem,
+            ScrollbarComponentSystem,
+            ScrollViewComponentSystem,
+            SoundComponentSystem,
+            SpriteComponentSystem,
+            ZoneComponentSystem
+        ];
+        createOptions.resourceHandlers = [
+            AnimClipHandler,
+            AnimationHandler,
+            AnimStateGraphHandler,
+            AudioHandler,
+            BinaryHandler,
+            CssHandler,
+            ContainerHandler,
+            CubemapHandler,
+            FolderHandler,
+            FontHandler,
+            GSplatHandler,
+            HierarchyHandler,
+            HtmlHandler,
+            JsonHandler,
+            MaterialHandler,
+            ModelHandler,
+            RenderHandler,
+            ScriptHandler,
+            SceneHandler,
+            ShaderHandler,
+            SpriteHandler,
+            TemplateHandler,
+            TextHandler,
+            TextureAtlasHandler,
+            TextureHandler
+        ];
+        createOptions.soundManager = new SoundManager();
+        createOptions.lightmapper = Lightmapper;
+        createOptions.batchManager = BatchManager;
+        createOptions.xr = XrManager;
+        
+        this.app = new AppBase(this._canvas);
+        this.app.init(createOptions);
 
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
         this.app.setCanvasResolution(RESOLUTION_AUTO);
