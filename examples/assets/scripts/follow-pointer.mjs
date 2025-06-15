@@ -5,6 +5,8 @@ import { Script } from 'playcanvas';
  */
 
 export class FollowPointer extends Script {
+    static scriptName = 'followPointer';
+
     initialize() {
         const canvas = this.app.graphicsDevice.canvas;
         canvas.addEventListener('pointermove', (event) => {

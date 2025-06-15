@@ -1,6 +1,8 @@
 import { Script } from 'playcanvas';
 
 export class MorphUpdate extends Script {
+    static scriptName = 'morphUpdate';
+
     initialize() {
         this.app.on('face:blendshapes', (categories) => {
             const renders = this.entity.findComponents('render');

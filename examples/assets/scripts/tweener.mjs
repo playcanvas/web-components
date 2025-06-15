@@ -132,6 +132,8 @@ class TweenDescriptor { /* eslint-disable-line no-unused-vars */
 }
 
 export class Tweener extends Script {
+    static scriptName = 'tweener';
+
     /**
      * Array of tween configurations
      * @type {TweenDescriptor[]}

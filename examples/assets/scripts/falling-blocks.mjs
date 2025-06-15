@@ -2,6 +2,8 @@ import { Script, Entity, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SPACE, KEY_P
 
 // Falling Blocks Game Controller
 export class FallingBlocksGame extends Script {
+    static scriptName = 'fallingBlocksGame';
+
     // Attributes
     boardWidth = 10;
 

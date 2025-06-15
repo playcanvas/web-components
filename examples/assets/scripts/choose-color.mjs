@@ -1,6 +1,8 @@
 import { math, Script, Color } from 'playcanvas';
 
 export class ChooseColor extends Script {
+    static scriptName = 'chooseColor';
+
     // Define available colors as a static property
     static PAINT_OPTIONS = [
         { name: 'Guards Red', color: new Color(0.902, 0.004, 0.086), metallic: false },

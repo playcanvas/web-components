@@ -25,6 +25,8 @@ import {
  * - An annotation panel that shows title and description text.
  */
 export class Annotation extends Script {
+    static scriptName = 'annotation';
+
     /** @type {HTMLDivElement | null} */
     static _activeTooltip = null;
 

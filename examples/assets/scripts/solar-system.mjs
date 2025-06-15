@@ -1,6 +1,8 @@
 import { Script, Vec3 } from 'playcanvas';
 
 export class PlanetaryCamera extends Script {
+    static scriptName = 'planetaryCamera';
+
     initialize() {
         // Camera offsets: X is sunward offset, Y and Z provide viewing angle
         this.cameraOffsets = new Map([
@@ -70,6 +72,8 @@ export class PlanetaryCamera extends Script {
 }
 
 export class PlanetaryMotion extends Script {
+    static scriptName = 'planetaryMotion';
+
     initialize() {
         // Planet radii (for scale reference)
         this.planetSizes = new Map([

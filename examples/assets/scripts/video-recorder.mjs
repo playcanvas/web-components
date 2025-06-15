@@ -15,6 +15,8 @@ const FrameRate = {
 };
 
 export class VideoRecorder extends Script {
+    static scriptName = 'videoRecorder';
+
     /**
      * Whether to activate the recorder on initialization.
      *

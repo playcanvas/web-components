@@ -1,6 +1,8 @@
 import { Script } from 'playcanvas';
 
 export class Orbit extends Script {
+    static scriptName = 'orbit';
+
     radius = 4;
 
     speed = 0.4;

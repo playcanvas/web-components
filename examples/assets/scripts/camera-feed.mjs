@@ -7,6 +7,8 @@ import { Script } from 'playcanvas';
  * It then streams the camera's video to the video element and plays it.
  */
 export class CameraFeed extends Script {
+    static scriptName = 'cameraFeed';
+
     /**
      * Whether to flip the video stream horizontally to behave like a mirror.
      *
