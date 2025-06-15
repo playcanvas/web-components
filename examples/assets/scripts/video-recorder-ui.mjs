@@ -1,6 +1,8 @@
 import { Script } from 'playcanvas';
 
 export class VideoRecorderUI extends Script {
+    static scriptName = 'videoRecorderUI';
+
     initialize() {
         this.createUI();
         // Listen to video recording progress events

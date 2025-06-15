@@ -2,6 +2,8 @@ import { HandLandmarker, GestureRecognizer, FilesetResolver } from '@mediapipe/t
 import { Script, Vec3 } from 'playcanvas';
 
 export class HandGestureController extends Script {
+    static scriptName = 'handGestureController';
+
     /**
      * Maximum number of hands to detect
      * @type {number}

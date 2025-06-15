@@ -98,6 +98,8 @@ class Polygon {
 }
 
 export class Text3D extends Script {
+    static scriptName = 'text3d';
+
     /**
      * TTF file used as the basis for this 3D text.
      * @type {Asset}
