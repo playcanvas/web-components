@@ -83,6 +83,8 @@ class AppElement extends AsyncElement {
 
     private _alpha = true;
 
+    private _backend: 'webgpu' | 'webgl2' | 'null' = 'webgl2';
+
     private _antialias = true;
 
     private _depth = true;
@@ -139,12 +141,20 @@ class AppElement extends AsyncElement {
         this._canvas = document.createElement('canvas');
         this.appendChild(this._canvas);
 
+        // Configure device types based on backend selection
+        const backendToDeviceTypes: { [key: string]: string[] } = {
+            webgpu: ['webgpu', 'webgl2'], // fallback to webgl2 if webgpu not available
+            webgl2: ['webgl2'],
+            null: ['null']
+        };
+        const deviceTypes = backendToDeviceTypes[this._backend] || [];
+
         const device = await createGraphicsDevice(this._canvas, {
             // @ts-ignore - alpha needs to be documented
             alpha: this._alpha,
             antialias: this._antialias,
             depth: this._depth,
-            deviceTypes: ['webgl2'],
+            deviceTypes: deviceTypes,
             stencil: this._stencil
         });
         device.maxPixelRatio = this._highResolution ? window.devicePixelRatio : 1;
@@ -485,6 +495,22 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Sets the graphics backend.
+     * @param value - The graphics backend ('webgpu', 'webgl2', or 'null').
+     */
+    set backend(value: 'webgpu' | 'webgl2' | 'null') {
+        this._backend = value;
+    }
+
+    /**
+     * Gets the graphics backend.
+     * @returns The graphics backend.
+     */
+    get backend() {
+        return this._backend;
+    }
+
+    /**
      * Sets the depth flag.
      * @param value - The depth flag.
      */
@@ -546,7 +572,7 @@ class AppElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['alpha', 'antialias', 'depth', 'stencil', 'high-resolution'];
+        return ['alpha', 'antialias', 'backend', 'depth', 'stencil', 'high-resolution'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
@@ -556,6 +582,11 @@ class AppElement extends AsyncElement {
                 break;
             case 'antialias':
                 this.antialias = newValue !== 'false';
+                break;
+            case 'backend':
+                if (newValue === 'webgpu' || newValue === 'webgl2' || newValue === 'null') {
+                    this.backend = newValue;
+                }
                 break;
             case 'depth':
                 this.depth = newValue !== 'false';
