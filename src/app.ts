@@ -509,7 +509,7 @@ class AppElement extends AsyncElement {
     get backend() {
         return this._backend;
     }
-    
+
     /**
      * Sets the depth flag.
      * @param value - The depth flag.
