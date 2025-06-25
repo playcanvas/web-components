@@ -50,6 +50,9 @@ class SoundSlotElement extends AsyncElement {
 
         this.soundSlot = this.soundElement!.component!.addSlot(this._name, options);
         this.asset = this._asset;
+        if (this._autoPlay) {
+            this.soundSlot!.play();
+        }
 
         this._onReady();
     }
