@@ -142,14 +142,12 @@ class AppElement extends AsyncElement {
         this.appendChild(this._canvas);
 
         // Configure device types based on backend selection
-        let deviceTypes: string[] = [];
-        if (this._backend === 'webgpu') {
-            deviceTypes = ['webgpu', 'webgl2']; // fallback to webgl2 if webgpu not available
-        } else if (this._backend === 'webgl2') {
-            deviceTypes = ['webgl2'];
-        } else if (this._backend === 'null') {
-            deviceTypes = ['null'];
-        }
+        const backendToDeviceTypes: { [key: string]: string[] } = {
+            webgpu: ['webgpu', 'webgl2'], // fallback to webgl2 if webgpu not available
+            webgl2: ['webgl2'],
+            null: ['null']
+        };
+        const deviceTypes = backendToDeviceTypes[this._backend] || [];
 
         const device = await createGraphicsDevice(this._canvas, {
             // @ts-ignore - alpha needs to be documented
