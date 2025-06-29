@@ -34,7 +34,7 @@ See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-c
 
 ## Usage
 
-Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/engine/web-components/getting-started) for installation and usage instructions.
+Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) for installation and usage instructions.
 
 ## Development 
 
