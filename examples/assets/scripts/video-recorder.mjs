@@ -129,7 +129,7 @@ export class VideoRecorder extends Script {
             format: new Mp4OutputFormat({
                 fastStart: 'in-memory'
             }),
-            target: new BufferTarget(),
+            target: new BufferTarget()
         });
 
         const videoSource = new EncodedVideoPacketSource('avc');
