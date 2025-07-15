@@ -1,4 +1,4 @@
-import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
+import { BufferTarget, EncodedPacket, EncodedVideoPacketSource, Mp4OutputFormat, Output } from 'mediabunny';
 import { FILLMODE_KEEP_ASPECT, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO, RESOLUTION_FIXED, Script } from 'playcanvas';
 
 /** @enum {number} */
@@ -48,10 +48,10 @@ export class VideoRecorder extends Script {
     encoder = null;
 
     /**
-     * @type {Muxer|null}
+     * @type {Output|null}
      * @private
      */
-    muxer = null;
+    output = null;
 
     /** @private */
     totalFrames = 0;
@@ -115,7 +115,7 @@ export class VideoRecorder extends Script {
     /**
      * Start recording.
      */
-    record() {
+    async record() {
         if (this.recording) return;
         this.recording = true;
         this.totalFrames = 0;
@@ -124,23 +124,28 @@ export class VideoRecorder extends Script {
 
         const { width, height, bitrate } = this.getVideoSettings();
 
-        // Create video frame muxer
-        this.muxer = new Muxer({
-            target: new ArrayBufferTarget(),
-            video: {
-                codec: 'avc',
-                width,
-                height
-            },
-            fastStart: 'in-memory',
-            firstTimestampBehavior: 'offset'
+        // Create video frame output
+        this.output = new Output({
+            format: new Mp4OutputFormat({
+                fastStart: 'in-memory'
+            }),
+            target: new BufferTarget()
         });
+
+        const videoSource = new EncodedVideoPacketSource('avc');
+        this.output.addVideoTrack(videoSource, {
+            rotation: 0,
+            frameRate: this.frameRate
+        });
+
+        await this.output.start();
 
         // Create video frame encoder
         this.encoder = new VideoEncoder({
-            output: (chunk, meta) => {
+            output: async (chunk, meta) => {
                 this.framesEncoded++;
-                this.muxer.addVideoChunk(chunk, meta);
+                const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
+                await videoSource.add(encodedPacket, meta);
                 if (!this.recording) {
                     this.app.fire('encode:progress', (this.framesEncoded - this.framesEncodedAtFlush) / (this.totalFrames - this.framesEncodedAtFlush));
                 }
@@ -195,10 +200,10 @@ export class VideoRecorder extends Script {
 
         // Flush and finalize muxer
         await this.encoder.flush();
-        this.muxer.finalize();
+        await this.output.finalize();
 
         // Download video
-        const { buffer } = this.muxer.target;
+        const { buffer } = this.output.target;
         this.app.fire('encode:end', buffer);
 
         // Free resources
