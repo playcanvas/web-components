@@ -29,15 +29,14 @@
                 <pc-sky asset="lake-bed" type="dome" lighting></pc-sky>
                 <!-- Camera (with XR support) -->
                 <pc-entity name="camera root">
-                    <pc-entity name="camera" position="3 1.5 5">
+                    <pc-entity name="camera" position="4.5 1.5 6.5">
                         <pc-camera></pc-camera>
                         <pc-scripts>
                             <pc-script name="cameraControls" attributes='{
                                 "focusPoint": "vec3:0,1.75,2",
                                 "pitchRange": "vec2:-90,0",
                                 "sceneSize": 15,
-                                "zoomMin": 0.5,
-                                "zoomMax": 15
+                                "zoomRange": "vec2:2,15"
                             }'></pc-script>
                         </pc-scripts>
                     </pc-entity>
