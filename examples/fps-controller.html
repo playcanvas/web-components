@@ -36,7 +36,9 @@
                     <pc-collision type="capsule" radius="0.5" height="1.8"></pc-collision>
                     <pc-rigidbody type="dynamic" angular-factor="0 0 0" mass="100" friction="0.5" restitution="0"></pc-rigidbody>
                     <pc-scripts>
-                        <pc-script name="firstPersonController"></pc-script>
+                        <pc-script name="firstPersonController" attributes='{
+                            "camera": "entity:camera"
+                        }'></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Map -->
