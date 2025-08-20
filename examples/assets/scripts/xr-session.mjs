@@ -20,26 +20,22 @@ export class XrSession extends Script {
      */
     endEvent = 'xr:end';
 
-    /** @private */
     cameraEntity = null;
-    /** @private */
+
     cameraRootEntity = null;
 
-    /** @private */
     clearColor = new Color();
-    /** @private */
+
     originalSkyType = null;
 
-    /** @private */
     positionRoot = new Vec3();
-    /** @private */
+
     rotationRoot = new Quat();
-    /** @private */
+
     positionCamera = new Vec3();
-    /** @private */
+
     rotationCamera = new Quat();
 
-    /** @private */
     onKeyDownHandler = null;
 
     initialize() {
@@ -74,7 +70,6 @@ export class XrSession extends Script {
         }
     }
 
-    /** @private */
     onStartEvent(typeOrOptions, spaceMaybe) {
         // Allow (type, space) or ({ type, space })
         /** @type {string|null} */
@@ -105,12 +100,10 @@ export class XrSession extends Script {
         this.startSession(type, space);
     }
 
-    /** @private */
     onEndEvent() {
         this.endSession();
     }
 
-    /** @private */
     startSession(type, space) {
         if (!this.cameraEntity.camera) {
             console.error('XrSession: No cameraEntity.camera found on the entity.');
@@ -125,13 +118,11 @@ export class XrSession extends Script {
         });
     }
 
-    /** @private */
     endSession() {
         if (!this.cameraEntity.camera) return;
         this.cameraEntity.camera.endXr();
     }
 
-    /** @private */
     onXrStart() {
         if (!this.cameraEntity || !this.cameraRootEntity) return;
 
@@ -153,7 +144,6 @@ export class XrSession extends Script {
         }
     }
 
-    /** @private */
     onXrEnd() {
         if (!this.cameraEntity || !this.cameraRootEntity) return;
 
@@ -169,7 +159,6 @@ export class XrSession extends Script {
         }
     }
 
-    /** @private */
     disableSky() {
         const sky = document.querySelector('pc-sky');
         if (!sky) return;
@@ -179,7 +168,6 @@ export class XrSession extends Script {
         sky.setAttribute('type', 'none');
     }
 
-    /** @private */
     restoreSky() {
         const sky = document.querySelector('pc-sky');
         if (!sky) return;
