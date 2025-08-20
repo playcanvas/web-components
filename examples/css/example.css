@@ -34,7 +34,7 @@ canvas {
     display: flex;
     position: relative;
     height: 40px;
-    background: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.9);
     border: 1px solid #ddd;
     border-radius: 8px;
     cursor: pointer;
@@ -52,8 +52,17 @@ canvas {
 .example-button.icon {
     width: 40px;
     padding: 0;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
 }
 
+.example-button.icon.icon-ar { background-image: url("../img/ar.svg"); }
+.example-button.icon.icon-vr { background-image: url("../img/vr.svg"); }
+.example-button.icon.icon-fs-enter { background-image: url("../img/fullscreen-enter.svg"); }
+.example-button.icon.icon-fs-exit { background-image: url("../img/fullscreen-exit.svg"); }
+.example-button.icon.icon-source { background-image: url("../img/code.svg"); }
+
 .example-button:hover {
-    background: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 255, 255, 1);
 }
