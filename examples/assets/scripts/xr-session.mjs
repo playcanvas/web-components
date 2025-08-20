@@ -4,10 +4,9 @@ export class XrSession extends Script {
     static scriptName = 'xrSession';
 
     /**
-     * Event name to start the XR session. Payload can be:
-     *  - (type: 'immersive-ar' | 'immersive-vr', space?: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer')
-     *  - ({ type?: string, space?: string })
-     * If omitted, the script will choose a supported type (AR preferred) and use 'local-floor' space.
+     * Event name to start the XR session. Handler expects two arguments:
+     *  (type: 'immersive-ar' | 'immersive-vr', space?: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer')
+     * If type is omitted, defaults to 'immersive-vr'. If space is omitted, defaults to 'local-floor'.
      * @type {string}
      * @attribute
      */
@@ -70,33 +69,7 @@ export class XrSession extends Script {
         }
     }
 
-    onStartEvent(typeOrOptions, spaceMaybe) {
-        // Allow (type, space) or ({ type, space })
-        /** @type {string|null} */
-        let type = null;
-        /** @type {string} */
-        let space = 'local-floor';
-
-        if (typeof typeOrOptions === 'string') {
-            type = typeOrOptions;
-            if (typeof spaceMaybe === 'string') space = spaceMaybe;
-        } else if (typeOrOptions && typeof typeOrOptions === 'object') {
-            if (typeof typeOrOptions.type === 'string') type = typeOrOptions.type;
-            if (typeof typeOrOptions.space === 'string') space = typeOrOptions.space;
-        }
-
-        // Choose a sensible default type if not provided
-        if (!type) {
-            if (this.app.xr?.isAvailable('immersive-ar')) {
-                type = 'immersive-ar';
-            } else if (this.app.xr?.isAvailable('immersive-vr')) {
-                type = 'immersive-vr';
-            } else {
-                console.warn('XR not available');
-                return;
-            }
-        }
-
+    onStartEvent(type = 'immersive-vr', space = 'local-floor') {
         this.startSession(type, space);
     }
 
@@ -104,7 +77,7 @@ export class XrSession extends Script {
         this.endSession();
     }
 
-    startSession(type, space) {
+    startSession(type = 'immersive-vr', space = 'local-floor') {
         if (!this.cameraEntity.camera) {
             console.error('XrSession: No cameraEntity.camera found on the entity.');
             return;
