@@ -19,12 +19,13 @@
     <body>
         <pc-app>
             <!-- Assets -->
-            <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs" preload></pc-asset>
-            <pc-asset id="grid" src="../node_modules/playcanvas/scripts/esm/grid.mjs" preload></pc-asset>
-            <pc-asset id="text3d" src="assets/scripts/text3d.mjs" preload></pc-asset>
-            <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs" preload></pc-asset>
-            <pc-asset id="xr-navigation" src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs" preload></pc-asset>
-            <pc-asset id="arial" src="assets/fonts/arial.ttf" type="binary" preload></pc-asset>
+            <pc-asset id="camera-controls" src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset id="grid" src="../node_modules/playcanvas/scripts/esm/grid.mjs"></pc-asset>
+            <pc-asset id="text3d" src="assets/scripts/text3d.mjs"></pc-asset>
+            <pc-asset id="xr-controllers" src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset id="xr-navigation" src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
+            <pc-asset id="xr-session" src="assets/scripts/xr-session.mjs"></pc-asset>
+            <pc-asset id="arial" src="assets/fonts/arial.ttf" type="binary"></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera (with XR support) -->
@@ -42,6 +43,7 @@
                     <pc-scripts>
                         <pc-script name="xrControllers"></pc-script>
                         <pc-script name="xrNavigation"></pc-script>
+                        <pc-script name="xrSession"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
