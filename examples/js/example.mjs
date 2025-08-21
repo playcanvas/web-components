@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const stats = new MiniStats(app);
     }
 
+    // Check if this example supports XR
+    function isXRCapable() {
+        // Check for XR-related scripts
+        const xrScripts = document.querySelectorAll('pc-script[name="xrSession"], pc-script[name="xrControllers"], pc-script[name="xrNavigation"]');
+        return xrScripts.length > 0;
+    }
+
     // Create container for buttons
     const container = document.createElement('div');
     container.classList.add('example-button-container', 'bottom-right');
@@ -27,29 +34,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         return button;
     }
 
-    const arButton = createButton({
-        iconClass: 'icon-ar',
-        title: 'Enter AR',
-        onClick: () => app.fire('xr:start', 'immersive-ar', 'local-floor')
-    });
-    arButton.style.display = app.xr?.isAvailable('immersive-ar') ? 'block' : 'none';
-    container.appendChild(arButton);
+    // Only create AR/VR buttons for XR-capable examples
+    if (isXRCapable()) {
+        const arButton = createButton({
+            iconClass: 'icon-ar',
+            title: 'Enter AR',
+            onClick: () => app.fire('xr:start', 'immersive-ar', 'local-floor')
+        });
+        arButton.style.display = app.xr?.isAvailable('immersive-ar') ? 'flex' : 'none';
+        container.appendChild(arButton);
 
-    const vrButton = createButton({
-        iconClass: 'icon-vr',
-        title: 'Enter VR',
-        onClick: () => app.fire('xr:start', 'immersive-vr', 'local-floor')
-    });
-    vrButton.style.display = app.xr?.isAvailable('immersive-vr') ? 'block' : 'none';
-    container.appendChild(vrButton);
+        const vrButton = createButton({
+            iconClass: 'icon-vr',
+            title: 'Enter VR',
+            onClick: () => app.fire('xr:start', 'immersive-vr', 'local-floor')
+        });
+        vrButton.style.display = app.xr?.isAvailable('immersive-vr') ? 'flex' : 'none';
+        container.appendChild(vrButton);
 
-    app.xr?.on('available:immersive-ar', (available) => {
-        arButton.style.display = available ? 'block' : 'none';
-    });
+        app.xr?.on('available:immersive-ar', (available) => {
+            arButton.style.display = available ? 'flex' : 'none';
+        });
 
-    app.xr?.on('available:immersive-vr', (available) => {
-        vrButton.style.display = available ? 'block' : 'none';
-    });
+        app.xr?.on('available:immersive-vr', (available) => {
+            vrButton.style.display = available ? 'flex' : 'none';
+        });
+    }
 
     // Add fullscreen button if supported
     if (document.documentElement.requestFullscreen && document.exitFullscreen) {
