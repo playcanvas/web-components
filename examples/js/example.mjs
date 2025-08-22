@@ -1,7 +1,8 @@
-import { MiniStats } from 'playcanvas';
+import { MiniStats, XRTYPE_AR, XRTYPE_VR } from 'playcanvas';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const appElement = await document.querySelector('pc-app').ready();
+    /** @type {import('playcanvas').AppBase} */
     const app = appElement.app;
 
     // Add MiniStats if query parameter is present
@@ -35,13 +36,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Only create AR/VR buttons for XR-capable examples
-    if (isXRCapable()) {
+    if (app.xr && isXRCapable()) {
         const arButton = createButton({
             iconClass: 'icon-ar',
             title: 'Enter AR',
             onClick: () => app.fire('ar:start')
         });
-        arButton.style.display = app.xr?.isAvailable('immersive-ar') ? 'flex' : 'none';
+        arButton.style.display = app.xr.isAvailable(XRTYPE_AR) ? 'flex' : 'none';
         container.appendChild(arButton);
 
         const vrButton = createButton({
@@ -49,15 +50,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             title: 'Enter VR',
             onClick: () => app.fire('vr:start')
         });
-        vrButton.style.display = app.xr?.isAvailable('immersive-vr') ? 'flex' : 'none';
+        vrButton.style.display = app.xr.isAvailable(XRTYPE_VR) ? 'flex' : 'none';
         container.appendChild(vrButton);
 
-        app.xr?.on('available:immersive-ar', (available) => {
-            arButton.style.display = available ? 'flex' : 'none';
-        });
-
-        app.xr?.on('available:immersive-vr', (available) => {
-            vrButton.style.display = available ? 'flex' : 'none';
+        app.xr.on('available', (type, available) => {
+            switch (type) {
+                case XRTYPE_AR:
+                    arButton.style.display = available ? 'flex' : 'none';
+                    break;
+                case XRTYPE_VR:
+                    vrButton.style.display = available ? 'flex' : 'none';
+                    break;
+            }
         });
     }
 
