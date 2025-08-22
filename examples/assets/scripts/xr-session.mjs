@@ -1,19 +1,24 @@
-import { Color, Quat, Script, Vec3 } from 'playcanvas';
+import { Color, Quat, Script, Vec3, LAYERID_SKYBOX } from 'playcanvas';
 
 export class XrSession extends Script {
     static scriptName = 'xrSession';
 
     /**
-     * Event name to start the XR session. Handler expects two arguments:
-     *  (type: 'immersive-ar' | 'immersive-vr', space?: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer')
-     * If type is omitted, defaults to 'immersive-vr'. If space is omitted, defaults to 'local-floor'.
+     * Event name to start the WebXR AR session.
      * @type {string}
      * @attribute
      */
-    startEvent = 'xr:start';
+    startArEvent = 'ar:start';
 
     /**
-     * Event name to end the XR session.
+     * Event name to start the WebXR VR session.
+     * @type {string}
+     * @attribute
+     */
+    startVrEvent = 'vr:start';
+
+    /**
+     * Event name to end the WebXR VR session.
      * @type {string}
      * @attribute
      */
@@ -24,8 +29,6 @@ export class XrSession extends Script {
     cameraRootEntity = null;
 
     clearColor = new Color();
-
-    originalSkyType = null;
 
     positionRoot = new Vec3();
 
@@ -46,7 +49,8 @@ export class XrSession extends Script {
         this.app.xr?.on('end', this.onXrEnd, this);
 
         // Listen for external events to control session
-        this.app.on(this.startEvent, this.onStartEvent, this);
+        this.app.on(this.startArEvent, this.onStartArEvent, this);
+        this.app.on(this.startVrEvent, this.onStartVrEvent, this);
         this.app.on(this.endEvent, this.onEndEvent, this);
 
         // ESC to exit
@@ -56,21 +60,32 @@ export class XrSession extends Script {
             }
         };
         window.addEventListener('keydown', this.onKeyDownHandler);
+
+        this.on('destroy', () => {
+            this.onDestroy();
+        });
     }
 
-    destroy() {
+    onDestroy() {
         this.app.xr?.off('start', this.onXrStart, this);
         this.app.xr?.off('end', this.onXrEnd, this);
-        this.app.off(this.startEvent, this.onStartEvent, this);
+
+        this.app.off(this.startVrEvent, this.onStartVrEvent, this);
+        this.app.off(this.startArEvent, this.onStartArEvent, this);
         this.app.off(this.endEvent, this.onEndEvent, this);
+
         if (this.onKeyDownHandler) {
             window.removeEventListener('keydown', this.onKeyDownHandler);
             this.onKeyDownHandler = null;
         }
     }
 
-    onStartEvent(type = 'immersive-vr', space = 'local-floor') {
-        this.startSession(type, space);
+    onStartArEvent(space = 'local-floor') {
+        this.startSession('immersive-ar', space);
+    }
+
+    onStartVrEvent(space = 'local-floor') {
+        this.startSession('immersive-vr', space);
     }
 
     onEndEvent() {
@@ -105,9 +120,12 @@ export class XrSession extends Script {
         this.positionCamera.copy(this.cameraEntity.getPosition());
         this.rotationCamera.copy(this.cameraEntity.getRotation());
 
-        // Place root at camera position/orientation
+        // Place root at camera position, but reset orientation to horizontal
         this.cameraRootEntity.setPosition(this.positionCamera.x, 0, this.positionCamera.z);
-        this.cameraRootEntity.setRotation(this.rotationCamera);
+
+        // Only preserve Y-axis rotation (yaw), reset pitch and roll for VR
+        const eulerAngles = this.rotationCamera.getEulerAngles();
+        this.cameraRootEntity.setEulerAngles(0, eulerAngles.y, 0);
 
         if (this.app.xr.type === 'immersive-ar') {
             // Make camera background transparent and hide the sky
@@ -133,24 +151,16 @@ export class XrSession extends Script {
     }
 
     disableSky() {
-        const sky = document.querySelector('pc-sky');
-        if (!sky) return;
-        if (this.originalSkyType === null) {
-            this.originalSkyType = sky.getAttribute('type');
+        const layer = this.app.scene.layers.getLayerById(LAYERID_SKYBOX);
+        if (layer) {
+            layer.enabled = false;
         }
-        sky.setAttribute('type', 'none');
     }
 
     restoreSky() {
-        const sky = document.querySelector('pc-sky');
-        if (!sky) return;
-        if (this.originalSkyType !== null) {
-            if (this.originalSkyType) {
-                sky.setAttribute('type', this.originalSkyType);
-            } else {
-                sky.removeAttribute('type');
-            }
-            this.originalSkyType = null;
+        const layer = this.app.scene.layers.getLayerById(LAYERID_SKYBOX);
+        if (layer) {
+            layer.enabled = true;
         }
     }
 }
