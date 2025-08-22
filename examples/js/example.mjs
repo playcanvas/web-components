@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const arButton = createButton({
             iconClass: 'icon-ar',
             title: 'Enter AR',
-            onClick: () => app.fire('xr:start', 'immersive-ar', 'local-floor')
+            onClick: () => app.fire('ar:start')
         });
         arButton.style.display = app.xr?.isAvailable('immersive-ar') ? 'flex' : 'none';
         container.appendChild(arButton);
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const vrButton = createButton({
             iconClass: 'icon-vr',
             title: 'Enter VR',
-            onClick: () => app.fire('xr:start', 'immersive-vr', 'local-floor')
+            onClick: () => app.fire('vr:start')
         });
         vrButton.style.display = app.xr?.isAvailable('immersive-vr') ? 'flex' : 'none';
         container.appendChild(vrButton);
