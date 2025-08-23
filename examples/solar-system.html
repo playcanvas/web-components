@@ -15,7 +15,8 @@
         <style>
             body { 
                 margin: 0; 
-                background-color: black;
+                background-color: #0a0a0a;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             }
             
             #canvas-container {
@@ -37,18 +38,271 @@
                 padding: 2em;
                 display: flex;
                 align-items: center;
+                justify-content: center;
+            }
+
+            .planet-panel {
+                background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 20px;
+                padding: 3em;
+                max-width: 600px;
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                box-shadow: 
+                    0 8px 32px rgba(0,0,0,0.3),
+                    inset 0 1px 0 rgba(255,255,255,0.2);
                 color: white;
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                position: relative;
+                overflow: hidden;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
             }
 
-            h1 {
-                font-size: 3em;
+            .planet-panel:hover {
+                transform: translateY(-5px);
+                box-shadow: 
+                    0 12px 40px rgba(0,0,0,0.4),
+                    inset 0 1px 0 rgba(255,255,255,0.2);
+            }
+
+            .planet-panel::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            }
+
+            .planet-panel::after {
+                content: '';
+                position: absolute;
+                top: 10px;
+                right: 20px;
+                width: 60px;
+                height: 60px;
+                border: 2px solid rgba(255,255,255,0.2);
+                border-radius: 50%;
+                background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+            }
+
+            .planet-stats {
+                margin-top: 2em;
+                padding-top: 1.5em;
+                border-top: 1px solid rgba(255,255,255,0.2);
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 1em;
+                font-size: 0.9em;
+            }
+
+            .stat-item {
+                text-align: center;
+                padding: 0.5em;
+                background: rgba(255,255,255,0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .stat-label {
+                display: block;
+                font-size: 0.8em;
+                color: rgba(255,255,255,0.7);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.3em;
+            }
+
+            .stat-value {
+                font-weight: bold;
+                color: rgba(255,255,255,0.95);
+            }
+
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .section {
+                    padding: 1em;
+                }
+                
+                .planet-panel {
+                    padding: 2em 1.5em;
+                    margin: 0 0.5em;
+                }
+                
+                .planet-title {
+                    font-size: 2.5em;
+                }
+                
+                .planet-description {
+                    font-size: 1.1em;
+                }
+                
+                .planet-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                    gap: 0.5em;
+                    margin-top: 1.5em;
+                    padding-top: 1em;
+                }
+                
+                .stat-item {
+                    padding: 0.4em;
+                }
+            }
+
+            /* Scroll indicator */
+            .scroll-indicator {
+                position: fixed;
+                bottom: 2em;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                color: rgba(255,255,255,0.7);
+                font-size: 0.9em;
+                text-align: center;
+                animation: fadeInOut 3s ease-in-out infinite;
+                pointer-events: none;
+            }
+
+            .scroll-indicator::after {
+                content: '↓';
+                display: block;
+                font-size: 1.5em;
+                margin-top: 0.2em;
+                animation: bounce 2s ease-in-out infinite;
+            }
+
+            @keyframes fadeInOut {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 0.8; }
+            }
+
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+            }
+
+            .planet-title {
+                font-size: 3.5em;
+                font-weight: 700;
+                margin: 0 0 0.5em 0;
+                background: linear-gradient(45deg, #fff, #ccc);
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                line-height: 1.2;
+            }
+
+            .planet-description {
+                font-size: 1.3em;
+                line-height: 1.6;
                 margin: 0;
+                color: rgba(255,255,255,0.9);
+                font-weight: 300;
             }
 
-            p {
-                max-width: 600px;
-                font-size: 1.2em;
+            /* Planet-specific color themes */
+            .section:nth-child(1) .planet-panel {
+                background: linear-gradient(135deg, rgba(255,165,0,0.15), rgba(255,69,0,0.1));
+                border-color: rgba(255,140,0,0.3);
+                box-shadow: 
+                    0 8px 32px rgba(255,100,0,0.2),
+                    inset 0 1px 0 rgba(255,255,255,0.2);
+            }
+            .section:nth-child(1) .planet-title { 
+                background: linear-gradient(45deg, #FFD700, #FFA500); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(2) .planet-panel {
+                background: linear-gradient(135deg, rgba(169,169,169,0.15), rgba(128,128,128,0.1));
+                border-color: rgba(169,169,169,0.3);
+            }
+            .section:nth-child(2) .planet-title { 
+                background: linear-gradient(45deg, #C0C0C0, #A9A9A9); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(3) .planet-panel {
+                background: linear-gradient(135deg, rgba(255,165,79,0.15), rgba(255,140,0,0.1));
+                border-color: rgba(255,165,79,0.3);
+            }
+            .section:nth-child(3) .planet-title { 
+                background: linear-gradient(45deg, #FFA54F, #FF8C00); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(4) .planet-panel {
+                background: linear-gradient(135deg, rgba(100,149,237,0.15), rgba(30,144,255,0.1));
+                border-color: rgba(100,149,237,0.3);
+            }
+            .section:nth-child(4) .planet-title { 
+                background: linear-gradient(45deg, #6495ED, #1E90FF); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(5) .planet-panel {
+                background: linear-gradient(135deg, rgba(205,92,92,0.15), rgba(178,34,34,0.1));
+                border-color: rgba(205,92,92,0.3);
+            }
+            .section:nth-child(5) .planet-title { 
+                background: linear-gradient(45deg, #CD5C5C, #B22222); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(6) .planet-panel {
+                background: linear-gradient(135deg, rgba(210,180,140,0.15), rgba(188,143,143,0.1));
+                border-color: rgba(210,180,140,0.3);
+            }
+            .section:nth-child(6) .planet-title { 
+                background: linear-gradient(45deg, #D2B48C, #BC8F8F); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(7) .planet-panel {
+                background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.1));
+                border-color: rgba(255,215,0,0.3);
+            }
+            .section:nth-child(7) .planet-title { 
+                background: linear-gradient(45deg, #FFD700, #DAA520); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(8) .planet-panel {
+                background: linear-gradient(135deg, rgba(64,224,208,0.15), rgba(72,209,204,0.1));
+                border-color: rgba(64,224,208,0.3);
+            }
+            .section:nth-child(8) .planet-title { 
+                background: linear-gradient(45deg, #40E0D0, #48D1CC); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
+            }
+
+            .section:nth-child(9) .planet-panel {
+                background: linear-gradient(135deg, rgba(0,0,255,0.15), rgba(25,25,112,0.1));
+                border-color: rgba(0,0,255,0.3);
+            }
+            .section:nth-child(9) .planet-title { 
+                background: linear-gradient(45deg, #0000FF, #191970); 
+                -webkit-background-clip: text; 
+                background-clip: text; 
+                -webkit-text-fill-color: transparent; 
             }
         </style>
     </head>
@@ -131,67 +385,197 @@
 
         <div class="content">
             <section class="section">
-                <div>
-                    <h1>The Sun</h1>
-                    <p>Our solar system's star, providing light and heat to all the planets. The Sun contains 99.86% of the solar system's mass.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">The Sun</h1>
+                    <p class="planet-description">Our solar system's star, providing light and heat to all the planets. The Sun contains 99.86% of the solar system's mass and generates energy through nuclear fusion in its core.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Type</span>
+                            <span class="stat-value">G-Type Star</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Temperature</span>
+                            <span class="stat-value">5,778 K</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Age</span>
+                            <span class="stat-value">4.6 Billion Years</span>
+                        </div>
+                    </div>
                 </div>
             </section>
             
             <section class="section">
-                <div>
-                    <h1>Mercury</h1>
-                    <p>The smallest and innermost planet, Mercury is also the fastest, orbiting the Sun every 88 Earth days.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Mercury</h1>
+                    <p class="planet-description">The smallest and innermost planet, Mercury is also the fastest, orbiting the Sun every 88 Earth days. Its surface experiences extreme temperature variations from -290°F to 800°F.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">36 million mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">3,032 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Year</span>
+                            <span class="stat-value">88 Earth days</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Venus</h1>
-                    <p>Often called Earth's sister planet due to their similar size, Venus is the hottest planet due to its thick atmosphere.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Venus</h1>
+                    <p class="planet-description">Often called Earth's sister planet due to their similar size, Venus is the hottest planet due to its thick atmosphere. Its surface temperature reaches 900°F, hot enough to melt lead.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">67 million mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">7,521 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Year</span>
+                            <span class="stat-value">225 Earth days</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Earth</h1>
-                    <p>Our home planet, Earth is the only known world to support life, with its unique atmosphere and liquid water.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Earth</h1>
+                    <p class="planet-description">Our home planet, Earth is the only known world to support life, with its unique atmosphere and liquid water. It's the perfect distance from the Sun to maintain temperatures suitable for life.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">93 million mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">7,918 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moons</span>
+                            <span class="stat-value">1</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Mars</h1>
-                    <p>The Red Planet, Mars has captured human imagination for centuries and is a prime target for future exploration.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Mars</h1>
+                    <p class="planet-description">The Red Planet, Mars has captured human imagination for centuries and is a prime target for future exploration. Evidence suggests it once had flowing water and possibly microbial life.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">142 million mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">4,212 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moons</span>
+                            <span class="stat-value">2</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Jupiter</h1>
-                    <p>The largest planet in our solar system, Jupiter is a gas giant with a distinctive Great Red Spot storm.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Jupiter</h1>
+                    <p class="planet-description">The largest planet in our solar system, Jupiter is a gas giant with a distinctive Great Red Spot storm. It acts as a cosmic vacuum cleaner, protecting inner planets from asteroids and comets.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">484 million mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">86,881 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moons</span>
+                            <span class="stat-value">95</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Saturn</h1>
-                    <p>Famous for its beautiful rings, Saturn is a gas giant known for its unique and spectacular appearance.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Saturn</h1>
+                    <p class="planet-description">Famous for its beautiful rings, Saturn is a gas giant known for its unique and spectacular appearance. Its rings are made of countless ice and rock particles ranging from tiny grains to house-sized chunks.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">890 million mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">72,367 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moons</span>
+                            <span class="stat-value">146</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Uranus</h1>
-                    <p>An ice giant that rotates on its side, Uranus has a unique tilt of nearly 98 degrees.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Uranus</h1>
+                    <p class="planet-description">An ice giant that rotates on its side, Uranus has a unique tilt of nearly 98 degrees. This unusual orientation means its poles experience 42 years of continuous sunlight followed by 42 years of darkness.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">1.8 billion mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">31,518 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moons</span>
+                            <span class="stat-value">28</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <section class="section">
-                <div>
-                    <h1>Neptune</h1>
-                    <p>The windiest planet, Neptune is the most distant planet and has the strongest winds in the solar system.</p>
+                <div class="planet-panel">
+                    <h1 class="planet-title">Neptune</h1>
+                    <p class="planet-description">The windiest planet, Neptune is the most distant planet and has the strongest winds in the solar system. Wind speeds can reach up to 1,200 mph, faster than the speed of sound on Earth.</p>
+                    <div class="planet-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Distance</span>
+                            <span class="stat-value">2.8 billion mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Diameter</span>
+                            <span class="stat-value">30,775 mi</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Moons</span>
+                            <span class="stat-value">16</span>
+                        </div>
+                    </div>
                 </div>
             </section>
+        </div>
+
+        <div class="scroll-indicator">
+            Scroll to explore the solar system
         </div>
 
         <script type="module">
