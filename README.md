@@ -3,11 +3,11 @@
 [![NPM Version](https://img.shields.io/npm/v/@playcanvas/web-components)](https://www.npmjs.com/package/@playcanvas/web-components)
 [![NPM Downloads](https://img.shields.io/npm/dw/@playcanvas/web-components)](https://npmtrends.com/@playcanvas/web-components)
 [![License](https://img.shields.io/npm/l/@playcanvas/web-components)](https://github.com/playcanvas/web-components/blob/main/LICENSE)
-[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white)](https://discord.gg/RSaMRzg)
-[![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white)](https://www.reddit.com/r/PlayCanvas)
-[![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white)](https://x.com/intent/follow?screen_name=playcanvas)
+[![Discord](https://img.shields.io/badge/Discord-5865F2?style=flat&logo=discord&logoColor=white&color=black)](https://discord.gg/RSaMRzg)
+[![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
+[![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [User Manual](https://developer.playcanvas.com) | [API Reference](https://api.playcanvas.com) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) |
+| [User Manual](https://developer.playcanvas.com//user-manual/web-components) | [API Reference](https://api.playcanvas.com/web-components) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) |
 
 PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website. Check out this simple example:
 
