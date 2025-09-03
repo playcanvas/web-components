@@ -1,13 +1,13 @@
 # PlayCanvas Web Components
 
-[![NPM Version][npm-version-badge]][npm-url]
-[![NPM Downloads][npm-downloads-badge]][npm-trends-url]
-[![License][license-badge]][license-url]
-[![GitHub Actions Build Status][build-status-badge]][workflow-url]
-[![Github Issue Resolve Time][issue-resolve-badge]][isitmaintained-url]
-[![Github Open Issues][open-issues-badge]][isitmaintained-url]
+[![NPM Version](https://img.shields.io/npm/v/@playcanvas/template)](https://www.npmjs.com/package/@playcanvas/template)
+[![NPM Downloads](https://img.shields.io/npm/dw/@playcanvas/template)](https://npmtrends.com/@playcanvas/template)
+[![License](https://img.shields.io/npm/l/@playcanvas/template)](https://github.com/playcanvas/template/blob/main/LICENSE)
+[![GitHub Actions Build Status](https://github.com/playcanvas/template/actions/workflows/ci.yml/badge.svg)](https://github.com/playcanvas/template/actions/workflows/ci.yml)
+[![Github Issue Resolve Time](https://isitmaintained.com/badge/resolution/playcanvas/template.svg)](https://isitmaintained.com/project/playcanvas/template)
+[![Github Open Issues](https://isitmaintained.com/badge/open/playcanvas/template.svg)](https://isitmaintained.com/project/playcanvas/template)
 
-| [User Manual][manual-url] | [API Reference][api-url] | [Examples][examples-url] | [Blog][blog-url] | [Forum][forum-url] | [Discord][discord-url] | [Reddit][reddit-url] | [Twitter][twitter-url] |
+| [User Manual](https://developer.playcanvas.com) | [API Reference](https://api.playcanvas.com) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) | [Discord](https://discord.gg/RSaMRzg) | [Reddit](https://www.reddit.com/r/PlayCanvas/) | [Twitter](https://twitter.com/intent/follow?screen_name=playcanvas) |
 
 PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website. Check out this simple example:
 
@@ -82,25 +82,3 @@ npm run docs
 ```
 
 The documentation will be generated in the `docs` directory.
-
-[npm-version-badge]: https://img.shields.io/npm/v/@playcanvas/web-components
-[npm-downloads-badge]: https://img.shields.io/npm/dw/@playcanvas/web-components
-[license-badge]: https://img.shields.io/npm/l/@playcanvas/web-components
-[build-status-badge]: https://github.com/playcanvas/web-components/actions/workflows/ci.yml/badge.svg
-[issue-resolve-badge]: https://isitmaintained.com/badge/resolution/playcanvas/web-components.svg
-[open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/web-components.svg
-
-[npm-url]: https://www.npmjs.com/package/@playcanvas/web-components
-[npm-trends-url]: https://npmtrends.com/@playcanvas/web-components
-[license-url]: https://github.com/playcanvas/web-components/blob/main/LICENSE
-[workflow-url]: https://github.com/playcanvas/web-components/actions/workflows/ci.yml
-[isitmaintained-url]: https://isitmaintained.com/project/playcanvas/web-components
-
-[manual-url]: https://developer.playcanvas.com/user-manual/web-components
-[api-url]: https://api.playcanvas.com/web-components
-[examples-url]: https://playcanvas.github.io/web-components/examples
-[blog-url]: https://blog.playcanvas.com
-[forum-url]: https://forum.playcanvas.com
-[discord-url]: https://discord.gg/RSaMRzg
-[reddit-url]: https://www.reddit.com/r/PlayCanvas/
-[twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
