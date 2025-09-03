@@ -1,11 +1,13 @@
 # PlayCanvas Web Components
 
-[![NPM Version](https://img.shields.io/npm/v/@playcanvas/web-components.svg)](https://www.npmjs.com/package/@playcanvas/web-components)
-[![NPM Downloads](https://img.shields.io/npm/dw/@playcanvas/web-components)](https://npmtrends.com/@playcanvas/web-components)
-[![License](https://img.shields.io/npm/l/@playcanvas/web-components.svg)](https://github.com/playcanvas/web-components/blob/main/LICENSE)
-[![GitHub Actions Build Status](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml/badge.svg)](https://github.com/playcanvas/web-components/actions/workflows/deploy.yml)
+[![NPM Version][npm-version-badge]][npm-url]
+[![NPM Downloads][npm-downloads-badge]][npm-trends-url]
+[![License][license-badge]][license-url]
+[![GitHub Actions Build Status][build-status-badge]][workflow-url]
+[![Github Issue Resolve Time][issue-resolve-badge]][isitmaintained-url]
+[![Github Open Issues][open-issues-badge]][isitmaintained-url]
 
-| [User Guide](https://developer.playcanvas.com/user-manual/web-components) | [API Reference](https://api.playcanvas.com/web-components/) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com/) | [Forum](https://forum.playcanvas.com/) | [Discord](https://discord.gg/RSaMRzg) |
+| [User Manual][manual-url] | [API Reference][api-url] | [Examples][examples-url] | [Blog][blog-url] | [Forum][forum-url] | [Discord][discord-url] | [Reddit][reddit-url] | [Twitter][twitter-url] |
 
 PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website. Check out this simple example:
 
@@ -80,3 +82,25 @@ npm run docs
 ```
 
 The documentation will be generated in the `docs` directory.
+
+[npm-version-badge]: https://img.shields.io/npm/v/@playcanvas/web-components
+[npm-downloads-badge]: https://img.shields.io/npm/dw/@playcanvas/web-components
+[license-badge]: https://img.shields.io/npm/l/@playcanvas/web-components
+[build-status-badge]: https://github.com/playcanvas/web-components/actions/workflows/ci.yml/badge.svg
+[issue-resolve-badge]: https://isitmaintained.com/badge/resolution/playcanvas/web-components.svg
+[open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/web-components.svg
+
+[npm-url]: https://www.npmjs.com/package/@playcanvas/web-components
+[npm-trends-url]: https://npmtrends.com/@playcanvas/web-components
+[license-url]: https://github.com/playcanvas/web-components/blob/main/LICENSE
+[workflow-url]: https://github.com/playcanvas/web-components/actions/workflows/ci.yml
+[isitmaintained-url]: https://isitmaintained.com/project/playcanvas/web-components
+
+[manual-url]: https://developer.playcanvas.com
+[api-url]: https://api.playcanvas.com/web-components
+[examples-url]: https://playcanvas.github.io/web-components/examples
+[blog-url]: https://blog.playcanvas.com
+[forum-url]: https://forum.playcanvas.com
+[discord-url]: https://discord.gg/RSaMRzg
+[reddit-url]: https://www.reddit.com/r/PlayCanvas/
+[twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
