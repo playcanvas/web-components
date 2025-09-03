@@ -17,6 +17,7 @@ const extToType = new Map([
     ['mjs', 'script'],
     ['ply', 'gsplat'],
     ['png', 'texture'],
+    ['sog', 'gsplat'],
     ['txt', 'text'],
     ['vert', 'shader'],
     ['webp', 'texture']
