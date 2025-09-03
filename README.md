@@ -1,13 +1,10 @@
 # PlayCanvas Web Components
 
-[![NPM Version](https://img.shields.io/npm/v/@playcanvas/template)](https://www.npmjs.com/package/@playcanvas/template)
-[![NPM Downloads](https://img.shields.io/npm/dw/@playcanvas/template)](https://npmtrends.com/@playcanvas/template)
-[![License](https://img.shields.io/npm/l/@playcanvas/template)](https://github.com/playcanvas/template/blob/main/LICENSE)
-[![GitHub Actions Build Status](https://github.com/playcanvas/template/actions/workflows/ci.yml/badge.svg)](https://github.com/playcanvas/template/actions/workflows/ci.yml)
-[![Github Issue Resolve Time](https://isitmaintained.com/badge/resolution/playcanvas/template.svg)](https://isitmaintained.com/project/playcanvas/template)
-[![Github Open Issues](https://isitmaintained.com/badge/open/playcanvas/template.svg)](https://isitmaintained.com/project/playcanvas/template)
+[![NPM Version](https://img.shields.io/npm/v/@playcanvas/web-components)](https://www.npmjs.com/package/@playcanvas/web-components)
+[![NPM Downloads](https://img.shields.io/npm/dw/@playcanvas/web-components)](https://npmtrends.com/@playcanvas/web-components)
+[![License](https://img.shields.io/npm/l/@playcanvas/web-components)](https://github.com/playcanvas/web-components/blob/main/LICENSE)
 
-| [User Manual](https://developer.playcanvas.com) | [API Reference](https://api.playcanvas.com) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) | [Discord](https://discord.gg/RSaMRzg) | [Reddit](https://www.reddit.com/r/PlayCanvas/) | [Twitter](https://twitter.com/intent/follow?screen_name=playcanvas) |
+| [User Manual](https://developer.playcanvas.com) | [API Reference](https://api.playcanvas.com) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) | [Discord](https://discord.gg/RSaMRzg) | [Reddit](https://www.reddit.com/r/PlayCanvas/) | [X](https://x.com/intent/follow?screen_name=playcanvas) |
 
 PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website. Check out this simple example:
 
