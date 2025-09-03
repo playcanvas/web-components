@@ -96,7 +96,7 @@ The documentation will be generated in the `docs` directory.
 [workflow-url]: https://github.com/playcanvas/web-components/actions/workflows/ci.yml
 [isitmaintained-url]: https://isitmaintained.com/project/playcanvas/web-components
 
-[manual-url]: https://developer.playcanvas.com
+[manual-url]: https://developer.playcanvas.com/user-manual/web-components
 [api-url]: https://api.playcanvas.com/web-components
 [examples-url]: https://playcanvas.github.io/web-components/examples
 [blog-url]: https://blog.playcanvas.com
