@@ -5,6 +5,7 @@ export const examples = [
     { name: 'Basic Shapes', path: 'basic-shapes.html' },
     { name: 'Basic Particles', path: 'basic-particles.html' },
     { name: 'Car Configurator', path: 'car-configurator.html' },
+    { name: 'First Person Teleport', path: 'first-person-teleport.html' },
     { name: 'FPS Controller', path: 'fps-controller.html' },
     { name: 'Gaussian Splatting', path: 'splat.html' },
     { name: 'GLB Loader', path: 'glb.html' },
