@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - First Person Teleport</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app antialias="false" stencil="false">
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/first-person-teleport.mjs"></pc-asset>
+            <pc-asset src="assets/splats/statues/angel.sog" id="angel"></pc-asset>
+            <pc-asset src="assets/splats/statues/angel-kneeling.sog" id="angel-kneeling"></pc-asset>
+            <pc-asset src="assets/splats/statues/angel-with-candlestick.sog" id="angel-with-candlestick"></pc-asset>
+            <pc-asset src="assets/splats/statues/massa.sog" id="massa"></pc-asset>
+            <pc-asset src="assets/splats/statues/narcissus.sog" id="narcissus"></pc-asset>
+            <pc-asset src="assets/splats/statues/st-peter.sog" id="st-peter"></pc-asset>
+            <pc-asset src="assets/splats/statues/trumpet.sog" id="trumpet"></pc-asset>
+            <pc-asset src="assets/skies/sepulchral-chapel-rotunda-4k.webp" id="rotunda"></pc-asset>
+            <pc-asset src="assets/textures/dark-tiles.png" id="dark-tiles"></pc-asset>
+            <pc-material id="ground" diffuse-map="dark-tiles"></pc-material>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="0 1.7 10">
+                        <pc-camera fov="60"></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="firstPersonTeleport"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
+                        <pc-script name="xrSession"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" position="2 2 -2" rotation="45 -35 0">
+                    <pc-light type="directional"></pc-light>
+                </pc-entity>
+                <!-- Ground -->
+                <pc-entity name="ground" scale="25 25 25">
+                    <pc-render type="plane" material="ground"></pc-render>
+                </pc-entity>
+                <!-- Statues -->
+                <pc-entity name="statues">
+                    <pc-entity name="angel" position="-5 0.7 0" rotation="180 0 0">
+                        <pc-splat asset="angel"></pc-splat>
+                    </pc-entity>
+                    <pc-entity name="angel-kneeling" position="5 0.7 0" rotation="0 0 180">
+                        <pc-splat asset="angel-kneeling"></pc-splat>
+                    </pc-entity>
+                    <pc-entity name="angel-with-candlestick" position="-5 0.7 5" rotation="180 0 0">
+                        <pc-splat asset="angel-with-candlestick"></pc-splat>
+                    </pc-entity>
+                    <pc-entity name="massa" position="0 0.7 -5" rotation="0 0 180">
+                        <pc-splat asset="massa"></pc-splat>
+                    </pc-entity>
+                    <pc-entity name="narcissus" position="5 0.7 5" rotation="180 0 0">
+                        <pc-splat asset="narcissus"></pc-splat>
+                    </pc-entity>
+                    <pc-entity name="st-peter" position="5 0.7 -5" rotation="0 0 180">
+                        <pc-splat asset="st-peter"></pc-splat>
+                    </pc-entity>
+                    <pc-entity name="trumpet" position="-5 0.7 -5" rotation="0 0 180">
+                        <pc-splat asset="trumpet"></pc-splat>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
