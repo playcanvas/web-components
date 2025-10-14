@@ -39,7 +39,7 @@ function cubicEaseInOut(t) {
 
 /**
  * First-person teleport controller with look controls and visual teleport marker.
- * 
+ *
  * Features:
  * - Click/tap to teleport to a location with smooth tweening
  * - Click-and-drag to look around (yaw and pitch rotation)
@@ -126,7 +126,7 @@ export class FirstPersonTeleport extends Script {
         this.lastPointerY = 0;
         this.clickStartX = 0;
         this.clickStartY = 0;
-        
+
         // Initialize current rotation from entity
         const euler = this.entity.getEulerAngles();
         this.currentYaw = euler.y;
@@ -143,13 +143,13 @@ export class FirstPersonTeleport extends Script {
 
         // Input - use pointer events for unified mouse/touch/pen support
         const canvas = this.app.graphicsDevice.canvas;
-        
+
         // Store bound handlers for cleanup
         this._boundPointerMove = this.onPointerMove.bind(this);
         this._boundPointerDown = this.onPointerDown.bind(this);
         this._boundPointerUp = this.onPointerUp.bind(this);
         this._boundPointerLeave = this.onPointerLeave.bind(this);
-        
+
         canvas.addEventListener('pointermove', this._boundPointerMove);
         canvas.addEventListener('pointerdown', this._boundPointerDown);
         canvas.addEventListener('pointerup', this._boundPointerUp);
@@ -201,14 +201,14 @@ export class FirstPersonTeleport extends Script {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        
+
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
 
         const centerX = size / 2;
         const centerY = size / 2;
         const colorStr = `rgba(${Math.round(this.markerColor.r * 255)}, ${Math.round(this.markerColor.g * 255)}, ${Math.round(this.markerColor.b * 255)}, ${this.markerOpacity})`;
-        
+
         // Draw outer ring
         ctx.beginPath();
         ctx.arc(centerX, centerY, size * 0.45, 0, Math.PI * 2);
@@ -250,15 +250,15 @@ export class FirstPersonTeleport extends Script {
 
     onPointerMove(e) {
         const coords = this._getCanvasCoords(e);
-        
+
         if (this.isLooking) {
             // Calculate pointer delta
             const deltaX = coords.x - this.lastPointerX;
             const deltaY = coords.y - this.lastPointerY;
-            
+
             // Apply rotation based on pointer movement
             this._applyLook(deltaX, deltaY);
-            
+
             this.lastPointerX = coords.x;
             this.lastPointerY = coords.y;
         } else if (!this.moving) {
@@ -275,34 +275,34 @@ export class FirstPersonTeleport extends Script {
     onPointerDown(e) {
         // Primary button only (left mouse button or first touch)
         if (e.button !== 0 && e.pointerType === 'mouse') return;
-        
+
         const coords = this._getCanvasCoords(e);
         this.clickStartX = coords.x;
         this.clickStartY = coords.y;
         this.lastPointerX = coords.x;
         this.lastPointerY = coords.y;
         this.isLooking = true;
-        
+
         // Hide marker while looking around
         if (this.marker) {
             this.marker.enabled = false;
         }
-        
+
         // Current pitch and yaw are already being tracked
     }
 
     onPointerUp(e) {
         // Primary button only (left mouse button or first touch)
         if (e.button !== 0 && e.pointerType === 'mouse') return;
-        
+
         this.isLooking = false;
-        
+
         const coords = this._getCanvasCoords(e);
         const dragDistance = Math.hypot(
-            coords.x - this.clickStartX, 
+            coords.x - this.clickStartX,
             coords.y - this.clickStartY
         );
-        
+
         // If drag distance is small, treat as click-to-move
         if (dragDistance < DRAG_THRESHOLD_PIXELS) {
             const hit = this._rayGroundHit(coords.x, coords.y);
@@ -340,35 +340,35 @@ export class FirstPersonTeleport extends Script {
 
     _placeMarker(hit) {
         if (!this.marker) return;
-        
+
         // Check if hit is within max range
         if (this.maxRange > 0) {
             const camPos = this.entity.getPosition();
             const distance = this._getHorizontalDistance(camPos.x, camPos.z, hit.x, hit.z);
-            
+
             if (distance > this.maxRange) {
                 this.marker.enabled = false;
                 return;
             }
         }
-        
+
         this.marker.enabled = true;
         this.marker.setPosition(hit.x, MARKER_HOVER_HEIGHT, hit.z);
     }
 
     _applyLook(deltaX, deltaY) {
         if (!this.entity) return;
-        
+
         // Update tracked yaw and pitch
         this.currentYaw += deltaX * this.lookSensitivity;
         this.currentPitch += deltaY * this.lookSensitivity;
-        
+
         // Normalize yaw angle
         this.currentYaw = normalizeAngle(this.currentYaw);
-        
+
         // Clamp pitch to prevent gimbal lock
         this.currentPitch = Math.max(this.minPitch, Math.min(this.maxPitch, this.currentPitch));
-        
+
         this.entity.setEulerAngles(this.currentPitch, this.currentYaw, 0);
     }
 
@@ -383,7 +383,7 @@ export class FirstPersonTeleport extends Script {
             this.startPos.x, this.startPos.z,
             this.targetPos.x, this.targetPos.z
         );
-        
+
         if (dist < MIN_MOVE_DISTANCE) return;
         if (this.maxRange > 0 && dist > this.maxRange) return;
 
