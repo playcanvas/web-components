@@ -51,7 +51,7 @@
     "eslint": "9.39.1",
     "eslint-import-resolver-typescript": "4.4.4",
     "globals": "16.5.0",
-    "mediabunny": "1.24.3",
+    "mediabunny": "1.24.4",
     "opentype.js": "1.3.4",
     "playcanvas": "2.12.4",
     "rollup": "4.52.5",
