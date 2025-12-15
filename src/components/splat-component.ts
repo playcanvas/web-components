@@ -84,6 +84,10 @@ class SplatComponentElement extends ComponentElement {
      * @param value - Whether the splat supports global sorting and LOD streaming.
      */
     set unified(value: boolean) {
+        if (this.component && this.component.enabled) {
+            console.warn('The "unified" property can only be changed when the component is disabled.');
+            return;
+        }
         this._unified = value;
         if (this.component) {
             this.component.unified = value;
