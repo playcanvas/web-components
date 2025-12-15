@@ -85,6 +85,9 @@ class SplatComponentElement extends ComponentElement {
      */
     set unified(value: boolean) {
         this._unified = value;
+        if (this.component) {
+            this.component.unified = value;
+        }
     }
 
     /**
