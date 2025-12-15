@@ -21,6 +21,8 @@ class ElementComponentElement extends ComponentElement {
 
     private _color: Color = new Color(1, 1, 1, 1);
 
+    private _enableMarkup: boolean = false;
+
     private _fontSize: number = 32;
 
     private _lineHeight: number = 32;
@@ -49,6 +51,7 @@ class ElementComponentElement extends ComponentElement {
             anchor: this._anchor,
             autoWidth: this._autoWidth,
             color: this._color,
+            enableMarkup: this._enableMarkup,
             fontAsset: AssetElement.get(this._asset)!.id,
             fontSize: this._fontSize,
             lineHeight: this._lineHeight,
@@ -143,6 +146,25 @@ class ElementComponentElement extends ComponentElement {
      */
     get color() {
         return this._color;
+    }
+
+    /**
+     * Sets whether the element component should use markup.
+     * @param value - Whether to enable markup.
+     */
+    set enableMarkup(value: boolean) {
+        this._enableMarkup = value;
+        if (this.component) {
+            this.component.enableMarkup = value;
+        }
+    }
+
+    /**
+     * Gets whether the element component should use markup.
+     * @returns Whether markup is enabled.
+     */
+    get enableMarkup() {
+        return this._enableMarkup;
     }
 
     /**
@@ -285,6 +307,7 @@ class ElementComponentElement extends ComponentElement {
             'asset',
             'auto-width',
             'color',
+            'enable-markup',
             'font-size',
             'line-height',
             'pivot',
@@ -310,6 +333,9 @@ class ElementComponentElement extends ComponentElement {
                 break;
             case 'color':
                 this.color = parseColor(newValue);
+                break;
+            case 'enable-markup':
+                this.enableMarkup = this.hasAttribute(name);
                 break;
             case 'font-size':
                 this.fontSize = Number(newValue);
