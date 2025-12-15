@@ -16,6 +16,8 @@ class SplatComponentElement extends ComponentElement {
 
     private _castShadows = false;
 
+    private _unified = false;
+
     /** @ignore */
     constructor() {
         super('gsplat');
@@ -24,7 +26,8 @@ class SplatComponentElement extends ComponentElement {
     getInitialComponentData() {
         return {
             asset: AssetElement.get(this._asset),
-            castShadows: this._castShadows
+            castShadows: this._castShadows,
+            unified: this._unified
         };
     }
 
@@ -75,11 +78,29 @@ class SplatComponentElement extends ComponentElement {
         return this._castShadows;
     }
 
+    /**
+     * Sets whether the splat supports global sorting and LOD streaming. This property can only be
+     * changed when the component is disabled.
+     * @param value - Whether the splat supports global sorting and LOD streaming.
+     */
+    set unified(value: boolean) {
+        this._unified = value;
+    }
+
+    /**
+     * Gets whether the splat supports global sorting and LOD streaming.
+     * @returns Whether the splat supports global sorting and LOD streaming.
+     */
+    get unified() {
+        return this._unified;
+    }
+
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
             'asset',
-            'cast-shadows'
+            'cast-shadows',
+            'unified'
         ];
     }
 
@@ -92,6 +113,9 @@ class SplatComponentElement extends ComponentElement {
                 break;
             case 'cast-shadows':
                 this.castShadows = this.hasAttribute('cast-shadows');
+                break;
+            case 'unified':
+                this.unified = this.hasAttribute('unified');
                 break;
         }
     }
