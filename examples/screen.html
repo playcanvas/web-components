@@ -28,11 +28,14 @@
                 <!-- Screen -->
                 <pc-entity name="screen">
                     <pc-screen screen-space></pc-screen>
-                    <pc-entity name="text" position="0 20 0">
+                    <pc-entity name="text" position="0 40 0">
                         <pc-element type="text" asset="arial" text="This is Arial"></pc-element>
                     </pc-entity>
-                    <pc-entity name="text2" position="0 -20 0">
+                    <pc-entity name="text2" position="0 0 0">
                         <pc-element type="text" asset="courier" text="This is Courier"></pc-element>
+                    </pc-entity>
+                    <pc-entity name="text3" position="0 -40 0">
+                        <pc-element type="text" asset="arial" enable-markup text='[color="#ff0000"]Red[/color] [color="#00ff00"]Green[/color] [color="#0088ff"]Blue[/color]'></pc-element>
                     </pc-entity>
                 </pc-entity>
             </pc-scene>
