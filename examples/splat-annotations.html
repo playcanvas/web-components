@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Gaussian Splat Annotations</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app antialias="false" depth="false" high-resolution="false" stencil="false">
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/annotations.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/splats/bicycle.sog" id="bicycle"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="-2 1.2 -2.5">
+                        <pc-camera fov="30"></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
+                                "enableFly": false,
+                                "enablePan": false,
+                                "focusPoint": "vec3:0,0.575,0",
+                                "zoomRange": "vec2:1,5"
+                            }'></pc-script>
+                            <pc-script name="cameraFrame" attributes='{
+                                "vignette": {
+                                    "enabled": true,
+                                    "color": "color:0,0,0,1",
+                                    "curvature": 0.5,
+                                    "intensity": 0.5,
+                                    "inner": 0.5,
+                                    "outer": 1
+                                }
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
+                        <pc-script name="xrSession"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Bicycle -->
+                <pc-entity name="bicycle" rotation="0 0 180">
+                    <pc-splat asset="bicycle"></pc-splat>
+                    <pc-scripts>
+                        <pc-script name="annotationManager"></pc-script>
+                    </pc-scripts>
+                    <!-- Annotation 1: Smooth-Rolling Tires -->
+                    <pc-entity name="annotation1" position="0 -0.6 -0.86">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "1",
+                                "title": "Smooth-Rolling Tires",
+                                "text": "Wide, durable tires absorb road vibrations while rolling smoothly, offering a perfect balance of comfort, grip, and efficiency."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 2: Front Lighting System -->
+                    <pc-entity name="annotation2" position="0 -0.88 -0.49">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "2",
+                                "title": "Front Lighting System",
+                                "text": "The built-in front light improves visibility in low-light conditions, helping you see and be seen for safer rides day or night."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 3: Upright Handlebar Position -->
+                    <pc-entity name="annotation3" position="0 -1.13 -0.31">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "3",
+                                "title": "Upright Handlebar Position",
+                                "text": "Raised handlebars promote an upright riding position, reducing strain on your back, shoulders, and wrists for longer, more enjoyable rides."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 4: Step-Through Frame -->
+                    <pc-entity name="annotation4" position="0 -0.656 -0.048">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "4",
+                                "title": "Step-Through Frame",
+                                "text": "The low step-through frame makes getting on and off effortless—ideal for everyday riding, commuting, or riders who value comfort and accessibility."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 5: Chain Guard -->
+                    <pc-entity name="annotation5" position="-0.07 -0.391 0.181">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "5",
+                                "title": "Chain Guard",
+                                "text": "The enclosed chain guard protects your clothing and reduces maintenance, so you can ride without worrying about grease or snagging."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 6: Adjustable Seat Height -->
+                    <pc-entity name="annotation6" position="-0.062 -0.748 0.234">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "6",
+                                "title": "Adjustable Seat Height",
+                                "text": "Easily adjust the seat height to match your riding style and body position, ensuring optimal comfort and control."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 7: Ergonomic Saddle -->
+                    <pc-entity name="annotation7" position="0 -1.0 0.309">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "7",
+                                "title": "Ergonomic Saddle",
+                                "text": "A wide, cushioned saddle provides excellent support, making every ride comfortable—no matter how long the journey."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 8: Reliable Braking System -->
+                    <pc-entity name="annotation8" position="0 -0.58 0.416">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "8",
+                                "title": "Reliable Braking System",
+                                "text": "High-quality brakes deliver consistent stopping power, giving you peace of mind in traffic, on hills, or in changing weather."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 9: Rear Cargo Rack -->
+                    <pc-entity name="annotation9" position="0 -0.78 0.596">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "9",
+                                "title": "Rear Cargo Rack",
+                                "text": "A sturdy rear rack makes it easy to transport bags, groceries, or accessories—perfect for commuting or daily errands."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- Annotation 10: Full Coverage Fenders -->
+                    <pc-entity name="annotation10" position="0 -0.701 0.816">
+                        <pc-scripts>
+                            <pc-script name="annotation" attributes='{
+                                "label": "10",
+                                "title": "Full Coverage Fenders",
+                                "text": "Full front and rear fenders protect you from splashes and debris, keeping your clothes clean in wet or unpredictable conditions."
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
