@@ -175,7 +175,7 @@ class RigidBodyComponentElement extends ComponentElement {
     set type(value: string) {
         this._type = value;
         if (this.component) {
-            this.component.type = value;
+            this.component.type = value as 'static' | 'dynamic' | 'kinematic';
         }
     }
 
