@@ -20,7 +20,7 @@
             <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
             <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
             <!-- Assets -->
-            <pc-asset src="../node_modules/playcanvas/scripts/esm/annotation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/annotations.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
@@ -57,6 +57,9 @@
                 </pc-entity>
                 <!-- Jet Fighter -->
                 <pc-entity name="jet-fighter" position="-2 1.6 0" rotation="0 0 3">
+                    <pc-scripts>
+                        <pc-script name="annotationManager"></pc-script>
+                    </pc-scripts>
                     <pc-model asset="jet-fighter"></pc-model>
                     <pc-entity name="annotation1" position="5.5 1.2 0">
                         <pc-scripts>
