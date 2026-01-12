@@ -1,6 +1,7 @@
 export const examples = [
     { name: 'Animation', path: 'animation.html' },
     { name: 'Annotations', path: 'annotations.html' },
+    { name: 'Annotations (Splat)', path: 'splat-annotations.html' },
     { name: 'AR Avatar', path: 'ar-avatar.html' },
     { name: 'Basic Shapes', path: 'basic-shapes.html' },
     { name: 'Basic Particles', path: 'basic-particles.html' },
