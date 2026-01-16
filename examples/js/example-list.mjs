@@ -9,6 +9,7 @@ export const examples = [
     { name: 'First Person Teleport', path: 'first-person-teleport.html' },
     { name: 'FPS Controller', path: 'fps-controller.html' },
     { name: 'Gaussian Splatting', path: 'splat.html' },
+    { name: 'GSplat Flipbook', path: 'gsplat-flipbook.html' },
     { name: 'GLB Loader', path: 'glb.html' },
     { name: 'Physics', path: 'physics.html' },
     { name: 'Physics Cluster', path: 'physics-cluster.html' },

@@ -54,6 +54,14 @@ class LightComponentElement extends ComponentElement {
 
     private _vsmBlurSize = 11;
 
+    private _penumbraSize = 1;
+
+    private _penumbraFalloff = 2;
+
+    private _shadowSamples = 16;
+
+    private _shadowBlockerSamples = 16;
+
     /** @ignore */
     constructor() {
         super('light');
@@ -67,11 +75,15 @@ class LightComponentElement extends ComponentElement {
             intensity: this._intensity,
             normalOffsetBias: this._normalOffsetBias,
             outerConeAngle: this._outerConeAngle,
+            penumbraFalloff: this._penumbraFalloff,
+            penumbraSize: this._penumbraSize,
             range: this._range,
             shadowBias: this._shadowBias,
+            shadowBlockerSamples: this._shadowBlockerSamples,
             shadowDistance: this._shadowDistance,
             shadowIntensity: this._shadowIntensity,
             shadowResolution: this._shadowResolution,
+            shadowSamples: this._shadowSamples,
             shadowType: shadowTypes.get(this._shadowType),
             type: this._type,
             vsmBias: this._vsmBias,
@@ -387,6 +399,82 @@ class LightComponentElement extends ComponentElement {
         return this._vsmBlurSize;
     }
 
+    /**
+     * Sets the penumbra size of the light. Used for PCSS shadows.
+     * @param value - The penumbra size.
+     */
+    set penumbraSize(value: number) {
+        this._penumbraSize = value;
+        if (this.component) {
+            this.component.penumbraSize = value;
+        }
+    }
+
+    /**
+     * Gets the penumbra size of the light.
+     * @returns The penumbra size.
+     */
+    get penumbraSize() {
+        return this._penumbraSize;
+    }
+
+    /**
+     * Sets the penumbra falloff of the light. Used for PCSS shadows.
+     * @param value - The penumbra falloff.
+     */
+    set penumbraFalloff(value: number) {
+        this._penumbraFalloff = value;
+        if (this.component) {
+            this.component.penumbraFalloff = value;
+        }
+    }
+
+    /**
+     * Gets the penumbra falloff of the light.
+     * @returns The penumbra falloff.
+     */
+    get penumbraFalloff() {
+        return this._penumbraFalloff;
+    }
+
+    /**
+     * Sets the number of shadow samples. Used for PCSS shadows.
+     * @param value - The number of shadow samples.
+     */
+    set shadowSamples(value: number) {
+        this._shadowSamples = value;
+        if (this.component) {
+            this.component.shadowSamples = value;
+        }
+    }
+
+    /**
+     * Gets the number of shadow samples.
+     * @returns The number of shadow samples.
+     */
+    get shadowSamples() {
+        return this._shadowSamples;
+    }
+
+    /**
+     * Sets the number of shadow blocker samples. Used for PCSS shadows.
+     * @param value - The number of shadow blocker samples.
+     */
+    set shadowBlockerSamples(value: number) {
+        this._shadowBlockerSamples = value;
+        if (this.component) {
+            this.component.shadowBlockerSamples = value;
+        }
+    }
+
+    /**
+     * Gets the number of shadow blocker samples.
+     * @returns The number of shadow blocker samples.
+     */
+    get shadowBlockerSamples() {
+        return this._shadowBlockerSamples;
+    }
+
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
@@ -396,11 +484,15 @@ class LightComponentElement extends ComponentElement {
             'inner-cone-angle',
             'normal-offset-bias',
             'outer-cone-angle',
+            'penumbra-falloff',
+            'penumbra-size',
             'range',
             'shadow-bias',
+            'shadow-blocker-samples',
             'shadow-distance',
             'shadow-intensity',
             'shadow-resolution',
+            'shadow-samples',
             'shadow-type',
             'type',
             'vsm-bias',
@@ -430,6 +522,12 @@ class LightComponentElement extends ComponentElement {
             case 'outer-cone-angle':
                 this.outerConeAngle = Number(newValue);
                 break;
+            case 'penumbra-falloff':
+                this.penumbraFalloff = Number(newValue);
+                break;
+            case 'penumbra-size':
+                this.penumbraSize = Number(newValue);
+                break;
             case 'range':
                 this.range = Number(newValue);
                 break;
@@ -439,11 +537,17 @@ class LightComponentElement extends ComponentElement {
             case 'shadow-distance':
                 this.shadowDistance = Number(newValue);
                 break;
+            case 'shadow-blocker-samples':
+                this.shadowBlockerSamples = Number(newValue);
+                break;
             case 'shadow-resolution':
                 this.shadowResolution = Number(newValue);
                 break;
             case 'shadow-intensity':
                 this.shadowIntensity = Number(newValue);
+                break;
+            case 'shadow-samples':
+                this.shadowSamples = Number(newValue);
                 break;
             case 'shadow-type':
                 this.shadowType = newValue as 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f';
