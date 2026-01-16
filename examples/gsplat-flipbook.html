@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - GSplat Flipbook</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app antialias="false" depth="false" high-resolution="false" stencil="false">
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="studio" type="dome" center="0 0.3 0" scale="5 5 5" lighting></pc-sky>
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera root">
+                    <pc-entity name="camera" position="0 1.25 2">
+                        <pc-camera far-clip="1500" fov="50" tone-mapping="aces"></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraControls" attributes='{
+                                "enableFly": false,
+                                "enablePan": false,
+                                "focusPoint": "vec3:0,1.25,0",
+                                "zoomRange": "vec2:0.2,2.5"
+                            }'></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrNavigation"></pc-script>
+                        <pc-script name="xrSession"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Player (Flipbook) -->
+                <pc-entity name="player" rotation="0 -90 180">
+                    <pc-splat unified cast-shadows></pc-splat>
+                    <pc-scripts>
+                        <pc-script name="gsplatFlipbook" attributes='{
+                            "fps": 30,
+                            "folder": "https://code.playcanvas.com/examples_data/example_basketball_02",
+                            "filenamePattern": "{frame:03}.compressed.ply",
+                            "startFrame": 1,
+                            "endFrame": 149,
+                            "playMode": "loop",
+                            "playing": false,
+                            "preloadCount": 149
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Shadow Catcher -->
+                <pc-entity name="shadow-catcher" position="0 0 0">
+                    <pc-render type="plane" cast-shadows="false"></pc-render>
+                    <pc-scripts>
+                        <pc-script name="shadowCatcher" attributes='{
+                            "scale": "vec3:10,10,10"
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="55 320 0">
+                    <pc-light type="directional" color="1 1 1" intensity="1"
+                        cast-shadows shadow-bias="0.2" normal-offset-bias="0.05"
+                        shadow-distance="10" shadow-intensity="0.3"
+                        shadow-resolution="2048" shadow-type="pcss-32f"
+                        penumbra-size="10" penumbra-falloff="2"
+                        shadow-samples="16" shadow-blocker-samples="16">
+                    </pc-light>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example.mjs"></script>
+        <script type="module">
+            // Wait for frames to preload before starting playback
+            document.addEventListener('DOMContentLoaded', async () => {
+                const appElement = await document.querySelector('pc-app').ready();
+                const app = appElement.app;
+                
+                // Wait for the flipbook script to be ready
+                const waitForFlipbook = setInterval(() => {
+                    const player = app.root.findByName('player');
+                    const flipbook = player?.script?.gsplatFlipbook;
+                    
+                    if (flipbook) {
+                        clearInterval(waitForFlipbook);
+                        console.log('Flipbook script found, waiting for frames to load...');
+                        
+                        // Now wait for all preloaded frames to be loaded
+                        const checkReady = setInterval(() => {
+                            const preloaded = flipbook.preloadedFrames || [];
+                            const loadedCount = preloaded.filter(f => f.asset.loaded).length;
+                            console.log(`Preloaded: ${loadedCount}/${preloaded.length}`);
+                            
+                            // Start when we have enough frames loaded
+                            if (preloaded.length >= 100 && loadedCount >= preloaded.length) {
+                                clearInterval(checkReady);
+                                flipbook.playing = true;
+                                console.log('Frames loaded, starting playback');
+                            }
+                        }, 500);
+                    }
+                }, 100);
+            });
+        </script>
+    </body>
+</html>
