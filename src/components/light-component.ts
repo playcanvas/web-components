@@ -56,7 +56,7 @@ class LightComponentElement extends ComponentElement {
 
     private _penumbraSize = 1;
 
-    private _penumbraFalloff = 2;
+    private _penumbraFalloff = 1;
 
     private _shadowSamples = 16;
 
