@@ -35,7 +35,7 @@
                         <pc-scripts>
                             <pc-script name="cameraControls" attributes='{
                                 "enableFly": false,
-                                "enablePan": false,
+                                "enablePan": true,
                                 "focusPoint": "vec3:0,1.25,0",
                                 "zoomRange": "vec2:0.2,2.5"
                             }'></pc-script>
@@ -73,12 +73,17 @@
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="55 320 0">
-                    <pc-light type="directional" color="0 0 0" intensity="0"
+                    <pc-light type="directional"
                         cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
-                        shadow-distance="10" shadow-intensity="0.3"
-                        shadow-resolution="2048" shadow-type="pcss-32f"
-                        penumbra-size="10" penumbra-falloff="2"
-                        shadow-samples="16" shadow-blocker-samples="16">
+                        shadow-distance="10" shadow-intensity="0.15"
+                        shadow-resolution="1024" shadow-type="pcf5-16f"
+                    </pc-light>
+                </pc-entity>
+                <pc-entity name="light" rotation="55 220 0">
+                    <pc-light type="directional"
+                        cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
+                        shadow-distance="10" shadow-intensity="0.15"
+                        shadow-resolution="1024" shadow-type="pcf5-16f"
                     </pc-light>
                 </pc-entity>
             </pc-scene>
