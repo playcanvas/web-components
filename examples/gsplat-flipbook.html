@@ -13,61 +13,8 @@
         </script>
         <script type="module" src="../dist/pwc.mjs"></script>
         <link rel="stylesheet" href="css/example.css">
-        <style>
-            .loading-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                color: white;
-                transition: opacity 0.5s ease;
-            }
-            .loading-overlay.hidden {
-                opacity: 0;
-                pointer-events: none;
-            }
-            .loading-text {
-                font-size: 1.2em;
-                margin-bottom: 20px;
-                opacity: 0.9;
-            }
-            .progress-container {
-                width: 300px;
-                height: 6px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 3px;
-                overflow: hidden;
-            }
-            .progress-bar {
-                height: 100%;
-                background: #ff8533;
-                width: 0%;
-                transition: width 0.2s ease;
-                border-radius: 3px;
-            }
-            .progress-percent {
-                margin-top: 12px;
-                font-size: 0.9em;
-                opacity: 0.7;
-            }
-        </style>
     </head>
     <body>
-        <div class="loading-overlay" id="loading">
-            <div class="loading-text">Loading frames...</div>
-            <div class="progress-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
-            <div class="progress-percent" id="progress-text">0%</div>
-        </div>
         <pc-app antialias="false" depth="false" high-resolution="false" stencil="false">
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
@@ -110,9 +57,8 @@
                             "filenamePattern": "{frame:03}.compressed.ply",
                             "startFrame": 1,
                             "endFrame": 149,
-                            "playMode": "loop",
-                            "playing": false,
-                            "preloadCount": 149
+                            "playMode": "bounce",
+                            "playing": true
                         }'></pc-script>
                     </pc-scripts>
                 </pc-entity>
@@ -127,8 +73,8 @@
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="55 320 0">
-                    <pc-light type="directional" color="1 1 1" intensity="1"
-                        cast-shadows shadow-bias="0.2" normal-offset-bias="0.05"
+                    <pc-light type="directional" color="0 0 0" intensity="0"
+                        cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
                         shadow-distance="10" shadow-intensity="0.3"
                         shadow-resolution="2048" shadow-type="pcss-32f"
                         penumbra-size="10" penumbra-falloff="2"
@@ -139,50 +85,8 @@
         </pc-app>
         <script type="module" src="js/example.mjs"></script>
         <script type="module">
-            // Wait for frames to preload before starting playback
-            document.addEventListener('DOMContentLoaded', async () => {
-                const appElement = await document.querySelector('pc-app').ready();
-                const app = appElement.app;
-                
-                const loadingOverlay = document.getElementById('loading');
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-                const totalFrames = 149;
-                
-                // Wait for the flipbook script to be ready
-                const waitForFlipbook = setInterval(() => {
-                    const player = app.root.findByName('player');
-                    const flipbook = player?.script?.gsplatFlipbook;
-                    
-                    if (flipbook) {
-                        clearInterval(waitForFlipbook);
-                        
-                        // Now wait for all preloaded frames to be loaded
-                        const checkReady = setInterval(() => {
-                            const preloaded = flipbook.preloadedFrames || [];
-                            const loadedCount = preloaded.filter(f => f.asset.loaded).length;
-                            
-                            // Update progress UI (+1 for current frame)
-                            const progress = Math.min(100, Math.round(((loadedCount + 1) / totalFrames) * 100));
-                            progressBar.style.width = progress + '%';
-                            progressText.textContent = `${loadedCount + 1} / ${totalFrames} frames`;
-                            
-                            // Start when we have enough frames loaded
-                            if (preloaded.length >= 100 && loadedCount >= preloaded.length) {
-                                clearInterval(checkReady);
-                                progressBar.style.width = '100%';
-                                progressText.textContent = 'Ready!';
-                                
-                                // Hide overlay and start playback
-                                setTimeout(() => {
-                                    loadingOverlay.classList.add('hidden');
-                                    flipbook.playing = true;
-                                }, 300);
-                            }
-                        }, 100);
-                    }
-                }, 100);
-            });
+            const appElement = await document.querySelector('pc-app').ready();
+            appElement.app.scene.gsplat.material.setParameter('alphaClip', 0.1);
         </script>
     </body>
 </html>
