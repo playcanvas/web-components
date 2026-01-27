@@ -18,8 +18,10 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-menu.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/fonts/arial.json" type="font" id="arial-font"></pc-asset>
             <pc-asset src="assets/scripts/orbit.mjs"></pc-asset>
             <pc-asset src="assets/skies/dry-lake-bed-2k.hdr" id="lake-bed"></pc-asset>
             <pc-asset src="assets/models/walking-robot.glb" id="robot"></pc-asset>
@@ -36,6 +38,10 @@
                     </pc-entity>
                     <pc-scripts>
                         <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrMenu" attributes='{
+                            "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
+                            "fontAsset": "asset:arial-font"
+                        }'></pc-script>
                         <pc-script name="xrNavigation"></pc-script>
                         <pc-script name="xrSession"></pc-script>
                     </pc-scripts>
