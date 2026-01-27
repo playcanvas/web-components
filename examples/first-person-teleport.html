@@ -18,8 +18,10 @@
         <pc-app antialias="false" stencil="false">
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-menu.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-navigation.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/fonts/arial.json" type="font" id="arial-font"></pc-asset>
             <pc-asset src="assets/scripts/first-person-teleport.mjs"></pc-asset>
             <pc-asset src="assets/splats/statues/angel.sog" id="angel"></pc-asset>
             <pc-asset src="assets/splats/statues/angel-kneeling.sog" id="angel-kneeling"></pc-asset>
@@ -43,6 +45,10 @@
                     </pc-entity>
                     <pc-scripts>
                         <pc-script name="xrControllers"></pc-script>
+                        <pc-script name="xrMenu" attributes='{
+                            "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
+                            "fontAsset": "asset:arial-font"
+                        }'></pc-script>
                         <pc-script name="xrNavigation"></pc-script>
                         <pc-script name="xrSession"></pc-script>
                     </pc-scripts>
