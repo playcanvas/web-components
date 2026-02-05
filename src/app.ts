@@ -60,7 +60,9 @@ import {
     BatchManager,
     SoundManager,
     Lightmapper,
-    XrManager
+    XrManager,
+    MeshInstance,
+    GSplatComponent
 } from 'playcanvas';
 
 import { AssetElement } from './asset';
@@ -355,7 +357,8 @@ class AppElement extends AsyncElement {
         // Get the currently hovered entity by walking up the hierarchy
         let newHoverEntity: EntityElement | null = null;
         if (selection.length > 0) {
-            let currentNode: GraphNode | null = selection[0].node;
+            const item = selection[0];
+            let currentNode: GraphNode | null = item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
             while (currentNode !== null) {
                 const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
                 if (entityElement) {
@@ -398,7 +401,8 @@ class AppElement extends AsyncElement {
         const selection = this._picker.getSelection(x, y);
 
         if (selection.length > 0) {
-            let currentNode: GraphNode | null = selection[0].node;
+            const item = selection[0];
+            let currentNode: GraphNode | null = item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
             while (currentNode !== null) {
                 const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
                 if (entityElement && entityElement.hasListeners('pointerdown')) {
@@ -423,7 +427,9 @@ class AppElement extends AsyncElement {
         const selection = this._picker.getSelection(x, y);
 
         if (selection.length > 0) {
-            const entityElement = this.querySelector(`pc-entity[name="${selection[0].node.name}"]`) as EntityElement;
+            const item = selection[0];
+            const node = item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
+            const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
             if (entityElement && entityElement.hasListeners('pointerup')) {
                 entityElement.dispatchEvent(new PointerEvent('pointerup', event));
             }
