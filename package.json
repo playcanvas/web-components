@@ -37,6 +37,9 @@
     "type-check:watch": "npm run type-check -- --watch",
     "watch": "rollup -c -w"
   },
+  "peerDependencies": {
+    "playcanvas": "^2.17.2"
+  },
   "devDependencies": {
     "@mediapipe/tasks-vision": "0.10.32",
     "@playcanvas/eslint-config": "2.1.0",
