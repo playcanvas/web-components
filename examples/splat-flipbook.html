@@ -55,7 +55,7 @@
                 </pc-entity>
                 <!-- Animated Splat (Flipbook) -->
                 <pc-entity name="animated-splat" rotation="0 -90 180">
-                    <pc-splat unified cast-shadows></pc-splat>
+                    <pc-splat cast-shadows></pc-splat>
                     <pc-scripts>
                         <pc-script name="gsplatFlipbook" attributes='{
                             "fps": 30,
@@ -97,7 +97,7 @@
         <script type="module" src="js/example.mjs"></script>
         <script type="module">
             const appElement = await document.querySelector('pc-app').ready();
-            appElement.app.scene.gsplat.material.setParameter('alphaClip', 0.1);
+            appElement.app.scene.gsplat.alphaClip = 0.1;
         </script>
     </body>
 </html>
