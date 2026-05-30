@@ -16,6 +16,13 @@
     "webxr"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/playcanvas/web-components.git"
+  },
+  "bugs": {
+    "url": "https://github.com/playcanvas/web-components/issues"
+  },
   "main": "dist/pwc.cjs",
   "module": "dist/pwc.mjs",
   "browser": "dist/pwc.js",
