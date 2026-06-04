@@ -1,4 +1,5 @@
-import { Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
+import type { Asset, Scene, Texture} from 'playcanvas';
+import { EnvLighting, LAYERID_SKYBOX, Quat, Vec3 } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';

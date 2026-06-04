@@ -7,7 +7,7 @@
  * @module EngineWebComponents
  */
 
-/* eslint-disable import/order */
+/* eslint-disable import-x/order */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
 import { AsyncElement } from './async-element';

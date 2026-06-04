@@ -1,4 +1,4 @@
-import { AudioListenerComponent } from 'playcanvas';
+import type { AudioListenerComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 

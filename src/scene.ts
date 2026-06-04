@@ -1,6 +1,7 @@
-import { Color, Scene, Vec3 } from 'playcanvas';
+import type { Scene} from 'playcanvas';
+import { Color, Vec3 } from 'playcanvas';
 
-import { AppElement } from './app';
+import type { AppElement } from './app';
 import { AsyncElement } from './async-element';
 import { parseColor, parseVec3 } from './utils';
 

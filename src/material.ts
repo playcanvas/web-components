@@ -1,4 +1,5 @@
-import { Color, StandardMaterial, Texture } from 'playcanvas';
+import type { Texture } from 'playcanvas';
+import { Color, StandardMaterial } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { parseColor } from './utils';

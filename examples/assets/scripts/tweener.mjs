@@ -24,7 +24,7 @@ const EasingFunction = {
 };
 
 /** @interface */
-class TweenDescriptor { /* eslint-disable-line no-unused-vars */
+class TweenDescriptor {  
     /**
      * Path to the property to tween
      * @type {string}

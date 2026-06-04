@@ -1,8 +1,10 @@
-import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
+import type { ElementComponent} from 'playcanvas';
+import { Color, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
-import { ComponentElement } from './component';
 import { parseColor, parseVec2, parseVec4 } from '../utils';
+
+import { ComponentElement } from './component';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating
@@ -15,27 +17,27 @@ import { parseColor, parseVec2, parseVec4 } from '../utils';
 class ElementComponentElement extends ComponentElement {
     private _anchor: Vec4 = new Vec4(0.5, 0.5, 0.5, 0.5);
 
-    private _asset: string = '';
+    private _asset = '';
 
-    private _autoWidth: boolean = true;
+    private _autoWidth = true;
 
     private _color: Color = new Color(1, 1, 1, 1);
 
-    private _enableMarkup: boolean = false;
+    private _enableMarkup = false;
 
-    private _fontSize: number = 32;
+    private _fontSize = 32;
 
-    private _lineHeight: number = 32;
+    private _lineHeight = 32;
 
     private _pivot: Vec2 = new Vec2(0.5, 0.5);
 
-    private _text: string = '';
+    private _text = '';
 
     private _type: 'group' | 'image' | 'text' = 'group';
 
-    private _width: number = 0;
+    private _width = 0;
 
-    private _wrapLines: boolean = false;
+    private _wrapLines = false;
 
     /** @ignore */
     constructor() {

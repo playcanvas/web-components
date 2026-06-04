@@ -1,7 +1,9 @@
-import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
+import type { CameraComponent} from 'playcanvas';
+import { Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
+
+import { parseColor, parseVec4 } from '../utils';
 
 import { ComponentElement } from './component';
-import { parseColor, parseVec4 } from '../utils';
 
 const tonemaps = new Map([
     ['none', TONEMAP_NONE],

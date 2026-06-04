@@ -4,11 +4,11 @@
  * methods of the {@link HTMLElement} interface.
  */
 class ScriptElement extends HTMLElement {
-    private _attributes: string = '{}';
+    private _attributes = '{}';
 
-    private _enabled: boolean = true;
+    private _enabled = true;
 
-    private _name: string = '';
+    private _name = '';
 
     /**
      * Sets the attributes of the script.
