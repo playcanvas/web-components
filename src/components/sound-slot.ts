@@ -1,7 +1,8 @@
-import { SoundSlot } from 'playcanvas';
+import type { SoundSlot } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { AsyncElement } from '../async-element';
+
 import { SoundComponentElement } from './sound-component';
 
 /**
@@ -10,23 +11,23 @@ import { SoundComponentElement } from './sound-component';
  * methods of the {@link AsyncElement} interface.
  */
 class SoundSlotElement extends AsyncElement {
-    private _asset: string = '';
+    private _asset = '';
 
-    private _autoPlay: boolean = false;
+    private _autoPlay = false;
 
     private _duration: number | null = null;
 
-    private _loop: boolean = false;
+    private _loop = false;
 
-    private _name: string = '';
+    private _name = '';
 
-    private _overlap: boolean = false;
+    private _overlap = false;
 
-    private _pitch: number = 1;
+    private _pitch = 1;
 
-    private _startTime: number = 0;
+    private _startTime = 0;
 
-    private _volume: number = 1;
+    private _volume = 1;
 
     /**
      * The sound slot.

@@ -28,7 +28,7 @@ const extToType = new Map([
 // https://github.com/zeux/meshoptimizer
 const processBufferView = (
     gltfBuffer: any,
-    buffers: Array<any>,
+    buffers: any[],
     continuation: (err: string | null, result: any) => void
 ) => {
     if (gltfBuffer.extensions && gltfBuffer.extensions.EXT_meshopt_compression) {
@@ -69,7 +69,7 @@ const processBufferView = (
  * {@link HTMLElement} interface.
  */
 class AssetElement extends HTMLElement {
-    private _lazy: boolean = false;
+    private _lazy = false;
 
     /**
      * The asset that is loaded.

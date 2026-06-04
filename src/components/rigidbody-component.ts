@@ -1,7 +1,9 @@
-import { RigidBodyComponent, Vec3 } from 'playcanvas';
+import type { RigidBodyComponent} from 'playcanvas';
+import { Vec3 } from 'playcanvas';
+
+import { parseVec3 } from '../utils';
 
 import { ComponentElement } from './component';
-import { parseVec3 } from '../utils';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
@@ -15,7 +17,7 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The angular damping of the rigidbody.
      */
-    private _angularDamping: number = 0;
+    private _angularDamping = 0;
 
     /**
      * The angular factor of the rigidbody.
@@ -25,12 +27,12 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The friction of the rigidbody.
      */
-    private _friction: number = 0.5;
+    private _friction = 0.5;
 
     /**
      * The linear damping of the rigidbody.
      */
-    private _linearDamping: number = 0;
+    private _linearDamping = 0;
 
     /**
      * The linear factor of the rigidbody.
@@ -40,22 +42,22 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The mass of the rigidbody.
      */
-    private _mass: number = 1;
+    private _mass = 1;
 
     /**
      * The restitution of the rigidbody.
      */
-    private _restitution: number = 0;
+    private _restitution = 0;
 
     /**
      * The rolling friction of the rigidbody.
      */
-    private _rollingFriction: number = 0;
+    private _rollingFriction = 0;
 
     /**
      * The type of the rigidbody.
      */
-    private _type: string = 'static';
+    private _type = 'static';
 
     /** @ignore */
     constructor() {

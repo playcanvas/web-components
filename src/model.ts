@@ -1,4 +1,4 @@
-import { ContainerResource, Entity } from 'playcanvas';
+import type { ContainerResource, Entity } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -10,7 +10,7 @@ import { AsyncElement } from './async-element';
  * {@link HTMLElement} interface.
  */
 class ModelElement extends AsyncElement {
-    private _asset: string = '';
+    private _asset = '';
 
     private _entity: Entity | null = null;
 

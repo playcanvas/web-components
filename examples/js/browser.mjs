@@ -141,5 +141,5 @@ class ExampleBrowser {
 
 // Initialize the browser when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const browser = new ExampleBrowser(); /* eslint-disable-line no-unused-vars */
+    const browser = new ExampleBrowser();  
 });

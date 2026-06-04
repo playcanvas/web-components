@@ -1,10 +1,13 @@
+import type {
+    CameraComponent,
+    GraphNode,
+    GSplatComponent
+} from 'playcanvas';
 import {
     AppBase,
     AppOptions,
-    CameraComponent,
     createGraphicsDevice,
     FILLMODE_FILL_WINDOW,
-    GraphNode,
     Keyboard,
     Mouse,
     Picker,
@@ -61,15 +64,14 @@ import {
     SoundManager,
     Lightmapper,
     XrManager,
-    MeshInstance,
-    GSplatComponent
+    MeshInstance
 } from 'playcanvas';
 
-import { AssetElement } from './asset';
+import type { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
-import { EntityElement } from './entity';
-import { MaterialElement } from './material';
-import { ModuleElement } from './module';
+import type { EntityElement } from './entity';
+import type { MaterialElement } from './material';
+import type { ModuleElement } from './module';
 
 /**
  * The AppElement interface provides properties and methods for manipulating
@@ -99,7 +101,7 @@ class AppElement extends AsyncElement {
 
     private _picker: Picker | null = null;
 
-    private _hasPointerListeners: { [key: string]: boolean } = {
+    private _hasPointerListeners: Record<string, boolean> = {
         pointerenter: false,
         pointerleave: false,
         pointerdown: false,
@@ -109,7 +111,7 @@ class AppElement extends AsyncElement {
 
     private _hoveredEntity: EntityElement | null = null;
 
-    private _pointerHandlers: { [key: string]: EventListener | null } = {
+    private _pointerHandlers: Record<string, EventListener | null> = {
         pointermove: null,
         pointerdown: null,
         pointerup: null
@@ -144,7 +146,7 @@ class AppElement extends AsyncElement {
         this.appendChild(this._canvas);
 
         // Configure device types based on backend selection
-        const backendToDeviceTypes: { [key: string]: string[] } = {
+        const backendToDeviceTypes: Record<string, string[]> = {
             webgpu: ['webgpu', 'webgl2'], // fallback to webgl2 if webgpu not available
             webgl2: ['webgl2'],
             null: ['null']

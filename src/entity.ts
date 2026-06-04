@@ -1,4 +1,5 @@
-import { AppBase, Entity, Vec3 } from 'playcanvas';
+import type { AppBase} from 'playcanvas';
+import { Entity, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
@@ -43,7 +44,7 @@ class EntityElement extends AsyncElement {
     /**
      * The pointer event listeners for the entity.
      */
-    private _listeners: { [key: string]: EventListener[] } = {};
+    private _listeners: Record<string, EventListener[]> = {};
 
     /**
      * The PlayCanvas entity instance.
@@ -94,7 +95,7 @@ class EntityElement extends AsyncElement {
                 const eventType = eventName.substring(2); // remove 'on' prefix
                 const eventHandler = (event: Event) => {
                     try {
-                        /* eslint-disable-next-line no-new-func */
+                         
                         new Function('event', handler).call(this, event);
                     } catch (e) {
                         console.error('Error in event handler:', e);
@@ -317,7 +318,7 @@ class EntityElement extends AsyncElement {
                     const handler = (event: Event) => {
                         try {
                             const handlerStr = this.getAttribute(eventName) || '';
-                            /* eslint-disable-next-line no-new-func */
+                             
                             new Function('event', handlerStr).call(this, event);
                         } catch (e) {
                             console.error('Error in event handler:', e);

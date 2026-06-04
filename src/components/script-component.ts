@@ -1,18 +1,20 @@
-import { Color, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
+import type { ScriptComponent, Script} from 'playcanvas';
+import { Color, Vec2, Vec3, Vec4 } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import type { AssetElement } from '../asset';
+import type { EntityElement } from '../entity';
+
 import { ComponentElement } from './component';
-import { EntityElement } from '../entity';
-import { ScriptElement } from './script';
+import type { ScriptElement } from './script';
 
 // Add these interfaces at the top of the file, after the imports
-interface ScriptAttributesChangeEvent extends CustomEvent {
+type ScriptAttributesChangeEvent = {
     detail: { attributes: any };
-}
+} & CustomEvent
 
-interface ScriptEnableChangeEvent extends CustomEvent {
+type ScriptEnableChangeEvent = {
     detail: { enabled: boolean };
-}
+} & CustomEvent
 
 // Add this interface before the ScriptComponentElement class
 declare global {

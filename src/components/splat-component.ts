@@ -1,7 +1,8 @@
-import { GSplatComponent } from 'playcanvas';
+import type { GSplatComponent } from 'playcanvas';
+
+import { AssetElement } from '../asset';
 
 import { ComponentElement } from './component';
-import { AssetElement } from '../asset';
 
 /**
  * The SplatComponentElement interface provides properties and methods for manipulating

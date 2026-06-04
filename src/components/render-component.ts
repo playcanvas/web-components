@@ -1,7 +1,8 @@
-import { RenderComponent, StandardMaterial } from 'playcanvas';
+import type { RenderComponent, StandardMaterial } from 'playcanvas';
+
+import { MaterialElement } from '../material';
 
 import { ComponentElement } from './component';
-import { MaterialElement } from '../material';
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -14,7 +15,7 @@ import { MaterialElement } from '../material';
 class RenderComponentElement extends ComponentElement {
     private _castShadows = true;
 
-    private _material: string = '';
+    private _material = '';
 
     private _receiveShadows = true;
 

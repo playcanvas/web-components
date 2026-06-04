@@ -1,5 +1,5 @@
-import { AppElement } from './app';
-import { EntityElement } from './entity';
+import type { AppElement } from './app';
+import type { EntityElement } from './entity';
 
 /**
  * Base class for all PlayCanvas Web Components that initialize asynchronously.

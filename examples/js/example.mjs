@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Add MiniStats if query parameter is present
     if (new URLSearchParams(window.location.search).has('ministats')) {
-        /* eslint-disable-next-line no-unused-vars */
+         
         const stats = new MiniStats(app);
     }
 
