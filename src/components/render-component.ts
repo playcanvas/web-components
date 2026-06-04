@@ -1,4 +1,6 @@
-import { RenderComponent, StandardMaterial } from 'playcanvas';
+import type { RenderComponent, StandardMaterial } from 'playcanvas';
+
+import { MaterialElement } from '../material';
 
 import { ComponentElement } from './component';
 import { MaterialElement } from '../material';
@@ -19,7 +21,7 @@ import { parseBool, parseEnum } from '../parse';
 class RenderComponentElement extends ComponentElement {
     private _castShadows = true;
 
-    private _material: string = '';
+    private _material = '';
 
     private _receiveShadows = true;
 

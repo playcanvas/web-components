@@ -1,12 +1,15 @@
+import type {
+    CameraComponent,
+    GraphNode,
+    GSplatComponent
+} from 'playcanvas';
 import {
     AppBase,
     AppOptions,
-    CameraComponent,
     createGraphicsDevice,
     ElementInput,
     Entity,
     FILLMODE_FILL_WINDOW,
-    GraphNode,
     Keyboard,
     Mouse,
     Picker,
@@ -63,11 +66,10 @@ import {
     SoundManager,
     Lightmapper,
     XrManager,
-    MeshInstance,
-    GSplatComponent
+    MeshInstance
 } from 'playcanvas';
 
-import { AssetElement } from './asset';
+import type { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
 import { EntityElement } from './entity';
 import { LoadingBar } from './loading-bar';
@@ -126,7 +128,7 @@ class AppElement extends AsyncElement {
 
     private _picker: Picker | null = null;
 
-    private _hasPointerListeners: { [key: string]: boolean } = {
+    private _hasPointerListeners: Record<string, boolean> = {
         pointerenter: false,
         pointerleave: false,
         pointerdown: false,
@@ -200,7 +202,7 @@ class AppElement extends AsyncElement {
         this.appendChild(this._canvas);
 
         // Configure device types based on backend selection
-        const backendToDeviceTypes: { [key: string]: string[] } = {
+        const backendToDeviceTypes: Record<string, string[]> = {
             webgpu: ['webgpu', 'webgl2'], // fallback to webgl2 if webgpu not available
             webgl2: ['webgl2'],
             null: ['null']

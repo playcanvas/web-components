@@ -1,4 +1,7 @@
-import { SCALEMODE_BLEND, SCALEMODE_NONE, ScreenComponent, Vec2 } from 'playcanvas';
+import type { ScreenComponent} from 'playcanvas';
+import { SCALEMODE_BLEND, SCALEMODE_NONE, Vec2 } from 'playcanvas';
+
+import { parseVec2 } from '../utils';
 
 import { ComponentElement } from './component';
 import { parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';

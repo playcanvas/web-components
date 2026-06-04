@@ -1,4 +1,4 @@
-import { SoundComponent } from 'playcanvas';
+import type { SoundComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { parseBool, parseEnum, parseNumber } from '../parse';
@@ -14,17 +14,17 @@ import { parseBool, parseEnum, parseNumber } from '../parse';
 class SoundComponentElement extends ComponentElement {
     private _distanceModel: 'exponential' | 'inverse' | 'linear' = 'linear';
 
-    private _maxDistance: number = 10000;
+    private _maxDistance = 10000;
 
-    private _pitch: number = 1;
+    private _pitch = 1;
 
-    private _positional: boolean = false;
+    private _positional = false;
 
-    private _refDistance: number = 1;
+    private _refDistance = 1;
 
-    private _rollOffFactor: number = 1;
+    private _rollOffFactor = 1;
 
-    private _volume: number = 1;
+    private _volume = 1;
 
     /** @ignore */
     constructor() {

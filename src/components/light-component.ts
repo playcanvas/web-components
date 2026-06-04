@@ -1,4 +1,7 @@
-import { Color, LightComponent, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
+import type { LightComponent} from 'playcanvas';
+import { Color, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
+
+import { parseColor } from '../utils';
 
 import { ComponentElement } from './component';
 import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';

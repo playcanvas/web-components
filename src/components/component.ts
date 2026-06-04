@@ -1,4 +1,4 @@
-import { Component } from 'playcanvas';
+import type { Component } from 'playcanvas';
 
 import { AppElement } from '../app';
 import { AsyncElement } from '../async-element';

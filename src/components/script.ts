@@ -39,7 +39,7 @@ import { parseBool } from '../parse';
 class ScriptElement extends AsyncElement {
     private _attributes: Record<string, any> = {};
 
-    private _enabled: boolean = true;
+    private _enabled = true;
 
     /**
      * Whether readiness has been signalled. Creation can happen more than once over an

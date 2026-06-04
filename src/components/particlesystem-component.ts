@@ -1,7 +1,8 @@
-import { ParticleSystemComponent } from 'playcanvas';
+import type { ParticleSystemComponent } from 'playcanvas';
+
+import { AssetElement } from '../asset';
 
 import { ComponentElement } from './component';
-import { AssetElement } from '../asset';
 
 /**
  * The ParticleSystemComponentElement interface provides properties and methods for manipulating
@@ -12,7 +13,7 @@ import { AssetElement } from '../asset';
  * @category Components
  */
 class ParticleSystemComponentElement extends ComponentElement {
-    private _asset: string = '';
+    private _asset = '';
 
     /** @ignore */
     constructor() {

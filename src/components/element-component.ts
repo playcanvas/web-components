@@ -1,8 +1,11 @@
-import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
+import type { ElementComponent} from 'playcanvas';
+import { Color, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
+
+import { ComponentElement } from './component';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating
@@ -25,7 +28,7 @@ class ElementComponentElement extends ComponentElement {
 
     private _color: Color = new Color(1, 1, 1, 1);
 
-    private _enableMarkup: boolean = false;
+    private _enableMarkup = false;
 
     private _fontAsset: string = '';
 
@@ -63,7 +66,7 @@ class ElementComponentElement extends ComponentElement {
 
     private _width: number = 0;
 
-    private _wrapLines: boolean = false;
+    private _wrapLines = false;
 
     /** @ignore */
     constructor() {

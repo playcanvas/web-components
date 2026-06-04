@@ -1,4 +1,5 @@
-import { AppBase, Entity, Vec3 } from 'playcanvas';
+import type { AppBase} from 'playcanvas';
+import { Entity, Vec3 } from 'playcanvas';
 
 import type { AppElement } from './app';
 import { AsyncElement } from './async-element';
@@ -62,7 +63,7 @@ class EntityElement extends AsyncElement {
     /**
      * The pointer event listeners for the entity.
      */
-    private _listeners: { [key: string]: EventListener[] } = {};
+    private _listeners: Record<string, EventListener[]> = {};
 
     /**
      * The event types for which an inline `onpointer*` attribute is currently present.

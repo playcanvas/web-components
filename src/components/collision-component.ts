@@ -1,4 +1,7 @@
-import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
+import type { CollisionComponent} from 'playcanvas';
+import { Quat, Vec3 } from 'playcanvas';
+
+import { parseQuat, parseVec3 } from '../utils';
 
 import { ComponentElement } from './component';
 import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../parse';
@@ -14,17 +17,17 @@ import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../pars
 class CollisionComponentElement extends ComponentElement {
     private _angularOffset: Quat = new Quat();
 
-    private _axis: number = 1;
+    private _axis = 1;
 
-    private _convexHull: boolean = false;
+    private _convexHull = false;
 
     private _halfExtents: Vec3 = new Vec3(0.5, 0.5, 0.5);
 
-    private _height: number = 2;
+    private _height = 2;
 
     private _linearOffset: Vec3 = new Vec3();
 
-    private _radius: number = 0.5;
+    private _radius = 0.5;
 
     private _type: 'box' | 'capsule' | 'compound' | 'cone' | 'cylinder' | 'mesh' | 'sphere' = 'box';
 

@@ -1,10 +1,8 @@
-import playcanvasConfig from '@playcanvas/eslint-config';
-import tsParser from '@typescript-eslint/parser';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
+import typescriptConfig from '@playcanvas/eslint-config/typescript';
 import globals from 'globals';
 
 export default [
-    ...playcanvasConfig,
+    ...typescriptConfig,
     {
         files: ['examples/js/**/*.mjs', 'examples/assets/scripts/**/*.mjs'],
         languageOptions: {
@@ -21,7 +19,6 @@ export default [
     {
         files: ['**/*.ts'],
         languageOptions: {
-            parser: tsParser,
             globals: {
                 ...globals.browser
             }
@@ -44,9 +41,7 @@ export default [
             ...tsPlugin.configs['recommended'].rules,
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
-            '@typescript-eslint/no-unused-vars': 'off',
-            'jsdoc/require-param-type': 'off',
-            'jsdoc/require-returns-type': 'off'
+            '@typescript-eslint/no-unused-vars': 'off'
         }
     },
     {

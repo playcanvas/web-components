@@ -1,4 +1,5 @@
-import { Color, Scene, Vec3 } from 'playcanvas';
+import type { Scene} from 'playcanvas';
+import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
 import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';

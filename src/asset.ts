@@ -38,7 +38,7 @@ const extToType = new Map([
 // https://github.com/zeux/meshoptimizer
 const processBufferView = (
     gltfBuffer: any,
-    buffers: Array<any>,
+    buffers: any[],
     continuation: (err: string | null, result: any) => void
 ) => {
     if (gltfBuffer.extensions && gltfBuffer.extensions.EXT_meshopt_compression) {

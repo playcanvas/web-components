@@ -1,6 +1,5 @@
 import { Color, Quat, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
-import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
 import { getEntity, parseBool, parseColor, parseComponents, parseNumber, parseQuat, parseVec2, parseVec3, parseVec4 } from '../parse';
@@ -188,9 +187,9 @@ interface ScriptAttributesChangeEvent extends CustomEvent {
     detail: { attributes: Record<string, any> };
 }
 
-interface ScriptEnableChangeEvent extends CustomEvent {
+type ScriptEnableChangeEvent = {
     detail: { enabled: boolean };
-}
+} & CustomEvent
 
 interface ScriptNameChangeEvent extends CustomEvent {
     detail: { oldName: string, newName: string };
