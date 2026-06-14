@@ -16,6 +16,10 @@ class GSplatComponentElement extends ComponentElement {
 
     private _castShadows = false;
 
+    private _lodBaseDistance = 5;
+
+    private _lodMultiplier = 3;
+
     /** @ignore */
     constructor() {
         super('gsplat');
@@ -24,7 +28,9 @@ class GSplatComponentElement extends ComponentElement {
     getInitialComponentData() {
         return {
             asset: AssetElement.get(this._asset),
-            castShadows: this._castShadows
+            castShadows: this._castShadows,
+            lodBaseDistance: this._lodBaseDistance,
+            lodMultiplier: this._lodMultiplier
         };
     }
 
@@ -75,11 +81,58 @@ class GSplatComponentElement extends ComponentElement {
         return this._castShadows;
     }
 
+    /**
+     * Sets the base distance for the first LOD transition (LOD 0 to LOD 1). Splats closer than
+     * this distance use the highest quality LOD. Each subsequent LOD level transitions at a
+     * progressively larger distance, controlled by {@link lodMultiplier}. Clamped to a minimum of
+     * 0.1. Defaults to 5. Only affects assets that contain LOD levels (e.g. `.lod-meta.json`).
+     * @param value - The LOD base distance.
+     */
+    set lodBaseDistance(value: number) {
+        this._lodBaseDistance = value;
+        if (this.component) {
+            this.component.lodBaseDistance = value;
+        }
+    }
+
+    /**
+     * Gets the base distance for the first LOD transition.
+     * @returns The LOD base distance.
+     */
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * Sets the multiplier between successive LOD distance thresholds. Each LOD level transitions
+     * at this factor times the previous level's distance, creating a geometric progression. Lower
+     * values keep higher quality at distance; higher values switch to coarser LODs sooner. Clamped
+     * to a minimum of 1.2. Defaults to 3. Only affects assets that contain LOD levels (e.g.
+     * `.lod-meta.json`).
+     * @param value - The LOD multiplier.
+     */
+    set lodMultiplier(value: number) {
+        this._lodMultiplier = value;
+        if (this.component) {
+            this.component.lodMultiplier = value;
+        }
+    }
+
+    /**
+     * Gets the multiplier between successive LOD distance thresholds.
+     * @returns The LOD multiplier.
+     */
+    get lodMultiplier() {
+        return this._lodMultiplier;
+    }
+
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
             'asset',
-            'cast-shadows'
+            'cast-shadows',
+            'lod-base-distance',
+            'lod-multiplier'
         ];
     }
 
@@ -92,6 +145,12 @@ class GSplatComponentElement extends ComponentElement {
                 break;
             case 'cast-shadows':
                 this.castShadows = this.hasAttribute('cast-shadows');
+                break;
+            case 'lod-base-distance':
+                this.lodBaseDistance = Number(newValue);
+                break;
+            case 'lod-multiplier':
+                this.lodMultiplier = Number(newValue);
                 break;
         }
     }
