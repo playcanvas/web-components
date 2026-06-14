@@ -29,7 +29,7 @@ import { ScriptComponentElement } from './components/script-component';
 import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
-import { SplatComponentElement } from './components/splat-component';
+import { GSplatComponentElement } from './components/gsplat-component';
 import { MaterialElement } from './material';
 import { ModelElement } from './model';
 import { SceneElement } from './scene';
@@ -55,7 +55,7 @@ export {
     ScriptElement,
     SoundComponentElement,
     SoundSlotElement,
-    SplatComponentElement,
+    GSplatComponentElement,
     MaterialElement,
     ModelElement,
     SceneElement,

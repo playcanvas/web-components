@@ -4,14 +4,14 @@ import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
 
 /**
- * The SplatComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-splat/ | `<pc-splat>`} elements.
- * The SplatComponentElement interface also inherits the properties and methods of the
+ * The GSplatComponentElement interface provides properties and methods for manipulating
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-gsplat/ | `<pc-gsplat>`} elements.
+ * The GSplatComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
  * @category Components
  */
-class SplatComponentElement extends ComponentElement {
+class GSplatComponentElement extends ComponentElement {
     private _asset = '';
 
     private _castShadows = false;
@@ -29,8 +29,8 @@ class SplatComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas splat component.
-     * @returns The splat component.
+     * Gets the underlying PlayCanvas gsplat component.
+     * @returns The gsplat component.
      */
     get component(): GSplatComponent | null {
         return super.component as GSplatComponent | null;
@@ -97,6 +97,6 @@ class SplatComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-splat', SplatComponentElement);
+customElements.define('pc-gsplat', GSplatComponentElement);
 
-export { SplatComponentElement };
+export { GSplatComponentElement };
