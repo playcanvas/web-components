@@ -46,11 +46,23 @@ class EntityElement extends AsyncElement {
     private _listeners: { [key: string]: EventListener[] } = {};
 
     /**
+     * Whether the hierarchy has been built for this entity.
+     */
+    private _built = false;
+
+    /**
      * The PlayCanvas entity instance.
      */
     entity: Entity | null = null;
 
     createEntity(app: AppBase) {
+        // Guard against double creation. When a subtree is inserted at runtime (e.g. cloning a
+        // `<template>`), an ancestor's connectedCallback eagerly creates descendant entities; the
+        // descendants' own connectedCallbacks would otherwise create them a second time.
+        if (this.entity) {
+            return;
+        }
+
         // Create a new entity
         this.entity = new Entity(this.getAttribute('name') || this._name, app);
 
@@ -106,7 +118,8 @@ class EntityElement extends AsyncElement {
     }
 
     buildHierarchy(app: AppBase) {
-        if (!this.entity) return;
+        if (!this.entity || this._built) return;
+        this._built = true;
 
         const closestEntity = this.closestEntity;
         if (closestEntity?.entity) {
@@ -152,6 +165,7 @@ class EntityElement extends AsyncElement {
             // Destroy the entity
             this.entity.destroy();
             this.entity = null;
+            this._built = false;
         }
     }
 

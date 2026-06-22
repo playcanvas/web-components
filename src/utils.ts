@@ -1,4 +1,4 @@
-import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { Color, Entity, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { CSS_COLORS } from './colors';
 
@@ -68,4 +68,52 @@ export const parseVec3 = (value: string): Vec3 => {
 export const parseVec4 = (value: string): Vec4 => {
     const components = value.split(' ').map(Number);
     return new Vec4(components);
+};
+
+/**
+ * Resolves an enum value supplied as either a named string (looked up in `map`) or a numeric
+ * string. Falls back to `defaultValue` when the value is neither a known name nor a finite number.
+ *
+ * @param value - The attribute value to parse.
+ * @param map - A map of named values to their numeric enum equivalents.
+ * @param defaultValue - The value to return when parsing fails.
+ * @returns The resolved numeric enum value.
+ */
+export const parseEnum = (value: string, map: Map<string, number>, defaultValue: number): number => {
+    const named = map.get(value);
+    if (named !== undefined) {
+        return named;
+    }
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : defaultValue;
+};
+
+/**
+ * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element. The reference
+ * can be a CSS selector (e.g. `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare
+ * entity name. Returns `null` if no matching element (or backing entity) is found.
+ *
+ * @param ref - The reference string to resolve.
+ * @returns The resolved entity, or `null`.
+ */
+export const getEntity = (ref: string): Entity | null => {
+    if (!ref) {
+        return null;
+    }
+
+    let element: Element | null = null;
+
+    // Try the reference as a CSS selector. An invalid selector (e.g. a bare name containing
+    // spaces) throws, in which case we fall back to id/name lookups below.
+    try {
+        element = document.querySelector(ref);
+    } catch {
+        element = null;
+    }
+
+    if (!element) {
+        element = document.getElementById(ref) ?? document.querySelector(`pc-entity[name="${ref}"]`);
+    }
+
+    return (element as { entity?: Entity } | null)?.entity ?? null;
 };

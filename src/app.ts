@@ -3,6 +3,7 @@ import {
     AppOptions,
     CameraComponent,
     createGraphicsDevice,
+    ElementInput,
     FILLMODE_FILL_WINDOW,
     GraphNode,
     Keyboard,
@@ -165,6 +166,10 @@ class AppElement extends AsyncElement {
         createOptions.graphicsDevice = device;
         createOptions.keyboard = new Keyboard(window);
         createOptions.mouse = new Mouse(this._canvas);
+        createOptions.elementInput = new ElementInput(this._canvas, {
+            useMouse: true,
+            useTouch: true
+        });
         createOptions.componentSystems = [
             AnimComponentSystem,
             AnimationComponentSystem,
