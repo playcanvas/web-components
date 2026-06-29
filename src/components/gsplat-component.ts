@@ -34,20 +34,10 @@ class GSplatComponentElement extends ComponentElement {
             asset: AssetElement.get(this._asset),
             castShadows: this._castShadows,
             lodBaseDistance: this._lodBaseDistance,
-            lodMultiplier: this._lodMultiplier
+            lodMultiplier: this._lodMultiplier,
+            lodRangeMin: this._lodRangeMin,
+            lodRangeMax: this._lodRangeMax
         };
-    }
-
-    initComponent() {
-        // Engine 2.20.0 first added lodRangeMin/lodRangeMax to GSplatComponent, but its gsplat
-        // component system omits them from the `_properties` list it applies from initialization
-        // data, so they are ignored when passed via getInitialComponentData(). Apply them here,
-        // once the component exists, through the setters so the values reach the underlying
-        // GSplatComponent. The engine root cause is fixed by playcanvas/engine#8968 (shipped in
-        // 2.20.1); once the minimum supported engine version includes that fix, these can move into
-        // getInitialComponentData() and this override can be removed.
-        this.lodRangeMin = this._lodRangeMin;
-        this.lodRangeMax = this._lodRangeMax;
     }
 
     /**
