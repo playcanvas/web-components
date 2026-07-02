@@ -1,3 +1,5 @@
+let backdropHandlerAttached = false;
+
 export function showQRCode(path) {
     const qr = window.qrcode(0, 'L');
     const url = `${window.location.origin}${window.location.pathname}${path}`;
@@ -8,15 +10,18 @@ export function showQRCode(path) {
     const qrDiv = document.getElementById('qr-code');
     qrDiv.innerHTML = qr.createImgTag(4);
 
-    // Add click handler to close on backdrop click
-    modal.addEventListener('click', (e) => {
-        const rect = modal.getBoundingClientRect();
-        const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-            rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
-        if (!isInDialog) {
-            modal.close();
-        }
-    });
+    // Add click handler (once) to close on backdrop click
+    if (!backdropHandlerAttached) {
+        modal.addEventListener('click', (e) => {
+            const rect = modal.getBoundingClientRect();
+            const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+                rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+            if (!isInDialog) {
+                modal.close();
+            }
+        });
+        backdropHandlerAttached = true;
+    }
 
     modal.showModal();
 }
