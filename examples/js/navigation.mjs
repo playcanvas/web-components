@@ -1,8 +1,12 @@
 import { examples } from './example-list.mjs';
 
 export function setupNavigation(loadExample) {
-    function updateURL(path) {
-        history.pushState(null, '', `#${path}`);
+    function updateURL(path, replace = false) {
+        if (replace) {
+            history.replaceState(null, '', `#${path}`);
+        } else {
+            history.pushState(null, '', `#${path}`);
+        }
     }
 
     window.addEventListener('popstate', () => {
@@ -18,7 +22,8 @@ export function setupNavigation(loadExample) {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             e.preventDefault();
-            const links = Array.from(document.querySelectorAll('.example-link'));
+            const links = Array.from(document.querySelectorAll('.example-link:not(.hidden)'));
+            if (links.length === 0) return;
             const currentIndex = links.findIndex(link => link.classList.contains('active'));
             const nextIndex = e.key === 'ArrowUp' ?
                 Math.max(0, currentIndex - 1) :

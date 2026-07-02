@@ -4,8 +4,8 @@
     "description": "Examples showcasing PlayCanvas Web Components capabilities and features",
     "start_url": "./index.html",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#ffffff",
+    "background_color": "#121212",
+    "theme_color": "#1a1a1a",
     "icons": [
         {
             "src": "img/playcanvas-192.png",
