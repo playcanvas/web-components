@@ -24,6 +24,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check package
+        run: npm run publint
+
   lint:
     runs-on: ubuntu-latest
 
@@ -40,3 +43,6 @@ jobs:
 
       - name: Run lint
         run: npm run lint
+
+      - name: Type check
+        run: npm run type-check
