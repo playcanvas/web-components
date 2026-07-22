@@ -27,12 +27,22 @@
   "module": "dist/pwc.mjs",
   "browser": "dist/pwc.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/pwc.mjs",
+      "require": "./dist/pwc.cjs"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "type": "module",
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
+    "prebuild": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "build": "rollup -c",
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
