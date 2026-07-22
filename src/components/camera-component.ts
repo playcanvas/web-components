@@ -513,7 +513,7 @@ class CameraComponentElement extends ComponentElement {
                 this.farClip = parseFloat(newValue);
                 break;
             case 'flip-faces':
-                this.flipFaces = newValue !== 'true';
+                this.flipFaces = newValue !== 'false';
                 break;
             case 'fov':
                 this.fov = parseFloat(newValue);
