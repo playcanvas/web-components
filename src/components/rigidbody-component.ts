@@ -80,8 +80,8 @@ class RigidBodyComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas rigidbody component.
      * @returns The rigidbody component.
      */
-    get component(): RigidBodyComponent | null {
-        return super.component as RigidBodyComponent | null;
+    get component(): RigidBodyComponent {
+        return super.component as RigidBodyComponent;
     }
 
     set angularDamping(value: number) {
@@ -223,5 +223,11 @@ class RigidBodyComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-rigidbody', RigidBodyComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-rigidbody': RigidBodyComponentElement;
+    }
+}
 
 export { RigidBodyComponentElement };

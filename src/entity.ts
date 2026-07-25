@@ -50,45 +50,52 @@ class EntityElement extends AsyncElement {
      */
     private _built = false;
 
+    private _entity: Entity | null = null;
+
     /**
-     * The PlayCanvas entity instance.
+     * The PlayCanvas entity instance. Available once the element is ready — await
+     * {@link whenReady} or the element's `ready()` promise before accessing it.
+     * @returns The entity instance.
      */
-    entity: Entity | null = null;
+    get entity(): Entity {
+        return this._entity!;
+    }
 
     createEntity(app: AppBase) {
         // Guard against double creation. When a subtree is inserted at runtime (e.g. cloning a
         // `<template>`), an ancestor's connectedCallback eagerly creates descendant entities; the
         // descendants' own connectedCallbacks would otherwise create them a second time.
-        if (this.entity) {
+        if (this._entity) {
             return;
         }
 
         // Create a new entity
-        this.entity = new Entity(this.getAttribute('name') || this._name, app);
+        const entity = new Entity(this.getAttribute('name') || this._name, app);
+        this._entity = entity;
 
         const enabled = this.getAttribute('enabled');
         if (enabled) {
-            this.entity.enabled = enabled !== 'false';
+            entity.enabled = enabled !== 'false';
         }
 
         const position = this.getAttribute('position');
         if (position) {
-            this.entity.setLocalPosition(parseVec3(position));
+            entity.setLocalPosition(parseVec3(position));
         }
 
         const rotation = this.getAttribute('rotation');
         if (rotation) {
-            this.entity.setLocalEulerAngles(parseVec3(rotation));
+            entity.setLocalEulerAngles(parseVec3(rotation));
         }
 
         const scale = this.getAttribute('scale');
         if (scale) {
-            this.entity.setLocalScale(parseVec3(scale));
+            entity.setLocalScale(parseVec3(scale));
         }
 
         const tags = this.getAttribute('tags');
         if (tags) {
-            this.entity.tags.add(tags.split(',').map(tag => tag.trim()));
+            entity.tags.add(tags.split(',').map(tag => tag.trim()));
         }
 
         // Handle pointer events
@@ -159,12 +166,12 @@ class EntityElement extends AsyncElement {
             // Notify all children that their entities are about to become invalid
             const children = this.querySelectorAll('pc-entity');
             children.forEach((child) => {
-                (child as EntityElement).entity = null;
+                (child as EntityElement)._entity = null;
             });
 
             // Destroy the entity
             this.entity.destroy();
-            this.entity = null;
+            this._entity = null;
             this._built = false;
         }
     }
@@ -370,5 +377,11 @@ class EntityElement extends AsyncElement {
 }
 
 customElements.define('pc-entity', EntityElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-entity': EntityElement;
+    }
+}
 
 export { EntityElement };

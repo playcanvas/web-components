@@ -108,4 +108,10 @@ class ModelElement extends AsyncElement {
 
 customElements.define('pc-model', ModelElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-model': ModelElement;
+    }
+}
+
 export { ModelElement };

@@ -40,4 +40,10 @@ class ModuleElement extends HTMLElement {
 
 customElements.define('pc-module', ModuleElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-module': ModuleElement;
+    }
+}
+
 export { ModuleElement };

@@ -7,6 +7,7 @@
         <script type="importmap">
             {
                 "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
                     "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs",
                     "@mediapipe/tasks-vision": "../node_modules/@mediapipe/tasks-vision/vision_bundle.mjs"
                 }
@@ -37,16 +38,16 @@
             </pc-scene>
         </pc-app>
         <script type="module">
-            document.addEventListener('DOMContentLoaded', async () => {
-                const app = await document.querySelector('pc-app').ready();
+            import { whenReady } from '@playcanvas/web-components';
 
-                app.app.on('hand:gesture', (handIndex, gesture, score) => {
-                    console.log(`Hand ${handIndex} detected gesture: ${gesture} (score: ${score})`);
-                });
+            const { app } = await whenReady('pc-app');
 
-                app.app.on('hand:position', (handIndex, position) => {
-                    console.log(`Hand ${handIndex} position: ${position}`);
-                });
+            app.on('hand:gesture', (handIndex, gesture, score) => {
+                console.log(`Hand ${handIndex} detected gesture: ${gesture} (score: ${score})`);
+            });
+
+            app.on('hand:position', (handIndex, position) => {
+                console.log(`Hand ${handIndex} position: ${position}`);
             });
         </script>
         <script type="module" src="js/example.mjs"></script>

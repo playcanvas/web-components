@@ -65,8 +65,8 @@ class LayoutGroupComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas layout group component.
      * @returns The layout group component.
      */
-    get component(): LayoutGroupComponent | null {
-        return super.component as LayoutGroupComponent | null;
+    get component(): LayoutGroupComponent {
+        return super.component as LayoutGroupComponent;
     }
 
     /**
@@ -293,5 +293,11 @@ class LayoutGroupComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-layoutgroup', LayoutGroupComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-layoutgroup': LayoutGroupComponentElement;
+    }
+}
 
 export { LayoutGroupComponentElement };

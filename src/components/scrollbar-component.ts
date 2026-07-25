@@ -49,8 +49,8 @@ class ScrollbarComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas scrollbar component.
      * @returns The scrollbar component.
      */
-    get component(): ScrollbarComponent | null {
-        return super.component as ScrollbarComponent | null;
+    get component(): ScrollbarComponent {
+        return super.component as ScrollbarComponent;
     }
 
     /**
@@ -162,5 +162,11 @@ class ScrollbarComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-scrollbar', ScrollbarComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-scrollbar': ScrollbarComponentElement;
+    }
+}
 
 export { ScrollbarComponentElement };

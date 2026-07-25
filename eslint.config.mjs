@@ -11,6 +11,10 @@ export default [
             globals: {
                 ...globals.browser
             }
+        },
+        rules: {
+            // dist/pwc.mjs is a build output, so it is absent when linting an unbuilt checkout
+            'import/no-unresolved': ['error', { ignore: ['/dist/pwc\\.mjs$'] }]
         }
     },
     {
@@ -18,10 +22,7 @@ export default [
         languageOptions: {
             parser: tsParser,
             globals: {
-                ...globals.browser,
-                AddEventListenerOptions: "readonly",
-                EventListener: "readonly",
-                EventListenerOptions: "readonly"
+                ...globals.browser
             }
         },
         plugins: {
@@ -33,6 +34,8 @@ export default [
             }
         },
         rules: {
+            // Disable the base rules that the TypeScript compiler already enforces
+            ...tsPlugin.configs['flat/eslint-recommended'].rules,
             ...tsPlugin.configs['recommended'].rules,
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-explicit-any': 'off',

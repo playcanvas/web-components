@@ -148,8 +148,8 @@ class ElementComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas element component.
      * @returns The element component.
      */
-    get component(): ElementComponent | null {
-        return super.component as ElementComponent | null;
+    get component(): ElementComponent {
+        return super.component as ElementComponent;
     }
 
     /**
@@ -773,5 +773,11 @@ class ElementComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-element', ElementComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-element': ElementComponentElement;
+    }
+}
 
 export { ElementComponentElement };

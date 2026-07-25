@@ -40,8 +40,8 @@ class ParticleSystemComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas particle system component.
      * @returns The particle system component.
      */
-    get component(): ParticleSystemComponent | null {
-        return super.component as ParticleSystemComponent | null;
+    get component(): ParticleSystemComponent {
+        return super.component as ParticleSystemComponent;
     }
 
     private applyConfig(resource: any) {
@@ -151,5 +151,11 @@ class ParticleSystemComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-particles', ParticleSystemComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-particles': ParticleSystemComponentElement;
+    }
+}
 
 export { ParticleSystemComponentElement };

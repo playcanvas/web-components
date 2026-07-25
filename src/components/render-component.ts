@@ -38,8 +38,8 @@ class RenderComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas render component.
      * @returns The render component.
      */
-    get component(): RenderComponent | null {
-        return super.component as RenderComponent | null;
+    get component(): RenderComponent {
+        return super.component as RenderComponent;
     }
 
     /**
@@ -143,5 +143,11 @@ class RenderComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-render', RenderComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-render': RenderComponentElement;
+    }
+}
 
 export { RenderComponentElement };

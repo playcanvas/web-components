@@ -290,4 +290,10 @@ class SkyElement extends AsyncElement {
 
 customElements.define('pc-sky', SkyElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-sky': SkyElement;
+    }
+}
+
 export { SkyElement };

@@ -116,10 +116,16 @@ class AppElement extends AsyncElement {
         pointerup: null
     };
 
+    private _app: AppBase | null = null;
+
     /**
-     * The PlayCanvas application instance.
+     * The PlayCanvas application instance. Available once the element is ready — await
+     * {@link whenReady} or the element's `ready()` promise before accessing it.
+     * @returns The application instance.
      */
-    app: AppBase | null = null;
+    get app(): AppBase {
+        return this._app!;
+    }
 
     /**
      * Creates a new AppElement instance.
@@ -227,7 +233,7 @@ class AppElement extends AsyncElement {
         createOptions.batchManager = BatchManager;
         createOptions.xr = XrManager;
 
-        this.app = new AppBase(this._canvas);
+        this._app = new AppBase(this._canvas);
         this.app.init(createOptions);
 
         this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -282,7 +288,7 @@ class AppElement extends AsyncElement {
         // Clean up the application
         if (this.app) {
             this.app.destroy();
-            this.app = null;
+            this._app = null;
         }
 
         // Remove event listeners
@@ -613,5 +619,11 @@ class AppElement extends AsyncElement {
 }
 
 customElements.define('pc-app', AppElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-app': AppElement;
+    }
+}
 
 export { AppElement };

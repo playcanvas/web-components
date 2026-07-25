@@ -260,11 +260,17 @@ class ScriptComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas script component.
      * @returns The script component.
      */
-    get component(): ScriptComponent | null {
-        return super.component as ScriptComponent | null;
+    get component(): ScriptComponent {
+        return super.component as ScriptComponent;
     }
 }
 
 customElements.define('pc-scripts', ScriptComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-scripts': ScriptComponentElement;
+    }
+}
 
 export { ScriptComponentElement };

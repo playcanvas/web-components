@@ -119,8 +119,8 @@ class CameraComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas camera component.
      * @returns The camera component.
      */
-    get component(): CameraComponent | null {
-        return super.component as CameraComponent | null;
+    get component(): CameraComponent {
+        return super.component as CameraComponent;
     }
 
     /**
@@ -553,5 +553,11 @@ class CameraComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-camera', CameraComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-camera': CameraComponentElement;
+    }
+}
 
 export { CameraComponentElement };

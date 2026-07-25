@@ -229,4 +229,10 @@ class AssetElement extends HTMLElement {
 
 customElements.define('pc-asset', AssetElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-asset': AssetElement;
+    }
+}
+
 export { AssetElement };

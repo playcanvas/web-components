@@ -87,4 +87,10 @@ class ScriptElement extends HTMLElement {
 
 customElements.define('pc-script', ScriptElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-script': ScriptElement;
+    }
+}
+
 export { ScriptElement };

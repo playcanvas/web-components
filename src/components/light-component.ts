@@ -95,8 +95,8 @@ class LightComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas light component.
      * @returns The light component.
      */
-    get component(): LightComponent | null {
-        return super.component as LightComponent | null;
+    get component(): LightComponent {
+        return super.component as LightComponent;
     }
 
     /**
@@ -566,5 +566,11 @@ class LightComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-light', LightComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-light': LightComponentElement;
+    }
+}
 
 export { LightComponentElement };

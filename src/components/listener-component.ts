@@ -20,11 +20,17 @@ class ListenerComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas audio listener component.
      * @returns The audio listener component.
      */
-    get component(): AudioListenerComponent | null {
-        return super.component as AudioListenerComponent | null;
+    get component(): AudioListenerComponent {
+        return super.component as AudioListenerComponent;
     }
 }
 
 customElements.define('pc-listener', ListenerComponentElement);
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-listener': ListenerComponentElement;
+    }
+}
 
 export { ListenerComponentElement };

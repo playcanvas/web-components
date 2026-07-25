@@ -1,41 +1,41 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    await document.querySelector('pc-app').ready();
+import { whenReady } from '../../../dist/pwc.mjs';
 
-    const entityElement = document.querySelector('pc-entity[name="shoe"]');
-    const assetElement = document.querySelector('pc-asset#shoe');
+await whenReady('pc-app');
 
-    if (entityElement && assetElement) {
-        const resource = assetElement.asset.resource;
-        const variants = resource.getMaterialVariants();
+const entityElement = document.querySelector('pc-entity[name="shoe"]');
+const assetElement = document.querySelector('pc-asset#shoe');
 
-        // create container for buttons
-        const buttonContainer = document.createElement('div');
-        buttonContainer.classList.add('example-button-container', 'top-right');
+if (entityElement && assetElement) {
+    const resource = assetElement.asset.resource;
+    const variants = resource.getMaterialVariants();
 
-        // create a button for each variant
-        variants.forEach((variant) => {
-            const button = document.createElement('button');
-            button.textContent = variant.split('-')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
+    // create container for buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add('example-button-container', 'top-right');
 
-            button.classList.add('example-button');
+    // create a button for each variant
+    variants.forEach((variant) => {
+        const button = document.createElement('button');
+        button.textContent = variant.split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 
-            button.onmouseenter = () => {
-                button.style.background = 'rgba(255, 255, 255, 1)';
-            };
+        button.classList.add('example-button');
 
-            button.onmouseleave = () => {
-                button.style.background = 'rgba(255, 255, 255, 0.9)';
-            };
+        button.onmouseenter = () => {
+            button.style.background = 'rgba(255, 255, 255, 1)';
+        };
 
-            button.addEventListener('click', () => {
-                resource.applyMaterialVariant(entityElement.entity, variant);
-            });
+        button.onmouseleave = () => {
+            button.style.background = 'rgba(255, 255, 255, 0.9)';
+        };
 
-            buttonContainer.appendChild(button);
+        button.addEventListener('click', () => {
+            resource.applyMaterialVariant(entityElement.entity, variant);
         });
 
-        document.body.appendChild(buttonContainer);
-    }
-});
+        buttonContainer.appendChild(button);
+    });
+
+    document.body.appendChild(buttonContainer);
+}
