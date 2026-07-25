@@ -1,9 +1,9 @@
 import { MiniStats, XRTYPE_AR, XRTYPE_VR } from 'playcanvas';
 
+import { whenReady } from '../../dist/pwc.mjs';
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const appElement = await document.querySelector('pc-app').ready();
-    /** @type {import('playcanvas').AppBase} */
-    const app = appElement.app;
+    const { app } = await whenReady('pc-app');
 
     // Add MiniStats if query parameter is present
     if (new URLSearchParams(window.location.search).has('ministats')) {

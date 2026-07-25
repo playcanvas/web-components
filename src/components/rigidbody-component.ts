@@ -224,4 +224,10 @@ class RigidBodyComponentElement extends ComponentElement {
 
 customElements.define('pc-rigidbody', RigidBodyComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-rigidbody': RigidBodyComponentElement;
+    }
+}
+
 export { RigidBodyComponentElement };

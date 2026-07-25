@@ -294,4 +294,10 @@ class LayoutGroupComponentElement extends ComponentElement {
 
 customElements.define('pc-layoutgroup', LayoutGroupComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-layoutgroup': LayoutGroupComponentElement;
+    }
+}
+
 export { LayoutGroupComponentElement };

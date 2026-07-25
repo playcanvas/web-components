@@ -614,4 +614,10 @@ class AppElement extends AsyncElement {
 
 customElements.define('pc-app', AppElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-app': AppElement;
+    }
+}
+
 export { AppElement };

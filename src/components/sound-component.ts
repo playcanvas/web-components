@@ -227,4 +227,10 @@ class SoundComponentElement extends ComponentElement {
 
 customElements.define('pc-sounds', SoundComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-sounds': SoundComponentElement;
+    }
+}
+
 export { SoundComponentElement };

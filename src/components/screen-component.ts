@@ -154,4 +154,10 @@ class ScreenComponentElement extends ComponentElement {
 
 customElements.define('pc-screen', ScreenComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-screen': ScreenComponentElement;
+    }
+}
+
 export { ScreenComponentElement };

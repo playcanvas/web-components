@@ -424,4 +424,10 @@ class ScrollViewComponentElement extends ComponentElement {
 
 customElements.define('pc-scrollview', ScrollViewComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-scrollview': ScrollViewComponentElement;
+    }
+}
+
 export { ScrollViewComponentElement };

@@ -10,7 +10,7 @@
 /* eslint-disable import/order */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
-import { AsyncElement } from './async-element';
+import { AsyncElement, whenReady } from './async-element';
 import { ModuleElement } from './module';
 import { AppElement } from './app';
 import { EntityElement } from './entity';
@@ -69,5 +69,8 @@ export {
     MaterialElement,
     ModelElement,
     SceneElement,
-    SkyElement
+    SkyElement,
+    whenReady
 };
+
+export type { AsyncElementTagName, NonAsyncElementTagName } from './async-element';

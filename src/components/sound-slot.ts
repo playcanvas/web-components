@@ -285,4 +285,10 @@ class SoundSlotElement extends AsyncElement {
 
 customElements.define('pc-sound', SoundSlotElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-sound': SoundSlotElement;
+    }
+}
+
 export { SoundSlotElement };

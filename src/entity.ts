@@ -371,4 +371,10 @@ class EntityElement extends AsyncElement {
 
 customElements.define('pc-entity', EntityElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-entity': EntityElement;
+    }
+}
+
 export { EntityElement };

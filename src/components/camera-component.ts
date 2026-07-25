@@ -554,4 +554,10 @@ class CameraComponentElement extends ComponentElement {
 
 customElements.define('pc-camera', CameraComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-camera': CameraComponentElement;
+    }
+}
+
 export { CameraComponentElement };

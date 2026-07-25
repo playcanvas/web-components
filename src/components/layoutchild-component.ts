@@ -229,4 +229,10 @@ class LayoutChildComponentElement extends ComponentElement {
 
 customElements.define('pc-layoutchild', LayoutChildComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-layoutchild': LayoutChildComponentElement;
+    }
+}
+
 export { LayoutChildComponentElement };

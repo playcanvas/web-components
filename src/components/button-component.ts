@@ -447,4 +447,10 @@ class ButtonComponentElement extends ComponentElement {
 
 customElements.define('pc-button', ButtonComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-button': ButtonComponentElement;
+    }
+}
+
 export { ButtonComponentElement };

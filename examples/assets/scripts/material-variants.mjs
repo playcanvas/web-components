@@ -1,5 +1,7 @@
+import { whenReady } from '../../../dist/pwc.mjs';
+
 document.addEventListener('DOMContentLoaded', async () => {
-    await document.querySelector('pc-app').ready();
+    await whenReady('pc-app');
 
     const entityElement = document.querySelector('pc-entity[name="shoe"]');
     const assetElement = document.querySelector('pc-asset#shoe');

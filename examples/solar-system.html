@@ -7,6 +7,7 @@
         <script type="importmap">
             {
                 "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
                     "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
                 }
             }
@@ -579,21 +580,21 @@
         </div>
 
         <script type="module">
-            document.addEventListener('DOMContentLoaded', async () => {
-                const app = await document.querySelector('pc-app').ready();
-                const planets = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-                let currentPlanetIndex = -1;
+            import { whenReady } from '@playcanvas/web-components';
 
-                window.addEventListener('scroll', () => {
-                    const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-                    const newPlanetIndex = Math.floor(scrollPercent * planets.length);
-                    
-                    // Only fire event when we change sections
-                    if (newPlanetIndex !== currentPlanetIndex) {
-                        currentPlanetIndex = newPlanetIndex;
-                        app.app.fire('zoom', planets[currentPlanetIndex]);
-                    }
-                });
+            const { app } = await whenReady('pc-app');
+            const planets = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+            let currentPlanetIndex = -1;
+
+            window.addEventListener('scroll', () => {
+                const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+                const newPlanetIndex = Math.floor(scrollPercent * planets.length);
+
+                // Only fire event when we change sections
+                if (newPlanetIndex !== currentPlanetIndex) {
+                    currentPlanetIndex = newPlanetIndex;
+                    app.fire('zoom', planets[currentPlanetIndex]);
+                }
             });
         </script>
     </body>

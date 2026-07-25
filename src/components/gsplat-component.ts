@@ -215,4 +215,10 @@ class GSplatComponentElement extends ComponentElement {
 
 customElements.define('pc-gsplat', GSplatComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-gsplat': GSplatComponentElement;
+    }
+}
+
 export { GSplatComponentElement };

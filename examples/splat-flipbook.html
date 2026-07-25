@@ -7,6 +7,7 @@
         <script type="importmap">
             {
                 "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
                     "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
                 }
             }
@@ -96,8 +97,10 @@
         </pc-app>
         <script type="module" src="js/example.mjs"></script>
         <script type="module">
-            const appElement = await document.querySelector('pc-app').ready();
-            appElement.app.scene.gsplat.alphaClip = 0.1;
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+            app.scene.gsplat.alphaClip = 0.1;
         </script>
     </body>
 </html>

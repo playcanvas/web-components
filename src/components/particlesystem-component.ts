@@ -152,4 +152,10 @@ class ParticleSystemComponentElement extends ComponentElement {
 
 customElements.define('pc-particles', ParticleSystemComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-particles': ParticleSystemComponentElement;
+    }
+}
+
 export { ParticleSystemComponentElement };

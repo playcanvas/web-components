@@ -774,4 +774,10 @@ class ElementComponentElement extends ComponentElement {
 
 customElements.define('pc-element', ElementComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-element': ElementComponentElement;
+    }
+}
+
 export { ElementComponentElement };

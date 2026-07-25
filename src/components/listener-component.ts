@@ -27,4 +27,10 @@ class ListenerComponentElement extends ComponentElement {
 
 customElements.define('pc-listener', ListenerComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-listener': ListenerComponentElement;
+    }
+}
+
 export { ListenerComponentElement };

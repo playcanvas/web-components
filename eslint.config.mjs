@@ -11,6 +11,10 @@ export default [
             globals: {
                 ...globals.browser
             }
+        },
+        rules: {
+            // dist/pwc.mjs is a build output, so it is absent when linting an unbuilt checkout
+            'import/no-unresolved': ['error', { ignore: ['/dist/pwc\\.mjs$'] }]
         }
     },
     {
@@ -21,7 +25,8 @@ export default [
                 ...globals.browser,
                 AddEventListenerOptions: "readonly",
                 EventListener: "readonly",
-                EventListenerOptions: "readonly"
+                EventListenerOptions: "readonly",
+                HTMLElementTagNameMap: "readonly"
             }
         },
         plugins: {
@@ -34,6 +39,8 @@ export default [
         },
         rules: {
             ...tsPlugin.configs['recommended'].rules,
+            // TypeScript function overloads are not redeclarations (tsc catches real ones)
+            'no-redeclare': 'off',
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-unused-vars': 'off',

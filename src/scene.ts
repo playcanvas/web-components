@@ -214,4 +214,10 @@ class SceneElement extends AsyncElement {
 
 customElements.define('pc-scene', SceneElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-scene': SceneElement;
+    }
+}
+
 export { SceneElement };

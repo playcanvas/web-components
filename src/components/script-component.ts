@@ -267,4 +267,10 @@ class ScriptComponentElement extends ComponentElement {
 
 customElements.define('pc-scripts', ScriptComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-scripts': ScriptComponentElement;
+    }
+}
+
 export { ScriptComponentElement };

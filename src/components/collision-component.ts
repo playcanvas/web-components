@@ -180,4 +180,10 @@ class CollisionComponentElement extends ComponentElement {
 
 customElements.define('pc-collision', CollisionComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-collision': CollisionComponentElement;
+    }
+}
+
 export { CollisionComponentElement };

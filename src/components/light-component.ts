@@ -567,4 +567,10 @@ class LightComponentElement extends ComponentElement {
 
 customElements.define('pc-light', LightComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-light': LightComponentElement;
+    }
+}
+
 export { LightComponentElement };

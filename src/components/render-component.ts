@@ -144,4 +144,10 @@ class RenderComponentElement extends ComponentElement {
 
 customElements.define('pc-render', RenderComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-render': RenderComponentElement;
+    }
+}
+
 export { RenderComponentElement };

@@ -163,4 +163,10 @@ class ScrollbarComponentElement extends ComponentElement {
 
 customElements.define('pc-scrollbar', ScrollbarComponentElement);
 
+declare global {
+    interface HTMLElementTagNameMap {
+        'pc-scrollbar': ScrollbarComponentElement;
+    }
+}
+
 export { ScrollbarComponentElement };
