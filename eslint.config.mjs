@@ -35,7 +35,7 @@ export default [
         },
         rules: {
             // Disable the base rules that the TypeScript compiler already enforces
-            ...tsPlugin.configs['eslint-recommended'].overrides[0].rules,
+            ...tsPlugin.configs['flat/eslint-recommended'].rules,
             ...tsPlugin.configs['recommended'].rules,
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-explicit-any': 'off',

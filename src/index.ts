@@ -73,4 +73,4 @@ export {
     whenReady
 };
 
-export type { AsyncElementTagName, NonAsyncElementTagName } from './async-element';
+export type { AsyncElementTagName } from './async-element';
