@@ -22,11 +22,7 @@ export default [
         languageOptions: {
             parser: tsParser,
             globals: {
-                ...globals.browser,
-                AddEventListenerOptions: "readonly",
-                EventListener: "readonly",
-                EventListenerOptions: "readonly",
-                HTMLElementTagNameMap: "readonly"
+                ...globals.browser
             }
         },
         plugins: {
@@ -38,9 +34,9 @@ export default [
             }
         },
         rules: {
+            // Disable the base rules that the TypeScript compiler already enforces
+            ...tsPlugin.configs['eslint-recommended'].overrides[0].rules,
             ...tsPlugin.configs['recommended'].rules,
-            // TypeScript function overloads are not redeclarations (tsc catches real ones)
-            'no-redeclare': 'off',
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-unused-vars': 'off',
