@@ -38,31 +38,6 @@ See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-c
 
 Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) for installation and usage instructions.
 
-### Scripting elements
-
-PlayCanvas Web Components initialize asynchronously. To script against an element's underlying engine object, import `whenReady` and await it:
-
-```html
-<script type="module">
-    import { whenReady } from '@playcanvas/web-components';
-
-    const { app } = await whenReady('pc-app'); // app is the AppBase instance
-    app.scene.exposure = 0.5;
-</script>
-```
-
-`whenReady` accepts a tag name, any CSS selector or an element reference, and resolves with the element once its engine object has been created — so it works just as well for scenes, entities, cameras and so on:
-
-```js
-const { scene } = await whenReady('pc-scene');
-const camera = (await whenReady('pc-camera')).component;
-const { entity } = await whenReady('pc-entity[name="player"]');
-```
-
-Pages with multiple `<pc-app>` elements can disambiguate with a selector (e.g. `whenReady('#left')`). And if you already hold a reference to an element, you can await its `ready()` method directly — the primitive that `whenReady` builds on.
-
-For anything more substantial than page-level glue, prefer writing an engine script and attaching it with `<pc-script>` — scripts receive a fully initialized entity, so no readiness check is ever needed.
-
 ## Development 
 
 ### Setting Up Local Development
