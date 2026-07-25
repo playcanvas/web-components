@@ -44,8 +44,8 @@ class GSplatComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas gsplat component.
      * @returns The gsplat component.
      */
-    get component(): GSplatComponent | null {
-        return super.component as GSplatComponent | null;
+    get component(): GSplatComponent {
+        return super.component as GSplatComponent;
     }
 
     /**

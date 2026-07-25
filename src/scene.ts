@@ -41,15 +41,21 @@ class SceneElement extends AsyncElement {
      */
     private _gravity = new Vec3(0, -9.81, 0);
 
+    private _scene: Scene | null = null;
+
     /**
-     * The PlayCanvas scene instance.
+     * The PlayCanvas scene instance. Available once the element is ready — await
+     * {@link whenReady} or the element's `ready()` promise before accessing it.
+     * @returns The scene instance.
      */
-    scene: Scene | null = null;
+    get scene(): Scene {
+        return this._scene!;
+    }
 
     async connectedCallback() {
         await this.closestApp?.ready();
 
-        this.scene = this.closestApp!.app!.scene;
+        this._scene = this.closestApp!.app!.scene;
         this.updateSceneSettings();
 
         this._onReady();

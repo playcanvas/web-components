@@ -7,6 +7,7 @@
         <script type="importmap">
             {
                 "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
                     "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
                 }
             }
@@ -18,11 +19,13 @@
         <script type="module">
             import { registerScript, Script } from 'playcanvas';
 
+            import { whenReady } from '@playcanvas/web-components';
+
             // Use the DOM API to programmatically create the scene
             const app = document.createElement('pc-app');
             document.body.appendChild(app);
 
-            await app.ready();
+            await whenReady(app);
 
             class Rotate extends Script { 
                 update(dt) {

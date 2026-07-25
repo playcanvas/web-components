@@ -94,8 +94,8 @@ class ButtonComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas button component.
      * @returns The button component.
      */
-    get component(): ButtonComponent | null {
-        return super.component as ButtonComponent | null;
+    get component(): ButtonComponent {
+        return super.component as ButtonComponent;
     }
 
     /**

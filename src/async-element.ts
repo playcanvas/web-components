@@ -26,16 +26,18 @@ class AsyncElement extends HTMLElement {
     }
 
     /**
-     * Called when the element is fully initialized and ready.
-     * Subclasses should call this when they're ready.
+     * Called when the element is fully initialized and ready. Subclasses should call this when
+     * they're ready. Resolves the ready promise and dispatches a bubbling, composed `ready`
+     * event.
      */
     protected _onReady() {
         this._readyResolve();
-        this.dispatchEvent(new CustomEvent('ready'));
+        this.dispatchEvent(new CustomEvent('ready', { bubbles: true, composed: true }));
     }
 
     /**
-     * Returns a promise that resolves with this element when it's ready.
+     * Returns a promise that resolves with this element when it's ready. This is the low-level
+     * primitive underlying {@link whenReady}, which is the recommended way to wait for elements.
      * @returns A promise that resolves with this element when it's ready.
      */
     ready(): Promise<this> {

@@ -44,8 +44,8 @@ class ScreenComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas screen component.
      * @returns The screen component.
      */
-    get component(): ScreenComponent | null {
-        return super.component as ScreenComponent | null;
+    get component(): ScreenComponent {
+        return super.component as ScreenComponent;
     }
 
     set priority(value: number) {

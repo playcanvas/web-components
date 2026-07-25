@@ -46,8 +46,8 @@ class SoundComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas sound component.
      * @returns The sound component.
      */
-    get component(): SoundComponent | null {
-        return super.component as SoundComponent | null;
+    get component(): SoundComponent {
+        return super.component as SoundComponent;
     }
 
     /**

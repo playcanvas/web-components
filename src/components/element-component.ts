@@ -148,8 +148,8 @@ class ElementComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas element component.
      * @returns The element component.
      */
-    get component(): ElementComponent | null {
-        return super.component as ElementComponent | null;
+    get component(): ElementComponent {
+        return super.component as ElementComponent;
     }
 
     /**

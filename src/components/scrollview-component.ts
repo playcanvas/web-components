@@ -94,8 +94,8 @@ class ScrollViewComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas scroll view component.
      * @returns The scroll view component.
      */
-    get component(): ScrollViewComponent | null {
-        return super.component as ScrollViewComponent | null;
+    get component(): ScrollViewComponent {
+        return super.component as ScrollViewComponent;
     }
 
     /**

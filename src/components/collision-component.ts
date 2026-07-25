@@ -50,8 +50,8 @@ class CollisionComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas collision component.
      * @returns The collision component.
      */
-    get component(): CollisionComponent | null {
-        return super.component as CollisionComponent | null;
+    get component(): CollisionComponent {
+        return super.component as CollisionComponent;
     }
 
     set angularOffset(value: Quat) {

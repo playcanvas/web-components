@@ -46,8 +46,8 @@ class LayoutChildComponentElement extends ComponentElement {
      * Gets the underlying PlayCanvas layout child component.
      * @returns The layout child component.
      */
-    get component(): LayoutChildComponent | null {
-        return super.component as LayoutChildComponent | null;
+    get component(): LayoutChildComponent {
+        return super.component as LayoutChildComponent;
     }
 
     /**
