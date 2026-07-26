@@ -133,3 +133,6 @@ dist
 .pnp.*
 
 docs
+
+# Claude Code local settings
+.claude/
