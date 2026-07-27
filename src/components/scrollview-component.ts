@@ -1,7 +1,7 @@
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED, ScrollViewComponent, Vec2 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { getEntity, parseBool, parseEnum, parseVec2 } from '../utils';
+import { getEntity, parseBool, parseEnum, parseNumber, parseVec2 } from '../utils';
 
 const scrollModes = new Map<'clamp' | 'bounce' | 'infinite', number>([
     ['clamp', SCROLL_MODE_CLAMP],
@@ -391,10 +391,10 @@ class ScrollViewComponentElement extends ComponentElement {
                 this.scrollMode = parseEnum(newValue, scrollModes, 'bounce', name);
                 break;
             case 'bounce-amount':
-                this.bounceAmount = Number(newValue);
+                this.bounceAmount = parseNumber(newValue, 0.1, name);
                 break;
             case 'friction':
-                this.friction = Number(newValue);
+                this.friction = parseNumber(newValue, 0.05, name);
                 break;
             case 'use-mouse-wheel':
                 this.useMouseWheel = parseBool(newValue, true);

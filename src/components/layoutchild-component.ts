@@ -1,7 +1,7 @@
 import { LayoutChildComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool } from '../utils';
+import { parseBool, parseNumber } from '../utils';
 
 /**
  * The LayoutChildComponentElement interface provides properties and methods for manipulating
@@ -204,22 +204,22 @@ class LayoutChildComponentElement extends ComponentElement {
 
         switch (name) {
             case 'min-width':
-                this.minWidth = Number(newValue);
+                this.minWidth = parseNumber(newValue, 0, name);
                 break;
             case 'min-height':
-                this.minHeight = Number(newValue);
+                this.minHeight = parseNumber(newValue, 0, name);
                 break;
             case 'max-width':
-                this.maxWidth = newValue === '' ? null : Number(newValue);
+                this.maxWidth = parseNumber(newValue, null, name);
                 break;
             case 'max-height':
-                this.maxHeight = newValue === '' ? null : Number(newValue);
+                this.maxHeight = parseNumber(newValue, null, name);
                 break;
             case 'fit-width-proportion':
-                this.fitWidthProportion = Number(newValue);
+                this.fitWidthProportion = parseNumber(newValue, 0, name);
                 break;
             case 'fit-height-proportion':
-                this.fitHeightProportion = Number(newValue);
+                this.fitHeightProportion = parseNumber(newValue, 0, name);
                 break;
             case 'exclude-from-layout':
                 this.excludeFromLayout = parseBool(newValue, false);

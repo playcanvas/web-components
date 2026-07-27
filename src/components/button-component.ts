@@ -2,7 +2,7 @@ import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Butt
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { getEntity, parseBool, parseColor, parseEnum, parseVec4 } from '../utils';
+import { getEntity, parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../utils';
 
 const transitionModes = new Map<'tint' | 'sprite', number>([
     ['tint', BUTTON_TRANSITION_MODE_TINT],
@@ -422,25 +422,25 @@ class ButtonComponentElement extends ComponentElement {
                 this.inactiveTint = parseColor(newValue);
                 break;
             case 'fade-duration':
-                this.fadeDuration = Number(newValue);
+                this.fadeDuration = parseNumber(newValue, 0, name);
                 break;
             case 'hover-sprite-asset':
                 this.hoverSpriteAsset = newValue;
                 break;
             case 'hover-sprite-frame':
-                this.hoverSpriteFrame = Number(newValue);
+                this.hoverSpriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'pressed-sprite-asset':
                 this.pressedSpriteAsset = newValue;
                 break;
             case 'pressed-sprite-frame':
-                this.pressedSpriteFrame = Number(newValue);
+                this.pressedSpriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'inactive-sprite-asset':
                 this.inactiveSpriteAsset = newValue;
                 break;
             case 'inactive-sprite-frame':
-                this.inactiveSpriteFrame = Number(newValue);
+                this.inactiveSpriteFrame = parseNumber(newValue, 0, name);
                 break;
         }
     }

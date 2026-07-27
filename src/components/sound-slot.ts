@@ -3,7 +3,7 @@ import { SoundSlot } from 'playcanvas';
 import { AssetElement } from '../asset';
 import { AsyncElement } from '../async-element';
 import { SoundComponentElement } from './sound-component';
-import { parseBool } from '../utils';
+import { parseBool, parseNumber } from '../utils';
 
 /**
  * The SoundSlotElement interface provides properties and methods for manipulating
@@ -117,12 +117,12 @@ class SoundSlotElement extends AsyncElement {
     }
 
     /**
-     * Sets the duration of the sound slot.
+     * Sets the duration of the sound slot, in seconds (or `null` to play the whole clip).
      * @param value - The duration.
      */
-    set duration(value: number) {
+    set duration(value: number | null) {
         this._duration = value;
-        if (this.soundSlot) {
+        if (this.soundSlot && value !== null) {
             this.soundSlot.duration = value;
         }
     }
@@ -131,8 +131,8 @@ class SoundSlotElement extends AsyncElement {
      * Gets the duration of the sound slot.
      * @returns The duration.
      */
-    get duration() {
-        return this._duration as number;
+    get duration(): number | null {
+        return this._duration;
     }
 
     /**
@@ -262,7 +262,7 @@ class SoundSlotElement extends AsyncElement {
                 this.autoPlay = parseBool(newValue, false);
                 break;
             case 'duration':
-                this.duration = parseFloat(newValue);
+                this.duration = parseNumber(newValue, null, name);
                 break;
             case 'loop':
                 this.loop = parseBool(newValue, false);
@@ -274,13 +274,13 @@ class SoundSlotElement extends AsyncElement {
                 this.overlap = parseBool(newValue, false);
                 break;
             case 'pitch':
-                this.pitch = parseFloat(newValue);
+                this.pitch = parseNumber(newValue, 1, name);
                 break;
             case 'start-time':
-                this.startTime = parseFloat(newValue);
+                this.startTime = parseNumber(newValue, 0, name);
                 break;
             case 'volume':
-                this.volume = parseFloat(newValue);
+                this.volume = parseNumber(newValue, 1, name);
                 break;
         }
     }

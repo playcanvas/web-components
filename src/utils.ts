@@ -115,6 +115,28 @@ export const parseEnum = <T extends string>(
 };
 
 /**
+ * Parses a number attribute value. Returns the parsed number when the value is a finite number.
+ * Returns `defaultValue` when the attribute is absent (`null`), or when the value is not a
+ * finite number — the latter also logs a warning.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The parsed number.
+ */
+export const parseNumber = <T extends number | null>(value: string | null, defaultValue: T, attribute: string): number | T => {
+    if (value === null) {
+        return defaultValue;
+    }
+    const number = value.trim() === '' ? NaN : Number(value);
+    if (!Number.isFinite(number)) {
+        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected a finite number. Using '${defaultValue}'.`);
+        return defaultValue;
+    }
+    return number;
+};
+
+/**
  * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element. The reference
  * can be a CSS selector (e.g. `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare
  * entity name. Returns `null` if no matching element (or backing entity) is found.

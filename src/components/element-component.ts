@@ -2,7 +2,7 @@ import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseEnum, parseVec2, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../utils';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating
@@ -715,19 +715,19 @@ class ElementComponentElement extends ComponentElement {
                 this.fontAsset = newValue;
                 break;
             case 'font-size':
-                this.fontSize = Number(newValue);
+                this.fontSize = parseNumber(newValue, 32, name);
                 break;
             case 'max-font-size':
-                this.maxFontSize = Number(newValue);
+                this.maxFontSize = parseNumber(newValue, 32, name);
                 break;
             case 'min-font-size':
-                this.minFontSize = Number(newValue);
+                this.minFontSize = parseNumber(newValue, 8, name);
                 break;
             case 'height':
-                this.height = Number(newValue);
+                this.height = parseNumber(newValue, 0, name);
                 break;
             case 'line-height':
-                this.lineHeight = Number(newValue);
+                this.lineHeight = parseNumber(newValue, 32, name);
                 break;
             case 'margin':
                 this.margin = parseVec4(newValue);
@@ -736,19 +736,19 @@ class ElementComponentElement extends ComponentElement {
                 this.mask = parseBool(newValue, false);
                 break;
             case 'opacity':
-                this.opacity = Number(newValue);
+                this.opacity = parseNumber(newValue, 1, name);
                 break;
             case 'pivot':
                 this.pivot = parseVec2(newValue);
                 break;
             case 'pixels-per-unit':
-                this.pixelsPerUnit = Number(newValue);
+                this.pixelsPerUnit = parseNumber(newValue, null, name);
                 break;
             case 'sprite-asset':
                 this.spriteAsset = newValue;
                 break;
             case 'sprite-frame':
-                this.spriteFrame = Number(newValue);
+                this.spriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'text':
                 this.text = newValue;
@@ -763,7 +763,7 @@ class ElementComponentElement extends ComponentElement {
                 this.useInput = parseBool(newValue, false);
                 break;
             case 'width':
-                this.width = Number(newValue);
+                this.width = parseNumber(newValue, 0, name);
                 break;
             case 'wrap-lines':
                 this.wrapLines = parseBool(newValue, false);

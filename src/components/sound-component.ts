@@ -1,7 +1,7 @@
 import { SoundComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum } from '../utils';
+import { parseBool, parseEnum, parseNumber } from '../utils';
 
 /**
  * The SoundComponentElement interface provides properties and methods for manipulating
@@ -205,22 +205,22 @@ class SoundComponentElement extends ComponentElement {
                 this.distanceModel = parseEnum(newValue, ['exponential', 'inverse', 'linear'], 'linear', name);
                 break;
             case 'max-distance':
-                this.maxDistance = parseFloat(newValue);
+                this.maxDistance = parseNumber(newValue, 10000, name);
                 break;
             case 'pitch':
-                this.pitch = parseFloat(newValue);
+                this.pitch = parseNumber(newValue, 1, name);
                 break;
             case 'positional':
                 this.positional = parseBool(newValue, false);
                 break;
             case 'ref-distance':
-                this.refDistance = parseFloat(newValue);
+                this.refDistance = parseNumber(newValue, 1, name);
                 break;
             case 'roll-off-factor':
-                this.rollOffFactor = parseFloat(newValue);
+                this.rollOffFactor = parseNumber(newValue, 1, name);
                 break;
             case 'volume':
-                this.volume = parseFloat(newValue);
+                this.volume = parseNumber(newValue, 1, name);
                 break;
         }
     }

@@ -1,7 +1,7 @@
 import { RigidBodyComponent, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseEnum, parseVec3 } from '../utils';
+import { parseEnum, parseNumber, parseVec3 } from '../utils';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
@@ -192,28 +192,28 @@ class RigidBodyComponentElement extends ComponentElement {
 
         switch (name) {
             case 'angular-damping':
-                this.angularDamping = parseFloat(newValue);
+                this.angularDamping = parseNumber(newValue, 0, name);
                 break;
             case 'angular-factor':
                 this.angularFactor = parseVec3(newValue);
                 break;
             case 'friction':
-                this.friction = parseFloat(newValue);
+                this.friction = parseNumber(newValue, 0.5, name);
                 break;
             case 'linear-damping':
-                this.linearDamping = parseFloat(newValue);
+                this.linearDamping = parseNumber(newValue, 0, name);
                 break;
             case 'linear-factor':
                 this.linearFactor = parseVec3(newValue);
                 break;
             case 'mass':
-                this.mass = parseFloat(newValue);
+                this.mass = parseNumber(newValue, 1, name);
                 break;
             case 'restitution':
-                this.restitution = parseFloat(newValue);
+                this.restitution = parseNumber(newValue, 0, name);
                 break;
             case 'rolling-friction':
-                this.rollingFriction = parseFloat(newValue);
+                this.rollingFriction = parseNumber(newValue, 0, name);
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['static', 'dynamic', 'kinematic'], 'static', name);
