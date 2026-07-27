@@ -1,4 +1,4 @@
-import { whenReady } from '../../../dist/pwc.mjs';
+import { whenReady } from '@playcanvas/web-components';
 
 await whenReady('pc-app');
 

@@ -13,8 +13,9 @@ export default [
             }
         },
         rules: {
-            // dist/pwc.mjs is a build output, so it is absent when linting an unbuilt checkout
-            'import/no-unresolved': ['error', { ignore: ['/dist/pwc\\.mjs$'] }]
+            // The package self-import resolves to dist/pwc.mjs, a build output that is absent
+            // when linting an unbuilt checkout
+            'import/no-unresolved': ['error', { ignore: ['^@playcanvas/web-components$'] }]
         }
     },
     {

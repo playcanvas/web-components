@@ -1,6 +1,5 @@
+import { whenReady } from '@playcanvas/web-components';
 import { MiniStats, XRTYPE_AR, XRTYPE_VR } from 'playcanvas';
-
-import { whenReady } from '../../dist/pwc.mjs';
 
 const appElement = await whenReady('pc-app');
 /** @type {import('playcanvas').AppBase} */
