@@ -2,7 +2,7 @@ import { Color, Scene, Vec3 } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AsyncElement } from './async-element';
-import { parseColor, parseEnum, parseVec3 } from './utils';
+import { parseColor, parseEnum, parseNumber, parseVec3 } from './utils';
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
@@ -203,13 +203,13 @@ class SceneElement extends AsyncElement {
                 this.fogColor = parseColor(newValue);
                 break;
             case 'fog-density':
-                this.fogDensity = parseFloat(newValue);
+                this.fogDensity = parseNumber(newValue, 0, name);
                 break;
             case 'fog-start':
-                this.fogStart = parseFloat(newValue);
+                this.fogStart = parseNumber(newValue, 0, name);
                 break;
             case 'fog-end':
-                this.fogEnd = parseFloat(newValue);
+                this.fogEnd = parseNumber(newValue, 1000, name);
                 break;
             case 'gravity':
                 this.gravity = parseVec3(newValue);

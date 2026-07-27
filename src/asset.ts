@@ -1,7 +1,7 @@
 import { Asset, SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseBool, parseEnum } from './utils';
+import { parseBool, parseEnum, parseNumber } from './utils';
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
 const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([
@@ -212,7 +212,7 @@ class AssetElement extends AsyncElement {
 
             const pixelsPerUnit = this.getAttribute('pixels-per-unit');
             if (pixelsPerUnit !== null) {
-                data.pixelsPerUnit = Number(pixelsPerUnit);
+                data.pixelsPerUnit = parseNumber(pixelsPerUnit, 1, 'pixels-per-unit');
             }
 
             const renderMode = this.getAttribute('render-mode');

@@ -1,7 +1,7 @@
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, ScrollbarComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { getEntity, parseEnum } from '../utils';
+import { getEntity, parseEnum, parseNumber } from '../utils';
 
 const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],
@@ -150,10 +150,10 @@ class ScrollbarComponentElement extends ComponentElement {
                 this.orientation = parseEnum(newValue, orientations, 'horizontal', name);
                 break;
             case 'value':
-                this.value = Number(newValue);
+                this.value = parseNumber(newValue, 0, name);
                 break;
             case 'handle-size':
-                this.handleSize = Number(newValue);
+                this.handleSize = parseNumber(newValue, 0.5, name);
                 break;
             case 'handle':
                 this.handle = newValue;

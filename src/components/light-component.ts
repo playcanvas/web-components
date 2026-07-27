@@ -1,7 +1,7 @@
 import { Color, LightComponent, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseEnum } from '../utils';
+import { parseBool, parseColor, parseEnum, parseNumber } from '../utils';
 
 const shadowTypes = new Map<'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f', number>([
     ['pcf1-16f', SHADOW_PCF1_16F],
@@ -507,43 +507,43 @@ class LightComponentElement extends ComponentElement {
                 this.castShadows = parseBool(newValue, false);
                 break;
             case 'inner-cone-angle':
-                this.innerConeAngle = Number(newValue);
+                this.innerConeAngle = parseNumber(newValue, 40, name);
                 break;
             case 'intensity':
-                this.intensity = Number(newValue);
+                this.intensity = parseNumber(newValue, 1, name);
                 break;
             case 'normal-offset-bias':
-                this.normalOffsetBias = Number(newValue);
+                this.normalOffsetBias = parseNumber(newValue, 0.05, name);
                 break;
             case 'outer-cone-angle':
-                this.outerConeAngle = Number(newValue);
+                this.outerConeAngle = parseNumber(newValue, 45, name);
                 break;
             case 'penumbra-falloff':
-                this.penumbraFalloff = Number(newValue);
+                this.penumbraFalloff = parseNumber(newValue, 1, name);
                 break;
             case 'penumbra-size':
-                this.penumbraSize = Number(newValue);
+                this.penumbraSize = parseNumber(newValue, 1, name);
                 break;
             case 'range':
-                this.range = Number(newValue);
+                this.range = parseNumber(newValue, 10, name);
                 break;
             case 'shadow-bias':
-                this.shadowBias = Number(newValue);
+                this.shadowBias = parseNumber(newValue, 0.2, name);
                 break;
             case 'shadow-distance':
-                this.shadowDistance = Number(newValue);
+                this.shadowDistance = parseNumber(newValue, 16, name);
                 break;
             case 'shadow-blocker-samples':
-                this.shadowBlockerSamples = Number(newValue);
+                this.shadowBlockerSamples = parseNumber(newValue, 16, name);
                 break;
             case 'shadow-resolution':
-                this.shadowResolution = Number(newValue);
+                this.shadowResolution = parseNumber(newValue, 1024, name);
                 break;
             case 'shadow-intensity':
-                this.shadowIntensity = Number(newValue);
+                this.shadowIntensity = parseNumber(newValue, 1, name);
                 break;
             case 'shadow-samples':
-                this.shadowSamples = Number(newValue);
+                this.shadowSamples = parseNumber(newValue, 16, name);
                 break;
             case 'shadow-type':
                 this.shadowType = parseEnum(newValue, shadowTypes, 'pcf3-32f', name);
@@ -552,10 +552,10 @@ class LightComponentElement extends ComponentElement {
                 this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
                 break;
             case 'vsm-bias':
-                this.vsmBias = Number(newValue);
+                this.vsmBias = parseNumber(newValue, 0.01, name);
                 break;
             case 'vsm-blur-size':
-                this.vsmBlurSize = Number(newValue);
+                this.vsmBlurSize = parseNumber(newValue, 11, name);
                 break;
         }
     }

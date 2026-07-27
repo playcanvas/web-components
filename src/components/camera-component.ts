@@ -1,7 +1,7 @@
 import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseEnum, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../utils';
 
 const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral', number>([
     ['none', TONEMAP_NONE],
@@ -510,13 +510,13 @@ class CameraComponentElement extends ComponentElement {
                 this.cullFaces = parseBool(newValue, true);
                 break;
             case 'far-clip':
-                this.farClip = parseFloat(newValue);
+                this.farClip = parseNumber(newValue, 1000, name);
                 break;
             case 'flip-faces':
                 this.flipFaces = parseBool(newValue, false);
                 break;
             case 'fov':
-                this.fov = parseFloat(newValue);
+                this.fov = parseNumber(newValue, 45, name);
                 break;
             case 'frustum-culling':
                 this.frustumCulling = parseBool(newValue, true);
@@ -528,16 +528,16 @@ class CameraComponentElement extends ComponentElement {
                 this.horizontalFov = parseBool(newValue, false);
                 break;
             case 'near-clip':
-                this.nearClip = parseFloat(newValue);
+                this.nearClip = parseNumber(newValue, 0.1, name);
                 break;
             case 'orthographic':
                 this.orthographic = parseBool(newValue, false);
                 break;
             case 'ortho-height':
-                this.orthoHeight = parseFloat(newValue);
+                this.orthoHeight = parseNumber(newValue, 10, name);
                 break;
             case 'priority':
-                this.priority = parseFloat(newValue);
+                this.priority = parseNumber(newValue, 0, name);
                 break;
             case 'rect':
                 this.rect = parseVec4(newValue);

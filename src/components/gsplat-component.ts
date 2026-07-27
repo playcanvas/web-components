@@ -2,7 +2,7 @@ import { GSplatComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
-import { parseBool } from '../utils';
+import { parseBool, parseNumber } from '../utils';
 
 /**
  * The GSplatComponentElement interface provides properties and methods for manipulating
@@ -199,16 +199,16 @@ class GSplatComponentElement extends ComponentElement {
                 this.castShadows = parseBool(newValue, false);
                 break;
             case 'lod-base-distance':
-                this.lodBaseDistance = Number(newValue);
+                this.lodBaseDistance = parseNumber(newValue, 5, name);
                 break;
             case 'lod-multiplier':
-                this.lodMultiplier = Number(newValue);
+                this.lodMultiplier = parseNumber(newValue, 3, name);
                 break;
             case 'lod-range-min':
-                this.lodRangeMin = Number(newValue);
+                this.lodRangeMin = parseNumber(newValue, 0, name);
                 break;
             case 'lod-range-max':
-                this.lodRangeMax = Number(newValue);
+                this.lodRangeMax = parseNumber(newValue, 99, name);
                 break;
         }
     }

@@ -1,7 +1,7 @@
 import { SCALEMODE_BLEND, SCALEMODE_NONE, ScreenComponent, Vec2 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseVec2 } from '../utils';
+import { parseBool, parseNumber, parseVec2 } from '../utils';
 
 /**
  * The ScreenComponentElement interface provides properties and methods for manipulating
@@ -131,7 +131,7 @@ class ScreenComponentElement extends ComponentElement {
 
         switch (name) {
             case 'priority':
-                this.priority = parseInt(newValue, 10);
+                this.priority = parseNumber(newValue, 0, name);
                 break;
             case 'reference-resolution':
                 this.referenceResolution = parseVec2(newValue);
@@ -140,7 +140,7 @@ class ScreenComponentElement extends ComponentElement {
                 this.resolution = parseVec2(newValue);
                 break;
             case 'scale-blend':
-                this.scaleBlend = parseFloat(newValue);
+                this.scaleBlend = parseNumber(newValue, 0.5, name);
                 break;
             case 'blend':
                 this.blend = parseBool(newValue, false);

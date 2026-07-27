@@ -1,7 +1,7 @@
 import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseQuat, parseVec3 } from '../utils';
+import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../utils';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating
@@ -154,7 +154,7 @@ class CollisionComponentElement extends ComponentElement {
                 this.angularOffset = parseQuat(newValue);
                 break;
             case 'axis':
-                this.axis = parseInt(newValue, 10);
+                this.axis = parseNumber(newValue, 1, name);
                 break;
             case 'convex-hull':
                 this.convexHull = parseBool(newValue, false);
@@ -163,13 +163,13 @@ class CollisionComponentElement extends ComponentElement {
                 this.halfExtents = parseVec3(newValue);
                 break;
             case 'height':
-                this.height = parseFloat(newValue);
+                this.height = parseNumber(newValue, 2, name);
                 break;
             case 'linear-offset':
                 this.linearOffset = parseVec3(newValue);
                 break;
             case 'radius':
-                this.radius = parseFloat(newValue);
+                this.radius = parseNumber(newValue, 0.5, name);
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['box', 'capsule', 'compound', 'cone', 'cylinder', 'mesh', 'sphere'], 'box', name);
