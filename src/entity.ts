@@ -46,6 +46,11 @@ class EntityElement extends AsyncElement {
     private _listeners: { [key: string]: EventListener[] } = {};
 
     /**
+     * The event types for which an inline `onpointer*` attribute is currently present.
+     */
+    private _inlineHandlerTypes = new Set<string>();
+
+    /**
      * Whether the hierarchy has been built for this entity.
      */
     private _built = false;
@@ -94,31 +99,6 @@ class EntityElement extends AsyncElement {
         if (tags) {
             entity.tags.add(tags.split(',').map(tag => tag.trim()));
         }
-
-        // Handle pointer events
-        const pointerEvents = [
-            'onpointerenter',
-            'onpointerleave',
-            'onpointerdown',
-            'onpointerup',
-            'onpointermove'
-        ];
-
-        pointerEvents.forEach((eventName) => {
-            const handler = this.getAttribute(eventName);
-            if (handler) {
-                const eventType = eventName.substring(2); // remove 'on' prefix
-                const eventHandler = (event: Event) => {
-                    try {
-                        /* eslint-disable-next-line no-new-func */
-                        new Function('event', handler).call(this, event);
-                    } catch (e) {
-                        console.error('Error in event handler:', e);
-                    }
-                };
-                this.addEventListener(eventType, eventHandler);
-            }
-        });
     }
 
     buildHierarchy(app: AppBase) {
@@ -288,6 +268,31 @@ class EntityElement extends AsyncElement {
         return this._tags;
     }
 
+    /**
+     * Tracks whether an inline `onpointer*` attribute is present. The browser itself compiles and
+     * runs these attributes — they are standard `GlobalEventHandlers`, so setting one replaces
+     * the previous handler and removing it removes the handler, exactly like `onclick` on any
+     * HTML element. But because they bypass {@link addEventListener}, the connect/disconnect
+     * bookkeeping that lets the application lazily attach its canvas pointer handlers must be
+     * kept in sync here.
+     *
+     * @param name - The attribute name (e.g. 'onpointerdown').
+     * @param value - The attribute value, or `null` when the attribute has been removed.
+     */
+    private _updateInlineHandler(name: string, value: string | null) {
+        const type = name.substring(2);
+        const had = this._inlineHandlerTypes.has(type);
+        const has = value !== null;
+
+        if (has && !had) {
+            this._inlineHandlerTypes.add(type);
+            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
+        } else if (!has && had) {
+            this._inlineHandlerTypes.delete(type);
+            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
+        }
+    }
+
     static get observedAttributes() {
         return [
             'enabled',
@@ -329,20 +334,7 @@ class EntityElement extends AsyncElement {
             case 'onpointerdown':
             case 'onpointerup':
             case 'onpointermove':
-                if (newValue) {
-                    const eventName = name.substring(2);
-                    // Use Function.prototype.bind to avoid new Function
-                    const handler = (event: Event) => {
-                        try {
-                            const handlerStr = this.getAttribute(eventName) || '';
-                            /* eslint-disable-next-line no-new-func */
-                            new Function('event', handlerStr).call(this, event);
-                        } catch (e) {
-                            console.error('Error in event handler:', e);
-                        }
-                    };
-                    this.addEventListener(eventName, handler);
-                }
+                this._updateInlineHandler(name, newValue);
                 break;
         }
     }
@@ -369,7 +361,7 @@ class EntityElement extends AsyncElement {
     }
 
     hasListeners(type: string): boolean {
-        return Boolean(this._listeners[type]?.length);
+        return Boolean(this._listeners[type]?.length) || this._inlineHandlerTypes.has(type);
     }
 }
 
