@@ -1,4 +1,4 @@
-import { whenReady } from '../../../dist/pwc.mjs';
+import { whenReady } from '@playcanvas/web-components';
 
 const [entityElement, assetElement] = await Promise.all([
     whenReady('pc-entity[name="shoe"]'),
