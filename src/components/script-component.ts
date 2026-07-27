@@ -2,8 +2,8 @@ import { Color, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { EntityElement } from '../entity';
 import { ScriptElement } from './script';
+import { getEntity, parseComponents } from '../utils';
 
 // Add these interfaces at the top of the file, after the imports
 interface ScriptAttributesChangeEvent extends CustomEvent {
@@ -39,13 +39,16 @@ class ScriptComponentElement extends ComponentElement {
 
         // Create mutation observer to watch for child script elements
         this.observer = new MutationObserver(this.handleMutations.bind(this));
-        this.observer.observe(this, {
-            childList: true
-        });
 
         // Listen for script attribute and enable changes
         this.addEventListener('scriptattributeschange', this.handleScriptAttributesChange.bind(this));
         this.addEventListener('scriptenablechange', this.handleScriptEnableChange.bind(this));
+    }
+
+    connectedCallback() {
+        // (Re-)observe on every connection - disconnectedCallback disconnects the observer
+        this.observer.observe(this, { childList: true });
+        return super.connectedCallback();
     }
 
     initComponent() {
@@ -54,72 +57,83 @@ class ScriptComponentElement extends ComponentElement {
             const scriptName = scriptElement.getAttribute('name');
             const attributes = scriptElement.getAttribute('attributes');
             if (scriptName) {
-                this.createScript(scriptName, attributes);
+                this.createScript(scriptName, attributes, scriptElement.enabled);
             }
         });
     }
 
     /**
      * Recursively converts raw attribute data into proper PlayCanvas types. Supported conversions:
-     * - "asset:assetId" → resolves to an Asset instance
-     * - "entity:entityId" → resolves to an Entity instance
-     * - "vec2:1,2" → new Vec2(1,2)
-     * - "vec3:1,2,3" → new Vec3(1,2,3)
-     * - "vec4:1,2,3,4" → new Vec4(1,2,3,4)
-     * - "color:1,0.5,0.5,1" → new Color(1,0.5,0.5,1)
+     * - "asset:id" → the Asset created by the `pc-asset` element with that id
+     * - "entity:ref" → the Entity backing a `pc-entity` element. The reference can be a CSS
+     *   selector, an element id or an entity name.
+     * - "vec2:1 2" → new Vec2(1, 2)
+     * - "vec3:1 2 3" → new Vec3(1, 2, 3)
+     * - "vec4:1 2 3 4" → new Vec4(1, 2, 3, 4)
+     * - "color:1 0.5 0.5 1" → new Color(1, 0.5, 0.5, 1)
+     *
+     * A prefixed string that fails to resolve or parse logs a warning and is left as the raw
+     * string.
      * @param item - The item to convert.
      * @returns The converted item.
      */
     private convertAttributes(item: any): any {
         if (typeof item === 'string') {
             if (item.startsWith('asset:')) {
-                const assetId = item.slice(6);
-                const assetElement = document.querySelector(`pc-asset#${assetId}`) as AssetElement;
-                if (assetElement) {
-                    return assetElement.asset;
+                const id = item.slice(6);
+                const asset = AssetElement.get(id);
+                if (asset) {
+                    return asset;
                 }
+                console.warn(`Unable to resolve '${item}' in script attributes - no pc-asset found with id '${id}'.`);
+                return item;
             }
             if (item.startsWith('entity:')) {
-                const entityId = item.slice(7);
-                const entityElement = document.querySelector(`pc-entity[name="${entityId}"]`) as EntityElement;
-                if (entityElement) {
-                    return entityElement.entity;
+                const ref = item.slice(7);
+                const entity = getEntity(ref);
+                if (entity) {
+                    return entity;
                 }
+                console.warn(`Unable to resolve '${item}' in script attributes - no pc-entity found matching '${ref}'.`);
+                return item;
             }
             if (item.startsWith('vec2:')) {
-                const parts = item.slice(5).split(',').map(Number);
-                if (parts.length === 2 && parts.every(v => !isNaN(v))) {
-                    return new Vec2(parts[0], parts[1]);
+                const components = parseComponents(item.slice(5), 2);
+                if (components) {
+                    return new Vec2(components);
                 }
+                console.warn(`Invalid script attribute value '${item}'. Expected 2 space-separated numbers after 'vec2:'.`);
+                return item;
             }
             if (item.startsWith('vec3:')) {
-                const parts = item.slice(5).split(',').map(Number);
-                if (parts.length === 3 && parts.every(v => !isNaN(v))) {
-                    return new Vec3(parts[0], parts[1], parts[2]);
+                const components = parseComponents(item.slice(5), 3);
+                if (components) {
+                    return new Vec3(components);
                 }
+                console.warn(`Invalid script attribute value '${item}'. Expected 3 space-separated numbers after 'vec3:'.`);
+                return item;
             }
             if (item.startsWith('vec4:')) {
-                const parts = item.slice(5).split(',').map(Number);
-                if (parts.length === 4 && parts.every(v => !isNaN(v))) {
-                    return new Vec4(parts[0], parts[1], parts[2], parts[3]);
+                const components = parseComponents(item.slice(5), 4);
+                if (components) {
+                    return new Vec4(components);
                 }
+                console.warn(`Invalid script attribute value '${item}'. Expected 4 space-separated numbers after 'vec4:'.`);
+                return item;
             }
             if (item.startsWith('color:')) {
-                const parts = item.slice(6).split(',').map(Number);
-                if (parts.length === 4 && parts.every(v => !isNaN(v))) {
-                    return new Color(parts[0], parts[1], parts[2], parts[3]);
+                const components = parseComponents(item.slice(6), 4) ?? parseComponents(item.slice(6), 3);
+                if (components) {
+                    return new Color(components);
                 }
+                console.warn(`Invalid script attribute value '${item}'. Expected 3 or 4 space-separated numbers after 'color:'.`);
+                return item;
             }
             return item;
         }
 
         if (Array.isArray(item)) {
-            // If it's an array of objects, convert each element individually.
-            if (item.length > 0 && typeof item[0] === 'object') {
-                return item.map((el: any) => this.convertAttributes(el));
-            }
-            // Otherwise, leave the numeric array unchanged but process each element.
-            return item.map((el: any) => this.convertAttributes(el));
+            return item.map((element: any) => this.convertAttributes(element));
         }
 
         if (item && typeof item === 'object') {
@@ -131,15 +145,6 @@ class ScriptComponentElement extends ComponentElement {
         }
 
         return item;
-    }
-
-    /**
-     * Preprocess the attributes object by converting its values.
-     * @param attrs - The attributes object to preprocess.
-     * @returns The preprocessed attributes object.
-     */
-    private preprocessAttributes(attrs: any): any {
-        return this.convertAttributes(attrs);
     }
 
     /**
@@ -167,17 +172,17 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Update script attributes by merging preprocessed values into the script.
+     * Update script attributes by merging converted values into the script.
      * @param script - The script to update.
+     * @param name - The script name, used in the warning message.
      * @param attributes - The attributes to merge into the script.
      */
-    private applyAttributes(script: any, attributes: string | null) {
+    private applyAttributes(script: any, name: string, attributes: string | null) {
         try {
             const attributesObject = attributes ? JSON.parse(attributes) : {};
-            const converted = this.convertAttributes(attributesObject);
-            this.mergeDeep(script, converted);
+            this.mergeDeep(script, this.convertAttributes(attributesObject));
         } catch (error) {
-            console.error(`Error parsing attributes JSON string ${attributes}:`, error);
+            console.warn(`Invalid 'attributes' JSON on pc-script '${name}': ${(error as Error).message}`);
         }
     }
 
@@ -188,7 +193,7 @@ class ScriptComponentElement extends ComponentElement {
 
         const script = this.component.get(scriptName);
         if (script) {
-            this.applyAttributes(script, event.detail.attributes);
+            this.applyAttributes(script, scriptName, event.detail.attributes);
         }
     }
 
@@ -203,20 +208,20 @@ class ScriptComponentElement extends ComponentElement {
         }
     }
 
-    private createScript(name: string, attributes: string | null): Script | null {
+    private createScript(name: string, attributes: string | null, enabled: boolean): Script | null {
         if (!this.component) return null;
 
         let attributesObject = {};
         if (attributes) {
             try {
-                attributesObject = JSON.parse(attributes);
-                // Preprocess attributes: convert arrays or strings into vectors, colors, asset references, etc.
-                attributesObject = this.preprocessAttributes(attributesObject);
+                // Convert prefixed strings into vectors, colors, asset and entity references, etc.
+                attributesObject = this.convertAttributes(JSON.parse(attributes));
             } catch (error) {
-                console.error(`Error parsing attributes JSON string ${attributes}:`, error);
+                console.warn(`Invalid 'attributes' JSON on pc-script '${name}': ${(error as Error).message}`);
             }
         }
         return this.component.create(name, {
+            enabled,
             properties: attributesObject
         });
     }
@@ -234,7 +239,7 @@ class ScriptComponentElement extends ComponentElement {
                     const scriptName = node.getAttribute('name');
                     const attributes = node.getAttribute('attributes');
                     if (scriptName) {
-                        this.createScript(scriptName, attributes);
+                        this.createScript(scriptName, attributes, (node as ScriptElement).enabled);
                     }
                 }
             });

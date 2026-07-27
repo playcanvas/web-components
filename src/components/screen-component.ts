@@ -134,10 +134,10 @@ class ScreenComponentElement extends ComponentElement {
                 this.priority = parseNumber(newValue, 0, name);
                 break;
             case 'reference-resolution':
-                this.referenceResolution = parseVec2(newValue);
+                this.referenceResolution = parseVec2(newValue, new Vec2(640, 320), name);
                 break;
             case 'resolution':
-                this.resolution = parseVec2(newValue);
+                this.resolution = parseVec2(newValue, new Vec2(640, 320), name);
                 break;
             case 'scale-blend':
                 this.scaleBlend = parseNumber(newValue, 0.5, name);

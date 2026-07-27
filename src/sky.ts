@@ -276,7 +276,7 @@ class SkyElement extends AsyncElement {
                 this.asset = newValue;
                 break;
             case 'center':
-                this.center = parseVec3(newValue);
+                this.center = parseVec3(newValue, new Vec3(0, 0.01, 0), name);
                 break;
             case 'intensity':
                 this.intensity = parseNumber(newValue, 1, name);
@@ -288,10 +288,10 @@ class SkyElement extends AsyncElement {
                 this.lighting = parseBool(newValue, false);
                 break;
             case 'rotation':
-                this.rotation = parseVec3(newValue);
+                this.rotation = parseVec3(newValue, Vec3.ZERO, name);
                 break;
             case 'scale':
-                this.scale = parseVec3(newValue);
+                this.scale = parseVec3(newValue, new Vec3(100, 100, 100), name);
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['box', 'dome', 'infinite', 'none'], 'infinite', name);

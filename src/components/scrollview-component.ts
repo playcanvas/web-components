@@ -400,7 +400,7 @@ class ScrollViewComponentElement extends ComponentElement {
                 this.useMouseWheel = parseBool(newValue, true);
                 break;
             case 'mouse-wheel-sensitivity':
-                this.mouseWheelSensitivity = parseVec2(newValue);
+                this.mouseWheelSensitivity = parseVec2(newValue, Vec2.ONE, name);
                 break;
             case 'horizontal-scrollbar-visibility':
                 this.horizontalScrollbarVisibility = parseEnum(newValue, visibilities, 'when-required', name);

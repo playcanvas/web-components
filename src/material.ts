@@ -118,7 +118,7 @@ class MaterialElement extends HTMLElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'diffuse':
-                this.diffuse = parseColor(newValue);
+                this.diffuse = parseColor(newValue, Color.WHITE, name);
                 break;
             case 'diffuse-map':
                 this.diffuseMap = newValue;
