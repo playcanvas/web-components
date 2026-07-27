@@ -2,7 +2,7 @@ import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseVec2, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseEnum, parseVec2, parseVec4 } from '../utils';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating
@@ -757,7 +757,7 @@ class ElementComponentElement extends ComponentElement {
                 this.textureAsset = newValue;
                 break;
             case 'type':
-                this.type = newValue as 'group' | 'image' | 'text';
+                this.type = parseEnum(newValue, ['group', 'image', 'text'], 'group', name);
                 break;
             case 'use-input':
                 this.useInput = parseBool(newValue, false);

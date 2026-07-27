@@ -1,9 +1,9 @@
 import { Color, LightComponent, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseColor } from '../utils';
+import { parseBool, parseColor, parseEnum } from '../utils';
 
-const shadowTypes = new Map([
+const shadowTypes = new Map<'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f', number>([
     ['pcf1-16f', SHADOW_PCF1_16F],
     ['pcf1-32f', SHADOW_PCF1_32F],
     ['pcf3-16f', SHADOW_PCF3_16F],
@@ -48,7 +48,7 @@ class LightComponentElement extends ComponentElement {
 
     private _shadowType: 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f' = 'pcf3-32f';
 
-    private _type = 'directional';
+    private _type: 'directional' | 'omni' | 'spot' = 'directional';
 
     private _vsmBias = 0.01;
 
@@ -338,15 +338,11 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the type of the light.
+     * Sets the type of the light. Can be `directional`, `omni` or `spot`. Defaults to
+     * `directional`.
      * @param value - The type.
      */
-    set type(value: string) {
-        if (!['directional', 'omni', 'spot'].includes(value)) {
-            console.warn(`Invalid light type '${value}', using default type '${this._type}'.`);
-            return;
-        }
-
+    set type(value: 'directional' | 'omni' | 'spot') {
         this._type = value;
         if (this.component) {
             this.component.type = value;
@@ -550,10 +546,10 @@ class LightComponentElement extends ComponentElement {
                 this.shadowSamples = Number(newValue);
                 break;
             case 'shadow-type':
-                this.shadowType = newValue as 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f';
+                this.shadowType = parseEnum(newValue, shadowTypes, 'pcf3-32f', name);
                 break;
             case 'type':
-                this.type = newValue;
+                this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
                 break;
             case 'vsm-bias':
                 this.vsmBias = Number(newValue);

@@ -3,7 +3,7 @@ import { Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from '
 import { AppElement } from './app';
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
-import { parseBool, parseVec3 } from './utils';
+import { parseBool, parseEnum, parseVec3 } from './utils';
 
 /**
  * The SkyElement interface provides properties and methods for manipulating
@@ -294,7 +294,7 @@ class SkyElement extends AsyncElement {
                 this.scale = parseVec3(newValue);
                 break;
             case 'type':
-                this.type = newValue as 'box' | 'dome' | 'infinite' | 'none';
+                this.type = parseEnum(newValue, ['box', 'dome', 'infinite', 'none'], 'infinite', name);
                 break;
         }
     }

@@ -3,7 +3,7 @@ import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, ScrollbarComponent } from
 import { ComponentElement } from './component';
 import { getEntity, parseEnum } from '../utils';
 
-const orientations = new Map<string, number>([
+const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],
     ['vertical', ORIENTATION_VERTICAL]
 ]);
@@ -17,7 +17,7 @@ const orientations = new Map<string, number>([
  * @category Components
  */
 class ScrollbarComponentElement extends ComponentElement {
-    private _orientation: number = ORIENTATION_HORIZONTAL;
+    private _orientation: 'horizontal' | 'vertical' = 'horizontal';
 
     private _value = 0;
 
@@ -32,7 +32,7 @@ class ScrollbarComponentElement extends ComponentElement {
 
     getInitialComponentData() {
         const data: Record<string, any> = {
-            orientation: this._orientation,
+            orientation: orientations.get(this._orientation),
             value: this._value,
             handleSize: this._handleSize
         };
@@ -54,13 +54,14 @@ class ScrollbarComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the orientation of the scrollbar. Can be `horizontal` (0) or `vertical` (1).
+     * Sets the orientation of the scrollbar. Can be `horizontal` or `vertical`. Defaults to
+     * `horizontal`.
      * @param value - The orientation.
      */
-    set orientation(value: number) {
+    set orientation(value: 'horizontal' | 'vertical') {
         this._orientation = value;
         if (this.component) {
-            this.component.orientation = value;
+            this.component.orientation = orientations.get(value) ?? ORIENTATION_HORIZONTAL;
         }
     }
 
@@ -146,7 +147,7 @@ class ScrollbarComponentElement extends ComponentElement {
 
         switch (name) {
             case 'orientation':
-                this.orientation = parseEnum(newValue, orientations, ORIENTATION_HORIZONTAL);
+                this.orientation = parseEnum(newValue, orientations, 'horizontal', name);
                 break;
             case 'value':
                 this.value = Number(newValue);

@@ -3,12 +3,12 @@ import { FITTING_NONE, FITTING_STRETCH, FITTING_SHRINK, FITTING_BOTH, LayoutGrou
 import { ComponentElement } from './component';
 import { parseBool, parseEnum, parseVec2, parseVec4 } from '../utils';
 
-const orientations = new Map<string, number>([
+const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],
     ['vertical', ORIENTATION_VERTICAL]
 ]);
 
-const fittings = new Map<string, number>([
+const fittings = new Map<'none' | 'stretch' | 'shrink' | 'both', number>([
     ['none', FITTING_NONE],
     ['stretch', FITTING_STRETCH],
     ['shrink', FITTING_SHRINK],
@@ -24,7 +24,7 @@ const fittings = new Map<string, number>([
  * @category Components
  */
 class LayoutGroupComponentElement extends ComponentElement {
-    private _orientation: number = ORIENTATION_HORIZONTAL;
+    private _orientation: 'horizontal' | 'vertical' = 'horizontal';
 
     private _reverseX = false;
 
@@ -36,9 +36,9 @@ class LayoutGroupComponentElement extends ComponentElement {
 
     private _spacing = new Vec2(0, 0);
 
-    private _widthFitting: number = FITTING_NONE;
+    private _widthFitting: 'none' | 'stretch' | 'shrink' | 'both' = 'none';
 
-    private _heightFitting: number = FITTING_NONE;
+    private _heightFitting: 'none' | 'stretch' | 'shrink' | 'both' = 'none';
 
     private _wrap = false;
 
@@ -49,14 +49,14 @@ class LayoutGroupComponentElement extends ComponentElement {
 
     getInitialComponentData() {
         return {
-            orientation: this._orientation,
+            orientation: orientations.get(this._orientation),
             reverseX: this._reverseX,
             reverseY: this._reverseY,
             alignment: this._alignment,
             padding: this._padding,
             spacing: this._spacing,
-            widthFitting: this._widthFitting,
-            heightFitting: this._heightFitting,
+            widthFitting: fittings.get(this._widthFitting),
+            heightFitting: fittings.get(this._heightFitting),
             wrap: this._wrap
         };
     }
@@ -70,13 +70,14 @@ class LayoutGroupComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the orientation of the layout group. Can be `horizontal` (0) or `vertical` (1).
+     * Sets the orientation of the layout group. Can be `horizontal` or `vertical`. Defaults to
+     * `horizontal`.
      * @param value - The orientation.
      */
-    set orientation(value: number) {
+    set orientation(value: 'horizontal' | 'vertical') {
         this._orientation = value;
         if (this.component) {
-            this.component.orientation = value;
+            this.component.orientation = orientations.get(value) ?? ORIENTATION_HORIZONTAL;
         }
     }
 
@@ -184,14 +185,14 @@ class LayoutGroupComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the fitting mode along the horizontal axis. Can be `none` (0), `stretch` (1), `shrink`
-     * (2) or `both` (3).
+     * Sets the fitting mode along the horizontal axis. Can be `none`, `stretch`, `shrink` or
+     * `both`. Defaults to `none`.
      * @param value - The width fitting mode.
      */
-    set widthFitting(value: number) {
+    set widthFitting(value: 'none' | 'stretch' | 'shrink' | 'both') {
         this._widthFitting = value;
         if (this.component) {
-            this.component.widthFitting = value;
+            this.component.widthFitting = fittings.get(value) ?? FITTING_NONE;
         }
     }
 
@@ -204,14 +205,14 @@ class LayoutGroupComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the fitting mode along the vertical axis. Can be `none` (0), `stretch` (1), `shrink` (2)
-     * or `both` (3).
+     * Sets the fitting mode along the vertical axis. Can be `none`, `stretch`, `shrink` or
+     * `both`. Defaults to `none`.
      * @param value - The height fitting mode.
      */
-    set heightFitting(value: number) {
+    set heightFitting(value: 'none' | 'stretch' | 'shrink' | 'both') {
         this._heightFitting = value;
         if (this.component) {
-            this.component.heightFitting = value;
+            this.component.heightFitting = fittings.get(value) ?? FITTING_NONE;
         }
     }
 
@@ -262,7 +263,7 @@ class LayoutGroupComponentElement extends ComponentElement {
 
         switch (name) {
             case 'orientation':
-                this.orientation = parseEnum(newValue, orientations, ORIENTATION_HORIZONTAL);
+                this.orientation = parseEnum(newValue, orientations, 'horizontal', name);
                 break;
             case 'reverse-x':
                 this.reverseX = parseBool(newValue, false);
@@ -280,10 +281,10 @@ class LayoutGroupComponentElement extends ComponentElement {
                 this.spacing = parseVec2(newValue);
                 break;
             case 'width-fitting':
-                this.widthFitting = parseEnum(newValue, fittings, FITTING_NONE);
+                this.widthFitting = parseEnum(newValue, fittings, 'none', name);
                 break;
             case 'height-fitting':
-                this.heightFitting = parseEnum(newValue, fittings, FITTING_NONE);
+                this.heightFitting = parseEnum(newValue, fittings, 'none', name);
                 break;
             case 'wrap':
                 this.wrap = parseBool(newValue, false);

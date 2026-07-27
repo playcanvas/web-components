@@ -2,7 +2,7 @@ import { Color, Scene, Vec3 } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AsyncElement } from './async-element';
-import { parseColor, parseVec3 } from './utils';
+import { parseColor, parseEnum, parseVec3 } from './utils';
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
@@ -14,7 +14,7 @@ class SceneElement extends AsyncElement {
     /**
      * The fog type of the scene.
      */
-    private _fog = 'none'; // possible values: 'none', 'linear', 'exp', 'exp2'
+    private _fog: 'none' | 'linear' | 'exp' | 'exp2' = 'none';
 
     /**
      * The color of the fog.
@@ -75,7 +75,8 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets the fog type of the scene.
+     * Sets the fog type of the scene. Can be `none`, `linear`, `exp` or `exp2`. Defaults to
+     * `none`.
      * @param value - The fog type.
      */
     set fog(value) {
@@ -196,7 +197,7 @@ class SceneElement extends AsyncElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'fog':
-                this.fog = newValue;
+                this.fog = parseEnum(newValue, ['none', 'linear', 'exp', 'exp2'], 'none', name);
                 break;
             case 'fog-color':
                 this.fogColor = parseColor(newValue);

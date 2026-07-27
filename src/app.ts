@@ -71,7 +71,7 @@ import { AsyncElement } from './async-element';
 import { EntityElement } from './entity';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
-import { parseBool } from './utils';
+import { parseBool, parseEnum } from './utils';
 
 /**
  * The AppElement interface provides properties and methods for manipulating
@@ -602,9 +602,7 @@ class AppElement extends AsyncElement {
                 this.antialias = parseBool(newValue, true);
                 break;
             case 'backend':
-                if (newValue === 'webgpu' || newValue === 'webgl2' || newValue === 'null') {
-                    this.backend = newValue;
-                }
+                this.backend = parseEnum(newValue, ['webgpu', 'webgl2', 'null'], 'webgl2', name);
                 break;
             case 'depth':
                 this.depth = parseBool(newValue, true);

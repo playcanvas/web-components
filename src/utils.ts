@@ -87,21 +87,31 @@ export const parseVec4 = (value: string): Vec4 => {
 };
 
 /**
- * Resolves an enum value supplied as either a named string (looked up in `map`) or a numeric
- * string. Falls back to `defaultValue` when the value is neither a known name nor a finite number.
+ * Resolves an enum attribute value against its set of valid names. Returns the value when it is
+ * one of the valid names. Returns `defaultValue` when the attribute is absent (`null`), or when
+ * the value is invalid — the latter also logs a warning listing the valid names.
  *
- * @param value - The attribute value to parse.
- * @param map - A map of named values to their numeric enum equivalents.
- * @param defaultValue - The value to return when parsing fails.
- * @returns The resolved numeric enum value.
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param valid - The valid names: an array, or a map whose keys are the valid names.
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The resolved enum name.
  */
-export const parseEnum = (value: string, map: Map<string, number>, defaultValue: number): number => {
-    const named = map.get(value);
-    if (named !== undefined) {
-        return named;
+export const parseEnum = <T extends string>(
+    value: string | null,
+    valid: readonly T[] | ReadonlyMap<T, number>,
+    defaultValue: T,
+    attribute: string
+): T => {
+    if (value === null) {
+        return defaultValue;
     }
-    const numeric = Number(value);
-    return Number.isFinite(numeric) ? numeric : defaultValue;
+    const names = Array.isArray(valid) ? valid : [...(valid as ReadonlyMap<T, number>).keys()];
+    if (names.includes(value as T)) {
+        return value as T;
+    }
+    console.warn(`Invalid value '${value}' for attribute '${attribute}'. Valid values: ${names.join(', ')}. Using '${defaultValue}'.`);
+    return defaultValue;
 };
 
 /**

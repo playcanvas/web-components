@@ -4,7 +4,7 @@ import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
 import { getEntity, parseBool, parseColor, parseEnum, parseVec4 } from '../utils';
 
-const transitionModes = new Map<string, number>([
+const transitionModes = new Map<'tint' | 'sprite', number>([
     ['tint', BUTTON_TRANSITION_MODE_TINT],
     ['sprite', BUTTON_TRANSITION_MODE_SPRITE_CHANGE]
 ]);
@@ -24,7 +24,7 @@ class ButtonComponentElement extends ComponentElement {
 
     private _hitPadding = new Vec4(0, 0, 0, 0);
 
-    private _transitionMode: number = BUTTON_TRANSITION_MODE_TINT;
+    private _transitionMode: 'tint' | 'sprite' = 'tint';
 
     private _hoverTint = new Color(1, 1, 1, 1);
 
@@ -55,7 +55,7 @@ class ButtonComponentElement extends ComponentElement {
         const data: Record<string, any> = {
             active: this._active,
             hitPadding: this._hitPadding,
-            transitionMode: this._transitionMode,
+            transitionMode: transitionModes.get(this._transitionMode),
             hoverTint: this._hoverTint,
             pressedTint: this._pressedTint,
             inactiveTint: this._inactiveTint,
@@ -158,13 +158,14 @@ class ButtonComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets how the button reacts to being hovered/pressed. Can be `tint` (0) or `sprite` (1).
+     * Sets how the button reacts to being hovered/pressed. Can be `tint` or `sprite`. Defaults to
+     * `tint`.
      * @param value - The transition mode.
      */
-    set transitionMode(value: number) {
+    set transitionMode(value: 'tint' | 'sprite') {
         this._transitionMode = value;
         if (this.component) {
-            this.component.transitionMode = value;
+            this.component.transitionMode = transitionModes.get(value) ?? BUTTON_TRANSITION_MODE_TINT;
         }
     }
 
@@ -409,7 +410,7 @@ class ButtonComponentElement extends ComponentElement {
                 this.hitPadding = parseVec4(newValue);
                 break;
             case 'transition-mode':
-                this.transitionMode = parseEnum(newValue, transitionModes, BUTTON_TRANSITION_MODE_TINT);
+                this.transitionMode = parseEnum(newValue, transitionModes, 'tint', name);
                 break;
             case 'hover-tint':
                 this.hoverTint = parseColor(newValue);

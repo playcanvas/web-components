@@ -1,7 +1,7 @@
 import { RigidBodyComponent, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseVec3 } from '../utils';
+import { parseEnum, parseVec3 } from '../utils';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
@@ -55,7 +55,7 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The type of the rigidbody.
      */
-    private _type: string = 'static';
+    private _type: 'static' | 'dynamic' | 'kinematic' = 'static';
 
     /** @ignore */
     constructor() {
@@ -172,10 +172,10 @@ class RigidBodyComponentElement extends ComponentElement {
         return this._rollingFriction;
     }
 
-    set type(value: string) {
+    set type(value: 'static' | 'dynamic' | 'kinematic') {
         this._type = value;
         if (this.component) {
-            this.component.type = value as 'static' | 'dynamic' | 'kinematic';
+            this.component.type = value;
         }
     }
 
@@ -216,7 +216,7 @@ class RigidBodyComponentElement extends ComponentElement {
                 this.rollingFriction = parseFloat(newValue);
                 break;
             case 'type':
-                this.type = newValue;
+                this.type = parseEnum(newValue, ['static', 'dynamic', 'kinematic'], 'static', name);
                 break;
         }
     }

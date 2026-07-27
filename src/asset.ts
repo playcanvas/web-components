@@ -4,7 +4,7 @@ import { AsyncElement } from './async-element';
 import { parseBool, parseEnum } from './utils';
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
-const renderModes = new Map<string, number>([
+const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([
     ['simple', SPRITE_RENDERMODE_SIMPLE],
     ['sliced', SPRITE_RENDERMODE_SLICED],
     ['tiled', SPRITE_RENDERMODE_TILED]
@@ -217,7 +217,7 @@ class AssetElement extends AsyncElement {
 
             const renderMode = this.getAttribute('render-mode');
             if (renderMode !== null) {
-                data.renderMode = parseEnum(renderMode, renderModes, SPRITE_RENDERMODE_SIMPLE);
+                data.renderMode = renderModes.get(parseEnum(renderMode, renderModes, 'simple', 'render-mode'));
             }
 
             // Apply engine defaults for any values not supplied.
