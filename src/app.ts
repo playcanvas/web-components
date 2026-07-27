@@ -321,6 +321,14 @@ class AppElement extends AsyncElement {
         ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'].forEach((type) => {
             this.addEventListener(`${type}:connect`, () => this._onPointerListenerAdded(type));
             this.addEventListener(`${type}:disconnect`, () => this._onPointerListenerRemoved(type));
+
+            // Attach canvas handlers for listeners registered before this point (e.g. handlers
+            // created from onpointer* attributes when their elements were first upgraded)
+            const anyListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity'))
+            .some(entity => entity.hasListeners(type));
+            if (anyListeners) {
+                this._onPointerListenerAdded(type);
+            }
         });
     }
 
@@ -338,6 +346,13 @@ class AppElement extends AsyncElement {
             pointermove: null,
             pointerdown: null,
             pointerup: null
+        };
+        this._hasPointerListeners = {
+            pointerenter: false,
+            pointerleave: false,
+            pointerdown: false,
+            pointerup: false,
+            pointermove: false
         };
     }
 
