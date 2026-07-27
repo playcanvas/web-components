@@ -1,9 +1,37 @@
-import { Color, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { Color, Quat, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
-import { getEntity, parseComponents } from '../utils';
+import { getEntity, parseBool, parseColor, parseComponents, parseNumber, parseQuat, parseVec2, parseVec3, parseVec4 } from '../utils';
+
+/**
+ * Attributes on `pc-script` that never map to script attributes: the element's own API plus
+ * reserved and global HTML attribute names.
+ */
+const RESERVED_ATTRIBUTES = new Set([
+    'attributes', 'class', 'dir', 'enabled', 'hidden', 'id', 'lang', 'name', 'part', 'slot',
+    'style', 'tabindex', 'title'
+]);
+
+/**
+ * Checks whether a `pc-script` attribute name is reserved (and so never maps to a script
+ * attribute).
+ * @param name - The attribute name.
+ * @returns Whether the attribute name is reserved.
+ */
+const isReservedAttribute = (name: string): boolean => {
+    return RESERVED_ATTRIBUTES.has(name) || name.startsWith('data-') || name.startsWith('aria-') || name.startsWith('on');
+};
+
+/**
+ * Converts a kebab-case attribute name to the camelCase script attribute name.
+ * @param name - The attribute name.
+ * @returns The camelCase name.
+ */
+const kebabToCamel = (name: string): string => {
+    return name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+};
 
 // Add these interfaces at the top of the file, after the imports
 interface ScriptAttributesChangeEvent extends CustomEvent {
@@ -46,8 +74,10 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     connectedCallback() {
-        // (Re-)observe on every connection - disconnectedCallback disconnects the observer
-        this.observer.observe(this, { childList: true });
+        // (Re-)observe on every connection - disconnectedCallback disconnects the observer.
+        // Attribute changes on child pc-script elements are watched here too: per-property
+        // script attributes are not statically known, so they cannot use observedAttributes.
+        this.observer.observe(this, { childList: true, subtree: true, attributes: true });
         return super.connectedCallback();
     }
 
@@ -220,6 +250,8 @@ class ScriptComponentElement extends ComponentElement {
         const script = this.component.get(scriptName);
         if (script) {
             this.applyAttributes(script, event.detail.attributes);
+            // Re-apply per-property attributes so they keep precedence over the JSON blob
+            this.applyInlineAttributes(script, scriptElement);
         }
     }
 
@@ -250,11 +282,99 @@ class ScriptComponentElement extends ComponentElement {
         if (!script) return null;
 
         this.mergeDeep(script, this.convertAttributes(scriptElement.scriptAttributes));
+        this.applyInlineAttributes(script, scriptElement);
         script.enabled = scriptElement.enabled;
 
         scriptElement._onScriptCreated();
 
         return script;
+    }
+
+    /**
+     * Applies the per-property attributes present on a `pc-script` element — any attribute that
+     * is not part of the element's own API or a reserved HTML attribute name. These are applied
+     * after the `attributes` JSON, so an individual attribute always takes precedence over the
+     * blob.
+     * @param script - The script to apply the attributes to.
+     * @param scriptElement - The `pc-script` element holding the attributes.
+     */
+    private applyInlineAttributes(script: any, scriptElement: ScriptElement) {
+        const scriptName = scriptElement.getAttribute('name') ?? '';
+        for (const attr of Array.from(scriptElement.attributes)) {
+            if (!isReservedAttribute(attr.name)) {
+                this.setScriptProperty(script, scriptName, kebabToCamel(attr.name), attr.name, attr.value);
+            }
+        }
+    }
+
+    /**
+     * Applies a single per-property attribute change to the script of a `pc-script` element.
+     * When the attribute has been removed, the value from the `attributes` JSON (if any) takes
+     * effect again.
+     * @param scriptElement - The `pc-script` element whose attribute changed.
+     * @param attributeName - The name of the changed attribute.
+     */
+    private applyScriptProperty(scriptElement: ScriptElement, attributeName: string) {
+        const scriptName = scriptElement.getAttribute('name');
+        if (!scriptName || !this.component) return;
+
+        const script = this.component.get(scriptName);
+        if (!script) return;
+
+        const key = kebabToCamel(attributeName);
+        const value = scriptElement.getAttribute(attributeName);
+        if (value === null) {
+            const fallback = scriptElement.scriptAttributes[key];
+            if (fallback !== undefined) {
+                this.mergeDeep(script, this.convertAttributes({ [key]: fallback }));
+            }
+            return;
+        }
+        this.setScriptProperty(script, scriptName, key, attributeName, value);
+    }
+
+    /**
+     * Applies one attribute string to a script property. Explicit prefixes (`asset:`, `entity:`,
+     * `vec2:`, `vec3:`, `vec4:`, `color:`) carry their own type; otherwise the string is parsed
+     * according to the type of the property's current value.
+     * @param script - The script to apply the value to.
+     * @param scriptName - The script name, used in warning messages.
+     * @param key - The (camelCase) script attribute name.
+     * @param attributeName - The (kebab-case) element attribute name, used in warning messages.
+     * @param value - The attribute value.
+     */
+    private setScriptProperty(script: any, scriptName: string, key: string, attributeName: string, value: string) {
+        if (/^(?:asset|entity|vec[234]|color):/.test(value)) {
+            script[key] = this.convertAttributes(value);
+            return;
+        }
+
+        const current = script[key];
+        if (typeof current === 'number') {
+            script[key] = parseNumber(value, current, attributeName);
+        } else if (typeof current === 'boolean') {
+            script[key] = parseBool(value, current);
+        } else if (current instanceof Vec2) {
+            const parsed = parseVec2(value, null, attributeName);
+            if (parsed) script[key] = parsed;
+        } else if (current instanceof Vec3) {
+            const parsed = parseVec3(value, null, attributeName);
+            if (parsed) script[key] = parsed;
+        } else if (current instanceof Vec4) {
+            const parsed = parseVec4(value, null, attributeName);
+            if (parsed) script[key] = parsed;
+        } else if (current instanceof Color) {
+            const parsed = parseColor(value, null, attributeName);
+            if (parsed) script[key] = parsed;
+        } else if (current instanceof Quat) {
+            const parsed = parseQuat(value, null, attributeName);
+            if (parsed) script[key] = parsed;
+        } else if (typeof current === 'string') {
+            script[key] = value;
+        } else {
+            console.warn(`Script '${scriptName}' has no typed attribute '${key}' - assigning the raw string from '${attributeName}'.`);
+            script[key] = value;
+        }
     }
 
     private destroyScript(name: string): void {
@@ -264,6 +384,22 @@ class ScriptComponentElement extends ComponentElement {
 
     private handleMutations(mutations: MutationRecord[]) {
         for (const mutation of mutations) {
+            // Handle per-property attribute changes on child pc-script elements
+            if (mutation.type === 'attributes') {
+                const target = mutation.target;
+                if (
+                    target instanceof HTMLElement &&
+                    target !== this &&
+                    target.parentElement === this &&
+                    target.tagName.toLowerCase() === 'pc-script' &&
+                    mutation.attributeName &&
+                    !isReservedAttribute(mutation.attributeName)
+                ) {
+                    this.applyScriptProperty(target as ScriptElement, mutation.attributeName);
+                }
+                continue;
+            }
+
             // Handle added nodes
             mutation.addedNodes.forEach((node) => {
                 if (node instanceof HTMLElement && node.tagName.toLowerCase() === 'pc-script') {

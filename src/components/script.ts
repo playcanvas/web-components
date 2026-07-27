@@ -9,6 +9,19 @@ import type { ScriptComponentElement } from './script-component';
  * `<pc-script>` elements. The ScriptElement interface also inherits the properties and
  * methods of the {@link AsyncElement} interface.
  *
+ * Script attributes can be supplied through two channels:
+ *
+ * - **Per-property attributes**: any non-reserved attribute on the element maps to the script
+ *   attribute of the same name (kebab-case to camelCase, e.g. `focus-point` → `focusPoint`).
+ *   Values are parsed according to the type of the script's own default value (numbers,
+ *   booleans, strings, Vec2/3/4, Color, Quat as Euler angles), and the `asset:`/`entity:`/
+ *   `vec2:`/`vec3:`/`vec4:`/`color:` prefixes may be used to be explicit.
+ * - **The `attributes` JSON attribute**: an object supporting nested structures and attribute
+ *   names that collide with reserved HTML attribute names (e.g. `name`, `enabled`, `title`).
+ *
+ * When both specify the same attribute, the per-property attribute wins — at creation and
+ * whenever either channel changes at runtime.
+ *
  * The element becomes ready once its script instance has been created by the parent
  * `<pc-scripts>` element.
  */

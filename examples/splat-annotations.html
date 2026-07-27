@@ -34,12 +34,11 @@
                     <pc-entity name="camera" position="-2 1.2 -2.5">
                         <pc-camera fov="30"></pc-camera>
                         <pc-scripts>
-                            <pc-script name="cameraControls" attributes='{
-                                "enableFly": false,
-                                "enablePan": false,
-                                "focusPoint": "vec3:0 0.575 0",
-                                "zoomRange": "vec2:1 5"
-                            }'></pc-script>
+                            <pc-script name="cameraControls"
+                                       enable-fly="false"
+                                       enable-pan="false"
+                                       focus-point="0 0.575 0"
+                                       zoom-range="1 5"></pc-script>
                             <pc-script name="cameraFrame" attributes='{
                                 "vignette": {
                                     "enabled": true,
