@@ -2,7 +2,6 @@ import { Script } from 'playcanvas';
 
 import { AsyncElement } from '../async-element';
 import { parseBool } from '../utils';
-import type { ScriptComponentElement } from './script-component';
 
 /**
  * The ScriptElement interface provides properties and methods for manipulating
@@ -13,14 +12,16 @@ import type { ScriptComponentElement } from './script-component';
  *
  * - **Per-property attributes**: any non-reserved attribute on the element maps to the script
  *   attribute of the same name (kebab-case to camelCase, e.g. `focus-point` → `focusPoint`).
- *   Values are parsed according to the type of the script's own default value (numbers,
- *   booleans, strings, Vec2/3/4, Color, Quat as Euler angles), and the `asset:`/`entity:`/
- *   `vec2:`/`vec3:`/`vec4:`/`color:` prefixes may be used to be explicit.
+ *   Values are parsed according to the type of the attribute's current value — initially the
+ *   script's declared default (numbers, booleans, strings, Vec2/3/4, Color, Quat as Euler
+ *   angles) — and the `asset:`/`entity:`/`vec2:`/`vec3:`/`vec4:`/`color:` prefixes may be used
+ *   to be explicit.
  * - **The `attributes` JSON attribute**: an object supporting nested structures and attribute
- *   names that collide with reserved HTML attribute names (e.g. `name`, `enabled`, `title`).
+ *   names that collide with reserved HTML attribute names (e.g. `title`).
  *
  * When both specify the same attribute, the per-property attribute wins — at creation and
- * whenever either channel changes at runtime.
+ * whenever either channel changes at runtime. The element's own `name` and `enabled`
+ * attributes configure the element itself and are not script attributes.
  *
  * The element becomes ready once its script instance has been created by the parent
  * `<pc-scripts>` element.
@@ -31,6 +32,12 @@ class ScriptElement extends AsyncElement {
     private _enabled: boolean = true;
 
     private _name: string = '';
+
+    /**
+     * The Script instance created for this element by its parent `<pc-scripts>` element.
+     * @ignore
+     */
+    _script: Script | null = null;
 
     /**
      * Sets the attributes of the script as an object. Values are converted with the same rules
@@ -99,12 +106,7 @@ class ScriptElement extends AsyncElement {
      * @returns The script instance, or `null`.
      */
     get script(): Script | null {
-        const parent = this.parentElement;
-        if (!parent || parent.tagName.toLowerCase() !== 'pc-scripts') {
-            return null;
-        }
-        const component = (parent as ScriptComponentElement).component;
-        return component ? (component.get(this._name) as Script | null) : null;
+        return this._script;
     }
 
     /**
