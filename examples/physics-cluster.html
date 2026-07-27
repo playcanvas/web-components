@@ -72,25 +72,25 @@
                 </pc-entity>
             </pc-scene>
         </pc-app>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const scene = document.querySelector('pc-scene');
-                const sphereTemplate = document.getElementById('sphere-template');
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
 
-                // Clone and append 40 spheres
-                for (let i = 0; i < 40; i++) {
-                    // Clone the sphere template
-                    const clone = document.importNode(sphereTemplate.content, true);
-                    const sphereEntity = clone.querySelector('pc-entity');
+            const scene = await whenReady('pc-scene');
+            const sphereTemplate = document.getElementById('sphere-template');
 
-                    // Set a random start position
-                    const rnd = (max) => (Math.random() - 0.5) * max;
-                    sphereEntity.setAttribute('position', `${rnd(10)} ${rnd(10)} ${rnd(10)}`);
+            // Clone and append 40 spheres
+            for (let i = 0; i < 40; i++) {
+                // Clone the sphere template
+                const clone = document.importNode(sphereTemplate.content, true);
+                const sphereEntity = clone.querySelector('pc-entity');
 
-                    // Append the clone to the scene
-                    scene.appendChild(clone);
-                }
-            });
+                // Set a random start position
+                const rnd = (max) => (Math.random() - 0.5) * max;
+                sphereEntity.setAttribute('position', `${rnd(10)} ${rnd(10)} ${rnd(10)}`);
+
+                // Append the clone to the scene
+                scene.appendChild(clone);
+            }
         </script>
         <script type="module" src="js/example.mjs"></script>
     </body>
