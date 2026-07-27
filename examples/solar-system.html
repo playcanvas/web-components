@@ -14,588 +14,1010 @@
         </script>
         <script type="module" src="../dist/pwc.mjs"></script>
         <style>
-            body { 
-                margin: 0; 
-                background-color: #0a0a0a;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            :root {
+                --bg: #05060a;
+                --ink: #eceef4;
+                --dim: #8b90a0;
+                --hairline: rgba(255, 255, 255, 0.14);
+                --font-display: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+                --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
             }
-            
-            #canvas-container {
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html {
+                overflow-x: clip;
+                color-scheme: dark;
+            }
+
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--ink);
+                font-family: var(--font-display);
+                overflow-x: clip;
+            }
+
+            ::selection {
+                background: rgba(160, 175, 255, 0.3);
+            }
+
+            :focus-visible {
+                outline: 1px solid rgba(255, 255, 255, 0.7);
+                outline-offset: 3px;
+            }
+
+            ::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: var(--bg);
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.14);
+                border-radius: 5px;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.25);
+            }
+
+            /*
+                Layered stage - everything shares the root stacking context so the giant
+                type (z -1) sits BEHIND the transparent 3D canvas (z 1) while the narrative
+                copy (z 2) sits above it. Sections must therefore never create stacking
+                contexts: no z-index, transform, opacity or filter on .content or .section.
+            */
+
+            #stars {
                 position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100vh;
-                z-index: -1;
-            }
-
-            .content {
-                position: relative;
-                z-index: 1;
-            }
-
-            .section {
-                height: 100vh;
-                padding: 2em;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .planet-panel {
-                background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 20px;
-                padding: 3em;
-                max-width: 600px;
-                backdrop-filter: blur(20px);
-                -webkit-backdrop-filter: blur(20px);
-                box-shadow: 
-                    0 8px 32px rgba(0,0,0,0.3),
-                    inset 0 1px 0 rgba(255,255,255,0.2);
-                color: white;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-                position: relative;
+                inset: 0;
+                z-index: -3;
                 overflow: hidden;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
             }
 
-            .planet-panel:hover {
-                transform: translateY(-5px);
-                box-shadow: 
-                    0 12px 40px rgba(0,0,0,0.4),
-                    inset 0 1px 0 rgba(255,255,255,0.2);
-            }
-
-            .planet-panel::before {
-                content: '';
+            .star-layer {
                 position: absolute;
                 top: 0;
                 left: 0;
-                right: 0;
-                height: 1px;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            }
-
-            .planet-panel::after {
-                content: '';
-                position: absolute;
-                top: 10px;
-                right: 20px;
-                width: 60px;
-                height: 60px;
-                border: 2px solid rgba(255,255,255,0.2);
+                width: 2px;
+                height: 2px;
                 border-radius: 50%;
-                background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.05));
+                will-change: transform;
             }
 
-            .planet-stats {
-                margin-top: 2em;
-                padding-top: 1.5em;
-                border-top: 1px solid rgba(255,255,255,0.2);
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 1em;
-                font-size: 0.9em;
+            .bright-star {
+                position: absolute;
+                width: 3px;
+                height: 3px;
+                border-radius: 50%;
+                background: #fff;
+                box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.7);
+                animation: twinkle 3.2s ease-in-out infinite;
             }
 
-            .stat-item {
-                text-align: center;
-                padding: 0.5em;
-                background: rgba(255,255,255,0.05);
-                border-radius: 8px;
-                border: 1px solid rgba(255,255,255,0.1);
+            @keyframes twinkle {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
             }
 
-            .stat-label {
+            /* position, size and opacity are driven per-frame by script - the halo is
+               projected from the sun's world position so it tracks the sun in the hero,
+               the transits and the family portrait alike */
+            #sun-halo {
+                position: absolute;
+                transform: translate(-50%, -50%);
+                opacity: 0;
+                background: radial-gradient(circle,
+                    rgba(255, 214, 150, 0.9) 0%,
+                    rgba(255, 196, 120, 0.75) 30%,
+                    rgba(255, 160, 80, 0.42) 44%,
+                    rgba(255, 130, 55, 0.18) 58%,
+                    rgba(255, 110, 40, 0.05) 70%,
+                    rgba(255, 110, 40, 0) 79%);
+            }
+
+            pc-app {
                 display: block;
-                font-size: 0.8em;
-                color: rgba(255,255,255,0.7);
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 0.3em;
-            }
-
-            .stat-value {
-                font-weight: bold;
-                color: rgba(255,255,255,0.95);
-            }
-
-            /* Responsive design */
-            @media (max-width: 768px) {
-                .section {
-                    padding: 1em;
-                }
-                
-                .planet-panel {
-                    padding: 2em 1.5em;
-                    margin: 0 0.5em;
-                }
-                
-                .planet-title {
-                    font-size: 2.5em;
-                }
-                
-                .planet-description {
-                    font-size: 1.1em;
-                }
-                
-                .planet-stats {
-                    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                    gap: 0.5em;
-                    margin-top: 1.5em;
-                    padding-top: 1em;
-                }
-                
-                .stat-item {
-                    padding: 0.4em;
-                }
-            }
-
-            /* Scroll indicator */
-            .scroll-indicator {
                 position: fixed;
-                bottom: 2em;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 10;
-                color: rgba(255,255,255,0.7);
-                font-size: 0.9em;
-                text-align: center;
-                animation: fadeInOut 3s ease-in-out infinite;
+                inset: 0;
+                z-index: 1;
                 pointer-events: none;
             }
 
-            .scroll-indicator::after {
-                content: '↓';
-                display: block;
-                font-size: 1.5em;
-                margin-top: 0.2em;
-                animation: bounce 2s ease-in-out infinite;
+            /* -------- narrative sections -------- */
+
+            .section {
+                position: relative; /* containing block for .giant - safe: no z-index */
+                min-height: 100vh;
+                min-height: 100svh;
+                display: flex;
+                align-items: flex-end;
+                overflow: hidden;
+                padding: 0 clamp(1.5rem, 6vw, 6rem) 12svh;
             }
 
-            @keyframes fadeInOut {
-                0%, 100% { opacity: 0.3; }
-                50% { opacity: 0.8; }
+            .giant {
+                position: absolute;
+                inset: 0;
+                z-index: -1; /* behind the transparent canvas */
+                display: grid;
+                place-items: center;
+                font-size: clamp(3.5rem, 15vw, 13rem);
+                font-weight: 200;
+                letter-spacing: 0.08em;
+                white-space: nowrap;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.04);
+                -webkit-text-stroke: 1px rgba(255, 255, 255, 0.16);
+                user-select: none;
             }
 
-            @keyframes bounce {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-5px); }
+            .copy {
+                position: relative;
+                z-index: 2; /* above the canvas */
+                width: 100%;
+                max-width: 34rem;
             }
 
-            .planet-title {
-                font-size: 3.5em;
-                font-weight: 700;
-                margin: 0 0 0.5em 0;
-                background: linear-gradient(45deg, #fff, #ccc);
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-                line-height: 1.2;
+            .section:nth-child(even) .copy {
+                margin-left: auto;
             }
 
-            .planet-description {
-                font-size: 1.3em;
-                line-height: 1.6;
-                margin: 0;
-                color: rgba(255,255,255,0.9);
+            .overline {
+                margin: 0 0 1.1rem;
+                font-family: var(--font-mono);
+                font-size: 0.72rem;
+                letter-spacing: 0.28em;
+                text-transform: uppercase;
+                color: var(--accent, var(--dim));
+            }
+
+            .copy h1,
+            .copy h2 {
+                margin: 0 0 1.25rem;
+                font-size: clamp(2.6rem, 5.5vw, 4.4rem);
+                font-weight: 200;
+                letter-spacing: 0.02em;
+                line-height: 1.05;
+            }
+
+            .lede {
+                margin: 0 0 2.25rem;
+                max-width: 28rem;
+                font-size: clamp(1.05rem, 1.6vw, 1.25rem);
                 font-weight: 300;
+                line-height: 1.6;
             }
 
-            /* Planet-specific color themes */
-            .section:nth-child(1) .planet-panel {
-                background: linear-gradient(135deg, rgba(255,165,0,0.15), rgba(255,69,0,0.1));
-                border-color: rgba(255,140,0,0.3);
-                box-shadow: 
-                    0 8px 32px rgba(255,100,0,0.2),
-                    inset 0 1px 0 rgba(255,255,255,0.2);
-            }
-            .section:nth-child(1) .planet-title { 
-                background: linear-gradient(45deg, #FFD700, #FFA500); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            .stats {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                margin: 0 0 1.75rem;
+                border-top: 1px solid var(--hairline);
             }
 
-            .section:nth-child(2) .planet-panel {
-                background: linear-gradient(135deg, rgba(169,169,169,0.15), rgba(128,128,128,0.1));
-                border-color: rgba(169,169,169,0.3);
-            }
-            .section:nth-child(2) .planet-title { 
-                background: linear-gradient(45deg, #C0C0C0, #A9A9A9); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            .stats > div {
+                padding: 0.8rem 0.5rem 0.85rem 0;
+                border-bottom: 1px solid var(--hairline);
             }
 
-            .section:nth-child(3) .planet-panel {
-                background: linear-gradient(135deg, rgba(255,165,79,0.15), rgba(255,140,0,0.1));
-                border-color: rgba(255,165,79,0.3);
-            }
-            .section:nth-child(3) .planet-title { 
-                background: linear-gradient(45deg, #FFA54F, #FF8C00); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            .stats dt {
+                margin: 0 0 0.35rem;
+                font-family: var(--font-mono);
+                font-size: 0.62rem;
+                letter-spacing: 0.22em;
+                text-transform: uppercase;
+                color: var(--accent, var(--dim));
             }
 
-            .section:nth-child(4) .planet-panel {
-                background: linear-gradient(135deg, rgba(100,149,237,0.15), rgba(30,144,255,0.1));
-                border-color: rgba(100,149,237,0.3);
-            }
-            .section:nth-child(4) .planet-title { 
-                background: linear-gradient(45deg, #6495ED, #1E90FF); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            .stats dd {
+                margin: 0;
+                font-family: var(--font-mono);
+                font-size: 0.95rem;
             }
 
-            .section:nth-child(5) .planet-panel {
-                background: linear-gradient(135deg, rgba(205,92,92,0.15), rgba(178,34,34,0.1));
-                border-color: rgba(205,92,92,0.3);
-            }
-            .section:nth-child(5) .planet-title { 
-                background: linear-gradient(45deg, #CD5C5C, #B22222); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
-            }
-
-            .section:nth-child(6) .planet-panel {
-                background: linear-gradient(135deg, rgba(210,180,140,0.15), rgba(188,143,143,0.1));
-                border-color: rgba(210,180,140,0.3);
-            }
-            .section:nth-child(6) .planet-title { 
-                background: linear-gradient(45deg, #D2B48C, #BC8F8F); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            .fact {
+                margin: 0;
+                max-width: 26rem;
+                padding-left: 1rem;
+                border-left: 2px solid var(--accent, var(--hairline));
+                font-size: 0.9rem;
+                line-height: 1.65;
+                color: var(--dim);
             }
 
-            .section:nth-child(7) .planet-panel {
-                background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(218,165,32,0.1));
-                border-color: rgba(255,215,0,0.3);
-            }
-            .section:nth-child(7) .planet-title { 
-                background: linear-gradient(45deg, #FFD700, #DAA520); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            /* staggered reveal - transforms live on .copy children, never on sections */
+
+            .copy > * {
+                opacity: 0;
+                transform: translateY(26px);
+                transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
             }
 
-            .section:nth-child(8) .planet-panel {
-                background: linear-gradient(135deg, rgba(64,224,208,0.15), rgba(72,209,204,0.1));
-                border-color: rgba(64,224,208,0.3);
-            }
-            .section:nth-child(8) .planet-title { 
-                background: linear-gradient(45deg, #40E0D0, #48D1CC); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+            .copy > *:nth-child(2) { transition-delay: 0.08s; }
+            .copy > *:nth-child(3) { transition-delay: 0.16s; }
+            .copy > *:nth-child(4) { transition-delay: 0.24s; }
+            .copy > *:nth-child(5) { transition-delay: 0.32s; }
+
+            .copy.visible > * {
+                opacity: 1;
+                transform: none;
             }
 
-            .section:nth-child(9) .planet-panel {
-                background: linear-gradient(135deg, rgba(0,0,255,0.15), rgba(25,25,112,0.1));
-                border-color: rgba(0,0,255,0.3);
+            /* -------- outro -------- */
+
+            /* the outro copy sits left and vertically centered, clear of the planet parade
+               receding on the right - a bookend to the hero */
+            .section-outro {
+                align-items: center;
             }
-            .section:nth-child(9) .planet-title { 
-                background: linear-gradient(45deg, #0000FF, #191970); 
-                -webkit-background-clip: text; 
-                background-clip: text; 
-                -webkit-text-fill-color: transparent; 
+
+            .section-outro .copy {
+                margin-left: 0;
+                margin-right: auto;
+            }
+
+            .credits {
+                margin: 3rem 0 0;
+                font-family: var(--font-mono);
+                font-size: 0.72rem;
+                letter-spacing: 0.18em;
+                text-transform: uppercase;
+                color: var(--dim);
+            }
+
+            .credits a {
+                padding-bottom: 2px;
+                border-bottom: 1px solid var(--hairline);
+                color: var(--ink);
+                text-decoration: none;
+                transition: border-color 0.25s ease;
+            }
+
+            .credits a:hover {
+                border-color: var(--ink);
+            }
+
+            /* -------- chrome -------- */
+
+            .brand {
+                position: fixed;
+                top: 1.6rem;
+                left: clamp(1.5rem, 6vw, 6rem);
+                z-index: 10;
+                font-family: var(--font-mono);
+                font-size: 0.68rem;
+                letter-spacing: 0.3em;
+                text-transform: uppercase;
+                color: var(--dim);
+            }
+
+            .brand strong {
+                color: var(--ink);
+                font-weight: 500;
+            }
+
+            .rail {
+                position: fixed;
+                top: 50%;
+                right: clamp(1rem, 2.5vw, 2.25rem);
+                transform: translateY(-50%);
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .rail button {
+                position: relative;
+                width: 16px;
+                height: 16px;
+                padding: 0;
+                border: 0;
+                background: transparent;
+                cursor: pointer;
+            }
+
+            .rail button::before {
+                content: '';
+                position: absolute;
+                inset: 4px;
+                border-radius: 50%;
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+            }
+
+            .rail button:hover::before {
+                border-color: rgba(255, 255, 255, 0.85);
+            }
+
+            .rail button.active::before {
+                background: var(--accent, #fff);
+                border-color: transparent;
+                transform: scale(1.35);
+            }
+
+            .rail .label {
+                position: absolute;
+                top: 50%;
+                right: 24px;
+                transform: translateY(-50%) translateX(4px);
+                font-family: var(--font-mono);
+                font-size: 0.62rem;
+                letter-spacing: 0.22em;
+                text-transform: uppercase;
+                white-space: nowrap;
+                color: var(--dim);
+                opacity: 0;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+                pointer-events: none;
+            }
+
+            .rail button:hover .label,
+            .rail button.active .label {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+
+            .rail button.active .label {
+                color: var(--ink);
+            }
+
+            .cue {
+                position: fixed;
+                bottom: 1.75rem;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                font-family: var(--font-mono);
+                font-size: 0.62rem;
+                letter-spacing: 0.34em;
+                text-transform: uppercase;
+                text-align: center;
+                color: var(--dim);
+                opacity: 0;
+                transition: opacity 0.8s ease 0.4s;
+                pointer-events: none;
+            }
+
+            body.ready:not(.scrolled) .cue {
+                opacity: 1;
+            }
+
+            body.scrolled .cue {
+                transition-delay: 0s;
+                transition-duration: 0.3s;
+            }
+
+            .cue::after {
+                content: '';
+                display: block;
+                width: 1px;
+                height: 36px;
+                margin: 0.75rem auto 0;
+                background: linear-gradient(to bottom, var(--dim), transparent);
+                transform-origin: top;
+                animation: cue 2s ease-in-out infinite;
+            }
+
+            @keyframes cue {
+                0% { transform: scaleY(0); opacity: 1; }
+                60% { transform: scaleY(1); opacity: 1; }
+                100% { transform: scaleY(1); opacity: 0; }
+            }
+
+            /* -------- loader -------- */
+
+            #loader {
+                position: fixed;
+                inset: 0;
+                z-index: 100;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1.5rem;
+                background: var(--bg);
+                transition: opacity 0.7s ease, visibility 0s linear 0.7s;
+            }
+
+            body.ready #loader {
+                opacity: 0;
+                visibility: hidden;
+            }
+
+            .loader-title {
+                margin: 0;
+                font-family: var(--font-mono);
+                font-size: 0.72rem;
+                letter-spacing: 0.42em;
+                text-transform: uppercase;
+                color: var(--dim);
+            }
+
+            .loader-bar {
+                width: min(240px, 50vw);
+                height: 1px;
+                overflow: hidden;
+                background: rgba(255, 255, 255, 0.12);
+            }
+
+            #loader-fill {
+                width: 100%;
+                height: 100%;
+                background: var(--ink);
+                transform: scaleX(0);
+                transform-origin: left;
+                transition: transform 0.35s ease;
+            }
+
+            /* -------- small screens -------- */
+
+            @media (max-width: 720px) {
+                .section {
+                    padding-bottom: 9svh;
+                }
+
+                /* keep the hero copy clear of the scroll cue */
+                .section:first-child {
+                    padding-bottom: 18svh;
+                }
+
+                .copy,
+                .section:nth-child(even) .copy {
+                    max-width: 100%;
+                    margin-left: 0;
+                }
+
+                .stats dd {
+                    font-size: 0.85rem;
+                }
+
+                .rail {
+                    right: 0.6rem;
+                    gap: 10px;
+                }
+
+                .rail .label {
+                    display: none;
+                }
+
+                .brand {
+                    top: 1.25rem;
+                    left: 1.25rem;
+                }
+
+            }
+
+            /* -------- reduced motion -------- */
+
+            @media (prefers-reduced-motion: reduce) {
+                .copy > * {
+                    opacity: 1;
+                    transform: none;
+                    transition: none;
+                }
+
+                .bright-star,
+                .cue::after {
+                    animation: none;
+                }
             }
         </style>
     </head>
     <body>
-        <div id="canvas-container">
-            <pc-app>
-                <!-- Modules -->
-                <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
-                <!-- Assets -->
-                <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
-                <pc-asset src="assets/scripts/solar-system.mjs"></pc-asset>
-                <pc-asset src="assets/skies/stars.png" id="stars"></pc-asset>
-                <pc-asset src="assets/models/planets/sun.glb" id="sun"></pc-asset>
-                <pc-asset src="assets/models/planets/mercury.glb" id="mercury" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/venus.glb" id="venus" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/earth.glb" id="earth" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/mars.glb" id="mars" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/jupiter.glb" id="jupiter" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/saturn.glb" id="saturn" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/uranus.glb" id="uranus" lazy></pc-asset>
-                <pc-asset src="assets/models/planets/neptune.glb" id="neptune" lazy></pc-asset>
-                <!-- Scene -->
-                <pc-scene>
-                    <!-- Sky -->
-                    <pc-sky asset="stars"></pc-sky>
-                    <!-- Camera -->
-                    <pc-entity name="camera">
-                        <pc-camera far-clip="10000"></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="planetaryCamera"></pc-script>
-                            <pc-script
-                                name="cameraFrame"
-                                attributes='{
-                                    "bloom": {
-                                        "enabled": true,
-                                        "intensity": 0.03,
-                                        "blurLevel": 5
-                                    }
-                                }'
-                            ></pc-script>
-                        </pc-scripts>
-                    </pc-entity>
-                    <!-- Solar System -->
-                    <pc-entity name="solar-system">
-                        <pc-entity name="sun">
-                            <pc-model asset="sun"></pc-model>
-                            <pc-light type="omni" range="10000"></pc-light>
-                        </pc-entity>
-                        <pc-entity name="mercury">
-                            <pc-model asset="mercury"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="venus">
-                            <pc-model asset="venus"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="earth">
-                            <pc-model asset="earth"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="mars">
-                            <pc-model asset="mars"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="jupiter">
-                            <pc-model asset="jupiter"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="saturn">
-                            <pc-model asset="saturn"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="uranus">
-                            <pc-model asset="uranus"></pc-model>
-                        </pc-entity>
-                        <pc-entity name="neptune">
-                            <pc-model asset="neptune"></pc-model>
-                        </pc-entity>
-                        <pc-scripts>
-                            <pc-script name="planetaryMotion"></pc-script>
-                        </pc-scripts>
-                    </pc-entity>
-                </pc-scene>
-            </pc-app>
+        <!-- Starfield (procedural - no texture assets) -->
+        <div id="stars" aria-hidden="true">
+            <div class="star-layer" id="stars-far"></div>
+            <div class="star-layer" id="stars-near"></div>
+            <div id="sun-halo"></div>
         </div>
 
-        <div class="content">
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">The Sun</h1>
-                    <p class="planet-description">Our solar system's star, providing light and heat to all the planets. The Sun contains 99.86% of the solar system's mass and generates energy through nuclear fusion in its core.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Type</span>
-                            <span class="stat-value">G-Type Star</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Temperature</span>
-                            <span class="stat-value">5,778 K</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Age</span>
-                            <span class="stat-value">4.6 Billion Years</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Mercury</h1>
-                    <p class="planet-description">The smallest and innermost planet, Mercury is also the fastest, orbiting the Sun every 88 Earth days. Its surface experiences extreme temperature variations from -290°F to 800°F.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">36 million mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">3,032 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Year</span>
-                            <span class="stat-value">88 Earth days</span>
-                        </div>
-                    </div>
+        <!-- 3D scene (transparent canvas over the starfield) -->
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset src="assets/scripts/solar-system.mjs"></pc-asset>
+            <pc-asset src="assets/models/planets/sun.glb" id="sun"></pc-asset>
+            <pc-asset src="assets/models/planets/mercury.glb" id="mercury"></pc-asset>
+            <pc-asset src="assets/models/planets/venus.glb" id="venus"></pc-asset>
+            <pc-asset src="assets/models/planets/earth.glb" id="earth"></pc-asset>
+            <pc-asset src="assets/models/planets/mars.glb" id="mars"></pc-asset>
+            <pc-asset src="assets/models/planets/jupiter.glb" id="jupiter"></pc-asset>
+            <pc-asset src="assets/models/planets/saturn.glb" id="saturn"></pc-asset>
+            <pc-asset src="assets/models/planets/uranus.glb" id="uranus"></pc-asset>
+            <pc-asset src="assets/models/planets/neptune.glb" id="neptune"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 7.6 63">
+                    <pc-camera clear-color="0 0 0 0" fov="35" near-clip="0.5" far-clip="1500" tonemap="neutral"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="planetTour"
+                                   planets="entity:planets"
+                                   frame="7"
+                                   side="0.35"
+                                   lift="0.12"
+                                   damping="5"
+                                   dwell="0.3"
+                                   drift="1"
+                                   overview-position="7 -250 22"
+                                   overview-target="-20 -150 0"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Lighting: warm key, faint cool fill -->
+                <pc-entity name="key-light" rotation="50 30 0">
+                    <pc-light type="directional" color="#fff2dd" intensity="2.2"></pc-light>
+                </pc-entity>
+                <pc-entity name="fill-light" rotation="-130 -40 0">
+                    <pc-light type="directional" color="#5b74d9" intensity="0.15"></pc-light>
+                </pc-entity>
+                <!-- Bodies: the tour visits this group's children, in order -->
+                <pc-entity name="planets">
+                    <pc-entity name="sun">
+                        <pc-model asset="sun"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="9"></pc-script>
+                            <pc-script name="planetSpin" speed="1.5"></pc-script>
+                            <pc-script name="sunGlow" intensity="6"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="mercury" position="0 -30 0">
+                        <pc-model asset="mercury"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="1.05"></pc-script>
+                            <pc-script name="planetSpin" speed="2"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="venus" position="0 -60 0">
+                        <pc-model asset="venus"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="1.55"></pc-script>
+                            <pc-script name="planetSpin" speed="-1.5" tilt="0 0 -3"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="earth" position="0 -90 0">
+                        <pc-model asset="earth"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="1.65"></pc-script>
+                            <pc-script name="planetSpin" speed="5" tilt="0 0 -23.4"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="mars" position="0 -120 0">
+                        <pc-model asset="mars"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="1.3"></pc-script>
+                            <pc-script name="planetSpin" speed="5" tilt="0 0 -25.2"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="jupiter" position="0 -150 0">
+                        <pc-model asset="jupiter"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="4.5"></pc-script>
+                            <pc-script name="planetSpin" speed="12" tilt="0 0 -3.1"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="saturn" position="0 -180 0">
+                        <pc-model asset="saturn"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="6.2"></pc-script>
+                            <pc-script name="planetSpin" speed="10" tilt="18 0 -26.7"></pc-script>
+                            <pc-script name="tourStop" radius="4.6"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="uranus" position="0 -210 0">
+                        <pc-model asset="uranus"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="2.6"></pc-script>
+                            <pc-script name="planetSpin" speed="7" tilt="0 0 -97.8"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-entity name="neptune" position="0 -240 0">
+                        <pc-model asset="neptune"></pc-model>
+                        <pc-scripts>
+                            <pc-script name="normalizeScale" radius="2.5"></pc-script>
+                            <pc-script name="planetSpin" speed="7" tilt="0 0 -28.3"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+
+        <!-- Narrative -->
+        <main class="content">
+            <section class="section" data-label="Sun" style="--accent: #ffb45e">
+                <span class="giant" aria-hidden="true">The Sun</span>
+                <div class="copy">
+                    <p class="overline">A scroll through the solar system</p>
+                    <h1>The Sun</h1>
+                    <p class="lede">Every story here begins with a star. Scroll to fall away from it &mdash; past eight worlds, out to the edge of the map.</p>
+                    <dl class="stats">
+                        <div><dt>Type</dt><dd>G2V yellow dwarf</dd></div>
+                        <div><dt>Diameter</dt><dd>1,392,700 km</dd></div>
+                        <div><dt>Surface</dt><dd>5,505 &deg;C</dd></div>
+                        <div><dt>Age</dt><dd>4.6 billion years</dd></div>
+                    </dl>
+                    <p class="fact">The Sun holds 99.86% of the solar system's mass and fuses about 600 million tonnes of hydrogen every second.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Venus</h1>
-                    <p class="planet-description">Often called Earth's sister planet due to their similar size, Venus is the hottest planet due to its thick atmosphere. Its surface temperature reaches 900°F, hot enough to melt lead.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">67 million mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">7,521 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Year</span>
-                            <span class="stat-value">225 Earth days</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Mercury" style="--accent: #c8b8a6">
+                <span class="giant" aria-hidden="true">Mercury</span>
+                <div class="copy">
+                    <p class="overline">01 &middot; The messenger</p>
+                    <h2>Mercury</h2>
+                    <p class="lede">Small, scorched, and in a hurry.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>57.9M km</dd></div>
+                        <div><dt>Diameter</dt><dd>4,879 km</dd></div>
+                        <div><dt>Year</dt><dd>88 days</dd></div>
+                        <div><dt>Moons</dt><dd>0</dd></div>
+                    </dl>
+                    <p class="fact">A single sunrise-to-sunrise day lasts 176 Earth days &mdash; twice as long as Mercury's year.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Earth</h1>
-                    <p class="planet-description">Our home planet, Earth is the only known world to support life, with its unique atmosphere and liquid water. It's the perfect distance from the Sun to maintain temperatures suitable for life.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">93 million mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">7,918 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Moons</span>
-                            <span class="stat-value">1</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Venus" style="--accent: #eac77c">
+                <span class="giant" aria-hidden="true">Venus</span>
+                <div class="copy">
+                    <p class="overline">02 &middot; The morning star</p>
+                    <h2>Venus</h2>
+                    <p class="lede">Beauty with a crushing secret.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>108.2M km</dd></div>
+                        <div><dt>Diameter</dt><dd>12,104 km</dd></div>
+                        <div><dt>Year</dt><dd>225 days</dd></div>
+                        <div><dt>Moons</dt><dd>0</dd></div>
+                    </dl>
+                    <p class="fact">Beneath 90 atmospheres of carbon dioxide, the surface is hot enough to melt lead &mdash; and the Sun rises in the west.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Mars</h1>
-                    <p class="planet-description">The Red Planet, Mars has captured human imagination for centuries and is a prime target for future exploration. Evidence suggests it once had flowing water and possibly microbial life.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">142 million mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">4,212 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Moons</span>
-                            <span class="stat-value">2</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Earth" style="--accent: #6ea8ff">
+                <span class="giant" aria-hidden="true">Earth</span>
+                <div class="copy">
+                    <p class="overline">03 &middot; The blue marble</p>
+                    <h2>Earth</h2>
+                    <p class="lede">The only address we've ever had.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>149.6M km</dd></div>
+                        <div><dt>Diameter</dt><dd>12,742 km</dd></div>
+                        <div><dt>Year</dt><dd>365.25 days</dd></div>
+                        <div><dt>Moons</dt><dd>1</dd></div>
+                    </dl>
+                    <p class="fact">Seventy-one percent ocean, one magnetic shield, and the only known life in the universe.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Jupiter</h1>
-                    <p class="planet-description">The largest planet in our solar system, Jupiter is a gas giant with a distinctive Great Red Spot storm. It acts as a cosmic vacuum cleaner, protecting inner planets from asteroids and comets.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">484 million mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">86,881 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Moons</span>
-                            <span class="stat-value">95</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Mars" style="--accent: #e0765a">
+                <span class="giant" aria-hidden="true">Mars</span>
+                <div class="copy">
+                    <p class="overline">04 &middot; The red planet</p>
+                    <h2>Mars</h2>
+                    <p class="lede">Rust, dust, and our next footprints.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>227.9M km</dd></div>
+                        <div><dt>Diameter</dt><dd>6,779 km</dd></div>
+                        <div><dt>Year</dt><dd>687 days</dd></div>
+                        <div><dt>Moons</dt><dd>2</dd></div>
+                    </dl>
+                    <p class="fact">Olympus Mons rises 22 km above the plains &mdash; two and a half times the height of Everest.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Saturn</h1>
-                    <p class="planet-description">Famous for its beautiful rings, Saturn is a gas giant known for its unique and spectacular appearance. Its rings are made of countless ice and rock particles ranging from tiny grains to house-sized chunks.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">890 million mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">72,367 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Moons</span>
-                            <span class="stat-value">146</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Jupiter" style="--accent: #d9a26a">
+                <span class="giant" aria-hidden="true">Jupiter</span>
+                <div class="copy">
+                    <p class="overline">05 &middot; The giant</p>
+                    <h2>Jupiter</h2>
+                    <p class="lede">The heavyweight that shields us all.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>778.5M km</dd></div>
+                        <div><dt>Diameter</dt><dd>139,820 km</dd></div>
+                        <div><dt>Year</dt><dd>11.9 years</dd></div>
+                        <div><dt>Moons</dt><dd>95</dd></div>
+                    </dl>
+                    <p class="fact">The Great Red Spot is a storm wider than Earth that has raged for at least three centuries.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Uranus</h1>
-                    <p class="planet-description">An ice giant that rotates on its side, Uranus has a unique tilt of nearly 98 degrees. This unusual orientation means its poles experience 42 years of continuous sunlight followed by 42 years of darkness.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">1.8 billion mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">31,518 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Moons</span>
-                            <span class="stat-value">28</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Saturn" style="--accent: #e8cf94">
+                <span class="giant" aria-hidden="true">Saturn</span>
+                <div class="copy">
+                    <p class="overline">06 &middot; The ringed one</p>
+                    <h2>Saturn</h2>
+                    <p class="lede">The showpiece of the solar system.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>1.43B km</dd></div>
+                        <div><dt>Diameter</dt><dd>116,460 km</dd></div>
+                        <div><dt>Year</dt><dd>29.4 years</dd></div>
+                        <div><dt>Moons</dt><dd>274</dd></div>
+                    </dl>
+                    <p class="fact">The rings span 280,000 km, yet in places they are barely ten meters thick.</p>
                 </div>
             </section>
 
-            <section class="section">
-                <div class="planet-panel">
-                    <h1 class="planet-title">Neptune</h1>
-                    <p class="planet-description">The windiest planet, Neptune is the most distant planet and has the strongest winds in the solar system. Wind speeds can reach up to 1,200 mph, faster than the speed of sound on Earth.</p>
-                    <div class="planet-stats">
-                        <div class="stat-item">
-                            <span class="stat-label">Distance</span>
-                            <span class="stat-value">2.8 billion mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Diameter</span>
-                            <span class="stat-value">30,775 mi</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Moons</span>
-                            <span class="stat-value">16</span>
-                        </div>
-                    </div>
+            <section class="section" data-label="Uranus" style="--accent: #82d7d7">
+                <span class="giant" aria-hidden="true">Uranus</span>
+                <div class="copy">
+                    <p class="overline">07 &middot; The sideways world</p>
+                    <h2>Uranus</h2>
+                    <p class="lede">The planet that rolls through its year.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>2.87B km</dd></div>
+                        <div><dt>Diameter</dt><dd>50,724 km</dd></div>
+                        <div><dt>Year</dt><dd>84 years</dd></div>
+                        <div><dt>Moons</dt><dd>28</dd></div>
+                    </dl>
+                    <p class="fact">Knocked onto its side long ago, each pole gets 42 years of daylight followed by 42 years of night.</p>
                 </div>
             </section>
-        </div>
 
-        <div class="scroll-indicator">
-            Scroll to explore the solar system
+            <section class="section" data-label="Neptune" style="--accent: #6b83e8">
+                <span class="giant" aria-hidden="true">Neptune</span>
+                <div class="copy">
+                    <p class="overline">08 &middot; The last giant</p>
+                    <h2>Neptune</h2>
+                    <p class="lede">Far, dark, and furiously windy.</p>
+                    <dl class="stats">
+                        <div><dt>Distance</dt><dd>4.50B km</dd></div>
+                        <div><dt>Diameter</dt><dd>49,244 km</dd></div>
+                        <div><dt>Year</dt><dd>164.8 years</dd></div>
+                        <div><dt>Moons</dt><dd>16</dd></div>
+                    </dl>
+                    <p class="fact">Predicted by mathematics before any telescope found it, with winds that top 2,000 km/h.</p>
+                </div>
+            </section>
+
+            <section class="section section-outro" data-label="Overview" style="--accent: #9aa4c0">
+                <div class="copy">
+                    <p class="overline">One star &middot; Eight worlds</p>
+                    <h2>The family portrait</h2>
+                    <p class="lede">From a scorched rock 58 million kilometers out, to an ice giant 4.5 billion kilometers from home &mdash; one line of light around an ordinary star.</p>
+                    <p class="credits">Built with <a href="https://github.com/playcanvas/web-components" target="_blank" rel="noopener">PlayCanvas Web Components</a> &middot; <a href="https://github.com/playcanvas/web-components/blob/main/examples/solar-system.html" target="_blank" rel="noopener">View source</a></p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Chrome -->
+        <header class="brand"><strong>PlayCanvas</strong> &middot; Web Components</header>
+        <nav class="rail" aria-label="Tour stops"></nav>
+        <div class="cue">Scroll</div>
+
+        <!-- Loader -->
+        <div id="loader" role="status" aria-label="Loading">
+            <p class="loader-title">The Solar System</p>
+            <div class="loader-bar"><div id="loader-fill"></div></div>
         </div>
 
         <script type="module">
             import { whenReady } from '@playcanvas/web-components';
+            import { Vec3 } from 'playcanvas';
 
-            const { app } = await whenReady('pc-app');
-            const planets = ['sun', 'mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-            let currentPlanetIndex = -1;
+            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const sections = Array.from(document.querySelectorAll('.section'));
+            const halo = document.getElementById('sun-halo');
+            const loaderFill = document.getElementById('loader-fill');
+            const rail = document.querySelector('.rail');
+            const starLayers = [
+                { element: document.getElementById('stars-far'), factor: 0.05, density: 110, alpha: 0.5 },
+                { element: document.getElementById('stars-near'), factor: 0.12, density: 55, alpha: 0.85 }
+            ];
 
-            window.addEventListener('scroll', () => {
-                const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-                const newPlanetIndex = Math.floor(scrollPercent * planets.length);
+            // A snappier camera and no idle drift under reduced motion - runtime changes to
+            // pc-script attributes are applied live to the script instance
+            if (reducedMotion) {
+                const tour = document.querySelector('pc-script[name="planetTour"]');
+                tour.setAttribute('damping', '30');
+                tour.setAttribute('drift', '0');
+            }
 
-                // Only fire event when we change sections
-                if (newPlanetIndex !== currentPlanetIndex) {
-                    currentPlanetIndex = newPlanetIndex;
-                    app.fire('zoom', planets[currentPlanetIndex]);
+            // ---- procedural starfield ----
+
+            const buildStars = () => {
+                const travel = document.documentElement.scrollHeight - window.innerHeight;
+                const width = Math.max(window.innerWidth, 1024);
+                for (const layer of starLayers) {
+                    const height = window.innerHeight + layer.factor * travel + 200;
+                    const count = Math.round(layer.density * height / 900);
+                    const dots = [];
+                    for (let i = 0; i < count; i++) {
+                        const x = Math.round(Math.random() * width);
+                        const y = Math.round(Math.random() * height);
+                        const alpha = (0.15 + Math.random() * layer.alpha).toFixed(2);
+                        const spread = Math.random() < 0.08 ? 1 : 0;
+                        dots.push(`${x}px ${y}px 0 ${spread}px rgba(255, 255, 255, ${alpha})`);
+                    }
+                    layer.element.style.boxShadow = dots.join(', ');
                 }
+
+                // a few brighter, twinkling stars on the near layer
+                const near = starLayers[1];
+                near.element.querySelectorAll('.bright-star').forEach((star) => star.remove());
+                const height = window.innerHeight + near.factor * travel;
+                for (let i = 0; i < 9; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'bright-star';
+                    star.style.left = `${Math.round(Math.random() * width)}px`;
+                    star.style.top = `${Math.round(Math.random() * height)}px`;
+                    star.style.animationDelay = `${(Math.random() * 3).toFixed(2)}s`;
+                    near.element.appendChild(star);
+                }
+            };
+
+            // ---- progress rail ----
+
+            const buttons = sections.map((section) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.setAttribute('aria-label', section.dataset.label);
+                button.style.setProperty('--accent', section.style.getPropertyValue('--accent'));
+                const label = document.createElement('span');
+                label.className = 'label';
+                label.textContent = section.dataset.label;
+                button.appendChild(label);
+                button.addEventListener('click', () => {
+                    section.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+                });
+                rail.appendChild(button);
+                return button;
             });
+
+            let activeIndex = -1;
+            const setActive = (index) => {
+                if (index === activeIndex) return;
+                if (activeIndex >= 0) buttons[activeIndex].classList.remove('active');
+                activeIndex = index;
+                buttons[activeIndex].classList.add('active');
+            };
+
+            // ---- scroll to tour progress ----
+
+            let app = null;
+            let tops = [];
+            let tourProgress = 0;
+
+            const measure = () => {
+                tops = sections.map((section) => section.offsetTop);
+            };
+
+            // Piecewise map of scroll position to a fractional stop index: section i aligned
+            // with the viewport top means the camera has settled at stop i
+            const computeT = () => {
+                const y = window.scrollY;
+                let i = sections.length - 1;
+                while (i > 0 && y < tops[i]) i--;
+                const start = tops[i];
+                const end = i + 1 < tops.length ? tops[i + 1] : start + sections[i].offsetHeight;
+                const f = end > start ? (y - start) / (end - start) : 0;
+                return Math.max(0, Math.min(sections.length - 1, i + f));
+            };
+
+            const onScroll = () => {
+                const y = window.scrollY;
+                const t = computeT();
+                tourProgress = t;
+                if (app) {
+                    // Record the latest value on the app too, so the tour script can adopt
+                    // it if it initializes after this fires (see PlanetTour)
+                    app.tourT = t;
+                    app.fire('tour:t', t);
+                }
+                if (!reducedMotion) {
+                    for (const layer of starLayers) {
+                        layer.element.style.transform = `translate3d(0, ${(-y * layer.factor).toFixed(1)}px, 0)`;
+                    }
+                }
+                setActive(Math.round(t));
+                document.body.classList.toggle('scrolled', y > 40);
+            };
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+
+            let resizeQueued = false;
+            window.addEventListener('resize', () => {
+                if (resizeQueued) return;
+                resizeQueued = true;
+                requestAnimationFrame(() => {
+                    resizeQueued = false;
+                    measure();
+                    buildStars();
+                    onScroll();
+                });
+            });
+
+            // ---- copy reveals ----
+
+            const revealObserver = new IntersectionObserver((entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                }
+            }, { threshold: 0.3 });
+
+            // ---- loading progress ----
+
+            // The app instance exists well before preload finishes, so poll for it and then
+            // listen for per-asset preload progress
+            const appElement = document.querySelector('pc-app');
+            const pollProgress = () => {
+                if (appElement.app) {
+                    appElement.app.on('preload:progress', (value) => {
+                        loaderFill.style.transform = `scaleX(${value})`;
+                    });
+                } else {
+                    requestAnimationFrame(pollProgress);
+                }
+            };
+            pollProgress();
+
+            // ---- boot ----
+
+            measure();
+            buildStars();
+            onScroll();
+
+            ({ app } = await whenReady('pc-app'));
+
+            loaderFill.style.transform = 'scaleX(1)';
+            document.body.classList.add('ready');
+            measure();
+            onScroll();
+            sections.forEach((section) => {
+                const copy = section.querySelector('.copy');
+                if (copy) revealObserver.observe(copy);
+            });
+
+            // ---- sun glow ----
+
+            // The halo is a DOM radial gradient layered behind the transparent canvas.
+            // Projecting the sun into screen space every frame glues the glow to the sun
+            // wherever the tour shows it - the hero, the transits and the family portrait.
+            // It is strongest at the star, fades as the tour leaves it, and returns for
+            // the closing overview.
+            const camera = document.querySelector('pc-entity[name="camera"]').entity;
+            const sunEntity = document.querySelector('pc-entity[name="sun"]').entity;
+            const sunRadius = parseFloat(document.querySelector(
+                'pc-entity[name="sun"] pc-script[name="normalizeScale"]').getAttribute('radius')) || 9;
+            const sunScreen = new Vec3();
+            const toSun = new Vec3();
+            const glowLoop = () => {
+                // component elements attach their engine components in ready continuations
+                // that may run after this one - skip frames until the camera component exists
+                const cameraComponent = camera.camera;
+                if (cameraComponent) {
+                    const sunPos = sunEntity.getPosition();
+                    toSun.copy(sunPos).sub(camera.getPosition());
+                    const distance = toSun.length();
+                    const opacity = Math.max(
+                        Math.min(1, Math.max(0, 1 - tourProgress)),
+                        Math.min(1, Math.max(0, (tourProgress - 8.2) / 0.6))
+                    );
+                    if (distance > 0 && toSun.dot(camera.forward) > 0 && opacity > 0.001) {
+                        cameraComponent.worldToScreen(sunPos, sunScreen);
+                        const halfFov = cameraComponent.fov * 0.5 * Math.PI / 180;
+                        const discRadius = sunRadius / distance / Math.tan(halfFov) * (window.innerHeight / 2);
+                        const size = Math.round(discRadius * 5.3);
+                        halo.style.left = `${Math.round(sunScreen.x)}px`;
+                        halo.style.top = `${Math.round(sunScreen.y)}px`;
+                        halo.style.width = `${size}px`;
+                        halo.style.height = `${size}px`;
+                        halo.style.opacity = opacity.toFixed(3);
+                    } else {
+                        halo.style.opacity = '0';
+                    }
+                }
+                requestAnimationFrame(glowLoop);
+            };
+            glowLoop();
         </script>
     </body>
-</html> 
+</html>
