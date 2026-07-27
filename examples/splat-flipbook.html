@@ -36,12 +36,11 @@
                     <pc-entity name="camera" position="-2 1.25 0">
                         <pc-camera far-clip="1500" fov="50" tone-mapping="aces"></pc-camera>
                         <pc-scripts>
-                            <pc-script name="cameraControls" attributes='{
-                                "enableFly": false,
-                                "enablePan": true,
-                                "focusPoint": "vec3:0 1.25 0",
-                                "zoomRange": "vec2:0.2 2.5"
-                            }'></pc-script>
+                            <pc-script name="cameraControls"
+                                       enable-fly="false"
+                                       enable-pan="true"
+                                       focus-point="0 1.25 0"
+                                       zoom-range="0.2 2.5"></pc-script>
                         </pc-scripts>
                     </pc-entity>
                     <pc-scripts>
@@ -58,24 +57,21 @@
                 <pc-entity name="animated-splat" rotation="0 -90 180">
                     <pc-gsplat cast-shadows></pc-gsplat>
                     <pc-scripts>
-                        <pc-script name="gsplatFlipbook" attributes='{
-                            "fps": 30,
-                            "folder": "https://code.playcanvas.com/examples_data/example_basketball_02",
-                            "filenamePattern": "{frame:03}.compressed.ply",
-                            "startFrame": 1,
-                            "endFrame": 149,
-                            "playMode": "bounce",
-                            "playing": true
-                        }'></pc-script>
+                        <pc-script name="gsplatFlipbook"
+                                   fps="30"
+                                   folder="https://code.playcanvas.com/examples_data/example_basketball_02"
+                                   filename-pattern="{frame:03}.compressed.ply"
+                                   start-frame="1"
+                                   end-frame="149"
+                                   play-mode="bounce"
+                                   playing="true"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Shadow Catcher -->
                 <pc-entity name="shadow-catcher" position="0 0 0">
                     <pc-render type="plane" cast-shadows="false"></pc-render>
                     <pc-scripts>
-                        <pc-script name="shadowCatcher" attributes='{
-                            "scale": "vec3:10 10 10"
-                        }'></pc-script>
+                        <pc-script name="shadowCatcher" scale="10 10 10"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light -->
