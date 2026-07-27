@@ -36,7 +36,9 @@ export const parseComponents = (value: string, count: number): number[] | null =
 };
 
 /**
- * Clones a math-type default so parsed results never alias the caller's default instance.
+ * Clones a math-type default so parsed results never alias the caller's default instance. This
+ * is what makes it safe to pass the engine's shared frozen constants (e.g. `Vec3.ZERO`,
+ * `Color.WHITE`) as defaults.
  *
  * @param value - The default value to clone (`null` is passed through).
  * @returns The cloned value.

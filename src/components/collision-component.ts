@@ -151,7 +151,7 @@ class CollisionComponentElement extends ComponentElement {
 
         switch (name) {
             case 'angular-offset':
-                this.angularOffset = parseQuat(newValue, new Quat(), name);
+                this.angularOffset = parseQuat(newValue, Quat.IDENTITY, name);
                 break;
             case 'axis':
                 this.axis = parseNumber(newValue, 1, name);
@@ -166,7 +166,7 @@ class CollisionComponentElement extends ComponentElement {
                 this.height = parseNumber(newValue, 2, name);
                 break;
             case 'linear-offset':
-                this.linearOffset = parseVec3(newValue, new Vec3(), name);
+                this.linearOffset = parseVec3(newValue, Vec3.ZERO, name);
                 break;
             case 'radius':
                 this.radius = parseNumber(newValue, 0.5, name);

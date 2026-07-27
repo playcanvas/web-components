@@ -288,7 +288,7 @@ class SkyElement extends AsyncElement {
                 this.lighting = parseBool(newValue, false);
                 break;
             case 'rotation':
-                this.rotation = parseVec3(newValue, new Vec3(), name);
+                this.rotation = parseVec3(newValue, Vec3.ZERO, name);
                 break;
             case 'scale':
                 this.scale = parseVec3(newValue, new Vec3(100, 100, 100), name);

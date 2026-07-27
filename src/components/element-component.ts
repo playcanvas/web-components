@@ -706,7 +706,7 @@ class ElementComponentElement extends ComponentElement {
                 this.autoFitHeight = parseBool(newValue, false);
                 break;
             case 'color':
-                this.color = parseColor(newValue, new Color(1, 1, 1, 1), name);
+                this.color = parseColor(newValue, Color.WHITE, name);
                 break;
             case 'enable-markup':
                 this.enableMarkup = parseBool(newValue, false);

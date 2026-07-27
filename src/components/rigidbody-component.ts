@@ -195,7 +195,7 @@ class RigidBodyComponentElement extends ComponentElement {
                 this.angularDamping = parseNumber(newValue, 0, name);
                 break;
             case 'angular-factor':
-                this.angularFactor = parseVec3(newValue, new Vec3(1, 1, 1), name);
+                this.angularFactor = parseVec3(newValue, Vec3.ONE, name);
                 break;
             case 'friction':
                 this.friction = parseNumber(newValue, 0.5, name);
@@ -204,7 +204,7 @@ class RigidBodyComponentElement extends ComponentElement {
                 this.linearDamping = parseNumber(newValue, 0, name);
                 break;
             case 'linear-factor':
-                this.linearFactor = parseVec3(newValue, new Vec3(1, 1, 1), name);
+                this.linearFactor = parseVec3(newValue, Vec3.ONE, name);
                 break;
             case 'mass':
                 this.mass = parseNumber(newValue, 1, name);

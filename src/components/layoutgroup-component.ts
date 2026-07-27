@@ -275,10 +275,10 @@ class LayoutGroupComponentElement extends ComponentElement {
                 this.alignment = parseVec2(newValue, new Vec2(0, 1), name);
                 break;
             case 'padding':
-                this.padding = parseVec4(newValue, new Vec4(0, 0, 0, 0), name);
+                this.padding = parseVec4(newValue, Vec4.ZERO, name);
                 break;
             case 'spacing':
-                this.spacing = parseVec2(newValue, new Vec2(0, 0), name);
+                this.spacing = parseVec2(newValue, Vec2.ZERO, name);
                 break;
             case 'width-fitting':
                 this.widthFitting = parseEnum(newValue, fittings, 'none', name);
