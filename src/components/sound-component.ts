@@ -1,6 +1,7 @@
 import { SoundComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
+import { parseBool } from '../utils';
 
 /**
  * The SoundComponentElement interface provides properties and methods for manipulating
@@ -210,7 +211,7 @@ class SoundComponentElement extends ComponentElement {
                 this.pitch = parseFloat(newValue);
                 break;
             case 'positional':
-                this.positional = this.hasAttribute('positional');
+                this.positional = parseBool(newValue, false);
                 break;
             case 'ref-distance':
                 this.refDistance = parseFloat(newValue);

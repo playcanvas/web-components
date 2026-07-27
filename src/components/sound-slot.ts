@@ -3,6 +3,7 @@ import { SoundSlot } from 'playcanvas';
 import { AssetElement } from '../asset';
 import { AsyncElement } from '../async-element';
 import { SoundComponentElement } from './sound-component';
+import { parseBool } from '../utils';
 
 /**
  * The SoundSlotElement interface provides properties and methods for manipulating
@@ -258,19 +259,19 @@ class SoundSlotElement extends AsyncElement {
                 this.asset = newValue;
                 break;
             case 'auto-play':
-                this.autoPlay = this.hasAttribute('auto-play');
+                this.autoPlay = parseBool(newValue, false);
                 break;
             case 'duration':
                 this.duration = parseFloat(newValue);
                 break;
             case 'loop':
-                this.loop = this.hasAttribute('loop');
+                this.loop = parseBool(newValue, false);
                 break;
             case 'name':
                 this.name = newValue;
                 break;
             case 'overlap':
-                this.overlap = this.hasAttribute('overlap');
+                this.overlap = parseBool(newValue, false);
                 break;
             case 'pitch':
                 this.pitch = parseFloat(newValue);

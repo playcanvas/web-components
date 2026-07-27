@@ -1,7 +1,7 @@
 import { FITTING_NONE, FITTING_STRETCH, FITTING_SHRINK, FITTING_BOTH, LayoutGroupComponent, ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, Vec2, Vec4 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseEnum, parseVec2, parseVec4 } from '../utils';
+import { parseBool, parseEnum, parseVec2, parseVec4 } from '../utils';
 
 const orientations = new Map<string, number>([
     ['horizontal', ORIENTATION_HORIZONTAL],
@@ -265,10 +265,10 @@ class LayoutGroupComponentElement extends ComponentElement {
                 this.orientation = parseEnum(newValue, orientations, ORIENTATION_HORIZONTAL);
                 break;
             case 'reverse-x':
-                this.reverseX = newValue !== 'false';
+                this.reverseX = parseBool(newValue, false);
                 break;
             case 'reverse-y':
-                this.reverseY = newValue !== 'false';
+                this.reverseY = parseBool(newValue, false);
                 break;
             case 'alignment':
                 this.alignment = parseVec2(newValue);
@@ -286,7 +286,7 @@ class LayoutGroupComponentElement extends ComponentElement {
                 this.heightFitting = parseEnum(newValue, fittings, FITTING_NONE);
                 break;
             case 'wrap':
-                this.wrap = newValue !== 'false';
+                this.wrap = parseBool(newValue, false);
                 break;
         }
     }

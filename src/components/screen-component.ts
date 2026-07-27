@@ -1,7 +1,7 @@
 import { SCALEMODE_BLEND, SCALEMODE_NONE, ScreenComponent, Vec2 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseVec2 } from '../utils';
+import { parseBool, parseVec2 } from '../utils';
 
 /**
  * The ScreenComponentElement interface provides properties and methods for manipulating
@@ -143,10 +143,10 @@ class ScreenComponentElement extends ComponentElement {
                 this.scaleBlend = parseFloat(newValue);
                 break;
             case 'blend':
-                this.blend = this.hasAttribute('blend');
+                this.blend = parseBool(newValue, false);
                 break;
             case 'screen-space':
-                this.screenSpace = this.hasAttribute('screen-space');
+                this.screenSpace = parseBool(newValue, false);
                 break;
         }
     }
