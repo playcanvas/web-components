@@ -1,7 +1,7 @@
 import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseQuat, parseVec3 } from '../utils';
+import { parseBool, parseEnum, parseQuat, parseVec3 } from '../utils';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating
@@ -26,7 +26,7 @@ class CollisionComponentElement extends ComponentElement {
 
     private _radius: number = 0.5;
 
-    private _type: string = 'box';
+    private _type: 'box' | 'capsule' | 'compound' | 'cone' | 'cylinder' | 'mesh' | 'sphere' = 'box';
 
     /** @ignore */
     constructor() {
@@ -131,7 +131,7 @@ class CollisionComponentElement extends ComponentElement {
         return this._radius;
     }
 
-    set type(value: string) {
+    set type(value: 'box' | 'capsule' | 'compound' | 'cone' | 'cylinder' | 'mesh' | 'sphere') {
         this._type = value;
         if (this.component) {
             this.component.type = value;
@@ -172,7 +172,7 @@ class CollisionComponentElement extends ComponentElement {
                 this.radius = parseFloat(newValue);
                 break;
             case 'type':
-                this.type = newValue;
+                this.type = parseEnum(newValue, ['box', 'capsule', 'compound', 'cone', 'cylinder', 'mesh', 'sphere'], 'box', name);
                 break;
         }
     }

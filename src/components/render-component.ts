@@ -2,7 +2,7 @@ import { RenderComponent, StandardMaterial } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { MaterialElement } from '../material';
-import { parseBool } from '../utils';
+import { parseBool, parseEnum } from '../utils';
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -137,7 +137,7 @@ class RenderComponentElement extends ComponentElement {
                 this.receiveShadows = parseBool(newValue, true);
                 break;
             case 'type':
-                this.type = newValue as 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere';
+                this.type = parseEnum(newValue, ['asset', 'box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere'], 'asset', name);
                 break;
         }
     }

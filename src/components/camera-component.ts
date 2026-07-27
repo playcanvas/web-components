@@ -1,9 +1,9 @@
 import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseEnum, parseVec4 } from '../utils';
 
-const tonemaps = new Map([
+const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral', number>([
     ['none', TONEMAP_NONE],
     ['linear', TONEMAP_LINEAR],
     ['filmic', TONEMAP_FILMIC],
@@ -522,7 +522,7 @@ class CameraComponentElement extends ComponentElement {
                 this.frustumCulling = parseBool(newValue, true);
                 break;
             case 'gamma':
-                this.gamma = newValue as 'linear' | 'srgb';
+                this.gamma = parseEnum(newValue, ['linear', 'srgb'], 'srgb', name);
                 break;
             case 'horizontal-fov':
                 this.horizontalFov = parseBool(newValue, false);
@@ -546,7 +546,7 @@ class CameraComponentElement extends ComponentElement {
                 this.scissorRect = parseVec4(newValue);
                 break;
             case 'tonemap':
-                this.tonemap = newValue as 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral';
+                this.tonemap = parseEnum(newValue, tonemaps, 'none', name);
                 break;
         }
     }
