@@ -3,6 +3,22 @@ import { Color, Entity, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 import { CSS_COLORS } from './colors';
 
 /**
+ * Parse a boolean attribute value. The same rules apply to every boolean attribute:
+ *
+ * - Attribute absent (or removed): the supplied default is used.
+ * - Attribute set to the string 'false': `false`.
+ * - Attribute present with any other value, including the empty string of a bare boolean
+ *   attribute (e.g. `<pc-light cast-shadows>`): `true`.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or removed.
+ * @returns The parsed boolean.
+ */
+export const parseBool = (value: string | null, defaultValue: boolean): boolean => {
+    return value === null ? defaultValue : value !== 'false';
+};
+
+/**
  * Parse a color string into a Color object. String can be in the format of '#rgb', '#rgba',
  * '#rrggbb', '#rrggbbaa', or a string of 3 or 4 comma-delimited numbers.
  *

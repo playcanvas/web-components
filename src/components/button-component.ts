@@ -2,7 +2,7 @@ import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Butt
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { getEntity, parseColor, parseEnum, parseVec4 } from '../utils';
+import { getEntity, parseBool, parseColor, parseEnum, parseVec4 } from '../utils';
 
 const transitionModes = new Map<string, number>([
     ['tint', BUTTON_TRANSITION_MODE_TINT],
@@ -400,7 +400,7 @@ class ButtonComponentElement extends ComponentElement {
 
         switch (name) {
             case 'active':
-                this.active = newValue !== 'false';
+                this.active = parseBool(newValue, true);
                 break;
             case 'image':
                 this.image = newValue;

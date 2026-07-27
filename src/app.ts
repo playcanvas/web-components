@@ -71,6 +71,7 @@ import { AsyncElement } from './async-element';
 import { EntityElement } from './entity';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
+import { parseBool } from './utils';
 
 /**
  * The AppElement interface provides properties and methods for manipulating
@@ -595,10 +596,10 @@ class AppElement extends AsyncElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'alpha':
-                this.alpha = newValue !== 'false';
+                this.alpha = parseBool(newValue, true);
                 break;
             case 'antialias':
-                this.antialias = newValue !== 'false';
+                this.antialias = parseBool(newValue, true);
                 break;
             case 'backend':
                 if (newValue === 'webgpu' || newValue === 'webgl2' || newValue === 'null') {
@@ -606,13 +607,13 @@ class AppElement extends AsyncElement {
                 }
                 break;
             case 'depth':
-                this.depth = newValue !== 'false';
+                this.depth = parseBool(newValue, true);
                 break;
             case 'high-resolution':
-                this.highResolution = newValue !== 'false';
+                this.highResolution = parseBool(newValue, true);
                 break;
             case 'stencil':
-                this.stencil = newValue !== 'false';
+                this.stencil = parseBool(newValue, true);
                 break;
         }
     }

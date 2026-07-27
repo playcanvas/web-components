@@ -2,6 +2,7 @@ import { RenderComponent, StandardMaterial } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { MaterialElement } from '../material';
+import { parseBool } from '../utils';
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -127,13 +128,13 @@ class RenderComponentElement extends ComponentElement {
 
         switch (name) {
             case 'cast-shadows':
-                this.castShadows = newValue !== 'false';
+                this.castShadows = parseBool(newValue, true);
                 break;
             case 'material':
                 this.material = newValue;
                 break;
             case 'receive-shadows':
-                this.receiveShadows = newValue !== 'false';
+                this.receiveShadows = parseBool(newValue, true);
                 break;
             case 'type':
                 this.type = newValue as 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere';

@@ -2,6 +2,7 @@ import { Component } from 'playcanvas';
 
 import { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
+import { parseBool } from '../utils';
 
 /**
  * Represents a component in the PlayCanvas engine.
@@ -100,7 +101,7 @@ class ComponentElement extends AsyncElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'enabled':
-                this.enabled = newValue !== 'false';
+                this.enabled = parseBool(newValue, true);
                 break;
         }
     }

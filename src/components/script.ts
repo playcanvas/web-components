@@ -1,3 +1,5 @@
+import { parseBool } from '../utils';
+
 /**
  * The ScriptElement interface provides properties and methods for manipulating
  * `<pc-script>` elements. The ScriptElement interface also inherits the properties and
@@ -76,7 +78,7 @@ class ScriptElement extends HTMLElement {
                 this.scriptAttributes = newValue;
                 break;
             case 'enabled':
-                this.enabled = newValue !== 'false';
+                this.enabled = parseBool(newValue, true);
                 break;
             case 'name':
                 this.name = newValue;

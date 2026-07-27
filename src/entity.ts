@@ -1,7 +1,7 @@
 import { AppBase, Entity, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseVec3 } from './utils';
+import { parseBool, parseVec3 } from './utils';
 
 /**
  * The EntityElement interface provides properties and methods for manipulating
@@ -73,10 +73,7 @@ class EntityElement extends AsyncElement {
         const entity = new Entity(this.getAttribute('name') || this._name, app);
         this._entity = entity;
 
-        const enabled = this.getAttribute('enabled');
-        if (enabled) {
-            entity.enabled = enabled !== 'false';
-        }
+        entity.enabled = parseBool(this.getAttribute('enabled'), true);
 
         const position = this.getAttribute('position');
         if (position) {
@@ -310,7 +307,7 @@ class EntityElement extends AsyncElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'enabled':
-                this.enabled = newValue !== 'false';
+                this.enabled = parseBool(newValue, true);
                 break;
             case 'name':
                 this.name = newValue;

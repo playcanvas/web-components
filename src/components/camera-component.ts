@@ -1,7 +1,7 @@
 import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseColor, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseVec4 } from '../utils';
 
 const tonemaps = new Map([
     ['none', TONEMAP_NONE],
@@ -77,7 +77,7 @@ class CameraComponentElement extends ComponentElement {
             gammaCorrection: this._gamma === 'srgb' ? GAMMA_SRGB : GAMMA_NONE,
             horizontalFov: this._horizontalFov,
             nearClip: this._nearClip,
-            orthographic: this._orthographic,
+            projection: this._orthographic ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE,
             orthoHeight: this._orthoHeight,
             priority: this._priority,
             rect: this._rect,
@@ -498,40 +498,40 @@ class CameraComponentElement extends ComponentElement {
                 this.clearColor = parseColor(newValue);
                 break;
             case 'clear-color-buffer':
-                this.clearColorBuffer = newValue !== 'false';
+                this.clearColorBuffer = parseBool(newValue, true);
                 break;
             case 'clear-depth-buffer':
-                this.clearDepthBuffer = newValue !== 'false';
+                this.clearDepthBuffer = parseBool(newValue, true);
                 break;
             case 'clear-stencil-buffer':
-                this.clearStencilBuffer = newValue !== 'false';
+                this.clearStencilBuffer = parseBool(newValue, false);
                 break;
             case 'cull-faces':
-                this.cullFaces = newValue !== 'false';
+                this.cullFaces = parseBool(newValue, true);
                 break;
             case 'far-clip':
                 this.farClip = parseFloat(newValue);
                 break;
             case 'flip-faces':
-                this.flipFaces = newValue !== 'false';
+                this.flipFaces = parseBool(newValue, false);
                 break;
             case 'fov':
                 this.fov = parseFloat(newValue);
                 break;
             case 'frustum-culling':
-                this.frustumCulling = newValue !== 'false';
+                this.frustumCulling = parseBool(newValue, true);
                 break;
             case 'gamma':
                 this.gamma = newValue as 'linear' | 'srgb';
                 break;
             case 'horizontal-fov':
-                this.horizontalFov = this.hasAttribute('horizontal-fov');
+                this.horizontalFov = parseBool(newValue, false);
                 break;
             case 'near-clip':
                 this.nearClip = parseFloat(newValue);
                 break;
             case 'orthographic':
-                this.orthographic = this.hasAttribute('orthographic');
+                this.orthographic = parseBool(newValue, false);
                 break;
             case 'ortho-height':
                 this.orthoHeight = parseFloat(newValue);

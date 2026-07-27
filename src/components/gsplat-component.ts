@@ -2,6 +2,7 @@ import { GSplatComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
+import { parseBool } from '../utils';
 
 /**
  * The GSplatComponentElement interface provides properties and methods for manipulating
@@ -195,7 +196,7 @@ class GSplatComponentElement extends ComponentElement {
                 this.asset = newValue;
                 break;
             case 'cast-shadows':
-                this.castShadows = this.hasAttribute('cast-shadows');
+                this.castShadows = parseBool(newValue, false);
                 break;
             case 'lod-base-distance':
                 this.lodBaseDistance = Number(newValue);

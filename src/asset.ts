@@ -1,7 +1,7 @@
 import { Asset, SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseEnum } from './utils';
+import { parseBool, parseEnum } from './utils';
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
 const renderModes = new Map<string, number>([
@@ -267,9 +267,9 @@ class AssetElement extends AsyncElement {
         return ['lazy'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, _newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         if (name === 'lazy') {
-            this.lazy = this.hasAttribute('lazy');
+            this.lazy = parseBool(newValue, false);
         }
     }
 }

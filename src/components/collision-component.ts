@@ -1,7 +1,7 @@
 import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseQuat, parseVec3 } from '../utils';
+import { parseBool, parseQuat, parseVec3 } from '../utils';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating
@@ -157,7 +157,7 @@ class CollisionComponentElement extends ComponentElement {
                 this.axis = parseInt(newValue, 10);
                 break;
             case 'convex-hull':
-                this.convexHull = this.hasAttribute('convex-hull');
+                this.convexHull = parseBool(newValue, false);
                 break;
             case 'half-extents':
                 this.halfExtents = parseVec3(newValue);

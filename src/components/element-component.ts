@@ -2,7 +2,7 @@ import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { parseColor, parseVec2, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseVec2, parseVec4 } from '../utils';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating
@@ -697,22 +697,22 @@ class ElementComponentElement extends ComponentElement {
                 this.asset = newValue;
                 break;
             case 'auto-width':
-                this.autoWidth = newValue !== 'false';
+                this.autoWidth = parseBool(newValue, true);
                 break;
             case 'auto-height':
-                this.autoHeight = newValue !== 'false';
+                this.autoHeight = parseBool(newValue, true);
                 break;
             case 'auto-fit-width':
-                this.autoFitWidth = newValue !== 'false';
+                this.autoFitWidth = parseBool(newValue, false);
                 break;
             case 'auto-fit-height':
-                this.autoFitHeight = newValue !== 'false';
+                this.autoFitHeight = parseBool(newValue, false);
                 break;
             case 'color':
                 this.color = parseColor(newValue);
                 break;
             case 'enable-markup':
-                this.enableMarkup = this.hasAttribute(name);
+                this.enableMarkup = parseBool(newValue, false);
                 break;
             case 'font-size':
                 this.fontSize = Number(newValue);
@@ -733,7 +733,7 @@ class ElementComponentElement extends ComponentElement {
                 this.margin = parseVec4(newValue);
                 break;
             case 'mask':
-                this.mask = this.hasAttribute(name);
+                this.mask = parseBool(newValue, false);
                 break;
             case 'opacity':
                 this.opacity = Number(newValue);
@@ -760,13 +760,13 @@ class ElementComponentElement extends ComponentElement {
                 this.type = newValue as 'group' | 'image' | 'text';
                 break;
             case 'use-input':
-                this.useInput = this.hasAttribute(name);
+                this.useInput = parseBool(newValue, false);
                 break;
             case 'width':
                 this.width = Number(newValue);
                 break;
             case 'wrap-lines':
-                this.wrapLines = this.hasAttribute(name);
+                this.wrapLines = parseBool(newValue, false);
                 break;
         }
     }

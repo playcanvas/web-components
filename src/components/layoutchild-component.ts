@@ -1,6 +1,7 @@
 import { LayoutChildComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
+import { parseBool } from '../utils';
 
 /**
  * The LayoutChildComponentElement interface provides properties and methods for manipulating
@@ -221,7 +222,7 @@ class LayoutChildComponentElement extends ComponentElement {
                 this.fitHeightProportion = Number(newValue);
                 break;
             case 'exclude-from-layout':
-                this.excludeFromLayout = newValue !== 'false';
+                this.excludeFromLayout = parseBool(newValue, false);
                 break;
         }
     }
