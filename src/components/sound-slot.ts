@@ -68,7 +68,7 @@ class SoundSlotElement extends AsyncElement {
         const soundElement = this.parentElement as SoundComponentElement;
 
         if (!(soundElement instanceof SoundComponentElement)) {
-            console.warn('pc-sound-slot must be a direct child of a pc-sound element');
+            console.warn('pc-sound must be a direct child of a pc-sounds element');
             return null;
         }
 

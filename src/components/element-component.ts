@@ -15,8 +15,6 @@ import { parseBool, parseColor, parseEnum, parseVec2, parseVec4 } from '../utils
 class ElementComponentElement extends ComponentElement {
     private _anchor: Vec4 = new Vec4(0.5, 0.5, 0.5, 0.5);
 
-    private _asset: string = '';
-
     private _autoWidth: boolean = true;
 
     private _autoHeight: boolean = true;
@@ -28,6 +26,8 @@ class ElementComponentElement extends ComponentElement {
     private _color: Color = new Color(1, 1, 1, 1);
 
     private _enableMarkup: boolean = false;
+
+    private _fontAsset: string = '';
 
     private _fontSize: number = 32;
 
@@ -116,7 +116,7 @@ class ElementComponentElement extends ComponentElement {
 
         // Asset references are resolved from `<pc-asset>` element ids to engine asset ids. They are
         // only included when they resolve, so image/group elements (with no font) don't error.
-        const fontAsset = AssetElement.get(this._asset);
+        const fontAsset = AssetElement.get(this._fontAsset);
         if (fontAsset) {
             data.fontAsset = fontAsset.id;
         }
@@ -169,26 +169,6 @@ class ElementComponentElement extends ComponentElement {
      */
     get anchor() {
         return this._anchor;
-    }
-
-    /**
-     * Sets the id of the `pc-asset` to use for the font (text elements).
-     * @param value - The asset ID.
-     */
-    set asset(value: string) {
-        this._asset = value;
-        const asset = AssetElement.get(value);
-        if (this.component && asset) {
-            this.component.fontAsset = asset.id;
-        }
-    }
-
-    /**
-     * Gets the id of the `pc-asset` to use for the font.
-     * @returns The asset ID.
-     */
-    get asset() {
-        return this._asset;
     }
 
     /**
@@ -267,6 +247,26 @@ class ElementComponentElement extends ComponentElement {
      */
     get enableMarkup() {
         return this._enableMarkup;
+    }
+
+    /**
+     * Sets the id of the `pc-asset` to use for the font (text elements).
+     * @param value - The font asset ID.
+     */
+    set fontAsset(value: string) {
+        this._fontAsset = value;
+        const asset = AssetElement.get(value);
+        if (this.component && asset) {
+            this.component.fontAsset = asset.id;
+        }
+    }
+
+    /**
+     * Gets the id of the `pc-asset` to use for the font.
+     * @returns The font asset ID.
+     */
+    get fontAsset() {
+        return this._fontAsset;
     }
 
     /**
@@ -658,13 +658,13 @@ class ElementComponentElement extends ComponentElement {
         return [
             ...super.observedAttributes,
             'anchor',
-            'asset',
             'auto-width',
             'auto-height',
             'auto-fit-width',
             'auto-fit-height',
             'color',
             'enable-markup',
+            'font-asset',
             'font-size',
             'max-font-size',
             'min-font-size',
@@ -693,9 +693,6 @@ class ElementComponentElement extends ComponentElement {
             case 'anchor':
                 this.anchor = parseVec4(newValue);
                 break;
-            case 'asset':
-                this.asset = newValue;
-                break;
             case 'auto-width':
                 this.autoWidth = parseBool(newValue, true);
                 break;
@@ -713,6 +710,9 @@ class ElementComponentElement extends ComponentElement {
                 break;
             case 'enable-markup':
                 this.enableMarkup = parseBool(newValue, false);
+                break;
+            case 'font-asset':
+                this.fontAsset = newValue;
                 break;
             case 'font-size':
                 this.fontSize = Number(newValue);
