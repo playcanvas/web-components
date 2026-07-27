@@ -1,195 +1,351 @@
-import { Script, Vec3 } from 'playcanvas';
+import { BoundingBox, Script, Vec3, math } from 'playcanvas';
 
-export class PlanetaryCamera extends Script {
-    static scriptName = 'planetaryCamera';
+/**
+ * Computes the world-space bounds of an entity as the union of the axis-aligned bounding
+ * boxes of all render components in its hierarchy.
+ *
+ * @param {import('playcanvas').Entity} entity - The entity to measure.
+ * @returns {BoundingBox|null} The bounds, or null if the entity has no mesh instances.
+ */
+const computeWorldBounds = (entity) => {
+    const aabb = new BoundingBox();
+    let first = true;
+    for (const render of entity.findComponents('render')) {
+        for (const meshInstance of render.meshInstances) {
+            if (first) {
+                aabb.copy(meshInstance.aabb);
+                first = false;
+            } else {
+                aabb.add(meshInstance.aabb);
+            }
+        }
+    }
+    return first ? null : aabb;
+};
+
+/**
+ * Returns the radius (largest half-extent) of a bounding box.
+ *
+ * @param {BoundingBox} aabb - The bounding box.
+ * @returns {number} The radius.
+ */
+const boundsRadius = (aabb) => {
+    return Math.max(aabb.halfExtents.x, aabb.halfExtents.y, aabb.halfExtents.z);
+};
+
+/**
+ * Scales the entity so that the bounds of its render hierarchy match a target radius. Useful
+ * for displaying models of wildly different intrinsic sizes at a consistent scale.
+ */
+export class NormalizeScale extends Script {
+    static scriptName = 'normalizeScale';
+
+    /**
+     * The world-space radius to scale the entity's render bounds to.
+     *
+     * @attribute
+     * @type {number}
+     */
+    radius = 1;
 
     initialize() {
-        // Camera offsets: X is sunward offset, Y and Z provide viewing angle
-        this.cameraOffsets = new Map([
-            ['sun', new Vec3(0, 75, 150)],
-            ['mercury', new Vec3(-3, 2, 2)],      // Much closer to Mercury
-            ['venus', new Vec3(-20, 10, 10)],
-            ['earth', new Vec3(-20, 10, 10)],
-            ['mars', new Vec3(-12, 6, 6)],
-            ['jupiter', new Vec3(-90, 30, 60)],
-            ['saturn', new Vec3(-80, 35, 55)],
-            ['uranus', new Vec3(-40, 30, 30)],
-            ['neptune', new Vec3(-40, 30, 30)]
-        ]);
-
-        this.currentTarget = 'sun';
-        this.targetPosition = new Vec3();
-        this.lerpFactor = 0.05; // Adjust for smoother/faster transitions
-
-        // Listen for zoom events
-        this.app.on('zoom', this.onZoom, this);
-    }
-
-    onZoom(planetName) {
-        this.currentTarget = planetName;
-    }
-
-    postUpdate(dt) {
-        // Get the current target planet
-        const targetPlanet = this.app.root.findByName(this.currentTarget);
-        if (!targetPlanet) return;
-
-        // Get planet's world position
-        const planetPos = targetPlanet.getPosition();
-
-        // Calculate direction from sun to planet
-        const sunwardDir = new Vec3();
-        if (this.currentTarget !== 'sun') {
-            // Normalize the planet's position to get the direction from sun (at origin) to planet
-            sunwardDir.copy(planetPos).normalize();
-
-            // Get the base offset values
-            const offset = this.cameraOffsets.get(this.currentTarget);
-
-            // Calculate camera position relative to planet's position around orbit
-            // We want to stay on the sunward side, so we use the sunward direction
-            this.targetPosition.set(
-                planetPos.x + (sunwardDir.x * offset.x),
-                planetPos.y + offset.y,
-                planetPos.z + (sunwardDir.z * offset.x)
-            );
-        } else {
-            // Sun doesn't orbit, use static offset
-            const offset = this.cameraOffsets.get('sun');
-            this.targetPosition.copy(planetPos).add(offset);
+        const bounds = computeWorldBounds(this.entity);
+        if (bounds) {
+            const factor = this.radius / boundsRadius(bounds);
+            this.entity.setLocalScale(factor, factor, factor);
         }
-
-        // Smoothly move camera to new position
-        const currentPos = this.entity.getPosition();
-        const t = 1.0 - Math.pow(1.0 - this.lerpFactor, dt * 60);
-
-        currentPos.lerp(currentPos, this.targetPosition, t);
-        this.entity.setPosition(currentPos);
-
-        // Make camera look at the planet
-        this.entity.lookAt(planetPos);
     }
 }
 
-export class PlanetaryMotion extends Script {
-    static scriptName = 'planetaryMotion';
+/**
+ * Tilts the entity to its axial tilt once, then spins it continuously around its tilted
+ * local Y axis.
+ */
+export class PlanetSpin extends Script {
+    static scriptName = 'planetSpin';
+
+    /**
+     * The rotation speed in degrees per second. Negative values spin retrograde.
+     *
+     * @attribute
+     * @type {number}
+     */
+    speed = 5;
+
+    /**
+     * The axial tilt in Euler degrees, applied once on initialize.
+     *
+     * @attribute
+     * @type {Vec3}
+     */
+    tilt = new Vec3();
 
     initialize() {
-        // Planet radii (for scale reference)
-        this.planetSizes = new Map([
-            ['sun', 90],
-            ['mercury', 6],
-            ['venus', 14],
-            ['earth', 15],
-            ['mars', 8],
-            ['jupiter', 45],
-            ['saturn', 38],
-            ['uranus', 20],
-            ['neptune', 19]
-        ]);
-
-        // Base distances (will be scaled up to account for sun's size)
-        const sunRadius = this.planetSizes.get('sun');
-        const minSpacing = 300; // Increased from 30 to 300 for larger orbits
-
-        this.orbitalDistances = new Map([
-            ['mercury', sunRadius + minSpacing],            // 390 units
-            ['venus', sunRadius + minSpacing * 2],          // 690 units
-            ['earth', sunRadius + minSpacing * 3],          // 990 units
-            ['mars', sunRadius + minSpacing * 4],           // 1290 units
-            ['jupiter', sunRadius + minSpacing * 6],        // 1890 units
-            ['saturn', sunRadius + minSpacing * 8],         // 2490 units
-            ['uranus', sunRadius + minSpacing * 10],        // 3090 units
-            ['neptune', sunRadius + minSpacing * 12]        // 3690 units
-        ]);
-
-        // Orbital periods in Earth years (we'll speed these up)
-        this.orbitalPeriods = new Map([
-            ['mercury', 0.24],
-            ['venus', 0.62],
-            ['earth', 1],
-            ['mars', 1.88],
-            ['jupiter', 11.86],
-            ['saturn', 29.46],
-            ['uranus', 84.01],
-            ['neptune', 164.79]
-        ]);
-
-        // Rotation speeds (arbitrary values for visualization)
-        this.rotationSpeeds = new Map([
-            ['sun', 0.1],
-            ['mercury', 0.08],
-            ['venus', -0.07],    // Venus rotates backwards!
-            ['earth', 0.15],
-            ['mars', 0.14],
-            ['jupiter', 0.32],   // Gas giants spin faster
-            ['saturn', 0.28],
-            ['uranus', 0.25],
-            ['neptune', 0.22]
-        ]);
-
-        // Scale factors - adjusted for planet sizes
-        this.distanceScale = 3;     // Base scale for distances
-        this.timeScale = 0.1;       // Speed up the orbital periods
-
-        // Get references to all planets
-        this.planets = new Map();
-        ['sun', 'mercury', 'venus', 'earth', 'mars',
-            'jupiter', 'saturn', 'uranus', 'neptune'].forEach((name) => {
-            this.planets.set(name, this.entity.findByName(name));
-        });
-
-        // Initialize orbital angles
-        this.orbitalAngles = new Map();
-        for (const planet of this.orbitalDistances.keys()) {
-            this.orbitalAngles.set(planet, Math.random() * Math.PI * 2);
-        }
+        this.entity.setLocalEulerAngles(this.tilt.x, this.tilt.y, this.tilt.z);
     }
 
     update(dt) {
-        const sun = this.planets.get('sun');
-        const render = sun.findComponent('render');
-        if (render) {
-            const material = render.meshInstances[0].material;
-            material.emissiveIntensity = 100;
-        }
+        this.entity.rotateLocal(0, this.speed * dt, 0);
+    }
+}
 
-        // Update each planet's position and rotation
-        for (const [planet, entity] of this.planets) {
-            // Don't move the sun, but rotate it
-            if (planet === 'sun') {
-                entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 30, 0);
-                continue;
-            }
+/**
+ * Boosts the emissive intensity of every material in the entity's render hierarchy. Applied
+ * once on initialize.
+ */
+export class SunGlow extends Script {
+    static scriptName = 'sunGlow';
 
-            // Update orbital position
-            const currentAngle = this.orbitalAngles.get(planet);
-            this.orbitalAngles.set(
-                planet,
-                currentAngle + (dt * this.timeScale / this.orbitalPeriods.get(planet))
-            );
+    /**
+     * The emissive intensity to apply.
+     *
+     * @attribute
+     * @type {number}
+     */
+    intensity = 6;
 
-            // Calculate orbital position
-            const distance = this.orbitalDistances.get(planet);
-            const angle = this.orbitalAngles.get(planet);
-            const x = Math.cos(angle) * distance;
-            const z = Math.sin(angle) * distance;
-
-            entity.setLocalPosition(x, 0, z);
-
-            // Special case for Saturn to keep rings tilted correctly
-            if (planet === 'saturn') {
-                // Set rotation so rings always tilt up relative to the sun
-                const tiltAngle = Math.PI / 12; // 30-degree tilt
-                entity.setLocalEulerAngles(
-                    tiltAngle * 180 / Math.PI,  // Convert to degrees
-                    (this.rotationSpeeds.get(planet) * dt * 30) + (angle * 180 / Math.PI),
-                    0
-                );
-            } else {
-                // Normal rotation for other planets
-                entity.rotate(0, this.rotationSpeeds.get(planet) * dt * 30, 0);
+    initialize() {
+        for (const render of this.entity.findComponents('render')) {
+            for (const meshInstance of render.meshInstances) {
+                const material = meshInstance.material;
+                material.emissiveIntensity = this.intensity;
+                material.update();
             }
         }
+    }
+}
+
+/**
+ * Overrides the radius the tour frames for this stop. Without it, a stop is framed on its
+ * authored normalizeScale radius, which for a model much wider than its ball (e.g. Saturn's
+ * rings) leaves the subject looking small - a tighter framing radius lets it fill the frame.
+ */
+export class TourStop extends Script {
+    static scriptName = 'tourStop';
+
+    /**
+     * The world-space radius the tour should frame for this stop.
+     *
+     * @attribute
+     * @type {number}
+     */
+    radius = 1;
+}
+
+/**
+ * Drives the camera along a line of tour stops — the children of a target entity, in order,
+ * plus a final overview pose. The page reports a fractional stop index by firing a 'tour:t'
+ * event on the application (typically mapped from scroll position) and the camera chases it
+ * with frame-rate independent damping, framing each stop off-center on alternating sides.
+ */
+export class PlanetTour extends Script {
+    static scriptName = 'planetTour';
+
+    /**
+     * The entity whose children are the tour stops, in order.
+     *
+     * @attribute
+     * @type {import('playcanvas').Entity}
+     */
+    planets = null;
+
+    /**
+     * The camera distance from each stop, as a multiple of the stop's radius.
+     *
+     * @attribute
+     * @type {number}
+     */
+    frame = 7;
+
+    /**
+     * The lateral framing offset, as a fraction of the half viewport width. Stops alternate
+     * sides, and the offset fades out on portrait aspect ratios to center the subject.
+     *
+     * @attribute
+     * @type {number}
+     */
+    side = 0.35;
+
+    /**
+     * The camera height above each stop, as a fraction of the camera distance.
+     *
+     * @attribute
+     * @type {number}
+     */
+    lift = 0.12;
+
+    /**
+     * The exponential rate at which the camera chases the requested stop index.
+     *
+     * @attribute
+     * @type {number}
+     */
+    damping = 5;
+
+    /**
+     * The fraction of each segment spent holding on its stop before and after the transit,
+     * so a subject stays framed while its narrative is in view. Must be below 0.5.
+     *
+     * @attribute
+     * @type {number}
+     */
+    dwell = 0.18;
+
+    /**
+     * The idle drift amplitude multiplier. Set to 0 to disable drift.
+     *
+     * @attribute
+     * @type {number}
+     */
+    drift = 1;
+
+    /**
+     * The camera position of the final overview stop.
+     *
+     * @attribute
+     * @type {Vec3}
+     */
+    overviewPosition = new Vec3(7, -250, 22);
+
+    /**
+     * The look target of the final overview stop.
+     *
+     * @attribute
+     * @type {Vec3}
+     */
+    overviewTarget = new Vec3(-20, -150, 0);
+
+    initialize() {
+        this._t = 0;
+        this._target = 0;
+        this._time = 0;
+        this._stops = null;
+
+        this._posA = new Vec3();
+        this._posB = new Vec3();
+        this._lookA = new Vec3();
+        this._lookB = new Vec3();
+        this._position = new Vec3();
+        this._look = new Vec3();
+
+        this.app.on('tour:t', (t) => {
+            this._target = t;
+        });
+
+        // Adopt any progress the page reported before this script initialized (e.g. a
+        // reload with restored scroll) - an event fired back then had no listener yet
+        if (typeof this.app.tourT === 'number') {
+            this._t = this.app.tourT;
+            this._target = this.app.tourT;
+        }
+    }
+
+    /**
+     * Builds the tour stops from the children of the planets entity, with the overview pose
+     * appended as the final stop. Stops center on the world bounds of their subject (models
+     * are not necessarily centered on their entity's origin). The framing radius comes from
+     * a tourStop override if present, else the authored normalizeScale radius - axial tilt
+     * inflates a world-space AABB, so the measured bounds are only a fallback.
+     *
+     * @returns {object[]} The tour stops.
+     */
+    _buildStops() {
+        const stops = this.planets.children.map((child) => {
+            const bounds = computeWorldBounds(child);
+            const override = child.script && child.script.tourStop;
+            const normalize = child.script && child.script.normalizeScale;
+            return {
+                position: bounds ? bounds.center.clone() : child.getPosition().clone(),
+                radius: (override && override.radius) ||
+                    (normalize && normalize.radius) ||
+                    (bounds ? boundsRadius(bounds) : 1)
+            };
+        });
+        stops.push({
+            position: this.overviewPosition.clone(),
+            target: this.overviewTarget.clone()
+        });
+        return stops;
+    }
+
+    /**
+     * Computes the camera pose for a stop. Regular stops frame their subject at a distance
+     * proportional to its radius, biased sideways so the subject composes off-center; the
+     * overview stop uses its explicit position and target.
+     *
+     * @param {number} index - The stop index.
+     * @param {Vec3} position - The vector to receive the camera position.
+     * @param {Vec3} look - The vector to receive the look target.
+     */
+    _stopPose(index, position, look) {
+        const stop = this._stops[index];
+        if (stop.target) {
+            position.copy(stop.position);
+            look.copy(stop.target);
+            return;
+        }
+
+        const { width, height } = this.app.graphicsDevice;
+        const aspect = width / Math.max(1, height);
+        const fit = Math.min(1, aspect);
+        const distance = stop.radius * this.frame / fit;
+
+        position.set(
+            stop.position.x,
+            stop.position.y + distance * this.lift,
+            stop.position.z + distance
+        );
+
+        // Bias the look target so the subject composes off-center: sideways on landscape
+        // (alternating sides per stop) and upward on portrait, where the narrative sits
+        // below the subject instead of beside it
+        const halfHeight = Math.tan(this.entity.camera.fov * 0.5 * math.DEG_TO_RAD) * distance;
+        const halfWidth = halfHeight * aspect;
+        const ramp = math.clamp((aspect - 0.9) / 0.4, 0, 1);
+        const sign = index % 2 === 0 ? 1 : -1;
+        look.set(
+            stop.position.x - sign * this.side * halfWidth * ramp,
+            stop.position.y - 0.3 * halfHeight * (1 - ramp),
+            stop.position.z
+        );
+    }
+
+    postUpdate(dt) {
+        if (!this.planets) return;
+
+        // Build the stop list lazily so that sibling scripts (e.g. normalizeScale) have
+        // already run their initialize()
+        if (!this._stops) {
+            this._stops = this._buildStops();
+        }
+        const count = this._stops.length;
+
+        // Chase the requested stop index with frame-rate independent damping
+        this._t += (this._target - this._t) * (1 - Math.exp(-this.damping * dt));
+        this._time += dt;
+
+        // Blend the camera pose between the two neighboring stops. The blend holds on each
+        // stop for the dwell fraction at both ends of the segment (keeping the subject
+        // framed while its narrative is read) and eases through the transit between them
+        const t = math.clamp(this._t, 0, count - 1);
+        const index = Math.max(0, Math.min(Math.floor(t), count - 2));
+        const next = Math.min(index + 1, count - 1);
+        const span = Math.max(0.0001, 1 - 2 * this.dwell);
+        let blend = math.clamp((t - index - this.dwell) / span, 0, 1);
+        blend = blend * blend * (3 - 2 * blend);
+
+        this._stopPose(index, this._posA, this._lookA);
+        this._stopPose(next, this._posB, this._lookB);
+
+        this._position.lerp(this._posA, this._posB, blend);
+        this._look.lerp(this._lookA, this._lookB, blend);
+
+        // A gentle idle drift, scaled to the current viewing distance
+        const sway = this._position.distance(this._look) * 0.02 * this.drift;
+        this._position.x += Math.sin(this._time * 0.4) * sway;
+        this._position.y += Math.cos(this._time * 0.3) * sway * 0.7;
+
+        this.entity.setPosition(this._position);
+        this.entity.lookAt(this._look);
     }
 }
