@@ -1,5 +1,6 @@
 import { Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
 
+import { AppElement } from './app';
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
 import { parseVec3 } from './utils';
@@ -28,6 +29,8 @@ class SkyElement extends AsyncElement {
 
     private _scene: Scene | null = null;
 
+    private _appElement: AppElement | null = null;
+
     connectedCallback() {
         this._loadSkybox();
         this._onReady();
@@ -35,6 +38,7 @@ class SkyElement extends AsyncElement {
 
     disconnectedCallback() {
         this._unloadSkybox();
+        this._appElement = null;
     }
 
     private _generateSkybox(asset: Asset) {
@@ -67,9 +71,11 @@ class SkyElement extends AsyncElement {
     private async _loadSkybox() {
         const appElement = await this.closestApp?.ready();
         const app = appElement?.app;
-        if (!app) {
+        if (!appElement || !app) {
             return;
         }
+
+        this._appElement = appElement;
 
         const asset = AssetElement.get(this._asset);
         if (!asset) {
@@ -89,16 +95,22 @@ class SkyElement extends AsyncElement {
     }
 
     private _unloadSkybox() {
-        if (!this._scene) return;
-
-        this._scene.skybox?.destroy();
-        // @ts-ignore
-        this._scene.skybox = null;
-        this._scene.envAtlas?.destroy();
-        // @ts-ignore
-        this._scene.envAtlas = null;
+        const scene = this._scene;
+        if (!scene) return;
 
         this._scene = null;
+
+        // If the owning application has already been destroyed (removing a <pc-app>
+        // disconnects it before its children), the scene, graphics device and skybox
+        // textures have all been destroyed along with it — nothing left to clean up.
+        if (!this._appElement?.app) return;
+
+        scene.skybox?.destroy();
+        // @ts-ignore
+        scene.skybox = null;
+        scene.envAtlas?.destroy();
+        // @ts-ignore
+        scene.envAtlas = null;
     }
 
     /**
