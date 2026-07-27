@@ -691,7 +691,7 @@ class ElementComponentElement extends ComponentElement {
 
         switch (name) {
             case 'anchor':
-                this.anchor = parseVec4(newValue);
+                this.anchor = parseVec4(newValue, new Vec4(0.5, 0.5, 0.5, 0.5), name);
                 break;
             case 'auto-width':
                 this.autoWidth = parseBool(newValue, true);
@@ -706,7 +706,7 @@ class ElementComponentElement extends ComponentElement {
                 this.autoFitHeight = parseBool(newValue, false);
                 break;
             case 'color':
-                this.color = parseColor(newValue);
+                this.color = parseColor(newValue, new Color(1, 1, 1, 1), name);
                 break;
             case 'enable-markup':
                 this.enableMarkup = parseBool(newValue, false);
@@ -730,7 +730,7 @@ class ElementComponentElement extends ComponentElement {
                 this.lineHeight = parseNumber(newValue, 32, name);
                 break;
             case 'margin':
-                this.margin = parseVec4(newValue);
+                this.margin = parseVec4(newValue, null, name);
                 break;
             case 'mask':
                 this.mask = parseBool(newValue, false);
@@ -739,7 +739,7 @@ class ElementComponentElement extends ComponentElement {
                 this.opacity = parseNumber(newValue, 1, name);
                 break;
             case 'pivot':
-                this.pivot = parseVec2(newValue);
+                this.pivot = parseVec2(newValue, new Vec2(0.5, 0.5), name);
                 break;
             case 'pixels-per-unit':
                 this.pixelsPerUnit = parseNumber(newValue, null, name);

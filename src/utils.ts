@@ -19,70 +19,160 @@ export const parseBool = (value: string | null, defaultValue: boolean): boolean 
 };
 
 /**
- * Parse a color string into a Color object. String can be in the format of '#rgb', '#rgba',
- * '#rrggbb', '#rrggbbaa', or a string of 3 or 4 comma-delimited numbers.
+ * Splits an attribute value into exactly `count` numeric components. Returns `null` when the
+ * value does not consist of exactly `count` whitespace-separated finite numbers.
  *
- * @param value - The color string to parse.
+ * @param value - The value to split.
+ * @param count - The required number of components.
+ * @returns The parsed components, or `null`.
+ * @ignore
+ */
+export const parseComponents = (value: string, count: number): number[] | null => {
+    const components = value.trim().split(/\s+/).map(Number);
+    if (components.length !== count || components.some(component => !Number.isFinite(component))) {
+        return null;
+    }
+    return components;
+};
+
+/**
+ * Clones a math-type default so parsed results never alias the caller's default instance.
+ *
+ * @param value - The default value to clone (`null` is passed through).
+ * @returns The cloned value.
+ */
+const cloneDefault = <T extends Color | Quat | Vec2 | Vec3 | Vec4 | null>(value: T): T => {
+    return (value === null ? null : value.clone()) as T;
+};
+
+/**
+ * Parse a color attribute value. The expected format is a CSS color name (e.g. 'rebeccapurple'),
+ * a hex color (e.g. '#ff0000' or '#f00'), or 3 or 4 space-separated numbers in the range 0 to 1
+ * (e.g. '1 0.5 0.5' or '1 0.5 0.5 0.5'). Returns `defaultValue` (cloned, when it is a color)
+ * when the attribute is absent (`null`), or when the value is malformed — the latter also logs
+ * a warning.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Color object.
  */
-export const parseColor = (value: string): Color => {
-    // Check if it's a CSS color name first
+export const parseColor = <T extends Color | null>(value: string | null, defaultValue: T, attribute: string): Color | T => {
+    if (value === null) {
+        return cloneDefault(defaultValue);
+    }
+
+    // A CSS color name (e.g. 'rebeccapurple')
     const hexColor = CSS_COLORS[value.toLowerCase()];
     if (hexColor) {
         return new Color().fromString(hexColor);
     }
 
-    if (value.startsWith('#')) {
-        return new Color().fromString(value);
+    // A hex color (e.g. '#ff0000'), expanding short forms (e.g. '#f00') for Color.fromString
+    if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) {
+        let hex = value.slice(1);
+        if (hex.length === 3 || hex.length === 4) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+        return new Color().fromString(`#${hex}`);
     }
 
-    const components = value.split(' ').map(Number);
-    return new Color(components);
+    // 3 or 4 space-separated components (e.g. '1 0.5 0.5')
+    const components = parseComponents(value, 4) ?? parseComponents(value, 3);
+    if (components) {
+        return new Color(components);
+    }
+
+    console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected a CSS color name, a hex color or 3 or 4 space-separated numbers. Using '${defaultValue}'.`);
+    return cloneDefault(defaultValue);
 };
 
 /**
- * Parse an Euler angles string into a Quat object. String can be in the format of 'x,y,z'.
+ * Parse an Euler-angles attribute value into a quaternion. The expected format is 3
+ * space-separated angles in degrees (e.g. '0 90 0'). Returns `defaultValue` (cloned, when it is
+ * a quaternion) when the attribute is absent (`null`), or when the value is malformed — the
+ * latter also logs a warning.
  *
- * @param value - The Euler angles string to parse.
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Quat object.
  */
-export const parseQuat = (value: string): Quat => {
-    const [x, y, z] = value.split(' ').map(Number);
-    const q = new Quat();
-    q.setFromEulerAngles(x, y, z);
-    return q;
+export const parseQuat = <T extends Quat | null>(value: string | null, defaultValue: T, attribute: string): Quat | T => {
+    if (value === null) {
+        return cloneDefault(defaultValue);
+    }
+    const components = parseComponents(value, 3);
+    if (!components) {
+        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 3 space-separated numbers. Using '${defaultValue}'.`);
+        return cloneDefault(defaultValue);
+    }
+    return new Quat().setFromEulerAngles(components[0], components[1], components[2]);
 };
 
 /**
- * Parse a Vec2 string into a Vec2 object. String can be in the format of 'x,y'.
+ * Parse a Vec2 attribute value. The expected format is 2 space-separated numbers (e.g. '1 2').
+ * Returns `defaultValue` (cloned, when it is a vector) when the attribute is absent (`null`),
+ * or when the value is malformed — the latter also logs a warning.
  *
- * @param value - The Vec2 string to parse.
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec2 object.
  */
-export const parseVec2 = (value: string): Vec2 => {
-    const components = value.split(' ').map(Number);
+export const parseVec2 = <T extends Vec2 | null>(value: string | null, defaultValue: T, attribute: string): Vec2 | T => {
+    if (value === null) {
+        return cloneDefault(defaultValue);
+    }
+    const components = parseComponents(value, 2);
+    if (!components) {
+        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 2 space-separated numbers. Using '${defaultValue}'.`);
+        return cloneDefault(defaultValue);
+    }
     return new Vec2(components);
 };
 
 /**
- * Parse a Vec3 string into a Vec3 object. String can be in the format of 'x,y,z'.
+ * Parse a Vec3 attribute value. The expected format is 3 space-separated numbers (e.g. '1 2 3').
+ * Returns `defaultValue` (cloned, when it is a vector) when the attribute is absent (`null`),
+ * or when the value is malformed — the latter also logs a warning.
  *
- * @param value - The Vec3 string to parse.
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec3 object.
  */
-export const parseVec3 = (value: string): Vec3 => {
-    const components = value.split(' ').map(Number);
+export const parseVec3 = <T extends Vec3 | null>(value: string | null, defaultValue: T, attribute: string): Vec3 | T => {
+    if (value === null) {
+        return cloneDefault(defaultValue);
+    }
+    const components = parseComponents(value, 3);
+    if (!components) {
+        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 3 space-separated numbers. Using '${defaultValue}'.`);
+        return cloneDefault(defaultValue);
+    }
     return new Vec3(components);
 };
 
 /**
- * Parse a Vec4 string into a Vec4 object. String can be in the format of 'x,y,z,w'.
+ * Parse a Vec4 attribute value. The expected format is 4 space-separated numbers
+ * (e.g. '1 2 3 4'). Returns `defaultValue` (cloned, when it is a vector) when the attribute is
+ * absent (`null`), or when the value is malformed — the latter also logs a warning.
  *
- * @param value - The Vec4 string to parse.
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec4 object.
  */
-export const parseVec4 = (value: string): Vec4 => {
-    const components = value.split(' ').map(Number);
+export const parseVec4 = <T extends Vec4 | null>(value: string | null, defaultValue: T, attribute: string): Vec4 | T => {
+    if (value === null) {
+        return cloneDefault(defaultValue);
+    }
+    const components = parseComponents(value, 4);
+    if (!components) {
+        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 4 space-separated numbers. Using '${defaultValue}'.`);
+        return cloneDefault(defaultValue);
+    }
     return new Vec4(components);
 };
 

@@ -495,7 +495,7 @@ class CameraComponentElement extends ComponentElement {
 
         switch (name) {
             case 'clear-color':
-                this.clearColor = parseColor(newValue);
+                this.clearColor = parseColor(newValue, new Color(0.75, 0.75, 0.75, 1), name);
                 break;
             case 'clear-color-buffer':
                 this.clearColorBuffer = parseBool(newValue, true);
@@ -540,10 +540,10 @@ class CameraComponentElement extends ComponentElement {
                 this.priority = parseNumber(newValue, 0, name);
                 break;
             case 'rect':
-                this.rect = parseVec4(newValue);
+                this.rect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
                 break;
             case 'scissor-rect':
-                this.scissorRect = parseVec4(newValue);
+                this.scissorRect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
                 break;
             case 'tonemap':
                 this.tonemap = parseEnum(newValue, tonemaps, 'none', name);

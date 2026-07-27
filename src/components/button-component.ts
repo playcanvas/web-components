@@ -407,19 +407,19 @@ class ButtonComponentElement extends ComponentElement {
                 this.image = newValue;
                 break;
             case 'hit-padding':
-                this.hitPadding = parseVec4(newValue);
+                this.hitPadding = parseVec4(newValue, new Vec4(0, 0, 0, 0), name);
                 break;
             case 'transition-mode':
                 this.transitionMode = parseEnum(newValue, transitionModes, 'tint', name);
                 break;
             case 'hover-tint':
-                this.hoverTint = parseColor(newValue);
+                this.hoverTint = parseColor(newValue, new Color(1, 1, 1, 1), name);
                 break;
             case 'pressed-tint':
-                this.pressedTint = parseColor(newValue);
+                this.pressedTint = parseColor(newValue, new Color(1, 1, 1, 1), name);
                 break;
             case 'inactive-tint':
-                this.inactiveTint = parseColor(newValue);
+                this.inactiveTint = parseColor(newValue, new Color(1, 1, 1, 1), name);
                 break;
             case 'fade-duration':
                 this.fadeDuration = parseNumber(newValue, 0, name);

@@ -272,13 +272,13 @@ class LayoutGroupComponentElement extends ComponentElement {
                 this.reverseY = parseBool(newValue, false);
                 break;
             case 'alignment':
-                this.alignment = parseVec2(newValue);
+                this.alignment = parseVec2(newValue, new Vec2(0, 1), name);
                 break;
             case 'padding':
-                this.padding = parseVec4(newValue);
+                this.padding = parseVec4(newValue, new Vec4(0, 0, 0, 0), name);
                 break;
             case 'spacing':
-                this.spacing = parseVec2(newValue);
+                this.spacing = parseVec2(newValue, new Vec2(0, 0), name);
                 break;
             case 'width-fitting':
                 this.widthFitting = parseEnum(newValue, fittings, 'none', name);

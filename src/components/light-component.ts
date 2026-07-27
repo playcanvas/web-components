@@ -501,7 +501,7 @@ class LightComponentElement extends ComponentElement {
 
         switch (name) {
             case 'color':
-                this.color = parseColor(newValue);
+                this.color = parseColor(newValue, new Color(1, 1, 1), name);
                 break;
             case 'cast-shadows':
                 this.castShadows = parseBool(newValue, false);

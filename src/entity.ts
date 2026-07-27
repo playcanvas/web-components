@@ -79,21 +79,9 @@ class EntityElement extends AsyncElement {
         this._entity = entity;
 
         entity.enabled = parseBool(this.getAttribute('enabled'), true);
-
-        const position = this.getAttribute('position');
-        if (position) {
-            entity.setLocalPosition(parseVec3(position));
-        }
-
-        const rotation = this.getAttribute('rotation');
-        if (rotation) {
-            entity.setLocalEulerAngles(parseVec3(rotation));
-        }
-
-        const scale = this.getAttribute('scale');
-        if (scale) {
-            entity.setLocalScale(parseVec3(scale));
-        }
+        entity.setLocalPosition(parseVec3(this.getAttribute('position'), new Vec3(), 'position'));
+        entity.setLocalEulerAngles(parseVec3(this.getAttribute('rotation'), new Vec3(), 'rotation'));
+        entity.setLocalScale(parseVec3(this.getAttribute('scale'), new Vec3(1, 1, 1), 'scale'));
 
         const tags = this.getAttribute('tags');
         if (tags) {
@@ -318,13 +306,13 @@ class EntityElement extends AsyncElement {
                 this.name = newValue;
                 break;
             case 'position':
-                this.position = parseVec3(newValue);
+                this.position = parseVec3(newValue, new Vec3(), name);
                 break;
             case 'rotation':
-                this.rotation = parseVec3(newValue);
+                this.rotation = parseVec3(newValue, new Vec3(), name);
                 break;
             case 'scale':
-                this.scale = parseVec3(newValue);
+                this.scale = parseVec3(newValue, new Vec3(1, 1, 1), name);
                 break;
             case 'tags':
                 this.tags = newValue.split(',').map(tag => tag.trim());

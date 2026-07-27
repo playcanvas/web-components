@@ -200,7 +200,7 @@ class SceneElement extends AsyncElement {
                 this.fog = parseEnum(newValue, ['none', 'linear', 'exp', 'exp2'], 'none', name);
                 break;
             case 'fog-color':
-                this.fogColor = parseColor(newValue);
+                this.fogColor = parseColor(newValue, new Color(1, 1, 1), name);
                 break;
             case 'fog-density':
                 this.fogDensity = parseNumber(newValue, 0, name);
@@ -212,7 +212,7 @@ class SceneElement extends AsyncElement {
                 this.fogEnd = parseNumber(newValue, 1000, name);
                 break;
             case 'gravity':
-                this.gravity = parseVec3(newValue);
+                this.gravity = parseVec3(newValue, new Vec3(0, -9.81, 0), name);
                 break;
             // ... handle other attributes as well
         }
