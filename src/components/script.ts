@@ -1,25 +1,36 @@
+import { Script } from 'playcanvas';
+
+import { AsyncElement } from '../async-element';
 import { parseBool } from '../utils';
+import type { ScriptComponentElement } from './script-component';
 
 /**
  * The ScriptElement interface provides properties and methods for manipulating
  * `<pc-script>` elements. The ScriptElement interface also inherits the properties and
- * methods of the {@link HTMLElement} interface.
+ * methods of the {@link AsyncElement} interface.
+ *
+ * The element becomes ready once its script instance has been created by the parent
+ * `<pc-scripts>` element.
  */
-class ScriptElement extends HTMLElement {
-    private _attributes: string = '{}';
+class ScriptElement extends AsyncElement {
+    private _attributes: Record<string, any> = {};
 
     private _enabled: boolean = true;
 
     private _name: string = '';
 
     /**
-     * Sets the attributes of the script.
+     * Sets the attributes of the script as an object. Values are converted with the same rules
+     * as the `attributes` attribute: `asset:`/`entity:` references and `vec2:`/`vec3:`/`vec4:`/
+     * `color:` prefixed strings are resolved, and a plain numeric array is converted to the
+     * type of the attribute it targets when that attribute currently holds a Vec2, Vec3, Vec4
+     * or Color.
      * @param value - The attributes of the script.
      */
-    set scriptAttributes(value: string) {
-        this._attributes = value;
+    set scriptAttributes(value: Record<string, any>) {
+        this._attributes = value ?? {};
         this.dispatchEvent(new CustomEvent('scriptattributeschange', {
-            detail: { attributes: value },
+            detail: { attributes: this._attributes },
             bubbles: true
         }));
     }
@@ -28,7 +39,7 @@ class ScriptElement extends HTMLElement {
      * Gets the attributes of the script.
      * @returns The attributes of the script.
      */
-    get scriptAttributes() {
+    get scriptAttributes(): Record<string, any> {
         return this._attributes;
     }
 
@@ -68,6 +79,29 @@ class ScriptElement extends HTMLElement {
         return this._name;
     }
 
+    /**
+     * Gets the {@link Script} instance created for this element. Returns `null` until the
+     * instance exists — await {@link whenReady} or the element's `ready()` promise before
+     * accessing it.
+     * @returns The script instance, or `null`.
+     */
+    get script(): Script | null {
+        const parent = this.parentElement;
+        if (!parent || parent.tagName.toLowerCase() !== 'pc-scripts') {
+            return null;
+        }
+        const component = (parent as ScriptComponentElement).component;
+        return component ? (component.get(this._name) as Script | null) : null;
+    }
+
+    /**
+     * Called by the parent `<pc-scripts>` element when the script instance has been created.
+     * @ignore
+     */
+    _onScriptCreated() {
+        this._onReady();
+    }
+
     static get observedAttributes() {
         return ['attributes', 'enabled', 'name'];
     }
@@ -75,7 +109,15 @@ class ScriptElement extends HTMLElement {
     attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
         switch (name) {
             case 'attributes':
-                this.scriptAttributes = newValue;
+                if (newValue === null) {
+                    this.scriptAttributes = {};
+                    break;
+                }
+                try {
+                    this.scriptAttributes = JSON.parse(newValue);
+                } catch (error) {
+                    console.warn(`Invalid 'attributes' JSON on pc-script '${this.getAttribute('name')}': ${(error as Error).message}`);
+                }
                 break;
             case 'enabled':
                 this.enabled = parseBool(newValue, true);

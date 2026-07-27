@@ -7,7 +7,7 @@ import { getEntity, parseComponents } from '../utils';
 
 // Add these interfaces at the top of the file, after the imports
 interface ScriptAttributesChangeEvent extends CustomEvent {
-    detail: { attributes: any };
+    detail: { attributes: Record<string, any> };
 }
 
 interface ScriptEnableChangeEvent extends CustomEvent {
@@ -54,11 +54,7 @@ class ScriptComponentElement extends ComponentElement {
     initComponent() {
         // Handle initial script elements
         this.querySelectorAll<ScriptElement>(':scope > pc-script').forEach((scriptElement) => {
-            const scriptName = scriptElement.getAttribute('name');
-            const attributes = scriptElement.getAttribute('attributes');
-            if (scriptName) {
-                this.createScript(scriptName, attributes, scriptElement.enabled);
-            }
+            this.createScript(scriptElement);
         });
     }
 
@@ -148,42 +144,72 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Recursively merge properties from source into target.
+     * Recursively merge properties from source into target. When the target value is a Vec2,
+     * Vec3, Vec4 or Color and the source value is a plain numeric array, the array is converted
+     * to the target's type — so script attributes with math-typed defaults can be written as
+     * plain JSON arrays (e.g. `"focusPoint": [0, 1.75, 0]`).
      * @param target - The target object to merge into.
      * @param source - The source object to merge from.
      * @returns The merged object.
      */
     private mergeDeep(target: any, source: any): any {
         for (const key in source) {
-            if (
-                source[key] &&
-                typeof source[key] === 'object' &&
-                !Array.isArray(source[key])
-            ) {
-                if (!target[key] || typeof target[key] !== 'object') {
+            const value = source[key];
+            const current = target[key];
+            if (this.isMathType(current) && Array.isArray(value)) {
+                const converted = this.arrayToMathType(current, value, key);
+                if (converted) {
+                    target[key] = converted;
+                }
+                continue;
+            }
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                if (!current || typeof current !== 'object') {
                     target[key] = {};
                 }
-                this.mergeDeep(target[key], source[key]);
+                this.mergeDeep(target[key], value);
             } else {
-                target[key] = source[key];
+                target[key] = value;
             }
         }
         return target;
     }
 
     /**
+     * Checks whether a value is one of the math types that plain numeric arrays convert to.
+     * @param value - The value to check.
+     * @returns Whether the value is a math type.
+     */
+    private isMathType(value: any): value is Vec2 | Vec3 | Vec4 | Color {
+        return value instanceof Vec2 || value instanceof Vec3 || value instanceof Vec4 || value instanceof Color;
+    }
+
+    /**
+     * Converts a plain numeric array to the math type of `current`. Returns `null` (and logs a
+     * warning) when the array's length or contents don't match the type.
+     * @param current - The current (typed) value of the property.
+     * @param value - The incoming array.
+     * @param key - The property name, used in the warning message.
+     * @returns The converted value, or `null`.
+     */
+    private arrayToMathType(current: Vec2 | Vec3 | Vec4 | Color, value: any[], key: string): Vec2 | Vec3 | Vec4 | Color | null {
+        if (value.every(component => typeof component === 'number' && Number.isFinite(component))) {
+            if (current instanceof Vec2 && value.length === 2) return new Vec2(value);
+            if (current instanceof Vec3 && value.length === 3) return new Vec3(value);
+            if (current instanceof Vec4 && value.length === 4) return new Vec4(value);
+            if (current instanceof Color && (value.length === 3 || value.length === 4)) return new Color(value);
+        }
+        console.warn(`Cannot convert script attribute '${key}' array [${value}] to ${current.constructor.name}. Keeping the current value.`);
+        return null;
+    }
+
+    /**
      * Update script attributes by merging converted values into the script.
      * @param script - The script to update.
-     * @param name - The script name, used in the warning message.
      * @param attributes - The attributes to merge into the script.
      */
-    private applyAttributes(script: any, name: string, attributes: string | null) {
-        try {
-            const attributesObject = attributes ? JSON.parse(attributes) : {};
-            this.mergeDeep(script, this.convertAttributes(attributesObject));
-        } catch (error) {
-            console.warn(`Invalid 'attributes' JSON on pc-script '${name}': ${(error as Error).message}`);
-        }
+    private applyAttributes(script: any, attributes: Record<string, any>) {
+        this.mergeDeep(script, this.convertAttributes(attributes));
     }
 
     private handleScriptAttributesChange(event: ScriptAttributesChangeEvent) {
@@ -193,7 +219,7 @@ class ScriptComponentElement extends ComponentElement {
 
         const script = this.component.get(scriptName);
         if (script) {
-            this.applyAttributes(script, scriptName, event.detail.attributes);
+            this.applyAttributes(script, event.detail.attributes);
         }
     }
 
@@ -208,22 +234,27 @@ class ScriptComponentElement extends ComponentElement {
         }
     }
 
-    private createScript(name: string, attributes: string | null, enabled: boolean): Script | null {
-        if (!this.component) return null;
+    /**
+     * Creates the script instance for a `pc-script` element. The instance is created disabled,
+     * the element's converted attributes are merged over the instance's defaults (which is what
+     * allows plain numeric arrays to be typed against those defaults), and only then is the
+     * declared enabled state applied — so `initialize()` runs with every attribute in place.
+     * @param scriptElement - The `pc-script` element to create the script instance for.
+     * @returns The created script, or `null`.
+     */
+    private createScript(scriptElement: ScriptElement): Script | null {
+        const name = scriptElement.getAttribute('name');
+        if (!name || !this.component) return null;
 
-        let attributesObject = {};
-        if (attributes) {
-            try {
-                // Convert prefixed strings into vectors, colors, asset and entity references, etc.
-                attributesObject = this.convertAttributes(JSON.parse(attributes));
-            } catch (error) {
-                console.warn(`Invalid 'attributes' JSON on pc-script '${name}': ${(error as Error).message}`);
-            }
-        }
-        return this.component.create(name, {
-            enabled,
-            properties: attributesObject
-        });
+        const script = this.component.create(name, { enabled: false });
+        if (!script) return null;
+
+        this.mergeDeep(script, this.convertAttributes(scriptElement.scriptAttributes));
+        script.enabled = scriptElement.enabled;
+
+        scriptElement._onScriptCreated();
+
+        return script;
     }
 
     private destroyScript(name: string): void {
@@ -236,11 +267,7 @@ class ScriptComponentElement extends ComponentElement {
             // Handle added nodes
             mutation.addedNodes.forEach((node) => {
                 if (node instanceof HTMLElement && node.tagName.toLowerCase() === 'pc-script') {
-                    const scriptName = node.getAttribute('name');
-                    const attributes = node.getAttribute('attributes');
-                    if (scriptName) {
-                        this.createScript(scriptName, attributes, (node as ScriptElement).enabled);
-                    }
+                    this.createScript(node as ScriptElement);
                 }
             });
 
