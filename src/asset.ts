@@ -1,5 +1,6 @@
 import { Asset, SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from 'playcanvas';
 
+import { AsyncElement } from './async-element';
 import { parseEnum } from './utils';
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
@@ -74,14 +75,58 @@ const processBufferView = (
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-asset/ | `<pc-asset>`} elements.
  * The AssetElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * The element becomes ready once the containing application has started and the asset is in the
+ * state declared by the markup: loaded for preloaded assets (even if loading failed — check the
+ * asset's `resource`), or registered and awaiting a load for `lazy` assets. Elements inserted
+ * while the application is running are created and registered on insertion, and begin loading
+ * immediately unless `lazy`. A `pc-asset` must be a direct child of `pc-app` — elements placed
+ * elsewhere, or with an unsupported asset type, never become ready.
  */
-class AssetElement extends HTMLElement {
+class AssetElement extends AsyncElement {
     private _lazy: boolean = false;
 
     /**
-     * The asset that is loaded.
+     * The asset that is loaded. Available once the element is ready — await
+     * {@link whenReady} or the element's `ready()` promise before accessing it.
      */
     asset: Asset | null = null;
+
+    async connectedCallback() {
+        const appElement = this.closestApp;
+        if (!appElement) return;
+
+        // Assets must be direct children of pc-app (matches the boot query ':scope > pc-asset')
+        if (this.parentElement !== appElement) {
+            console.warn(`pc-asset '${this.getAttribute('id') ?? this.getAttribute('src')}' must be a direct child of pc-app - asset not created`);
+            return;
+        }
+
+        await appElement.ready();
+
+        // The element may have been removed or re-parented while waiting for the app
+        if (!this.isConnected || this.parentElement !== appElement) return;
+
+        // Assets present at startup are created by AppElement's boot; this branch handles
+        // elements inserted (or re-inserted) after the app is already running
+        if (!this.asset) {
+            const app = appElement.app;
+            if (!app) return; // pc-app is re-connecting; its own boot will create this asset
+
+            this.createAsset();
+            if (this.asset) {
+                app.assets.add(this.asset); // add() auto-loads when preload is true
+                if (!this.lazy) {
+                    app.assets.load(this.asset);
+                }
+            }
+        }
+
+        // Never ready if createAsset failed (unsupported asset type)
+        if (this.asset) {
+            this._onReady();
+        }
+    }
 
     disconnectedCallback() {
         this.destroyAsset();
@@ -187,6 +232,8 @@ class AssetElement extends HTMLElement {
 
     destroyAsset() {
         if (this.asset) {
+            // Deregister first so unload() can still notify the registry
+            this.asset.registry?.remove(this.asset);
             this.asset.unload();
             this.asset = null;
         }
