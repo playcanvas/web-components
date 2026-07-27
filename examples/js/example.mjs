@@ -1,67 +1,49 @@
 import { whenReady } from '@playcanvas/web-components';
 import { MiniStats, XRTYPE_AR, XRTYPE_VR } from 'playcanvas';
 
-const appElement = await whenReady('pc-app');
-/** @type {import('playcanvas').AppBase} */
-const app = appElement.app;
+const { app } = await whenReady('pc-app');
 
-// Add MiniStats if query parameter is present
+// Add MiniStats if the query parameter is present
 if (new URLSearchParams(window.location.search).has('ministats')) {
-    /* eslint-disable-next-line no-unused-vars */
-    const stats = new MiniStats(app);
+    // eslint-disable-next-line no-new
+    new MiniStats(app);
 }
 
-// Check if this example supports XR
-function isXRCapable() {
-    // Check for XR-related scripts
-    const xrScripts = document.querySelectorAll('pc-script[name="xrSession"], pc-script[name="xrControllers"], pc-script[name="xrNavigation"]');
-    return xrScripts.length > 0;
+function createButton({ iconClass, title, onClick }) {
+    const button = document.createElement('button');
+    button.classList.add('example-button', 'icon', iconClass);
+    button.title = title;
+    button.onclick = onClick;
+    return button;
+}
+
+function setVisible(button, visible) {
+    button.style.display = visible ? 'flex' : 'none';
 }
 
 // Create container for buttons
 const container = document.createElement('div');
 container.classList.add('example-button-container', 'bottom-right');
 
-function createButton({ iconClass, title, onClick }) {
-    const button = document.createElement('button');
-    if (iconClass) button.classList.add(iconClass);
-    button.title = title;
-    button.classList.add('example-button', 'icon');
+// Add AR/VR buttons if the app supports XR and the example uses XR scripts
+const xrScriptSelector = 'pc-script[name="xrSession"], pc-script[name="xrControllers"], pc-script[name="xrNavigation"]';
+if (app.xr && document.querySelector(xrScriptSelector)) {
+    const xrModes = [
+        { type: XRTYPE_AR, iconClass: 'icon-ar', title: 'Enter AR', event: 'ar:start' },
+        { type: XRTYPE_VR, iconClass: 'icon-vr', title: 'Enter VR', event: 'vr:start' }
+    ];
 
-    if (onClick) {
-        button.onclick = onClick;
+    const xrButtons = new Map();
+    for (const { type, iconClass, title, event } of xrModes) {
+        const button = createButton({ iconClass, title, onClick: () => app.fire(event) });
+        setVisible(button, app.xr.isAvailable(type));
+        container.appendChild(button);
+        xrButtons.set(type, button);
     }
 
-    return button;
-}
-
-// Only create AR/VR buttons for XR-capable examples
-if (app.xr && isXRCapable()) {
-    const arButton = createButton({
-        iconClass: 'icon-ar',
-        title: 'Enter AR',
-        onClick: () => app.fire('ar:start')
-    });
-    arButton.style.display = app.xr.isAvailable(XRTYPE_AR) ? 'flex' : 'none';
-    container.appendChild(arButton);
-
-    const vrButton = createButton({
-        iconClass: 'icon-vr',
-        title: 'Enter VR',
-        onClick: () => app.fire('vr:start')
-    });
-    vrButton.style.display = app.xr.isAvailable(XRTYPE_VR) ? 'flex' : 'none';
-    container.appendChild(vrButton);
-
     app.xr.on('available', (type, available) => {
-        switch (type) {
-            case XRTYPE_AR:
-                arButton.style.display = available ? 'flex' : 'none';
-                break;
-            case XRTYPE_VR:
-                vrButton.style.display = available ? 'flex' : 'none';
-                break;
-        }
+        const button = xrButtons.get(type);
+        if (button) setVisible(button, available);
     });
 }
 
@@ -71,31 +53,31 @@ if (document.documentElement.requestFullscreen && document.exitFullscreen) {
         iconClass: 'icon-fs-enter',
         title: 'Enter Fullscreen',
         onClick: () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
+            if (document.fullscreenElement) {
                 document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
             }
         }
     });
 
-    // Update icon when fullscreen state changes
+    // Update icon and tooltip when fullscreen state changes
     document.addEventListener('fullscreenchange', () => {
-        fullscreenButton.classList.toggle('icon-fs-enter', !document.fullscreenElement);
-        fullscreenButton.classList.toggle('icon-fs-exit', !!document.fullscreenElement);
-        fullscreenButton.title = document.fullscreenElement ? 'Exit Fullscreen' : 'Enter Fullscreen';
+        const fullscreen = !!document.fullscreenElement;
+        fullscreenButton.classList.toggle('icon-fs-enter', !fullscreen);
+        fullscreenButton.classList.toggle('icon-fs-exit', fullscreen);
+        fullscreenButton.title = fullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
     });
 
     container.appendChild(fullscreenButton);
 }
 
-// Add source button
+// Add view-source button linking to this page's source on GitHub
 const filename = window.location.pathname.split('/').pop();
-const sourceButton = createButton({
+container.appendChild(createButton({
     iconClass: 'icon-source',
     title: 'View Source',
-    onClick: () => window.open(`https://github.com/playcanvas/web-components/tree/main/examples/${filename}`, '_blank')
-});
-container.appendChild(sourceButton);
+    onClick: () => window.open(`https://github.com/playcanvas/web-components/tree/main/examples/${filename}`, '_blank', 'noopener')
+}));
 
 document.body.appendChild(container);
