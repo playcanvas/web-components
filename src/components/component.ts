@@ -1,5 +1,6 @@
 import { Component } from 'playcanvas';
 
+import { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
 
 /**
@@ -13,6 +14,8 @@ class ComponentElement extends AsyncElement {
     private _enabled = true;
 
     private _component: Component | null = null;
+
+    private _appElement: AppElement | null = null;
 
     /**
      * Creates a new ComponentElement instance.
@@ -44,18 +47,22 @@ class ComponentElement extends AsyncElement {
     initComponent() {}
 
     async connectedCallback() {
-        await this.closestApp?.ready();
+        this._appElement = this.closestApp ?? null;
+        await this._appElement?.ready();
         await this.addComponent();
         this.initComponent();
         this._onReady();
     }
 
     disconnectedCallback() {
-        // Remove the component when the element is disconnected
-        if (this.component && this.component.entity) {
-            this._component!.entity.removeComponent(this._componentName);
-            this._component = null;
+        // Remove the component when the element is disconnected. Skip this when the owning
+        // application has already been destroyed — removing a <pc-app> disconnects it before
+        // its children, taking the component systems with it.
+        if (this._appElement?.app && this._component?.entity) {
+            this._component.entity.removeComponent(this._componentName);
         }
+        this._component = null;
+        this._appElement = null;
     }
 
     /**

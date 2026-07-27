@@ -58,7 +58,9 @@ class SoundSlotElement extends AsyncElement {
     }
 
     disconnectedCallback() {
-        this.soundElement!.component!.removeSlot(this._name);
+        // The component is null if the parent <pc-sound> (or the whole <pc-app>) is being
+        // torn down — parents disconnect first and have already removed the component.
+        this.soundElement?.component?.removeSlot(this._name);
     }
 
     protected get soundElement(): SoundComponentElement | null {
