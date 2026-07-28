@@ -16,38 +16,388 @@
 
         <script type="module" src="../dist/pwc.mjs"></script>
         <link rel="stylesheet" href="css/example.css">
+        <style>
+            :root {
+                --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+                --hud-bg: rgba(8, 12, 24, 0.55);
+                --hud-border: rgba(255, 255, 255, 0.14);
+                --hud-ink: #eef2ff;
+                --hand-0: #19d9ff;
+                --hand-1: #ff40d9;
+            }
+
+            body {
+                background-color: #05060a;
+            }
+
+            /* Dim the camera feed a little so the neon visuals read over it */
+            video {
+                filter: brightness(0.72) saturate(1.15);
+            }
+
+            #vignette {
+                position: fixed;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                background: radial-gradient(ellipse at center, transparent 52%, rgba(2, 4, 12, 0.55) 100%);
+            }
+
+            /* Status banner */
+            #status {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 18px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 999px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 14px;
+                letter-spacing: 0.02em;
+                white-space: nowrap;
+                transition: opacity 0.35s ease, transform 0.35s ease;
+            }
+            #status.hidden {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-8px);
+            }
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--hand-0);
+                animation: pulse 1.2s ease-in-out infinite;
+            }
+            #status.error .status-dot {
+                background: #ff5470;
+                animation: none;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+
+            /* Per-hand gesture chips */
+            .hand-chip {
+                position: fixed;
+                left: 0;
+                top: 0;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 14px 8px 10px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-left: 3px solid var(--accent);
+                border-radius: 12px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                pointer-events: none;
+                will-change: transform;
+            }
+            .hand-chip.visible { opacity: 1; }
+            .hand-chip.pop { animation: chip-pop 0.3s ease; }
+            #chip-0 { --accent: var(--hand-0); }
+            #chip-1 { --accent: var(--hand-1); }
+            .chip-emoji { font-size: 24px; }
+            .chip-label {
+                font-size: 12px;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+            .chip-hand {
+                font-size: 10px;
+                opacity: 0.6;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+            .chip-bar {
+                margin-top: 4px;
+                width: 92px;
+                height: 3px;
+                border-radius: 2px;
+                background: rgba(255, 255, 255, 0.15);
+                overflow: hidden;
+            }
+            .chip-fill {
+                height: 100%;
+                width: 0%;
+                background: var(--accent);
+                border-radius: 2px;
+                transition: width 0.15s linear;
+            }
+            @keyframes chip-pop {
+                0% { scale: 1; }
+                40% { scale: 1.14; }
+                100% { scale: 1; }
+            }
+
+            /* Gesture collection legend */
+            #legend {
+                position: fixed;
+                bottom: max(18px, env(safe-area-inset-bottom));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 9px;
+                pointer-events: none;
+            }
+            .legend-row {
+                display: flex;
+                gap: 8px;
+            }
+            .legend-item {
+                width: 42px;
+                height: 42px;
+                display: grid;
+                place-items: center;
+                font-size: 21px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 10px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                opacity: 0.45;
+                filter: grayscale(0.9);
+                transition: opacity 0.4s ease, filter 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+            }
+            .legend-item.lit {
+                opacity: 1;
+                filter: none;
+                border-color: var(--g);
+                box-shadow: 0 0 16px var(--g);
+                animation: legend-pop 0.45s ease;
+            }
+            @keyframes legend-pop {
+                0% { scale: 1; }
+                45% { scale: 1.25; }
+                100% { scale: 1; }
+            }
+            #legend.complete .legend-item {
+                animation: legend-wave 0.7s ease;
+            }
+            #legend.complete .legend-item:nth-child(2) { animation-delay: 0.06s; }
+            #legend.complete .legend-item:nth-child(3) { animation-delay: 0.12s; }
+            #legend.complete .legend-item:nth-child(4) { animation-delay: 0.18s; }
+            #legend.complete .legend-item:nth-child(5) { animation-delay: 0.24s; }
+            #legend.complete .legend-item:nth-child(6) { animation-delay: 0.3s; }
+            #legend.complete .legend-item:nth-child(7) { animation-delay: 0.36s; }
+            @keyframes legend-wave {
+                0% { translate: 0 0; }
+                35% { translate: 0 -14px; }
+                100% { translate: 0 0; }
+            }
+            .legend-caption {
+                font-family: var(--font);
+                font-size: 11px;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: rgba(238, 242, 255, 0.75);
+                text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+                white-space: nowrap;
+            }
+        </style>
     </head>
     <body>
         <pc-app>
             <!-- Assets -->
             <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
             <pc-asset src="assets/scripts/hand-gestures.mjs"></pc-asset>
-            <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
+            <pc-asset src="assets/scripts/hand-visuals.mjs"></pc-asset>
             <!-- Scene -->
             <pc-scene>
-                <!-- Sky -->
-                <pc-sky asset="shanghai" type="none" lighting></pc-sky>
                 <!-- Camera -->
                 <pc-entity name="camera">
                     <pc-camera clear-color="0 0 0 0" fov="80"></pc-camera>
                     <pc-scripts>
                         <pc-script name="cameraFeed"></pc-script>
                         <pc-script name="handGestureController"></pc-script>
+                        <pc-script name="handVisuals"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>
+
+        <!-- HUD -->
+        <div id="vignette"></div>
+        <div id="status"><span class="status-dot"></span><span id="status-text">Loading hand tracking…</span></div>
+        <div class="hand-chip" id="chip-0">
+            <span class="chip-emoji">👋</span>
+            <div>
+                <div class="chip-label">Tracking</div>
+                <div class="chip-hand"></div>
+                <div class="chip-bar"><div class="chip-fill"></div></div>
+            </div>
+        </div>
+        <div class="hand-chip" id="chip-1">
+            <span class="chip-emoji">👋</span>
+            <div>
+                <div class="chip-label">Tracking</div>
+                <div class="chip-hand"></div>
+                <div class="chip-bar"><div class="chip-fill"></div></div>
+            </div>
+        </div>
+        <div id="legend">
+            <div class="legend-row" id="legend-row"></div>
+            <div class="legend-caption">Find all 7 · 🖐️ charges an orb · ✊ crushes it</div>
+        </div>
+
         <script type="module">
             import { whenReady } from '@playcanvas/web-components';
 
             const { app } = await whenReady('pc-app');
 
-            app.on('hand:gesture', (handIndex, gesture, score) => {
-                console.log(`Hand ${handIndex} detected gesture: ${gesture} (score: ${score})`);
+            const GESTURES = {
+                Open_Palm: { emoji: '🖐️', label: 'Open palm', color: '#19d9ff' },
+                Closed_Fist: { emoji: '✊', label: 'Fist', color: '#ff40d9' },
+                Pointing_Up: { emoji: '☝️', label: 'Pointing up', color: '#ffffff' },
+                Thumb_Up: { emoji: '👍', label: 'Thumbs up', color: '#ffa626' },
+                Thumb_Down: { emoji: '👎', label: 'Thumbs down', color: '#6680ff' },
+                Victory: { emoji: '✌️', label: 'Victory', color: '#4dff80' },
+                ILoveYou: { emoji: '🤟', label: 'I love you', color: '#ff4073' }
+            };
+
+            // Build the collection legend
+            const legend = document.getElementById('legend');
+            const legendRow = document.getElementById('legend-row');
+            const legendItems = new Map();
+            for (const [name, { emoji, label, color }] of Object.entries(GESTURES)) {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.style.setProperty('--g', color);
+                item.title = label;
+                item.textContent = emoji;
+                legendRow.appendChild(item);
+                legendItems.set(name, item);
+            }
+            const collected = new Set();
+
+            // Status banner
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const setStatus = (text, cls = '') => {
+                statusText.textContent = text;
+                status.className = cls;
+            };
+
+            let tracking = false;
+            let cameraError = false;
+            let lastSeen = 0;
+            let stickyUntil = 0;
+
+            app.on('camera:error', () => {
+                cameraError = true;
+                setStatus('Camera unavailable — check permissions', 'error');
             });
 
-            app.on('hand:position', (handIndex, position) => {
-                console.log(`Hand ${handIndex} position: ${position}`);
+            app.on('hands:ready', () => {
+                tracking = true;
+                if (!cameraError) setStatus('Show your hands 👋');
+            });
+
+            // Per-hand gesture chips that follow the wrists
+            const chips = [0, 1].map((i) => {
+                const chip = document.getElementById(`chip-${i}`);
+                return {
+                    chip,
+                    emoji: chip.querySelector('.chip-emoji'),
+                    label: chip.querySelector('.chip-label'),
+                    hand: chip.querySelector('.chip-hand'),
+                    fill: chip.querySelector('.chip-fill'),
+                    seen: false,
+                    visible: false
+                };
+            });
+
+            app.on('hands:update', (hands) => {
+                const now = performance.now();
+                if (hands.length > 0) {
+                    lastSeen = now;
+                    if (tracking && now > stickyUntil) status.classList.add('hidden');
+                } else if (tracking && !cameraError && status.classList.contains('hidden') && now - lastSeen > 4000) {
+                    setStatus('Show your hands 👋');
+                }
+
+                for (const c of chips) c.seen = false;
+
+                for (const hand of hands) {
+                    const c = chips[hand.slot];
+                    if (!c) continue;
+                    c.seen = true;
+
+                    const wrist = hand.screenLandmarks[0];
+                    c.chip.style.transform = `translate3d(${wrist.x.toFixed(1)}px, ${(wrist.y + 26).toFixed(1)}px, 0) translate(-50%, 0)`;
+
+                    const meta = GESTURES[hand.gesture.name];
+                    c.emoji.textContent = meta ? meta.emoji : '👋';
+                    c.label.textContent = meta ? meta.label : 'Tracking';
+                    c.hand.textContent = hand.handedness ? `${hand.handedness} hand` : '';
+                    c.fill.style.width = `${Math.round((meta ? hand.gesture.score : 0) * 100)}%`;
+
+                    if (!c.visible) {
+                        c.visible = true;
+                        c.chip.classList.add('visible');
+                    }
+                }
+
+                for (const c of chips) {
+                    if (!c.seen && c.visible) {
+                        c.visible = false;
+                        c.chip.classList.remove('visible');
+                    }
+                }
+            });
+
+            app.on('hand:lost', (slot) => {
+                const c = chips[slot];
+                if (c && c.visible) {
+                    c.visible = false;
+                    c.chip.classList.remove('visible');
+                }
+            });
+
+            app.on('hand:gesture', (slot, name) => {
+                const c = chips[slot];
+                if (c && GESTURES[name]) {
+                    c.chip.classList.remove('pop');
+                    void c.chip.offsetWidth;
+                    c.chip.classList.add('pop');
+                }
+
+                // Light up the legend the first time each gesture is performed
+                const item = legendItems.get(name);
+                if (item && !collected.has(name)) {
+                    collected.add(name);
+                    item.classList.add('lit');
+
+                    if (collected.size === legendItems.size) {
+                        legend.classList.add('complete');
+                        setStatus('All 7 gestures found! 🎉');
+                        stickyUntil = performance.now() + 3500;
+                        app.fire('gestures:complete');
+                        setTimeout(() => status.classList.add('hidden'), 3500);
+                    }
+                }
             });
         </script>
         <script type="module" src="js/example.mjs"></script>
