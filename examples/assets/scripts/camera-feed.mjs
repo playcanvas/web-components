@@ -5,6 +5,12 @@ import { Script } from 'playcanvas';
  *
  * This script creates a video element and requests access to the device's camera.
  * It then streams the camera's video to the video element and plays it.
+ *
+ * Fires the following events on the application:
+ *
+ * - `camera:ready` - Fired with the video element once the stream is playing and
+ *   its dimensions are known.
+ * - `camera:error` - Fired with the error if the camera could not be accessed.
  */
 export class CameraFeed extends Script {
     static scriptName = 'cameraFeed';
@@ -65,19 +71,24 @@ export class CameraFeed extends Script {
             this.video = null;
         });
 
-        // Request access to the webcam
+        // Request access to the webcam (prefer the front-facing camera on mobile)
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
             .then((stream) => {
                 // Stream the webcam to the video element and play it
                 this.video.srcObject = stream;
+                this.video.addEventListener('loadedmetadata', () => {
+                    this.app.fire('camera:ready', this.video);
+                }, { once: true });
                 this.video.play();
             })
             .catch((error) => {
                 console.error('Error accessing the webcam:', error);
+                this.app.fire('camera:error', error);
             });
         } else {
             console.error('getUserMedia is not supported in this browser.');
+            this.app.fire('camera:error', new Error('getUserMedia is not supported in this browser.'));
         }
     }
 
