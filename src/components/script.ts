@@ -126,6 +126,14 @@ class ScriptElement extends AsyncElement {
         return this._script;
     }
 
+    connectedCallback() {
+        // Script instances are created by the parent pc-scripts element, so an element placed
+        // anywhere else is inert and never becomes ready - warn rather than hang silently
+        if (this.parentElement?.tagName !== 'PC-SCRIPTS') {
+            console.warn(`pc-script '${this.getAttribute('name')}' must be a direct child of pc-scripts - script not created`);
+        }
+    }
+
     /**
      * Called by the parent `<pc-scripts>` element when the script instance has been created.
      * @ignore
