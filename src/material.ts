@@ -1,5 +1,6 @@
 import { Color, StandardMaterial, Texture } from 'playcanvas';
 
+import { AppElement } from './app';
 import { AssetElement } from './asset';
 import { parseColor } from './utils';
 
@@ -8,6 +9,10 @@ import { parseColor } from './utils';
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-material/ | `<pc-material>`} elements.
  * The MaterialElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * A `pc-material` must be a direct child of `pc-app` — elements placed elsewhere log a warning
+ * and never create a material. Elements inserted while the application is already running are
+ * created on insertion.
  */
 class MaterialElement extends HTMLElement {
     private _diffuse = new Color(1, 1, 1);
@@ -21,6 +26,28 @@ class MaterialElement extends HTMLElement {
     private _roughnessMap = '';
 
     material: StandardMaterial | null = null;
+
+    async connectedCallback() {
+        const appElement = this.parentElement?.closest('pc-app') as AppElement | null ?? null;
+
+        // Materials must be direct children of pc-app (matches the boot query ':scope > pc-material')
+        if (!appElement || this.parentElement !== appElement) {
+            console.warn(`pc-material '${this.id}' must be a direct child of pc-app - material not created`);
+            return;
+        }
+
+        await appElement.ready();
+
+        // The element may have been removed or re-parented while waiting for the app
+        if (!this.isConnected || this.parentElement !== appElement) return;
+
+        // Materials present at startup are created by AppElement's boot; this branch handles
+        // elements inserted (or re-inserted) after the app is already running
+        if (!this.material) {
+            if (!appElement.app) return; // pc-app is re-connecting; its own boot will create this
+            this.createMaterial();
+        }
+    }
 
     createMaterial() {
         this.material = new StandardMaterial();
