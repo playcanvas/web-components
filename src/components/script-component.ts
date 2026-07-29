@@ -90,11 +90,16 @@ interface ScriptEnableChangeEvent extends CustomEvent {
     detail: { enabled: boolean };
 }
 
+interface ScriptNameChangeEvent extends CustomEvent {
+    detail: { oldName: string, newName: string };
+}
+
 // Add this interface before the ScriptComponentElement class
 declare global {
     interface HTMLElementEventMap {
         'scriptattributeschange': ScriptAttributesChangeEvent;
         'scriptenablechange': ScriptEnableChangeEvent;
+        'scriptnamechange': ScriptNameChangeEvent;
     }
 }
 
@@ -116,9 +121,10 @@ class ScriptComponentElement extends ComponentElement {
         // Create mutation observer to watch for child script elements
         this.observer = new MutationObserver(this.handleMutations.bind(this));
 
-        // Listen for script attribute and enable changes
+        // Listen for script attribute, enable and name changes
         this.addEventListener('scriptattributeschange', this.handleScriptAttributesChange.bind(this));
         this.addEventListener('scriptenablechange', this.handleScriptEnableChange.bind(this));
+        this.addEventListener('scriptnamechange', this.handleScriptNameChange.bind(this));
     }
 
     connectedCallback() {
@@ -360,6 +366,38 @@ class ScriptComponentElement extends ComponentElement {
         if (script) {
             script.enabled = event.detail.enabled;
         }
+    }
+
+    /**
+     * Handles a runtime `name` change on a child `pc-script`, swapping the engine script instance
+     * to match. Without this the element would keep pointing at the old-name instance: the old
+     * script would go on running while every subsequent update (attribute changes, enable
+     * changes, destruction on removal) resolved the new name and silently no-opped.
+     *
+     * The new instance is built by the normal creation path, so both attribute channels are
+     * re-applied to it and the declared enabled state is restored.
+     * @param event - The name change event.
+     */
+    private handleScriptNameChange(event: ScriptNameChangeEvent) {
+        const scriptElement = event.target as ScriptElement;
+
+        // Only direct children are managed, matching initComponent's ':scope > pc-script'
+        // contract - the event bubbles, so a deeper pc-script must not be created here
+        if (scriptElement.parentElement !== this) return;
+
+        // Before the component exists there is nothing to swap: initComponent creates from
+        // whatever the name is by then
+        if (!this.component) return;
+
+        // Only tear down the old-name script if this element actually owns it - a duplicate-named
+        // element whose own create() failed must not take down the live script on rename
+        const { oldName } = event.detail;
+        if (oldName && scriptElement._script && this.component.get(oldName) === scriptElement._script) {
+            this.destroyScript(oldName);
+        }
+        scriptElement._script = null;
+
+        this.createScript(scriptElement);
     }
 
     /**
