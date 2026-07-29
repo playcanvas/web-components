@@ -8,14 +8,14 @@ export class VideoTexture extends Script {
      * @type {string}
      * @attribute
      */
-    url;
+    url = '';
 
     /**
      * Material name to apply the video texture to.
      * @type {string}
      * @attribute
      */
-    materialName;
+    materialName = '';
 
     /**
      * The video element.

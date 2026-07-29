@@ -61,6 +61,108 @@ const camelToKebab = (name: string): string => {
 };
 
 /**
+ * A conversion applied to a script attribute value carrying an explicit type prefix. Receives the
+ * text after the prefix plus the raw value, and returns the raw value (having warned) when it
+ * cannot resolve or parse it — callers rely on that identity to tell failure from success.
+ */
+type Conversion = (rest: string, raw: string) => any;
+
+/**
+ * Resolves an `asset:` prefix to the Asset created by the `pc-asset` element with that id.
+ * @param rest - The asset id.
+ * @param raw - The raw value, returned unchanged when the id does not resolve.
+ * @returns The asset, or `raw`.
+ */
+const assetConversion: Conversion = (rest, raw) => {
+    const asset = AssetElement.get(rest);
+    if (asset) {
+        return asset;
+    }
+    console.warn(`Unable to resolve '${raw}' in script attributes - no pc-asset found with id '${rest}'.`);
+    return raw;
+};
+
+/**
+ * Resolves an `entity:` prefix to the Entity backing a `pc-entity` element. The reference can be a
+ * CSS selector, an element id or an entity name.
+ * @param rest - The entity reference.
+ * @param raw - The raw value, returned unchanged when the reference does not resolve.
+ * @returns The entity, or `raw`.
+ */
+const entityConversion: Conversion = (rest, raw) => {
+    const entity = getEntity(rest);
+    if (entity) {
+        return entity;
+    }
+    console.warn(`Unable to resolve '${raw}' in script attributes - no pc-entity found matching '${rest}'.`);
+    return raw;
+};
+
+/**
+ * Builds the conversion for a `vec2:`/`vec3:`/`vec4:` prefix.
+ * @param length - The number of components the prefix carries.
+ * @param Ctor - The vector type to construct.
+ * @returns The conversion.
+ */
+const vectorConversion = (length: 2 | 3 | 4, Ctor: new (components: number[]) => Vec2 | Vec3 | Vec4): Conversion => {
+    return (rest, raw) => {
+        const components = parseComponents(rest, length);
+        if (components) {
+            return new Ctor(components);
+        }
+        console.warn(`Invalid script attribute value '${raw}'. Expected ${length} space-separated numbers after 'vec${length}:'.`);
+        return raw;
+    };
+};
+
+/**
+ * Converts a `color:` prefix to a Color, accepting 3 or 4 components.
+ * @param rest - The space-separated components.
+ * @param raw - The raw value, returned unchanged when the components do not parse.
+ * @returns The color, or `raw`.
+ */
+const colorConversion: Conversion = (rest, raw) => {
+    const components = parseComponents(rest, 4) ?? parseComponents(rest, 3);
+    if (components) {
+        return new Color(components);
+    }
+    console.warn(`Invalid script attribute value '${raw}'. Expected 3 or 4 space-separated numbers after 'color:'.`);
+    return raw;
+};
+
+/**
+ * The conversion prefixes recognised in script attribute values, mapped to the conversion each
+ * performs. These keys are the single source of truth for the prefix vocabulary: they drive both
+ * the conversion in `convertAttributes` and the has-a-prefix test in `setScriptProperty`, so a
+ * prefix added here is automatically known to both.
+ */
+const CONVERSIONS = new Map<string, Conversion>([
+    ['asset', assetConversion],
+    ['entity', entityConversion],
+    ['vec2', vectorConversion(2, Vec2)],
+    ['vec3', vectorConversion(3, Vec3)],
+    ['vec4', vectorConversion(4, Vec4)],
+    ['color', colorConversion]
+]);
+
+/**
+ * Matches a value against the conversion prefixes. A prefix is the text before the first colon,
+ * so a value whose remainder itself contains colons (`asset:a:b`) still resolves, and a value
+ * with an unrecognised prefix (`https://...`) or no colon does not match.
+ * @param value - The value to inspect.
+ * @returns The matching converter and the text after the prefix, or `null` if the value carries
+ * no recognised prefix.
+ */
+const matchConversion = (value: string) => {
+    const index = value.indexOf(':');
+    if (index <= 0) {
+        return null;
+    }
+    const convert = CONVERSIONS.get(value.slice(0, index));
+    return convert ? { convert, rest: value.slice(index + 1) } : null;
+};
+
+/**
  * Finds a script property whose name matches `key` case-insensitively (but not exactly). Used
  * to suggest the kebab-case spelling when a camelCase attribute has been lowercased by the HTML
  * parser (e.g. `focusPoint` arriving as 'focuspoint').
@@ -159,57 +261,8 @@ class ScriptComponentElement extends ComponentElement {
      */
     private convertAttributes(item: any): any {
         if (typeof item === 'string') {
-            if (item.startsWith('asset:')) {
-                const id = item.slice(6);
-                const asset = AssetElement.get(id);
-                if (asset) {
-                    return asset;
-                }
-                console.warn(`Unable to resolve '${item}' in script attributes - no pc-asset found with id '${id}'.`);
-                return item;
-            }
-            if (item.startsWith('entity:')) {
-                const ref = item.slice(7);
-                const entity = getEntity(ref);
-                if (entity) {
-                    return entity;
-                }
-                console.warn(`Unable to resolve '${item}' in script attributes - no pc-entity found matching '${ref}'.`);
-                return item;
-            }
-            if (item.startsWith('vec2:')) {
-                const components = parseComponents(item.slice(5), 2);
-                if (components) {
-                    return new Vec2(components);
-                }
-                console.warn(`Invalid script attribute value '${item}'. Expected 2 space-separated numbers after 'vec2:'.`);
-                return item;
-            }
-            if (item.startsWith('vec3:')) {
-                const components = parseComponents(item.slice(5), 3);
-                if (components) {
-                    return new Vec3(components);
-                }
-                console.warn(`Invalid script attribute value '${item}'. Expected 3 space-separated numbers after 'vec3:'.`);
-                return item;
-            }
-            if (item.startsWith('vec4:')) {
-                const components = parseComponents(item.slice(5), 4);
-                if (components) {
-                    return new Vec4(components);
-                }
-                console.warn(`Invalid script attribute value '${item}'. Expected 4 space-separated numbers after 'vec4:'.`);
-                return item;
-            }
-            if (item.startsWith('color:')) {
-                const components = parseComponents(item.slice(6), 4) ?? parseComponents(item.slice(6), 3);
-                if (components) {
-                    return new Color(components);
-                }
-                console.warn(`Invalid script attribute value '${item}'. Expected 3 or 4 space-separated numbers after 'color:'.`);
-                return item;
-            }
-            return item;
+            const match = matchConversion(item);
+            return match ? match.convert(match.rest, item) : item;
         }
 
         if (Array.isArray(item)) {
@@ -493,7 +546,7 @@ class ScriptComponentElement extends ComponentElement {
 
             if (typeof current === 'string') {
                 script[key] = value;
-            } else if (/^(?:asset|entity|vec[234]|color):/.test(value)) {
+            } else if (matchConversion(value)) {
                 const converted = this.convertAttributes(value);
                 // A prefix that failed to resolve or parse comes back as the raw string
                 // (convertAttributes already warned) - never clobber a typed value with it
