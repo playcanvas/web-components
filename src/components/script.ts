@@ -23,6 +23,9 @@ import { parseBool } from '../utils';
  * whenever either channel changes at runtime. The element's own `name` and `enabled`
  * attributes configure the element itself and are not script attributes.
  *
+ * Changing `name` on a live element destroys the old-name script instance and creates the
+ * new-name one, re-applying both attribute channels to it.
+ *
  * The element becomes ready once its script instance has been created by the parent
  * `<pc-scripts>` element.
  */
@@ -31,7 +34,12 @@ class ScriptElement extends AsyncElement {
 
     private _enabled: boolean = true;
 
-    private _name: string = '';
+    /**
+     * Whether readiness has been signalled. Creation can happen more than once over an
+     * element's life (a runtime `name` change recreates the instance), but `ready` is a
+     * one-shot signal, so only the first successful creation fires it.
+     */
+    private _readySignalled: boolean = false;
 
     /**
      * The Script instance created for this element by its parent `<pc-scripts>` element.
@@ -84,11 +92,20 @@ class ScriptElement extends AsyncElement {
     }
 
     /**
-     * Sets the name of the script to create.
+     * Sets the name of the script to create. The `name` attribute is the single source of truth
+     * (it is what the parent `<pc-scripts>` element reads when creating the instance), so the
+     * property writes through to it — assigning before insertion works as expected:
+     *
+     * ```js
+     * const script = document.createElement('pc-script');
+     * script.name = 'rotate';
+     * scriptsElement.appendChild(script);
+     * await script.ready();
+     * ```
      * @param value - The name.
      */
     set name(value: string) {
-        this._name = value;
+        this.setAttribute('name', value);
     }
 
     /**
@@ -96,7 +113,7 @@ class ScriptElement extends AsyncElement {
      * @returns The name.
      */
     get name() {
-        return this._name;
+        return this.getAttribute('name') ?? '';
     }
 
     /**
@@ -114,6 +131,8 @@ class ScriptElement extends AsyncElement {
      * @ignore
      */
     _onScriptCreated() {
+        if (this._readySignalled) return;
+        this._readySignalled = true;
         this._onReady();
     }
 
@@ -121,7 +140,7 @@ class ScriptElement extends AsyncElement {
         return ['attributes', 'enabled', 'name'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
         switch (name) {
             case 'attributes':
                 if (newValue === null) {
@@ -138,7 +157,15 @@ class ScriptElement extends AsyncElement {
                 this.enabled = parseBool(newValue, true);
                 break;
             case 'name':
-                this.name = newValue;
+                // The first set is handled by the parent's creation paths (the boot query and
+                // the added-node mutation), so only a genuine rename is signalled here. Note
+                // that setAttribute fires this callback even when the value is unchanged.
+                if (oldValue !== null && oldValue !== newValue) {
+                    this.dispatchEvent(new CustomEvent('scriptnamechange', {
+                        detail: { oldName: oldValue, newName: newValue },
+                        bubbles: true
+                    }));
+                }
                 break;
         }
     }
