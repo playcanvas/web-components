@@ -10,6 +10,10 @@ import { parseBool, parseEnum } from '../utils';
  * The RenderComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * This element renders one of the engine's built-in primitives, selected with `type` (defaulting
+ * to `box`). It does not cover the engine's `asset` render type, since there is no way to supply
+ * a render asset here — use `pc-model` for glTF content instead.
+ *
  * @category Components
  */
 class RenderComponentElement extends ComponentElement {
@@ -19,7 +23,7 @@ class RenderComponentElement extends ComponentElement {
 
     private _receiveShadows = true;
 
-    private _type: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'asset';
+    private _type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'box';
 
     /** @ignore */
     constructor() {
@@ -47,7 +51,7 @@ class RenderComponentElement extends ComponentElement {
      * Sets the type of the render component.
      * @param value - The type.
      */
-    set type(value: 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere') {
+    set type(value: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere') {
         this._type = value;
         if (this.component) {
             this.component.type = value;
@@ -58,7 +62,7 @@ class RenderComponentElement extends ComponentElement {
      * Gets the type of the render component.
      * @returns The type.
      */
-    get type(): 'asset' | 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' {
+    get type(): 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' {
         return this._type;
     }
 
@@ -137,7 +141,7 @@ class RenderComponentElement extends ComponentElement {
                 this.receiveShadows = parseBool(newValue, true);
                 break;
             case 'type':
-                this.type = parseEnum(newValue, ['asset', 'box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere'], 'asset', name);
+                this.type = parseEnum(newValue, ['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere'], 'box', name);
                 break;
         }
     }
