@@ -81,3 +81,41 @@ container.appendChild(createButton({
 }));
 
 document.body.appendChild(container);
+
+// Fade the buttons out after a few seconds without user input, and bring them back on
+// any pointer or keyboard activity
+const IDLE_FADE_MS = 3500;
+let idleTimeout;
+
+function fadeWhenIdle() {
+    // Never fade away under the pointer
+    if (container.matches(':hover')) {
+        idleTimeout = setTimeout(fadeWhenIdle, IDLE_FADE_MS);
+        return;
+    }
+    container.classList.add('faded');
+}
+
+function onActivity() {
+    container.classList.remove('faded');
+    clearTimeout(idleTimeout);
+    idleTimeout = setTimeout(fadeWhenIdle, IDLE_FADE_MS);
+}
+
+// While faded the buttons are not hit-testable, so a press aimed at them would fall
+// through to the page beneath - and on touch there is no pointermove to reveal them
+// first. Capture the press, spend it on revealing the buttons, and stop it from
+// reaching the page (mouse users are unaffected: pointermove reveals before any click).
+function onPress(event) {
+    if (container.classList.contains('faded')) {
+        event.stopPropagation();
+    }
+    onActivity();
+}
+
+window.addEventListener('pointerdown', onPress, { capture: true, passive: true });
+window.addEventListener('touchstart', onPress, { capture: true, passive: true });
+for (const event of ['pointermove', 'keydown']) {
+    window.addEventListener(event, onActivity, { passive: true });
+}
+onActivity();
