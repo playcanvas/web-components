@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - AR Optic Blast</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@mediapipe/tasks-vision": "../node_modules/@mediapipe/tasks-vision/vision_bundle.mjs",
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            :root {
+                --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+                --hud-bg: rgba(20, 6, 12, 0.55);
+                --hud-border: rgba(255, 120, 140, 0.22);
+                --hud-ink: #ffeef1;
+                --ruby: #ff2b4a;
+            }
+
+            body {
+                background-color: #0a0507;
+            }
+
+            /* Dim the camera feed a little so the ruby visuals read over it */
+            video {
+                filter: brightness(0.75) saturate(1.1);
+            }
+
+            #vignette {
+                position: fixed;
+                inset: 0;
+                z-index: 1;
+                pointer-events: none;
+                background: radial-gradient(ellipse at center, transparent 52%, rgba(10, 2, 6, 0.55) 100%);
+                transition: box-shadow 0.25s ease;
+            }
+            #vignette.blast {
+                box-shadow: inset 0 0 18vmin rgba(255, 30, 60, 0.55);
+            }
+
+            /* A brief full-screen flash when the beam erupts */
+            #flash {
+                position: fixed;
+                inset: 0;
+                z-index: 2;
+                pointer-events: none;
+                opacity: 0;
+                background: radial-gradient(circle at center, rgba(255, 150, 160, 0.7), rgba(255, 30, 60, 0.3) 45%, transparent 75%);
+            }
+            #flash.on {
+                animation: flash-fade 0.5s ease-out;
+            }
+            @keyframes flash-fade {
+                0% { opacity: 1; }
+                100% { opacity: 0; }
+            }
+
+            /* Status banner */
+            #status {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 18px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 999px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 14px;
+                letter-spacing: 0.02em;
+                white-space: nowrap;
+                transition: opacity 0.35s ease, transform 0.35s ease;
+            }
+            #status.hidden {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-8px);
+            }
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--ruby);
+                animation: pulse 1.2s ease-in-out infinite;
+            }
+            #status.error .status-dot {
+                background: #ffb02e;
+                animation: none;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+
+            /* Charge progress bar */
+            #charge {
+                position: fixed;
+                bottom: max(26px, env(safe-area-inset-bottom));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                width: 200px;
+                padding: 5px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 999px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                pointer-events: none;
+            }
+            #charge.active {
+                opacity: 1;
+            }
+            #charge-fill {
+                height: 6px;
+                width: 0%;
+                border-radius: 999px;
+                background: linear-gradient(90deg, #ff8fa0, var(--ruby));
+                box-shadow: 0 0 10px var(--ruby);
+            }
+
+            /* Badge shown when running the synthetic ?sim preview */
+            #sim-badge {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 18px;
+                z-index: 10;
+                display: none;
+                padding: 6px 12px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 8px;
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.14em;
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/optic-blast-tracking.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/optic-blast-visuals.mjs"></pc-asset>
+            <pc-asset src="assets/models/visor.glb" id="visor"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="sky"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky (lighting only) -->
+                <pc-sky asset="sky" type="none" lighting></pc-sky>
+                <!-- Camera (driven by face tracking) -->
+                <pc-entity name="camera">
+                    <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraFeed"></pc-script>
+                        <pc-script name="opticBlastTracking"></pc-script>
+                        <pc-script name="opticBlastVisuals"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- The visor, worn at the origin of canonical face space -->
+                <pc-entity name="visor" position="0 -5 1" scale="0.085 0.085 0.085">
+                    <pc-model asset="visor"></pc-model>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+
+        <script>
+            // In ?sim mode the synthetic head pose replaces the webcam entirely - remove
+            // the camera feed script before the app boots (this classic script runs at
+            // parse time, ahead of the deferred module scripts) so no camera permission
+            // is ever requested
+            if (new URLSearchParams(window.location.search).has('sim')) {
+                document.querySelector('pc-script[name="cameraFeed"]')?.remove();
+            }
+        </script>
+
+        <!-- HUD -->
+        <div id="vignette"></div>
+        <div id="flash"></div>
+        <div id="status"><span class="status-dot"></span><span id="status-text">Loading optic trackers…</span></div>
+        <div id="charge"><div id="charge-fill"></div></div>
+        <div id="sim-badge">SIM</div>
+
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            const sim = new URLSearchParams(window.location.search).has('sim');
+            const touchHint = sim ?
+                'Hold Space or the pointer to charge the visor' :
+                'Touch and hold the side of your head to charge the visor';
+
+            if (sim) document.getElementById('sim-badge').style.display = 'block';
+
+            // Status banner
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const setStatus = (text, cls = '') => {
+                statusText.textContent = text;
+                status.className = cls;
+            };
+
+            let cameraError = false;
+            let faceSeen = false;
+            let hintRetired = false;
+
+            app.on('camera:error', () => {
+                if (sim) return;
+                cameraError = true;
+                setStatus('Camera unavailable — click and hold to fire anyway', 'error');
+            });
+
+            app.on('visor:ready', () => {
+                if (!cameraError) setStatus(sim ? touchHint : 'Show your face');
+            });
+
+            app.on('face:found', () => {
+                faceSeen = true;
+                if (cameraError) return;
+                if (hintRetired) {
+                    // The user already knows the trigger - keep the banner retired
+                    status.classList.add('hidden');
+                } else {
+                    setStatus(touchHint);
+                }
+            });
+
+            app.on('face:lost', () => {
+                if (!cameraError) setStatus('Show your face');
+            });
+
+            // Charge progress bar, synced to the script's charge-time attribute
+            const chargeSecs = parseFloat(
+                document.querySelector('pc-script[name="opticBlastVisuals"]')?.getAttribute('charge-time') ?? '3'
+            ) || 3;
+            const charge = document.getElementById('charge');
+            const chargeFill = document.getElementById('charge-fill');
+
+            app.on('blast:charging', () => {
+                vignette.classList.remove('blast');
+                charge.classList.add('active');
+                chargeFill.style.transition = 'none';
+                chargeFill.style.width = '0%';
+                void chargeFill.offsetWidth;
+                chargeFill.style.transition = `width ${chargeSecs}s linear`;
+                chargeFill.style.width = '100%';
+            });
+
+            const resetCharge = () => {
+                charge.classList.remove('active');
+                chargeFill.style.transition = 'none';
+                chargeFill.style.width = '0%';
+            };
+
+            // Vignette and flash while the beam fires
+            const vignette = document.getElementById('vignette');
+            const flash = document.getElementById('flash');
+
+            app.on('blast:fire', (side) => {
+                resetCharge();
+                vignette.classList.add('blast');
+                flash.classList.remove('on');
+                void flash.offsetWidth;
+                flash.classList.add('on');
+
+                // The user has found the trigger - retire the instructions
+                if (side !== 'screen' || sim) {
+                    hintRetired = true;
+                    status.classList.add('hidden');
+                }
+            });
+
+            app.on('blast:end', () => {
+                resetCharge();
+                vignette.classList.remove('blast');
+                if (faceSeen && !hintRetired && !status.classList.contains('hidden') && !cameraError) {
+                    setStatus(touchHint);
+                }
+            });
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

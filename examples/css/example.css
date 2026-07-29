@@ -20,6 +20,12 @@ canvas {
     right: max(16px, env(safe-area-inset-right));
     display: flex;
     gap: 8px;
+    transition: opacity 0.5s ease;
+}
+
+.example-button-container.faded {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .example-button-container.bottom-right {
