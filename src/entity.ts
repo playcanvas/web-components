@@ -8,6 +8,24 @@ import { parseBool, parseVec3 } from './utils';
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-entity/ | `<pc-entity>`} elements.
  * The EntityElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
+ * intersects this entity's geometry. They are only generated while the entity has a listener for
+ * them, registered either with {@link addEventListener} or with the matching inline `onpointer*`
+ * attribute.
+ *
+ * @attribute {string} onpointerenter - Script to run when the pointer moves onto the entity.
+ * @attribute {string} onpointerleave - Script to run when the pointer moves off the entity.
+ * @attribute {string} onpointermove - Script to run when the pointer moves over the entity.
+ * @attribute {string} onpointerdown - Script to run when a pointer button is pressed over the
+ * entity.
+ * @attribute {string} onpointerup - Script to run when a pointer button is released over the
+ * entity.
+ * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the entity.
+ * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the entity.
+ * @fires {PointerEvent} pointermove - Fired when the pointer moves over the entity.
+ * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the entity.
+ * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the entity.
  */
 class EntityElement extends AsyncElement {
     /**

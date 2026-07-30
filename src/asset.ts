@@ -84,6 +84,21 @@ const processBufferView = (
  * while the application is running are created and registered on insertion, and begin loading
  * immediately unless `lazy`. A `pc-asset` must be a direct child of `pc-app` — elements placed
  * elsewhere, or with an unsupported asset type, never become ready.
+ *
+ * Apart from `lazy`, these attributes are read once when the asset is created, so changing them
+ * later has no effect.
+ *
+ * @attribute {string} id - The identifier used to reference the asset from other elements.
+ * @attribute {string} src - The URL of the asset to load.
+ * @attribute {string} type - The asset type. Inferred from the `src` file extension when omitted.
+ * @attribute {string} data - Additional asset data, as a JSON object.
+ * @attribute {string} atlas - For a `sprite` asset, the `id` of the texture atlas asset it uses.
+ * The atlas must be declared before the sprite.
+ * @attribute {string} frame-keys - For a `sprite` asset, the atlas frame keys it uses, separated
+ * by spaces or commas.
+ * @attribute {number} pixels-per-unit - For a `sprite` asset, the number of pixels per world unit.
+ * @attribute {'simple' | 'sliced' | 'tiled'} render-mode - For a `sprite` asset, how the sprite is
+ * rendered when resized.
  */
 class AssetElement extends AsyncElement {
     private _lazy: boolean = false;

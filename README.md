@@ -38,6 +38,24 @@ See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-c
 
 Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) for installation and usage instructions.
 
+## Editor Support
+
+The package ships a [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest), which editors use to offer tag and attribute completions, valid attribute values and hover documentation when authoring HTML.
+
+**VS Code** — add the following to your workspace `.vscode/settings.json`:
+
+```json
+{
+  "html.customData": [
+    "./node_modules/@playcanvas/web-components/dist/vscode.html-custom-data.json"
+  ]
+}
+```
+
+**JetBrains IDEs** (WebStorm, IntelliJ IDEA) — no setup required. The IDE discovers the bundled `web-types.json` automatically.
+
+**Other tooling** — the manifest itself is at `@playcanvas/web-components/dist/custom-elements.json` and is declared in the package's `customElements` field, which is how tools such as `lit-analyzer` and Storybook locate it.
+
 ## Development 
 
 ### Setting Up Local Development
