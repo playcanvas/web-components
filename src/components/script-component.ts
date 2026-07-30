@@ -131,7 +131,7 @@ const colorConversion: Conversion = (rest, raw) => {
 };
 
 /**
- * The conversion prefixes recognised in script attribute values, mapped to the conversion each
+ * The conversion prefixes recognized in script attribute values, mapped to the conversion each
  * performs. These keys are the single source of truth for the prefix vocabulary: they drive both
  * the conversion in `convertAttributes` and the has-a-prefix test in `setScriptProperty`, so a
  * prefix added here is automatically known to both.
@@ -148,10 +148,10 @@ const CONVERSIONS = new Map<string, Conversion>([
 /**
  * Matches a value against the conversion prefixes. A prefix is the text before the first colon,
  * so a value whose remainder itself contains colons (`asset:a:b`) still resolves, and a value
- * with an unrecognised prefix (`https://...`) or no colon does not match.
+ * with an unrecognized prefix (`https://...`) or no colon does not match.
  * @param value - The value to inspect.
  * @returns The matching converter and the text after the prefix, or `null` if the value carries
- * no recognised prefix.
+ * no recognized prefix.
  */
 const matchConversion = (value: string) => {
     const index = value.indexOf(':');
