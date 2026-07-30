@@ -12,6 +12,12 @@ export default {
             sourcemap: true
         },
         {
+            file: 'dist/pwc.min.mjs',
+            format: 'esm',
+            sourcemap: true,
+            plugins: [terser()]
+        },
+        {
             file: 'dist/pwc.cjs',
             format: 'cjs',
             sourcemap: true
