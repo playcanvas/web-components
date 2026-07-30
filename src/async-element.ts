@@ -3,6 +3,9 @@ import { EntityElement } from './entity';
 
 /**
  * Base class for all PlayCanvas Web Components that initialize asynchronously.
+ *
+ * @fires {CustomEvent} ready - Fired once the element is fully initialized. Bubbles and is
+ * composed.
  */
 class AsyncElement extends HTMLElement {
     private _readyPromise: Promise<void>;

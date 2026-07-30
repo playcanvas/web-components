@@ -28,6 +28,13 @@ import { parseBool } from '../utils';
  *
  * The element becomes ready once its script instance has been created by the parent
  * `<pc-scripts>` element.
+ *
+ * @fires {CustomEvent} scriptattributeschange - Fired when the script's attributes change. The
+ * `detail` carries the new `attributes` object. Bubbles.
+ * @fires {CustomEvent} scriptenablechange - Fired when the script's enabled state changes. The
+ * `detail` carries the new `enabled` state. Bubbles.
+ * @fires {CustomEvent} scriptnamechange - Fired when the script is renamed on a live element. The
+ * `detail` carries `oldName` and `newName`. Bubbles.
  */
 class ScriptElement extends AsyncElement {
     private _attributes: Record<string, any> = {};

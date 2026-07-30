@@ -29,6 +29,8 @@
   "unpkg": "dist/pwc.min.js",
   "jsdelivr": "dist/pwc.min.js",
   "types": "dist/index.d.ts",
+  "customElements": "dist/custom-elements.json",
+  "web-types": "dist/web-types.json",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -46,6 +48,8 @@
   "scripts": {
     "prebuild": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "build": "rollup -c",
+    "postbuild": "npm run cem",
+    "cem": "cem analyze && node utils/cem/validate.mjs",
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
     "lint": "eslint examples/js examples/assets/scripts src",
@@ -60,6 +64,7 @@
     "playcanvas": "^2.20.1"
   },
   "devDependencies": {
+    "@custom-elements-manifest/analyzer": "0.11.0",
     "@mediapipe/tasks-vision": "1.0.0",
     "@playcanvas/eslint-config": "2.1.0",
     "@rollup/plugin-commonjs": "29.0.3",
@@ -70,6 +75,8 @@
     "@typescript-eslint/eslint-plugin": "8.65.0",
     "@typescript-eslint/parser": "8.65.0",
     "concurrently": "10.0.4",
+    "custom-element-jet-brains-integration": "1.7.0",
+    "custom-element-vs-code-integration": "1.5.0",
     "earcut": "3.2.3",
     "eslint": "9.39.5",
     "eslint-import-resolver-typescript": "4.4.5",
