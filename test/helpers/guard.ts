@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, vi } from 'vitest';
+import { beforeEach, expect, vi } from 'vitest';
 
 type Pattern = string | RegExp;
 
@@ -133,33 +133,31 @@ export const useGuard = (): Guard => {
     let onError: ((event: ErrorEvent) => void) | undefined;
     let onRejection: ((event: PromiseRejectionEvent) => void) | undefined;
 
-    beforeEach(() => {
-        warnings.reset();
-        errors.reset();
-        uncaught.reset();
-        active = guard;
-
-        vi.spyOn(console, 'warn').mockImplementation((...args) => warnings.record(format(args)));
-        vi.spyOn(console, 'error').mockImplementation((...args) => errors.record(format(args)));
-
-        // The unit project runs in the node environment, where there is no window to listen on.
-        if (typeof window === 'undefined') {
-            return;
-        }
-
-        onError = (event) => {
-            event.preventDefault();
-            uncaught.record(event.error?.message ?? event.message);
-        };
-        onRejection = (event) => {
-            event.preventDefault();
-            uncaught.record((event.reason as Error)?.message ?? String(event.reason));
-        };
-        window.addEventListener('error', onError);
-        window.addEventListener('unhandledrejection', onRejection);
-    });
-
-    afterEach(() => {
+    /**
+     * Teardown runs as a cleanup function returned from beforeEach, NOT as an afterEach.
+     *
+     * This is load bearing. Vitest runs hooks in this order (measured):
+     *
+     *   1. the test body
+     *   2. afterEach registered in this describe
+     *   3. afterEach registered at module scope - which is where test/helpers/dom.ts unmounts
+     *      the DOM, and therefore where <pc-app> is disconnected and destroyed
+     *   4. cleanup functions returned from beforeEach
+     *
+     * An afterEach here would assert at step 2, before anything is torn down, so every warning
+     * and unhandled rejection produced BY teardown would escape - and because beforeEach resets
+     * the recorders, it would vanish silently rather than failing anything. Teardown is exactly
+     * where this library is most fragile: disconnecting a <pc-app> before its children is what
+     * makes an in-flight connectedCallback dereference a destroyed app.
+     *
+     * Returning the cleanup from beforeEach moves the assertion to step 4, after teardown, so the
+     * console spies and window listeners are still installed while the DOM is being dismantled.
+     * Verified: a warning emitted during step 3 is invisible at step 2 and recorded at step 4.
+     *
+     * Restoration of the spies themselves is left to `restoreMocks: true` in vitest.config.ts,
+     * which Vitest applies after this cleanup - so the spies stay live for the whole teardown.
+     */
+    const teardown = () => {
         if (typeof window !== 'undefined') {
             if (onError) {
                 window.removeEventListener('error', onError);
@@ -173,6 +171,34 @@ export const useGuard = (): Guard => {
         warnings.assertDrained();
         errors.assertDrained();
         uncaught.assertDrained();
+    };
+
+    beforeEach(() => {
+        warnings.reset();
+        errors.reset();
+        uncaught.reset();
+        active = guard;
+
+        vi.spyOn(console, 'warn').mockImplementation((...args) => warnings.record(format(args)));
+        vi.spyOn(console, 'error').mockImplementation((...args) => errors.record(format(args)));
+
+        // The unit project runs in the node environment, where there is no window to listen on.
+        if (typeof window === 'undefined') {
+            return teardown;
+        }
+
+        onError = (event) => {
+            event.preventDefault();
+            uncaught.record(event.error?.message ?? event.message);
+        };
+        onRejection = (event) => {
+            event.preventDefault();
+            uncaught.record((event.reason as Error)?.message ?? String(event.reason));
+        };
+        window.addEventListener('error', onError);
+        window.addEventListener('unhandledrejection', onRejection);
+
+        return teardown;
     });
 
     return guard;

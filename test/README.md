@@ -47,6 +47,16 @@ custom element reactions are *reported*, not propagated, so `guard.uncaught` is 
 them. Do not install a global handler that swallows them — one such rejection is how the
 `sound-slot.ts` teardown bug was found.
 
+**The guard asserts from a cleanup function returned by `beforeEach`, not from an `afterEach`. Do
+not "simplify" that.** Vitest's measured hook order is: test body → `afterEach` registered in the
+describe → `afterEach` registered at module scope (where `dom.ts` unmounts the DOM and destroys the
+app) → cleanup functions returned from `beforeEach`. An `afterEach` would therefore assert *before*
+teardown, so anything teardown emits would escape — and since `beforeEach` resets the recorders, a
+teardown warning would vanish silently rather than fail. Teardown is where this library is most
+fragile, so the assertion has to come last. Spy restoration is left to `restoreMocks: true` in
+`vitest.config.ts`, which Vitest applies after the cleanup, keeping the spies live throughout
+teardown.
+
 **Mount detached, insert once.** `mount()` builds the subtree on a detached container and appends it
 in a single operation, so every `connectedCallback` runs with the full subtree present. That matches
 production, where `pwc.mjs` is a deferred module script and elements upgrade with their children
