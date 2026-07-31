@@ -1,7 +1,7 @@
 import { SoundComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseNumber } from '../utils';
+import { parseBool, parseEnum, parseNumber } from '../parse';
 
 /**
  * The SoundComponentElement interface provides properties and methods for manipulating

@@ -1,7 +1,7 @@
 import { Asset, SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseBool, parseEnum, parseNumber } from './utils';
+import { parseBool, parseEnum, parseNumber } from './parse';
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
 const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([

@@ -12,7 +12,7 @@ import {
     parseVec2,
     parseVec3,
     parseVec4
-} from '../../src/utils';
+} from '../../src/parse';
 import { useGuard } from '../helpers/guard';
 
 /**
@@ -21,9 +21,9 @@ import { useGuard } from '../helpers/guard';
  * Vec2 '[x, y]', Vec3 '[x, y, z]', Vec4 and Quat '[x, y, z, w]', Color '#rrggbb'.
  *
  * getEntity() is the one export that touches the DOM, so it is covered by
- * test/elements/get-entity.test.ts rather than here.
+ * test/integration/get-entity.test.ts rather than here.
  */
-describe('utils', () => {
+describe('parse', () => {
     const { warnings } = useGuard();
 
     describe('parseBool', () => {

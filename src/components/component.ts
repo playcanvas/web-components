@@ -2,7 +2,7 @@ import { Component } from 'playcanvas';
 
 import { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
-import { parseBool } from '../utils';
+import { parseBool } from '../parse';
 
 /**
  * Represents a component in the PlayCanvas engine.

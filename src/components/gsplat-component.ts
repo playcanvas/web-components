@@ -2,7 +2,7 @@ import { GSplatComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
-import { parseBool, parseNumber } from '../utils';
+import { parseBool, parseNumber } from '../parse';
 
 /**
  * The GSplatComponentElement interface provides properties and methods for manipulating

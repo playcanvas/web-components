@@ -55,7 +55,7 @@ export default defineConfig({
                 extends: true,
                 test: {
                     /**
-                     * Pure functions: the parsers in src/utils.ts and the CSS_COLORS table. No DOM
+                     * Pure functions: the parsers in src/parse.ts and the CSS_COLORS table. No DOM
                      * at all - getEntity() touches document, so its tests live in `elements`.
                      */
                     name: 'unit',

@@ -2,7 +2,7 @@ import { RenderComponent, StandardMaterial } from 'playcanvas';
 
 import { ComponentElement } from './component';
 import { MaterialElement } from '../material';
-import { parseBool, parseEnum } from '../utils';
+import { parseBool, parseEnum } from '../parse';
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating

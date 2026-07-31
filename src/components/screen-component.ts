@@ -1,7 +1,7 @@
 import { SCALEMODE_BLEND, SCALEMODE_NONE, ScreenComponent, Vec2 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseNumber, parseVec2 } from '../utils';
+import { parseBool, parseNumber, parseVec2 } from '../parse';
 
 /**
  * The ScreenComponentElement interface provides properties and methods for manipulating

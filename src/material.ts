@@ -2,7 +2,7 @@ import { Color, StandardMaterial, Texture } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AssetElement } from './asset';
-import { parseColor } from './utils';
+import { parseColor } from './parse';
 
 /**
  * The MaterialElement interface provides properties and methods for manipulating

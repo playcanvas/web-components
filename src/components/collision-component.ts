@@ -1,7 +1,7 @@
 import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../utils';
+import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../parse';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating

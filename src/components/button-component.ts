@@ -2,7 +2,7 @@ import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Butt
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { getEntity, parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../utils';
+import { getEntity, parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 
 const transitionModes = new Map<'tint' | 'sprite', number>([
     ['tint', BUTTON_TRANSITION_MODE_TINT],

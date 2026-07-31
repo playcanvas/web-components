@@ -1,7 +1,7 @@
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, ScrollbarComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { getEntity, parseEnum, parseNumber } from '../utils';
+import { getEntity, parseEnum, parseNumber } from '../parse';
 
 const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],

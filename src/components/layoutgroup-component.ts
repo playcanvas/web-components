@@ -1,7 +1,7 @@
 import { FITTING_NONE, FITTING_STRETCH, FITTING_SHRINK, FITTING_BOTH, LayoutGroupComponent, ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, Vec2, Vec4 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseVec2, parseVec4 } from '../utils';
+import { parseBool, parseEnum, parseVec2, parseVec4 } from '../parse';
 
 const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],

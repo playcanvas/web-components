@@ -1,7 +1,7 @@
 import { RigidBodyComponent, Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseEnum, parseNumber, parseVec3 } from '../utils';
+import { parseEnum, parseNumber, parseVec3 } from '../parse';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating

@@ -1,7 +1,7 @@
 import { Script } from 'playcanvas';
 
 import { AsyncElement } from '../async-element';
-import { parseBool } from '../utils';
+import { parseBool } from '../parse';
 
 /**
  * The ScriptElement interface provides properties and methods for manipulating
