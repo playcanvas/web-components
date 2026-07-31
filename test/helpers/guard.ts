@@ -1,0 +1,179 @@
+import { afterEach, beforeEach, expect, vi } from 'vitest';
+
+type Pattern = string | RegExp;
+
+const matches = (text: string, pattern: Pattern) => {
+    return typeof pattern === 'string' ? text.includes(pattern) : pattern.test(text);
+};
+
+/**
+ * Joins console arguments the way the library produces them (a single template string).
+ *
+ * @param args - The arguments the console method was called with.
+ * @returns The joined message.
+ */
+const format = (args: unknown[]) => args.map(arg => String(arg)).join(' ');
+
+/**
+ * Records messages on one channel and lets a test claim the ones it expects. Anything left
+ * unclaimed when the test ends is a failure.
+ */
+class Recorder {
+    /** Every message seen, in order. Never drained - kept for diagnostics. */
+    readonly seen: string[] = [];
+
+    /** Messages not yet accounted for. Drained as they are claimed. */
+    private pending: string[] = [];
+
+    constructor(private readonly channel: string) {}
+
+    /**
+     * Clears both lists, keeping this instance's identity.
+     *
+     * Identity matters: suites destructure the guard once at collection time
+     * (`const { warnings } = useGuard()`), so replacing the recorder objects between tests would
+     * leave the suite holding a stale one - writing to one instance and asserting against another.
+     */
+    reset() {
+        this.seen.length = 0;
+        this.pending.length = 0;
+    }
+
+    /** @param message - The message to record. */
+    record(message: string) {
+        this.seen.push(message);
+        this.pending.push(message);
+    }
+
+    /**
+     * Claims the messages matching `pattern`, asserting exactly `count` of them occurred.
+     *
+     * @param pattern - A substring or regular expression to match.
+     * @param count - The exact number expected.
+     * @returns The claimed messages.
+     */
+    expect(pattern: Pattern, count = 1): string[] {
+        const claimed = this.pending.filter(message => matches(message, pattern));
+        expect(
+            claimed.length,
+            `expected ${count} ${this.channel} message(s) matching ${String(pattern)}, saw ${claimed.length}.\n` +
+            `All ${this.channel} messages:\n${this.seen.map(message => `  - ${message}`).join('\n') || '  (none)'}`
+        ).toBe(count);
+        this.pending = this.pending.filter(message => !matches(message, pattern));
+        return claimed;
+    }
+
+    /**
+     * Claims messages matching `pattern` without asserting that any occurred.
+     *
+     * @param pattern - A substring or regular expression to match.
+     */
+    allow(pattern: Pattern) {
+        this.pending = this.pending.filter(message => !matches(message, pattern));
+    }
+
+    /** Claims everything remaining. Always accompany with a comment saying why. */
+    ignoreRest() {
+        this.pending = [];
+    }
+
+    /** Fails the test if anything was left unclaimed. */
+    assertDrained() {
+        expect(
+            this.pending,
+            `unexpected ${this.channel} output. Claim it with .expect(...) or explain it with .allow(...)`
+        ).toEqual([]);
+    }
+}
+
+export interface Guard {
+    /** console.warn - the library's entire negative-path surface. */
+    readonly warnings: Recorder;
+    /** console.error. */
+    readonly errors: Recorder;
+    /** Uncaught exceptions and unhandled rejections. Async connectedCallbacks land here. */
+    readonly uncaught: Recorder;
+}
+
+let active: Guard | null = null;
+
+/**
+ * The guard installed for the running test, so other helpers can enrich a diagnostic.
+ *
+ * @returns The active guard, or `null` outside a guarded test.
+ */
+export const currentGuard = () => active;
+
+/**
+ * Installs the console and error guard for the surrounding suite. Any `console.warn`,
+ * `console.error`, uncaught exception or unhandled rejection that a test does not explicitly claim
+ * fails that test.
+ *
+ * This is load bearing rather than convenient. The library reports every misuse through
+ * console.warn - it never throws and never rejects - so the warning IS the assertion for a whole
+ * class of behaviour, and an unclaimed warning is how a test silently stops meaning anything.
+ * Three examples that are untestable without it:
+ *
+ * - A component element outside <pc-entity>: the only observable difference from correct placement
+ *   is one warning plus `component === null`.
+ * - <pc-scene> inside a <div> throws from an async connectedCallback, so expect().toThrow() cannot
+ *   see it. Custom element reactions are reported, not propagated.
+ * - ScriptRegistry.add warns from a setTimeout on a duplicate script name, i.e. during a LATER
+ *   test. Draining attributes the leak to the test that caused it.
+ *
+ * @returns The guard. Its recorders are replaced before each test.
+ */
+export const useGuard = (): Guard => {
+    const warnings = new Recorder('warn');
+    const errors = new Recorder('error');
+    const uncaught = new Recorder('uncaught');
+
+    const guard: Guard = { warnings, errors, uncaught };
+
+    let onError: ((event: ErrorEvent) => void) | undefined;
+    let onRejection: ((event: PromiseRejectionEvent) => void) | undefined;
+
+    beforeEach(() => {
+        warnings.reset();
+        errors.reset();
+        uncaught.reset();
+        active = guard;
+
+        vi.spyOn(console, 'warn').mockImplementation((...args) => warnings.record(format(args)));
+        vi.spyOn(console, 'error').mockImplementation((...args) => errors.record(format(args)));
+
+        // The unit project runs in the node environment, where there is no window to listen on.
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        onError = (event) => {
+            event.preventDefault();
+            uncaught.record(event.error?.message ?? event.message);
+        };
+        onRejection = (event) => {
+            event.preventDefault();
+            uncaught.record((event.reason as Error)?.message ?? String(event.reason));
+        };
+        window.addEventListener('error', onError);
+        window.addEventListener('unhandledrejection', onRejection);
+    });
+
+    afterEach(() => {
+        if (typeof window !== 'undefined') {
+            if (onError) {
+                window.removeEventListener('error', onError);
+            }
+            if (onRejection) {
+                window.removeEventListener('unhandledrejection', onRejection);
+            }
+        }
+        active = null;
+
+        warnings.assertDrained();
+        errors.assertDrained();
+        uncaught.assertDrained();
+    });
+
+    return guard;
+};
