@@ -212,6 +212,14 @@ if (vsCode) {
         ?.find(item => item.name === 'tonemap');
     check(tonemap?.values?.length === 7,
         `VS Code custom data should offer 7 values for pc-camera[tonemap], found ${tonemap?.values?.length}`);
+
+    // A `---` directly below a paragraph is markdown for "make that paragraph a heading", which
+    // would render the last paragraph of the tooltip at heading size
+    const setext = (vsCode.tags ?? [])
+        .filter(tag => /[^\n]\n---/.test(typeof tag.description === 'string' ? tag.description : tag.description?.value ?? ''))
+        .map(tag => tag.name);
+    check(setext.length === 0,
+        `${setext.length} VS Code tooltip(s) would render a paragraph as a heading: ${setext.join(', ')}`);
 }
 
 const webTypes = readJson('web-types.json');
