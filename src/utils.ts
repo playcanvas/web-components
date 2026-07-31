@@ -19,6 +19,27 @@ export const parseBool = (value: string | null, defaultValue: boolean): boolean 
 };
 
 /**
+ * Parse a tags attribute value. The expected format is a comma-separated list of tag names
+ * (e.g. 'enemy, flying'). Surrounding whitespace is trimmed from each name and empty names are
+ * discarded, so a trailing comma or a doubled separator does not produce a blank tag. Returns a
+ * copy of `defaultValue` when the attribute is absent or removed (`null`).
+ *
+ * Every value is valid, so this never warns.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or removed.
+ * @returns The parsed tag names.
+ */
+export const parseTags = (value: string | null, defaultValue: string[] = []): string[] => {
+    if (value === null) {
+        // Copied for the same reason cloneDefault exists: a parsed result must never alias the
+        // caller's default, or a later mutation would write back through it.
+        return [...defaultValue];
+    }
+    return value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+};
+
+/**
  * Splits an attribute value into exactly `count` numeric components. Returns `null` when the
  * value does not consist of exactly `count` whitespace-separated finite numbers.
  *

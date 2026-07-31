@@ -36,12 +36,14 @@ describe('<pc-entity>', () => {
             expect(element.tags).toEqual([]);
         });
 
-        it('treats an empty attribute as a single empty tag', () => {
-            // ''.split(',') is [''], so this is the documented consequence rather than a special
-            // case. Pinned so a future change to the parsing is deliberate.
+        it.for(['', '   ', ',', 'enemy,', ',enemy', 'enemy,,flying'])('discards empty names in %o', (value) => {
+            // Both tags call sites now route through parseTags, which drops empty names. Before
+            // that, `tags=""` set the element property to [''] - a single blank tag - while
+            // createEntity's `if (tags)` truthiness check skipped it entirely, so the element and
+            // its backing entity disagreed. See the integration test for the agreement assertion.
             const element = create();
-            element.setAttribute('tags', '');
-            expect(element.tags).toEqual(['']);
+            element.setAttribute('tags', value);
+            expect(element.tags).not.toContain('');
         });
 
         it('does not warn for any tags value, valid or not', () => {

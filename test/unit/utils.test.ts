@@ -8,6 +8,7 @@ import {
     parseEnum,
     parseNumber,
     parseQuat,
+    parseTags,
     parseVec2,
     parseVec3,
     parseVec4
@@ -47,6 +48,55 @@ describe('utils', () => {
 
         it('never warns, because every value is valid', () => {
             parseBool('nonsense', false);
+            expect(warnings.seen).toEqual([]);
+        });
+    });
+
+    describe('parseTags', () => {
+        it.for([
+            ['enemy', ['enemy']],
+            ['enemy,flying', ['enemy', 'flying']],
+            // Whitespace around each name is trimmed
+            ['enemy, flying ,boss', ['enemy', 'flying', 'boss']],
+            ['  enemy  ', ['enemy']],
+            // Empty names are discarded, so a trailing comma or a doubled separator does not
+            // produce a blank tag. This is what makes the two call sites in entity.ts agree.
+            ['enemy,', ['enemy']],
+            [',enemy', ['enemy']],
+            ['enemy,,flying', ['enemy', 'flying']],
+            ['', []],
+            ['   ', []],
+            [',', []],
+            [',,,', []],
+            // Duplicates are passed through - the engine's Tags.add dedupes
+            ['enemy,enemy', ['enemy', 'enemy']],
+            // Internal whitespace is preserved: only the ends are trimmed
+            ['big enemy', ['big enemy']]
+        ] as [string, string[]][])('parses %o as %o', ([value, expected]) => {
+            expect(parseTags(value)).toEqual(expected);
+        });
+
+        it('returns an empty array by default when the attribute is absent', () => {
+            expect(parseTags(null)).toEqual([]);
+        });
+
+        it('returns the supplied default when the attribute is absent', () => {
+            expect(parseTags(null, ['fallback'])).toEqual(['fallback']);
+        });
+
+        it('never returns the caller default instance, so the result cannot alias it', () => {
+            const defaultValue = ['fallback'];
+            const result = parseTags(null, defaultValue);
+
+            expect(result).not.toBe(defaultValue);
+            result.push('mutated');
+            expect(defaultValue).toEqual(['fallback']);
+        });
+
+        it('never warns, because every value is valid', () => {
+            parseTags('');
+            parseTags(',,,');
+            parseTags('anything at all');
             expect(warnings.seen).toEqual([]);
         });
     });
