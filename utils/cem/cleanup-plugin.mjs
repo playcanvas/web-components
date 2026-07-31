@@ -175,5 +175,15 @@ export const manifestCleanupPlugin = () => ({
         }
 
         rewriteDescriptions(customElementsManifest);
+
+        // The editor integrations append their own `---` separated sections directly after the
+        // class description. In markdown, a `---` line immediately below a paragraph makes that
+        // paragraph a heading, which renders the last paragraph of every element's tooltip at
+        // heading size. A trailing blank line keeps the separator a separator.
+        for (const { declaration } of declarations.values()) {
+            if (declaration.customElement && declaration.description) {
+                declaration.description = `${declaration.description.trimEnd()}\n`;
+            }
+        }
     }
 });
