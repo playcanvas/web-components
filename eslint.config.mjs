@@ -31,7 +31,11 @@ export default [
         },
         settings: {
             'import/resolver': {
-                typescript: {}
+                typescript: {
+                    // tsconfig.test.json is the program that covers test/, so without it here
+                    // import/no-unresolved fails on every ../../src/... import from a test file
+                    project: ['./tsconfig.json', './tsconfig.test.json']
+                }
             }
         },
         rules: {
@@ -43,6 +47,18 @@ export default [
             '@typescript-eslint/no-unused-vars': 'off',
             'jsdoc/require-param-type': 'off',
             'jsdoc/require-returns-type': 'off'
+        }
+    },
+    {
+        // The '**/*.ts' block above already gives test files the TypeScript parser and browser
+        // globals. This adds only the delta. Note there are no test-framework globals to declare:
+        // vitest.config.ts sets `globals: false`, so every test imports describe/it/expect/vi
+        // explicitly.
+        files: ['test/**/*.ts', 'vitest.config.ts'],
+        languageOptions: {
+            globals: {
+                ...globals.node
+            }
         }
     }
 ];

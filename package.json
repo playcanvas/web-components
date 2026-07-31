@@ -51,12 +51,19 @@
     "cem": "cem analyze && node utils/cem/validate.mjs",
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
-    "lint": "eslint examples/js examples/assets/scripts src",
+    "lint": "eslint examples/js examples/assets/scripts src test vitest.config.ts",
     "serve": "serve",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --project unit",
+    "test:elements": "vitest run --project elements",
+    "test:integration": "vitest run --project integration",
     "publint": "publint",
-    "type-check": "tsc --noEmit",
-    "type-check:watch": "npm run type-check -- --watch",
+    "type-check": "npm run type-check:src && npm run type-check:test",
+    "type-check:src": "tsc --noEmit -p tsconfig.json",
+    "type-check:test": "tsc --noEmit -p tsconfig.test.json",
+    "type-check:watch": "npm run type-check:src -- --watch",
     "watch": "rollup -c -w"
   },
   "peerDependencies": {
@@ -73,6 +80,7 @@
     "@tweenjs/tween.js": "25.0.0",
     "@typescript-eslint/eslint-plugin": "8.65.0",
     "@typescript-eslint/parser": "8.65.0",
+    "@vitest/coverage-v8": "4.1.10",
     "concurrently": "10.0.4",
     "custom-element-jet-brains-integration": "1.7.0",
     "custom-element-vs-code-integration": "1.5.0",
@@ -80,6 +88,7 @@
     "eslint": "9.39.5",
     "eslint-import-resolver-typescript": "4.4.5",
     "globals": "17.8.0",
+    "jsdom": "29.1.1",
     "mediabunny": "1.52.1",
     "opentype.js": "2.0.0",
     "playcanvas": "2.21.3",
@@ -89,6 +98,7 @@
     "tslib": "2.8.1",
     "typedoc": "0.28.20",
     "typedoc-plugin-mdn-links": "5.1.1",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   }
 }

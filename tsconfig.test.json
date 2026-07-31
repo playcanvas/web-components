@@ -1,0 +1,26 @@
+{
+    // tsconfig.json cannot simply be widened to cover test/: its `rootDir: "./src"` makes every
+    // file outside src/ a TS6059 error, and both rollup and typedoc resolve to that file by
+    // default. This is a separate, check-only program over the same compiler options.
+    //
+    // `noEmit` rather than `declaration: false`: declarationDir is inherited and tsconfig has no
+    // way to unset an inherited string option, so turning declaration off on its own raises
+    // TS5069 (declarationDir cannot be specified without declaration).
+    //
+    // `moduleResolution: "bundler"` and `strict` are inherited, so tests resolve extensionless
+    // relative imports exactly as src/ does and are held to identical strictness.
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "rootDir": "."
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*.ts",
+        "vitest.config.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

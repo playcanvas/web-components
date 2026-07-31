@@ -13,25 +13,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { COMPONENT_TAGS, READY_TAGS, TAGS } from './tags.mjs';
+
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
-
-/** Every tag the library registers. Kept explicit so adding or removing an element is deliberate. */
-const TAGS = [
-    'pc-app', 'pc-asset', 'pc-button', 'pc-camera', 'pc-collision', 'pc-element', 'pc-entity',
-    'pc-gsplat', 'pc-layoutchild', 'pc-layoutgroup', 'pc-light', 'pc-listener', 'pc-material',
-    'pc-model', 'pc-module', 'pc-particles', 'pc-render', 'pc-rigidbody', 'pc-scene', 'pc-screen',
-    'pc-script', 'pc-scripts', 'pc-scrollbar', 'pc-scrollview', 'pc-sky', 'pc-sound', 'pc-sounds'
-];
-
-/** The tags whose elements extend `ComponentElement`, and so inherit its `enabled` attribute. */
-const COMPONENT_TAGS = [
-    'pc-button', 'pc-camera', 'pc-collision', 'pc-element', 'pc-gsplat', 'pc-layoutchild',
-    'pc-layoutgroup', 'pc-light', 'pc-listener', 'pc-particles', 'pc-render', 'pc-rigidbody',
-    'pc-screen', 'pc-scripts', 'pc-scrollbar', 'pc-scrollview', 'pc-sounds'
-];
-
-/** `pc-material` and `pc-module` extend `HTMLElement`, so they never become ready. */
-const READY_TAGS = TAGS.filter(tag => tag !== 'pc-material' && tag !== 'pc-module');
 
 const failures = [];
 
