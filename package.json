@@ -25,7 +25,6 @@
   },
   "main": "dist/pwc.cjs",
   "module": "dist/pwc.mjs",
-  "browser": "dist/pwc.js",
   "unpkg": "dist/pwc.min.js",
   "jsdelivr": "dist/pwc.min.js",
   "types": "dist/index.d.ts",
