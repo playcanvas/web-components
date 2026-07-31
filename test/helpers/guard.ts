@@ -98,6 +98,21 @@ export interface Guard {
 let active: Guard | null = null;
 
 /**
+ * Node's process object, reached through globalThis so this file needs no @types/node.
+ *
+ * jsdom does NOT dispatch `unhandledrejection` on window - measured: a rejected promise reaches
+ * `process.on('unhandledRejection')` and nothing else. Since an async connectedCallback that throws
+ * surfaces as exactly that, listening only on window would silently record nothing and make
+ * `expect(uncaught.seen).toEqual([])` a vacuous assertion.
+ */
+type NodeProcess = {
+    on(event: 'unhandledRejection', listener: (reason: unknown) => void): void;
+    off(event: 'unhandledRejection', listener: (reason: unknown) => void): void;
+};
+
+const nodeProcess = (globalThis as { process?: NodeProcess }).process;
+
+/**
  * The guard installed for the running test, so other helpers can enrich a diagnostic.
  *
  * @returns The active guard, or `null` outside a guarded test.
@@ -131,7 +146,7 @@ export const useGuard = (): Guard => {
     const guard: Guard = { warnings, errors, uncaught };
 
     let onError: ((event: ErrorEvent) => void) | undefined;
-    let onRejection: ((event: PromiseRejectionEvent) => void) | undefined;
+    let onRejection: ((reason: unknown) => void) | undefined;
 
     /**
      * Teardown runs as a cleanup function returned from beforeEach, NOT as an afterEach.
@@ -158,13 +173,11 @@ export const useGuard = (): Guard => {
      * which Vitest applies after this cleanup - so the spies stay live for the whole teardown.
      */
     const teardown = () => {
-        if (typeof window !== 'undefined') {
-            if (onError) {
-                window.removeEventListener('error', onError);
-            }
-            if (onRejection) {
-                window.removeEventListener('unhandledrejection', onRejection);
-            }
+        if (typeof window !== 'undefined' && onError) {
+            window.removeEventListener('error', onError);
+        }
+        if (onRejection) {
+            nodeProcess?.off('unhandledRejection', onRejection);
         }
         active = null;
 
@@ -182,21 +195,22 @@ export const useGuard = (): Guard => {
         vi.spyOn(console, 'warn').mockImplementation((...args) => warnings.record(format(args)));
         vi.spyOn(console, 'error').mockImplementation((...args) => errors.record(format(args)));
 
-        // The unit project runs in the node environment, where there is no window to listen on.
-        if (typeof window === 'undefined') {
-            return teardown;
-        }
+        // Rejections arrive on process, not on window - see the note on nodeProcess above. This is
+        // what an async connectedCallback that throws turns into.
+        onRejection = (reason) => {
+            uncaught.record((reason as Error)?.message ?? String(reason));
+        };
+        nodeProcess?.on('unhandledRejection', onRejection);
 
-        onError = (event) => {
-            event.preventDefault();
-            uncaught.record(event.error?.message ?? event.message);
-        };
-        onRejection = (event) => {
-            event.preventDefault();
-            uncaught.record((event.reason as Error)?.message ?? String(event.reason));
-        };
-        window.addEventListener('error', onError);
-        window.addEventListener('unhandledrejection', onRejection);
+        // A synchronous throw inside a custom element reaction IS reported on window, so both
+        // channels are needed. The unit project runs in node, where there is no window.
+        if (typeof window !== 'undefined') {
+            onError = (event) => {
+                event.preventDefault();
+                uncaught.record(event.error?.message ?? event.message);
+            };
+            window.addEventListener('error', onError);
+        }
 
         return teardown;
     });

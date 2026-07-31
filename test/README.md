@@ -47,6 +47,16 @@ custom element reactions are *reported*, not propagated, so `guard.uncaught` is 
 them. Do not install a global handler that swallows them — one such rejection is how the
 `sound-slot.ts` teardown bug was found.
 
+**Rejections are captured on `process`, not on `window`.** jsdom does not dispatch
+`unhandledrejection` on `window` — measured: a rejected promise reaches
+`process.on('unhandledRejection')` and nothing else. A `window`-only listener records nothing, which
+silently turns `expect(uncaught.seen).toEqual([])` into a vacuous assertion. Synchronous throws
+inside a custom element reaction *are* reported on `window`, so the guard listens on both.
+
+One consequence: a test cannot *expect* an unhandled rejection. Vitest fails a file on any unhandled
+rejection whether or not a test claims it, so a defect that only manifests as one (#313) is recorded
+as an `it.todo` with an explanation rather than pinned executably.
+
 **The guard asserts from a cleanup function returned by `beforeEach`, not from an `afterEach`. Do
 not "simplify" that.** Vitest's measured hook order is: test body → `afterEach` registered in the
 describe → `afterEach` registered at module scope (where `dom.ts` unmounts the DOM and destroys the

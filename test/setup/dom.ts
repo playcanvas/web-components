@@ -1,6 +1,17 @@
 import { afterEach } from 'vitest';
 
 /**
+ * Loads the library for its side effects, which is what registers all 27 custom elements.
+ *
+ * This belongs in the setup file rather than in each test, for the same reason the examples load
+ * pwc.mjs once per page: document.createElement only upgrades a tag that has already been defined,
+ * so a test file that forgets the import gets inert elements whose properties are all undefined -
+ * a confusing failure a long way from its cause. Setup files run per test file, in that file's own
+ * realm, so this registers exactly once per file.
+ */
+import '../../src/index';
+
+/**
  * jsdom has no layout engine, so every element reports a clientWidth/clientHeight of 0 and an
  * all-zero bounding rect. Those are constant getters in jsdom's own Element-impl - `clientWidth`
  * and `clientHeight` are literally `return 0` - so no dependency choice can fix them. In

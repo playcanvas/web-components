@@ -333,7 +333,10 @@ class EntityElement extends AsyncElement {
                 this.scale = parseVec3(newValue, Vec3.ONE, name);
                 break;
             case 'tags':
-                this.tags = newValue.split(',').map(tag => tag.trim());
+                // newValue is null when the attribute is removed, which must restore the default
+                // rather than throw. Every other case here routes through a null-tolerant parse*
+                // helper; this one has to do it itself.
+                this.tags = newValue === null ? [] : newValue.split(',').map(tag => tag.trim());
                 break;
             case 'onpointerenter':
             case 'onpointerleave':

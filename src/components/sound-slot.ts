@@ -30,12 +30,30 @@ class SoundSlotElement extends AsyncElement {
     private _volume: number = 1;
 
     /**
+     * The `<pc-sounds>` this slot was added to, captured at connect time.
+     *
+     * `disconnectedCallback` cannot rediscover it: by the time the element is disconnected its
+     * `parentElement` is already `null`, so a lookup would both fail to find the component and
+     * emit a misleading "must be a direct child" warning for what is an ordinary removal.
+     */
+    private _soundElement: SoundComponentElement | null = null;
+
+    /**
      * The sound slot.
      */
     soundSlot: SoundSlot | null = null;
 
     async connectedCallback() {
-        await this.soundElement?.ready();
+        const soundElement = this.soundElement;
+        await soundElement?.ready();
+
+        // The element may have been removed, or its parent torn down, while we were waiting. A
+        // <pc-app> disconnects before its children, so by the time we resume the component can
+        // already be gone - see the matching guard in disconnectedCallback below.
+        const component = soundElement?.component;
+        if (!this.isConnected || !component) {
+            return;
+        }
 
         const options = {
             autoPlay: this._autoPlay,
@@ -49,7 +67,8 @@ class SoundSlotElement extends AsyncElement {
             options.duration = this._duration;
         }
 
-        this.soundSlot = this.soundElement!.component!.addSlot(this._name, options);
+        this._soundElement = soundElement;
+        this.soundSlot = component.addSlot(this._name, options);
         this.asset = this._asset;
         if (this._autoPlay) {
             this.soundSlot!.play();
@@ -59,9 +78,12 @@ class SoundSlotElement extends AsyncElement {
     }
 
     disconnectedCallback() {
-        // The component is null if the parent <pc-sound> (or the whole <pc-app>) is being
-        // torn down — parents disconnect first and have already removed the component.
-        this.soundElement?.component?.removeSlot(this._name);
+        // Uses the cached parent rather than a fresh lookup, since parentElement is already null
+        // by now. The component itself is null if the parent <pc-sound> (or the whole <pc-app>) is
+        // being torn down — parents disconnect first and have already removed the component.
+        this._soundElement?.component?.removeSlot(this._name);
+        this._soundElement = null;
+        this.soundSlot = null;
     }
 
     protected get soundElement(): SoundComponentElement | null {
