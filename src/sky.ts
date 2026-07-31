@@ -3,7 +3,7 @@ import { Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from '
 import { AppElement } from './app';
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
-import { parseBool, parseEnum, parseNumber, parseVec3 } from './utils';
+import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
 
 /**
  * The SkyElement interface provides properties and methods for manipulating

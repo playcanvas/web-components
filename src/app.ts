@@ -71,7 +71,7 @@ import { AsyncElement } from './async-element';
 import { EntityElement } from './entity';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
-import { parseBool, parseEnum } from './utils';
+import { parseBool, parseEnum } from './parse';
 
 /**
  * The AppElement interface provides properties and methods for manipulating

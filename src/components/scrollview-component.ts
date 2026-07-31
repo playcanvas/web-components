@@ -1,7 +1,7 @@
 import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED, ScrollViewComponent, Vec2 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { getEntity, parseBool, parseEnum, parseNumber, parseVec2 } from '../utils';
+import { getEntity, parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
 
 const scrollModes = new Map<'clamp' | 'bounce' | 'infinite', number>([
     ['clamp', SCROLL_MODE_CLAMP],

@@ -1,7 +1,7 @@
 import { Color, LightComponent, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseEnum, parseNumber } from '../utils';
+import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';
 
 const shadowTypes = new Map<'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f', number>([
     ['pcf1-16f', SHADOW_PCF1_16F],

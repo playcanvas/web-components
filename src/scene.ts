@@ -2,7 +2,7 @@ import { Color, Scene, Vec3 } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AsyncElement } from './async-element';
-import { parseColor, parseEnum, parseNumber, parseVec3 } from './utils';
+import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
 
 /**
  * The SceneElement interface provides properties and methods for manipulating

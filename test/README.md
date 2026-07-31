@@ -4,7 +4,7 @@ Four tiers, three of which run in Node with jsdom and need neither a build nor a
 
 | Tier | Command | Environment | Covers |
 |---|---|---|---|
-| Unit | `npm run test:unit` | `node` | The pure parsers in `src/utils.ts` and the `CSS_COLORS` table |
+| Unit | `npm run test:unit` | `node` | The pure parsers in `src/parse.ts` and the `CSS_COLORS` table |
 | Elements | `npm run test:elements` | `jsdom` | Attribute and property surface, with no engine created |
 | Integration | `npm run test:integration` | `jsdom` | A real `AppBase` on `NullGraphicsDevice`, via `<pc-app backend="null">` |
 | Browser | *(not yet implemented)* | Chromium | The built `dist/` bundle and the example pages |

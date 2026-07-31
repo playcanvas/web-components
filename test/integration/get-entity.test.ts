@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { getEntity } from '../../src/utils';
+import { getEntity } from '../../src/parse';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
 /**
- * getEntity is the one export in src/utils.ts that touches the DOM, so it is covered here against a
+ * getEntity is the one export in src/parse.ts that touches the DOM, so it is covered here against a
  * real hierarchy rather than in the pure-unit tier.
  */
 describe('getEntity', () => {

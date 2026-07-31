@@ -1,43 +1,24 @@
+/**
+ * Converts HTML attribute values into the values the engine expects. Every element's
+ * `attributeChangedCallback` funnels through this module.
+ *
+ * The parsers share one contract:
+ *
+ * - A `null` value means the attribute is absent or was removed, and yields the supplied default.
+ * - A malformed value yields the same default and logs exactly one `console.warn` naming the
+ *   attribute, so misuse is reported rather than thrown — nothing here throws or rejects.
+ * - A math-type default is cloned on the way out, which is what makes it safe to pass the engine's
+ *   shared frozen constants (`Vec3.ZERO`, `Color.WHITE`) as defaults.
+ * - `parseBool` and `parseTags` take no attribute name, because every value is valid for them and
+ *   so they never warn.
+ *
+ * `getEntity` is the exception: it resolves a reference to a live entity rather than parsing a
+ * literal, and returns `null` instead of falling back to a default.
+ */
+
 import { Color, Entity, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { CSS_COLORS } from './colors';
-
-/**
- * Parse a boolean attribute value. The same rules apply to every boolean attribute:
- *
- * - Attribute absent (or removed): the supplied default is used.
- * - Attribute set to the string 'false': `false`.
- * - Attribute present with any other value, including the empty string of a bare boolean
- *   attribute (e.g. `<pc-light cast-shadows>`): `true`.
- *
- * @param value - The attribute value to parse (`null` when the attribute is absent).
- * @param defaultValue - The value to use when the attribute is absent or removed.
- * @returns The parsed boolean.
- */
-export const parseBool = (value: string | null, defaultValue: boolean): boolean => {
-    return value === null ? defaultValue : value !== 'false';
-};
-
-/**
- * Parse a tags attribute value. The expected format is a comma-separated list of tag names
- * (e.g. 'enemy, flying'). Surrounding whitespace is trimmed from each name and empty names are
- * discarded, so a trailing comma or a doubled separator does not produce a blank tag. Returns a
- * copy of `defaultValue` when the attribute is absent or removed (`null`).
- *
- * Every value is valid, so this never warns.
- *
- * @param value - The attribute value to parse (`null` when the attribute is absent).
- * @param defaultValue - The value to use when the attribute is absent or removed.
- * @returns The parsed tag names.
- */
-export const parseTags = (value: string | null, defaultValue: string[] = []): string[] => {
-    if (value === null) {
-        // Copied for the same reason cloneDefault exists: a parsed result must never alias the
-        // caller's default, or a later mutation would write back through it.
-        return [...defaultValue];
-    }
-    return value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
-};
 
 /**
  * Splits an attribute value into exactly `count` numeric components. Returns `null` when the
@@ -66,6 +47,22 @@ export const parseComponents = (value: string, count: number): number[] | null =
  */
 const cloneDefault = <T extends Color | Quat | Vec2 | Vec3 | Vec4 | null>(value: T): T => {
     return (value === null ? null : value.clone()) as T;
+};
+
+/**
+ * Parse a boolean attribute value. The same rules apply to every boolean attribute:
+ *
+ * - Attribute absent (or removed): the supplied default is used.
+ * - Attribute set to the string 'false': `false`.
+ * - Attribute present with any other value, including the empty string of a bare boolean
+ *   attribute (e.g. `<pc-light cast-shadows>`): `true`.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or removed.
+ * @returns The parsed boolean.
+ */
+export const parseBool = (value: string | null, defaultValue: boolean): boolean => {
+    return value === null ? defaultValue : value !== 'false';
 };
 
 /**
@@ -111,6 +108,56 @@ export const parseColor = <T extends Color | null>(value: string | null, default
 };
 
 /**
+ * Resolves an enum attribute value against its set of valid names. Returns the value when it is
+ * one of the valid names. Returns `defaultValue` when the attribute is absent (`null`), or when
+ * the value is invalid — the latter also logs a warning listing the valid names.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param valid - The valid names: an array, or a map whose keys are the valid names.
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The resolved enum name.
+ */
+export const parseEnum = <T extends string>(
+    value: string | null,
+    valid: readonly T[] | ReadonlyMap<T, number>,
+    defaultValue: T,
+    attribute: string
+): T => {
+    if (value === null) {
+        return defaultValue;
+    }
+    const names = Array.isArray(valid) ? valid : [...(valid as ReadonlyMap<T, number>).keys()];
+    if (names.includes(value as T)) {
+        return value as T;
+    }
+    console.warn(`Invalid value '${value}' for attribute '${attribute}'. Valid values: ${names.join(', ')}. Using '${defaultValue}'.`);
+    return defaultValue;
+};
+
+/**
+ * Parses a number attribute value. Returns the parsed number when the value is a finite number.
+ * Returns `defaultValue` when the attribute is absent (`null`), or when the value is not a
+ * finite number — the latter also logs a warning.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The parsed number.
+ */
+export const parseNumber = <T extends number | null>(value: string | null, defaultValue: T, attribute: string): number | T => {
+    if (value === null) {
+        return defaultValue;
+    }
+    const number = value.trim() === '' ? NaN : Number(value);
+    if (!Number.isFinite(number)) {
+        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected a finite number. Using '${defaultValue}'.`);
+        return defaultValue;
+    }
+    return number;
+};
+
+/**
  * Parse an Euler-angles attribute value into a quaternion. The expected format is 3
  * space-separated angles in degrees (e.g. '0 90 0'). Returns `defaultValue` (cloned, when it is
  * a quaternion) when the attribute is absent (`null`), or when the value is malformed — the
@@ -131,6 +178,27 @@ export const parseQuat = <T extends Quat | null>(value: string | null, defaultVa
         return cloneDefault(defaultValue);
     }
     return new Quat().setFromEulerAngles(components[0], components[1], components[2]);
+};
+
+/**
+ * Parse a tags attribute value. The expected format is a comma-separated list of tag names
+ * (e.g. 'enemy, flying'). Surrounding whitespace is trimmed from each name and empty names are
+ * discarded, so a trailing comma or a doubled separator does not produce a blank tag. Returns a
+ * copy of `defaultValue` when the attribute is absent or removed (`null`).
+ *
+ * Every value is valid, so this never warns.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or removed.
+ * @returns The parsed tag names.
+ */
+export const parseTags = (value: string | null, defaultValue: string[] = []): string[] => {
+    if (value === null) {
+        // Copied for the same reason cloneDefault exists: a parsed result must never alias the
+        // caller's default, or a later mutation would write back through it.
+        return [...defaultValue];
+    }
+    return value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
 };
 
 /**
@@ -197,56 +265,6 @@ export const parseVec4 = <T extends Vec4 | null>(value: string | null, defaultVa
         return cloneDefault(defaultValue);
     }
     return new Vec4(components);
-};
-
-/**
- * Resolves an enum attribute value against its set of valid names. Returns the value when it is
- * one of the valid names. Returns `defaultValue` when the attribute is absent (`null`), or when
- * the value is invalid — the latter also logs a warning listing the valid names.
- *
- * @param value - The attribute value to parse (`null` when the attribute is absent).
- * @param valid - The valid names: an array, or a map whose keys are the valid names.
- * @param defaultValue - The value to use when the attribute is absent or invalid.
- * @param attribute - The attribute name, used in the warning message.
- * @returns The resolved enum name.
- */
-export const parseEnum = <T extends string>(
-    value: string | null,
-    valid: readonly T[] | ReadonlyMap<T, number>,
-    defaultValue: T,
-    attribute: string
-): T => {
-    if (value === null) {
-        return defaultValue;
-    }
-    const names = Array.isArray(valid) ? valid : [...(valid as ReadonlyMap<T, number>).keys()];
-    if (names.includes(value as T)) {
-        return value as T;
-    }
-    console.warn(`Invalid value '${value}' for attribute '${attribute}'. Valid values: ${names.join(', ')}. Using '${defaultValue}'.`);
-    return defaultValue;
-};
-
-/**
- * Parses a number attribute value. Returns the parsed number when the value is a finite number.
- * Returns `defaultValue` when the attribute is absent (`null`), or when the value is not a
- * finite number — the latter also logs a warning.
- *
- * @param value - The attribute value to parse (`null` when the attribute is absent).
- * @param defaultValue - The value to use when the attribute is absent or invalid.
- * @param attribute - The attribute name, used in the warning message.
- * @returns The parsed number.
- */
-export const parseNumber = <T extends number | null>(value: string | null, defaultValue: T, attribute: string): number | T => {
-    if (value === null) {
-        return defaultValue;
-    }
-    const number = value.trim() === '' ? NaN : Number(value);
-    if (!Number.isFinite(number)) {
-        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected a finite number. Using '${defaultValue}'.`);
-        return defaultValue;
-    }
-    return number;
 };
 
 /**

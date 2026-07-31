@@ -1,7 +1,7 @@
 import { AppBase, Entity, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseBool, parseTags, parseVec3 } from './utils';
+import { parseBool, parseTags, parseVec3 } from './parse';
 
 /**
  * The EntityElement interface provides properties and methods for manipulating

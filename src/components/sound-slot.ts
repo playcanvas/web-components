@@ -3,7 +3,7 @@ import { SoundSlot } from 'playcanvas';
 import { AssetElement } from '../asset';
 import { AsyncElement } from '../async-element';
 import { SoundComponentElement } from './sound-component';
-import { parseBool, parseNumber } from '../utils';
+import { parseBool, parseNumber } from '../parse';
 
 /**
  * The SoundSlotElement interface provides properties and methods for manipulating

@@ -2,7 +2,7 @@ import { Color, ElementComponent, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../utils';
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
 
 /**
  * The ElementComponentElement interface provides properties and methods for manipulating

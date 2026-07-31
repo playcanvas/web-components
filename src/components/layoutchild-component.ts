@@ -1,7 +1,7 @@
 import { LayoutChildComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseNumber } from '../utils';
+import { parseBool, parseNumber } from '../parse';
 
 /**
  * The LayoutChildComponentElement interface provides properties and methods for manipulating

@@ -3,7 +3,7 @@ import { Color, Quat, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanv
 import { AssetElement } from '../asset';
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
-import { getEntity, parseBool, parseColor, parseComponents, parseNumber, parseQuat, parseVec2, parseVec3, parseVec4 } from '../utils';
+import { getEntity, parseBool, parseColor, parseComponents, parseNumber, parseQuat, parseVec2, parseVec3, parseVec4 } from '../parse';
 
 /**
  * Attributes on `pc-script` that never map to script attributes: the element's own API (derived
