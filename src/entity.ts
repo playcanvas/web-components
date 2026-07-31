@@ -1,7 +1,7 @@
 import { AppBase, Entity, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseBool, parseVec3 } from './utils';
+import { parseBool, parseTags, parseVec3 } from './utils';
 
 /**
  * The EntityElement interface provides properties and methods for manipulating
@@ -101,9 +101,9 @@ class EntityElement extends AsyncElement {
         entity.setLocalEulerAngles(parseVec3(this.getAttribute('rotation'), Vec3.ZERO, 'rotation'));
         entity.setLocalScale(parseVec3(this.getAttribute('scale'), Vec3.ONE, 'scale'));
 
-        const tags = this.getAttribute('tags');
-        if (tags) {
-            entity.tags.add(tags.split(',').map(tag => tag.trim()));
+        const tags = parseTags(this.getAttribute('tags'));
+        if (tags.length > 0) {
+            entity.tags.add(tags);
         }
     }
 
@@ -333,10 +333,7 @@ class EntityElement extends AsyncElement {
                 this.scale = parseVec3(newValue, Vec3.ONE, name);
                 break;
             case 'tags':
-                // newValue is null when the attribute is removed, which must restore the default
-                // rather than throw. Every other case here routes through a null-tolerant parse*
-                // helper; this one has to do it itself.
-                this.tags = newValue === null ? [] : newValue.split(',').map(tag => tag.trim());
+                this.tags = parseTags(newValue);
                 break;
             case 'onpointerenter':
             case 'onpointerleave':
