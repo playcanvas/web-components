@@ -87,7 +87,7 @@ class AppElement extends AsyncElement {
 
     private _alpha = true;
 
-    private _backend: 'webgpu' | 'webgl2' | 'null' = 'webgl2';
+    private _backend: 'webgpu' | 'webgl2' | 'null' = 'webgpu';
 
     private _antialias = true;
 
@@ -528,7 +528,8 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Sets the graphics backend.
+     * Sets the graphics backend. Defaults to 'webgpu', which falls back to 'webgl2' if WebGPU
+     * is not supported by the browser.
      * @param value - The graphics backend ('webgpu', 'webgl2', or 'null').
      */
     set backend(value: 'webgpu' | 'webgl2' | 'null') {
@@ -617,7 +618,7 @@ class AppElement extends AsyncElement {
                 this.antialias = parseBool(newValue, true);
                 break;
             case 'backend':
-                this.backend = parseEnum(newValue, ['webgpu', 'webgl2', 'null'], 'webgl2', name);
+                this.backend = parseEnum(newValue, ['webgpu', 'webgl2', 'null'], 'webgpu', name);
                 break;
             case 'depth':
                 this.depth = parseBool(newValue, true);
