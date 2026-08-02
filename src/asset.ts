@@ -284,7 +284,7 @@ class AssetElement extends AsyncElement {
         return ['lazy'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         if (name === 'lazy') {
             this.lazy = parseBool(newValue, false);
         }

@@ -377,7 +377,7 @@ class ScrollViewComponentElement extends ComponentElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
@@ -409,16 +409,16 @@ class ScrollViewComponentElement extends ComponentElement {
                 this.verticalScrollbarVisibility = parseEnum(newValue, visibilities, 'when-required', name);
                 break;
             case 'viewport':
-                this.viewport = newValue;
+                this.viewport = newValue ?? '';
                 break;
             case 'content':
-                this.content = newValue;
+                this.content = newValue ?? '';
                 break;
             case 'horizontal-scrollbar':
-                this.horizontalScrollbar = newValue;
+                this.horizontalScrollbar = newValue ?? '';
                 break;
             case 'vertical-scrollbar':
-                this.verticalScrollbar = newValue;
+                this.verticalScrollbar = newValue ?? '';
                 break;
         }
     }

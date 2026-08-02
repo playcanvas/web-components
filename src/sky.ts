@@ -270,10 +270,10 @@ class SkyElement extends AsyncElement {
         return ['asset', 'center', 'intensity', 'level', 'lighting', 'rotation', 'scale', 'type'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'asset':
-                this.asset = newValue;
+                this.asset = newValue ?? '';
                 break;
             case 'center':
                 this.center = parseVec3(newValue, new Vec3(0, 0.01, 0), name);

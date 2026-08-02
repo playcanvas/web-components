@@ -91,8 +91,13 @@ class RenderComponentElement extends ComponentElement {
      */
     set material(value: string) {
         this._material = value;
-        if (this.component) {
-            this.component.material = MaterialElement.get(value) as StandardMaterial;
+        const material = MaterialElement.get(value);
+        // Guarded like every other reference attribute in the library. Assigning an unresolved
+        // lookup used to write `undefined` straight through to every mesh instance, and the
+        // engine's MeshInstance setter takes that literally - it clears the material and skips
+        // the ref/transparency/key bookkeeping, leaving the mesh with no material at all.
+        if (this.component && material) {
+            this.component.material = material as StandardMaterial;
         }
     }
 
@@ -127,7 +132,7 @@ class RenderComponentElement extends ComponentElement {
         return [...super.observedAttributes, 'cast-shadows', 'material', 'receive-shadows', 'type'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
@@ -135,7 +140,7 @@ class RenderComponentElement extends ComponentElement {
                 this.castShadows = parseBool(newValue, true);
                 break;
             case 'material':
-                this.material = newValue;
+                this.material = newValue ?? '';
                 break;
             case 'receive-shadows':
                 this.receiveShadows = parseBool(newValue, true);

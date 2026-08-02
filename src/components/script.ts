@@ -155,7 +155,7 @@ class ScriptElement extends AsyncElement {
         return ['attributes', 'enabled', 'name'];
     }
 
-    attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'attributes':
                 if (newValue === null) {

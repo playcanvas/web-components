@@ -188,12 +188,12 @@ class GSplatComponentElement extends ComponentElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
             case 'asset':
-                this.asset = newValue;
+                this.asset = newValue ?? '';
                 break;
             case 'cast-shadows':
                 this.castShadows = parseBool(newValue, false);

@@ -609,7 +609,7 @@ class AppElement extends AsyncElement {
         return ['alpha', 'antialias', 'backend', 'depth', 'stencil', 'high-resolution'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'alpha':
                 this.alpha = parseBool(newValue, true);
