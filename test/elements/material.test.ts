@@ -224,5 +224,51 @@ describe('<pc-material>', () => {
 
             expect(element.glossMap).toBe('b');
         });
+
+        it.for([
+            ['gloss-map-tiling', '4 4'],
+            ['gloss-map-offset', '0.5 0'],
+            ['gloss-map-channel', 'r'],
+            ['gloss-map-rotation', '90'],
+            ['gloss-map-uv', '1']
+        ])('does not warn when roughness-map is configured with [%s]', ([modifier, value]) => {
+            // The gloss-map-* modifiers only configure the shared slot - they carry no opinion
+            // about inversion - and since the roughness alias covers only the value-carrying
+            // attributes, they are the supported way to configure a roughness map. Warning on them
+            // would fire on the documented usage.
+            //
+            // The modifier is set FIRST on purpose: the check only sees attributes already present,
+            // so the opposite order would pass no matter how broad the conflict set was.
+            const element = create();
+            element.id = 'rough';
+            element.setAttribute(modifier, value);
+            element.setAttribute('roughness-map', 'b');
+
+            expect(element.glossInvert).toBe(true);
+        });
+
+        it('still warns when roughness-map meets gloss-invert', () => {
+            const element = create();
+            element.id = 'mixed';
+            element.setAttribute('gloss-invert', 'false');
+            element.setAttribute('roughness-map', 'b');
+
+            warnings.expect('sets both \'roughness-map\' and \'gloss-invert\'');
+        });
+
+        it('warns in either attribute order', () => {
+            // The check runs from both families, so neither ordering slips through.
+            const glossFirst = create();
+            glossFirst.id = 'gloss-first';
+            glossFirst.setAttribute('gloss', '0.8');
+            glossFirst.setAttribute('roughness', '0.5');
+            warnings.expect('\'gloss-first\' sets both \'roughness\' and \'gloss\'');
+
+            const roughnessFirst = create();
+            roughnessFirst.id = 'roughness-first';
+            roughnessFirst.setAttribute('roughness', '0.5');
+            roughnessFirst.setAttribute('gloss', '0.8');
+            warnings.expect('\'roughness-first\' sets both \'roughness\' and \'gloss\'');
+        });
     });
 });

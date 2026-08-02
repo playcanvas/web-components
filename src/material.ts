@@ -86,6 +86,17 @@ type ScalarChannel = 'r' | 'g' | 'b' | 'a';
 const scalarChannels: ScalarChannel[] = ['r', 'g', 'b', 'a'];
 
 /**
+ * The attributes that contradict a `roughness-*` attribute: each one carries the opposite
+ * interpretation of a value the aliases also write. The `gloss-map-*` modifiers are deliberately
+ * absent - they only configure the shared slot (tiling, offset, channel and so on) and carry no
+ * interpretation of their own, so they are the supported way to configure a `roughness-map`.
+ */
+const glossConflicts = ['gloss', 'gloss-invert', 'gloss-map'];
+
+/** The aliases those attributes contradict. */
+const roughnessAliases = ['roughness', 'roughness-map'];
+
+/**
  * The texture slots a `pc-material` can populate. Each is backed by a `pc-asset` id rather than a
  * `Texture`, so the element can be authored before the asset has loaded.
  */
@@ -287,6 +298,8 @@ class MaterialElement extends HTMLElement {
 
     private _updateScheduled = false;
 
+    private _glossConflictWarned = false;
+
     material: StandardMaterial | null = null;
 
     async connectedCallback() {
@@ -433,20 +446,33 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Warns when the `roughness-*` and `gloss-*` attribute families are used on the same element.
-     * They write the same engine properties but disagree about whether the channel is inverted, so
-     * the result would depend on attribute order rather than on intent.
+     * Warns when a `roughness-*` attribute is combined with one that carries the opposite
+     * interpretation of the same value. They write the same engine properties but disagree about
+     * whether the channel is inverted, so the result would depend on attribute order rather than
+     * on intent.
      *
-     * @param attribute - The roughness attribute being applied.
+     * Called from both families rather than only from the roughness branches, because the two
+     * orderings are equally wrong and only one of them would otherwise be caught. The conflict is
+     * a property of the element rather than of any one write - and an upgrading element already
+     * has all of its attributes, so every branch would otherwise report the same clash - so the
+     * warning latches and reports once per episode, clearing when the clash is resolved.
      */
-    private _warnGlossConflict(attribute: string) {
-        const conflicting = MaterialElement.observedAttributes
-        .filter(name => name.startsWith('gloss') && this.hasAttribute(name));
+    private _warnGlossConflict() {
+        const quote = (names: string[]) => `'${names.join('\', \'')}'`;
 
-        if (conflicting.length > 0) {
-            console.warn(`pc-material '${this.id}' sets both '${attribute}' and '${conflicting.join('\', \'')}' - ` +
-                'the roughness-* attributes invert gloss, so the two families contradict each other. Use one or the other.');
+        const roughness = roughnessAliases.filter(name => this.hasAttribute(name));
+        const gloss = glossConflicts.filter(name => this.hasAttribute(name));
+
+        if (roughness.length === 0 || gloss.length === 0) {
+            this._glossConflictWarned = false;
+            return;
         }
+
+        if (this._glossConflictWarned) return;
+        this._glossConflictWarned = true;
+
+        console.warn(`pc-material '${this.id}' sets both ${quote(roughness)} and ${quote(gloss)} - ` +
+            'the roughness-* attributes invert gloss, so the two families contradict each other. Use one or the other.');
     }
 
     /**
@@ -2210,7 +2236,10 @@ class MaterialElement extends HTMLElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    // newValue is null when an attribute is removed, which several branches below rely on. The
+    // other elements still declare it as `string`; widening those surfaces 21 real removal bugs of
+    // the #309 shape, which is its own change rather than a signature tweak.
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'alpha-test':
                 this.alphaTest = parseNumber(newValue, 0, name);
@@ -2310,12 +2339,15 @@ class MaterialElement extends HTMLElement {
                 break;
             case 'gloss':
                 this.gloss = parseNumber(newValue, 0.25, name);
+                this._warnGlossConflict();
                 break;
             case 'gloss-invert':
                 this.glossInvert = parseBool(newValue, false);
+                this._warnGlossConflict();
                 break;
             case 'gloss-map':
                 this.glossMap = newValue ?? '';
+                this._warnGlossConflict();
                 break;
             case 'gloss-map-channel':
                 this.glossMapChannel = parseEnum(newValue, scalarChannels, 'g', name);
@@ -2427,12 +2459,12 @@ class MaterialElement extends HTMLElement {
                 // attribute restores the engine's uninverted interpretation.
                 this.gloss = parseNumber(newValue, 0.25, name);
                 this.glossInvert = newValue !== null;
-                this._warnGlossConflict(name);
+                this._warnGlossConflict();
                 break;
             case 'roughness-map':
                 this.glossMap = newValue ?? '';
                 this.glossInvert = newValue !== null;
-                this._warnGlossConflict(name);
+                this._warnGlossConflict();
                 break;
             case 'slope-depth-bias':
                 this.slopeDepthBias = parseNumber(newValue, 0, name);
