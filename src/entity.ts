@@ -315,13 +315,13 @@ class EntityElement extends AsyncElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'enabled':
                 this.enabled = parseBool(newValue, true);
                 break;
             case 'name':
-                this.name = newValue;
+                this.name = newValue ?? 'Untitled';
                 break;
             case 'position':
                 this.position = parseVec3(newValue, Vec3.ZERO, name);

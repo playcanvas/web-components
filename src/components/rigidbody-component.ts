@@ -187,7 +187,7 @@ class RigidBodyComponentElement extends ComponentElement {
         return [...super.observedAttributes, 'angular-damping', 'angular-factor', 'friction', 'linear-damping', 'linear-factor', 'mass', 'restitution', 'rolling-friction', 'type'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {

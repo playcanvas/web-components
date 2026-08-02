@@ -194,7 +194,7 @@ class SceneElement extends AsyncElement {
         return ['fog', 'fog-color', 'fog-density', 'fog-start', 'fog-end', 'gravity'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'fog':
                 this.fog = parseEnum(newValue, ['none', 'linear', 'exp', 'exp2'], 'none', name);

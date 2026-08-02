@@ -142,7 +142,7 @@ class ScrollbarComponentElement extends ComponentElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
@@ -156,7 +156,7 @@ class ScrollbarComponentElement extends ComponentElement {
                 this.handleSize = parseNumber(newValue, 0.5, name);
                 break;
             case 'handle':
-                this.handle = newValue;
+                this.handle = newValue ?? '';
                 break;
         }
     }

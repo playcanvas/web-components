@@ -104,7 +104,7 @@ class ComponentElement extends AsyncElement {
         return ['enabled'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'enabled':
                 this.enabled = parseBool(newValue, true);

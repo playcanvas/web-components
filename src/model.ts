@@ -97,10 +97,10 @@ class ModelElement extends AsyncElement {
         return ['asset'];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'asset':
-                this.asset = newValue;
+                this.asset = newValue ?? '';
                 break;
         }
     }

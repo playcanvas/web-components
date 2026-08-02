@@ -686,7 +686,7 @@ class ElementComponentElement extends ComponentElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
@@ -712,7 +712,7 @@ class ElementComponentElement extends ComponentElement {
                 this.enableMarkup = parseBool(newValue, false);
                 break;
             case 'font-asset':
-                this.fontAsset = newValue;
+                this.fontAsset = newValue ?? '';
                 break;
             case 'font-size':
                 this.fontSize = parseNumber(newValue, 32, name);
@@ -745,16 +745,16 @@ class ElementComponentElement extends ComponentElement {
                 this.pixelsPerUnit = parseNumber(newValue, null, name);
                 break;
             case 'sprite-asset':
-                this.spriteAsset = newValue;
+                this.spriteAsset = newValue ?? '';
                 break;
             case 'sprite-frame':
                 this.spriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'text':
-                this.text = newValue;
+                this.text = newValue ?? '';
                 break;
             case 'texture-asset':
-                this.textureAsset = newValue;
+                this.textureAsset = newValue ?? '';
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['group', 'image', 'text'], 'group', name);

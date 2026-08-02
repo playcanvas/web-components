@@ -396,7 +396,7 @@ class ButtonComponentElement extends ComponentElement {
         ];
     }
 
-    attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
@@ -404,7 +404,7 @@ class ButtonComponentElement extends ComponentElement {
                 this.active = parseBool(newValue, true);
                 break;
             case 'image':
-                this.image = newValue;
+                this.image = newValue ?? '';
                 break;
             case 'hit-padding':
                 this.hitPadding = parseVec4(newValue, Vec4.ZERO, name);
@@ -425,19 +425,19 @@ class ButtonComponentElement extends ComponentElement {
                 this.fadeDuration = parseNumber(newValue, 0, name);
                 break;
             case 'hover-sprite-asset':
-                this.hoverSpriteAsset = newValue;
+                this.hoverSpriteAsset = newValue ?? '';
                 break;
             case 'hover-sprite-frame':
                 this.hoverSpriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'pressed-sprite-asset':
-                this.pressedSpriteAsset = newValue;
+                this.pressedSpriteAsset = newValue ?? '';
                 break;
             case 'pressed-sprite-frame':
                 this.pressedSpriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'inactive-sprite-asset':
-                this.inactiveSpriteAsset = newValue;
+                this.inactiveSpriteAsset = newValue ?? '';
                 break;
             case 'inactive-sprite-frame':
                 this.inactiveSpriteFrame = parseNumber(newValue, 0, name);
