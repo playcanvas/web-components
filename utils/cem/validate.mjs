@@ -125,6 +125,28 @@ if (manifest) {
     expectAttribute('pc-material', 'roughness', { fieldName: 'gloss' });
     expectAttribute('pc-material', 'roughness-map', { type: 'string', fieldName: 'glossMap' });
 
+    // Because they resolve to gloss, the aliases would inherit gloss's description - which reads
+    // inverted ("The glossiness of the material"). They carry an @attribute tag instead, and that
+    // only survives because moduleLinkPhase leaves an existing description alone. Pin both ends.
+    for (const name of ['roughness', 'roughness-map']) {
+        const description = attribute('pc-material', name)?.description ?? '';
+        check(/roughness/i.test(description) && !/^The gloss/i.test(description),
+            `pc-material[${name}] fell back to the gloss description: ${JSON.stringify(description)}`);
+    }
+
+    // Attributes that do nothing on their own must say so, or the tooltip promises an effect the
+    // defaults prevent. Only the first sentence of an accessor's JSDoc reaches the manifest, so
+    // the caveat has to be in it.
+    for (const [name, caveat] of [
+        ['opacity', 'blend-type'],
+        ['specular', 'use-metalness-specular-color'],
+        ['specularity-factor', 'use-metalness-specular-color']
+    ]) {
+        const description = attribute('pc-material', name)?.description ?? '';
+        check(description.includes(caveat),
+            `pc-material[${name}] does not mention '${caveat}': ${JSON.stringify(description)}`);
+    }
+
     // A texture slot names a pc-asset, so it has no meaningful default to publish
     check(attribute('pc-material', 'diffuse-map')?.default === undefined,
         'pc-material[diffuse-map] should have no default');

@@ -106,6 +106,15 @@ type TextureSlot = 'aoMap' | 'diffuseMap' | 'emissiveMap' | 'glossMap' | 'height
  * workflow, which is what the `metalness-*` attributes assume and what glTF means by PBR. The
  * `roughness` and `roughness-map` attributes are aliases for `gloss` and `gloss-map` that
  * additionally invert the gloss channel; do not mix the two families on one element.
+ *
+ * The two aliases are documented here rather than on an accessor, because they resolve to the
+ * `gloss` properties and would otherwise inherit gloss's description - which reads inverted.
+ *
+ * @attribute {number} roughness - The roughness of the material, from 0 (shiny) to 1 (rough). An
+ * alias for `gloss` that also inverts it, so do not combine it with the `gloss` attributes.
+ * @attribute {string} roughness-map - The id of the `pc-asset` to use as the roughness map. An
+ * alias for `gloss-map` that also inverts the gloss channel, so do not combine it with the `gloss`
+ * attributes.
  */
 class MaterialElement extends HTMLElement {
     private _alphaTest = 0;
@@ -1688,8 +1697,8 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Sets the opacity of the material, from 0 (transparent) to 1 (opaque). Requires a `blend-type`
-     * other than `none` to be visible.
+     * Sets the opacity of the material, from 0 (transparent) to 1 (opaque), which requires a
+     * `blend-type` other than `none` to have any visible effect.
      * @param value - The opacity.
      */
     set opacity(value: number) {
@@ -1701,7 +1710,8 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Gets the opacity of the material.
+     * Gets the opacity of the material, which requires a `blend-type` other than `none` to have
+     * any visible effect.
      * @returns The opacity.
      */
     get opacity() {
@@ -1922,8 +1932,8 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Sets the specular color of the material. With the metalness workflow this applies only when
-     * `use-metalness-specular-color` is enabled.
+     * Sets the specular color of the material, which applies only when the metalness workflow is
+     * disabled or `use-metalness-specular-color` is enabled.
      * @param value - The specular color.
      */
     set specular(value: Color) {
@@ -1935,7 +1945,8 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Gets the specular color of the material.
+     * Gets the specular color of the material, which applies only when the metalness workflow is
+     * disabled or `use-metalness-specular-color` is enabled.
      * @returns The specular color.
      */
     get specular(): Color {
@@ -1943,7 +1954,8 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Sets the strength of specular reflections at direct angles, from 0 to 1.
+     * Sets the strength of specular reflections at direct angles, from 0 to 1, which applies only
+     * when `use-metalness-specular-color` is enabled.
      * @param value - The specularity factor.
      */
     set specularityFactor(value: number) {
@@ -1955,7 +1967,8 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Gets the strength of specular reflections at direct angles.
+     * Gets the strength of specular reflections at direct angles, which applies only when
+     * `use-metalness-specular-color` is enabled.
      * @returns The specularity factor.
      */
     get specularityFactor() {
