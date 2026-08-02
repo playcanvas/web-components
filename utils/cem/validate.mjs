@@ -101,6 +101,34 @@ if (manifest) {
     check(attribute('pc-element', 'margin')?.default === undefined,
         'pc-element[margin] should have no default');
 
+    // pc-material carries by far the largest attribute surface, and it is the one element whose
+    // attributes are mostly mechanical repetitions of a handful of shapes - so a regression in any
+    // one shape would be easy to miss by eye.
+    const materialAttributes = elements.get('pc-material')?.attributes ?? [];
+    check(materialAttributes.length > 80,
+        `pc-material has ${materialAttributes.length} attributes, expected more than 80`);
+    expectAttribute('pc-material', 'diffuse-map-tiling',
+        { type: 'string', default: '1 1', fieldName: 'diffuseMapTiling' });
+    expectAttribute('pc-material', 'diffuse-map-offset', { default: '0 0' });
+    expectAttribute('pc-material', 'gloss', { type: 'number', default: '0.25', fieldName: 'gloss' });
+    expectAttribute('pc-material', 'diffuse', { type: 'string', default: '1 1 1' });
+    expectAttribute('pc-material', 'emissive', { default: '0 0 0' });
+    expectEnum('pc-material', 'cull', 4, 'back');
+    expectEnum('pc-material', 'diffuse-map-channel', 5, 'rgb');
+    expectEnum('pc-material', 'opacity-dither', 4, 'none');
+
+    // The element enables the metalness workflow, unlike a bare StandardMaterial, so the default
+    // published to editors has to say so
+    expectAttribute('pc-material', 'use-metalness', { type: 'boolean', default: 'true' });
+
+    // roughness-* are aliases: they resolve to the gloss properties rather than to themselves
+    expectAttribute('pc-material', 'roughness', { fieldName: 'gloss' });
+    expectAttribute('pc-material', 'roughness-map', { type: 'string', fieldName: 'glossMap' });
+
+    // A texture slot names a pc-asset, so it has no meaningful default to publish
+    check(attribute('pc-material', 'diffuse-map')?.default === undefined,
+        'pc-material[diffuse-map] should have no default');
+
     // Enums resolved from an inline array, and from a module-scope Map
     expectEnum('pc-render', 'type', 6, 'box');
     expectEnum('pc-light', 'type', 3, 'directional');
@@ -154,6 +182,12 @@ if (manifest) {
     for (const [tag, declaration] of elements) {
         for (const item of declaration.attributes ?? []) {
             check(Boolean(item.type?.text), `${tag}[${item.name}] has no type`);
+
+            // An attribute description is read as a tooltip, so it must not still be in the
+            // accessor voice ("Gets how the material is blended..."). A leading word that
+            // toAttributeDescription does not know about is how these slip through.
+            check(!/^(?:Sets|Gets)\b/.test(item.description ?? ''),
+                `${tag}[${item.name}] kept the accessor voice: ${JSON.stringify(item.description)}`);
         }
         for (const event of declaration.events ?? []) {
             check(Boolean(event.name) && !/[`$:]/.test(event.name),
