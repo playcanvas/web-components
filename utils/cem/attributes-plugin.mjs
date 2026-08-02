@@ -19,7 +19,7 @@
  */
 
 /**
- * The attribute-parsing helpers from `src/utils.ts`, mapped to the manifest type they imply.
+ * The attribute-parsing helpers from `src/parse.ts`, mapped to the manifest type they imply.
  * `format` selects a trailing hint appended to the attribute description, since the accepted
  * string syntax of a color or vector attribute is not obvious from the type alone.
  */
@@ -352,9 +352,14 @@ const toAttributeDescription = (text) => {
     }
     const paragraph = text.split(/\n\s*\n/)[0].replace(/\s+/g, ' ').trim();
     const sentence = /^[\s\S]*?[.!?](?=\s|$)/.exec(paragraph)?.[0] ?? paragraph;
-    return sentence
-        .replace(/^(?:Sets|Gets) the /, 'The ')
-        .replace(/^(?:Sets|Gets) whether /, 'Whether ');
+
+    // Accessors open with one of a small set of leading words ("Sets the ...", "Gets whether ...",
+    // "Sets how ...", "Gets which ..."). Dropping the verb and capitalizing the word after it turns
+    // every one of them into the declarative voice an attribute description wants.
+    return sentence.replace(
+        /^(?:Sets|Gets) (the|whether|how|which) /,
+        (_, word) => `${word[0].toUpperCase()}${word.slice(1)} `
+    );
 };
 
 /**
