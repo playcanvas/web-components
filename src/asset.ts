@@ -99,6 +99,13 @@ const processBufferView = (
  * @attribute {number} pixels-per-unit - For a `sprite` asset, the number of pixels per world unit.
  * @attribute {'simple' | 'sliced' | 'tiled'} render-mode - For a `sprite` asset, how the sprite is
  * rendered when resized.
+ *
+ * @fires {Event} load - Fired each time the asset finishes loading, including a `lazy` asset
+ * loaded later and any subsequent reloads. Does not bubble — listen on this element, or use a
+ * capture-phase listener on an ancestor to observe every asset.
+ * @fires {ErrorEvent} error - Fired when the asset fails to load, with the engine's error in
+ * `message`. Does not bubble. The element still becomes ready — readiness means the load settled,
+ * not that it succeeded.
  */
 class AssetElement extends AsyncElement {
     private _lazy: boolean = false;
@@ -149,6 +156,16 @@ class AssetElement extends AsyncElement {
         this.destroyAsset();
     }
 
+    private _onAssetLoad() {
+        this.dispatchEvent(new Event('load'));
+    }
+
+    private _onAssetError(err: string | Error) {
+        this.dispatchEvent(new ErrorEvent('error', {
+            message: err instanceof Error ? err.message : String(err)
+        }));
+    }
+
     createAsset() {
         const id = this.getAttribute('id') || '';
         const src = this.getAttribute('src') || '';
@@ -186,6 +203,11 @@ class AssetElement extends AsyncElement {
         }
 
         this.asset.preload = !this._lazy;
+
+        // Forward the engine asset's load outcome as DOM events on this element, like <img>.
+        // Attached before the asset joins the registry, which is what starts a preloaded load.
+        this.asset.on('load', this._onAssetLoad, this);
+        this.asset.on('error', this._onAssetError, this);
     }
 
     /**
@@ -249,6 +271,9 @@ class AssetElement extends AsyncElement {
 
     destroyAsset() {
         if (this.asset) {
+            // A caller that keeps the Asset alive must not dispatch on a removed element
+            this.asset.off('load', this._onAssetLoad, this);
+            this.asset.off('error', this._onAssetError, this);
             // Deregister first so unload() can still notify the registry
             this.asset.registry?.remove(this.asset);
             this.asset.unload();

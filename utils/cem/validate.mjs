@@ -200,6 +200,18 @@ if (manifest) {
     check(strayPointerEvents.length === 0,
         `pc-app should not declare pointer events: ${strayPointerEvents.join(', ')}`);
 
+    // Loading events are leaf-declared (ProgressEvent/ErrorEvent dispatches, not CustomEvent), so
+    // they exercise the analyzer's non-CustomEvent detection - and must not leak onto other tags
+    // through the inheritance step
+    check(events('pc-app').includes('progress'), "pc-app is missing the 'progress' event");
+    for (const name of ['load', 'error']) {
+        check(events('pc-asset').includes(name), `pc-asset is missing the '${name}' event`);
+    }
+    check(!events('pc-entity').includes('progress'), 'pc-entity should not have a progress event');
+    const strayAssetEvents = ['load', 'error'].filter(name => events('pc-app').includes(name));
+    check(strayAssetEvents.length === 0,
+        `pc-app should not declare asset events: ${strayAssetEvents.join(', ')}`);
+
     // Global invariants
     for (const [tag, declaration] of elements) {
         for (const item of declaration.attributes ?? []) {
