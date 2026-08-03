@@ -92,23 +92,24 @@ describe('misplaced elements', () => {
         await expectNeverReady(get<AsyncElement>('pc-sound'));
     });
 
-    it('never becomes ready and logs NOTHING for a pc-entity with no pc-app ancestor', async () => {
-        // KNOWN BUG (#314): every other misplacement names the parent it requires. This one is
-        // silent, so `await whenReady(...)` hangs with a completely clean console and the
-        // documented debugging route - "check the warning" - is a dead end.
+    it('warns and never becomes ready for a pc-entity with no pc-app ancestor', async () => {
         const handle = mount('<pc-entity name="stray"></pc-entity>');
         const entity = handle.get<AsyncElement>('pc-entity');
 
+        warnings.expect('pc-entity \'stray\' must be a descendant of pc-app - entity not created');
         await expectNeverReady(entity);
-        expect(warnings.seen, 'no warning is emitted - this is the bug').toEqual([]);
     });
 
-    it.todo('warns that a pc-entity must be a descendant of pc-app');
+    it('omits the label when an unnamed pc-entity has no pc-app ancestor', async () => {
+        const handle = mount('<pc-entity></pc-entity>');
 
-    // Both cases below were unreachable before #313 was fixed: <pc-scene> threw from inside an
-    // async connectedCallback, which Vitest sees as an unhandled rejection and fails the whole file
-    // on, whether or not a test claims it. Now that the element warns and returns instead, they are
-    // ordinary assertions.
+        warnings.expect('pc-entity must be a descendant of pc-app - entity not created');
+        await expectNeverReady(handle.get<AsyncElement>('pc-entity'));
+    });
+
+    // Both cases below are only testable because <pc-scene> warns and returns rather than throwing.
+    // A throw inside an async connectedCallback becomes an unhandled rejection, and Vitest fails the
+    // whole file on any of those, whether or not a test claims it.
     it('warns and never becomes ready for a pc-scene with no pc-app ancestor', async () => {
         const handle = mount('<pc-scene fog="linear"></pc-scene>');
         const scene = handle.get<AsyncElement>('pc-scene');
@@ -118,11 +119,9 @@ describe('misplaced elements', () => {
     });
 
     it('applies settings to a pc-scene nested inside a wrapper element', async () => {
-        // #313 resolved this as *descendant*, not direct-child. pc-asset and pc-material require a
-        // direct child because app.ts collects them with `:scope > `; nothing queries pc-scene, so
-        // there is no mechanical reason to restrict it - and connectedCallback already resolved the
-        // app with closestApp, so fog worked here all along. Only the gravity line, which read
-        // parentElement, threw.
+        // pc-scene requires a descendant relationship, not a direct child. pc-asset and pc-material
+        // require a direct child because app.ts collects them with `:scope > `; nothing queries
+        // pc-scene, so there is no mechanical reason to restrict it.
         const { get, appElement } = await bootUnsettled('<div><pc-scene fog="exp2" gravity="0 -5 0"></pc-scene></div>');
         const scene = get<SceneElement>('pc-scene');
 

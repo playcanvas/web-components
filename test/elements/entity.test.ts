@@ -84,6 +84,10 @@ describe('<pc-entity>', () => {
                     </div>
                 </pc-entity>
             `);
+
+            // Connecting an entity with no pc-app ancestor warns. Not the point of this test.
+            warnings.allow(/must be a descendant of pc-app/);
+
             const [outer, inner] = handle.all<EntityElement>('pc-entity');
 
             // Both getters start from parentElement, so an element never matches itself, and the
@@ -95,6 +99,10 @@ describe('<pc-entity>', () => {
 
         it('is null when there is no app ancestor', () => {
             const handle = mount('<pc-entity name="stray"></pc-entity>');
+
+            // Connecting an entity with no pc-app ancestor warns. Not the point of this test.
+            warnings.allow(/must be a descendant of pc-app/);
+
             expect(handle.get<EntityElement>('pc-entity').closestApp).toBeNull();
         });
     });
