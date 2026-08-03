@@ -69,6 +69,7 @@ import {
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
 import { EntityElement } from './entity';
+import { LoadingBar } from './loading-bar';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
 import { parseBool, parseEnum } from './parse';
@@ -101,6 +102,10 @@ class AppElement extends AsyncElement {
     private _stencil = true;
 
     private _highResolution = true;
+
+    private _loadingBar = true;
+
+    private _bar: LoadingBar | null = null;
 
     private _hierarchyReady = false;
 
@@ -160,6 +165,12 @@ class AppElement extends AsyncElement {
     }
 
     async connectedCallback() {
+        // Created before the first await, so the bar is visible while modules and the graphics
+        // device are created, and exists before any disconnect could need to clean it up
+        if (this._loadingBar && !this._bar) {
+            this._bar = new LoadingBar(this);
+        }
+
         // Get all pc-module elements that are direct children of the pc-app element
         const moduleElements = this.querySelectorAll<ModuleElement>(':scope > pc-module');
 
@@ -299,11 +310,13 @@ class AppElement extends AsyncElement {
         const onPreloadProgress = () => {
             loaded += 1;
             this._loadProgress = loaded / total;
+            this._bar?.progress(loaded, total);
             this.dispatchEvent(new ProgressEvent('progress', { lengthComputable: true, loaded, total }));
         };
         app.on('preload:progress', onPreloadProgress);
 
         this._loadProgress = total === 0 ? 1 : 0;
+        this._bar?.progress(0, total);
         this.dispatchEvent(new ProgressEvent('progress', { lengthComputable: true, loaded: 0, total }));
 
         // Load assets before starting the application
@@ -315,6 +328,10 @@ class AppElement extends AsyncElement {
 
             // Start the application
             app.start();
+
+            // Dismiss the bar only once a frame has actually rendered; ready fires before the
+            // first rAF tick
+            app.once('frameend', () => this._bar?.complete());
 
             // Handle window resize to keep the canvas responsive
             window.addEventListener('resize', this._onWindowResize);
@@ -332,6 +349,8 @@ class AppElement extends AsyncElement {
             this._app = null;
         }
         this._loadProgress = 0;
+        this._bar?.destroy();
+        this._bar = null;
 
         // Remove event listeners
         window.removeEventListener('resize', this._onWindowResize);
@@ -631,6 +650,31 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Sets whether the application shows its built-in loading bar while it boots and preloads its
+     * assets. Enabled by default; setting `false` removes the bar immediately, while setting
+     * `true` has no effect until the element is next connected. The bar can be themed with the
+     * CSS custom properties `--pc-loading-bar-color`, `--pc-loading-bar-background` and
+     * `--pc-loading-bar-height`.
+     * @param value - The loading bar flag.
+     */
+    set loadingBar(value: boolean) {
+        this._loadingBar = value;
+        if (!value && this._bar) {
+            this._bar.destroy();
+            this._bar = null;
+        }
+    }
+
+    /**
+     * Gets whether the application shows its built-in loading bar while it boots and preloads
+     * its assets.
+     * @returns The loading bar flag.
+     */
+    get loadingBar() {
+        return this._loadingBar;
+    }
+
+    /**
      * Sets the stencil flag.
      * @param value - The stencil flag.
      */
@@ -647,7 +691,7 @@ class AppElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['alpha', 'antialias', 'backend', 'depth', 'stencil', 'high-resolution'];
+        return ['alpha', 'antialias', 'backend', 'depth', 'stencil', 'high-resolution', 'loading-bar'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -666,6 +710,9 @@ class AppElement extends AsyncElement {
                 break;
             case 'high-resolution':
                 this.highResolution = parseBool(newValue, true);
+                break;
+            case 'loading-bar':
+                this.loadingBar = parseBool(newValue, true);
                 break;
             case 'stencil':
                 this.stencil = parseBool(newValue, true);
