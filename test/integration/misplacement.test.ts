@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { AppElement } from '../../src/app';
 import type { AsyncElement } from '../../src/async-element';
 import type { ComponentElement } from '../../src/components/component';
+import type { SceneElement } from '../../src/scene';
 import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
@@ -104,19 +105,30 @@ describe('misplaced elements', () => {
 
     it.todo('warns that a pc-entity must be a descendant of pc-app');
 
-    // KNOWN BUG (#313): a misplaced <pc-scene> throws instead of warning, because
-    // updateSceneSettings reads this.parentElement while connectedCallback in the same file uses
-    // closestApp - so a wrapper element makes it dereference `undefined.app`.
-    //
-    // This is deliberately NOT pinned with an executable test. The throw happens inside an async
-    // connectedCallback, so it becomes an unhandled rejection, and Vitest fails the whole file on
-    // any unhandled rejection regardless of whether a test claims it. There is no way to mount a
-    // misplaced <pc-scene> and still have the file pass, and the bug cannot be reached
-    // synchronously either: updateSceneSettings only gets past its `if (this.scene)` guard once
-    // connectedCallback has run, and re-parenting an already-connected element just triggers the
-    // async path again.
-    //
-    // Once #313 is fixed the todo below becomes a normal warning assertion, matching the other
-    // cases in this file.
-    it.todo('warns and does nothing when pc-scene is not a direct child of pc-app');
+    // Both cases below were unreachable before #313 was fixed: <pc-scene> threw from inside an
+    // async connectedCallback, which Vitest sees as an unhandled rejection and fails the whole file
+    // on, whether or not a test claims it. Now that the element warns and returns instead, they are
+    // ordinary assertions.
+    it('warns and never becomes ready for a pc-scene with no pc-app ancestor', async () => {
+        const handle = mount('<pc-scene fog="linear"></pc-scene>');
+        const scene = handle.get<AsyncElement>('pc-scene');
+
+        warnings.expect('pc-scene must be a descendant of pc-app - scene settings not applied');
+        await expectNeverReady(scene);
+    });
+
+    it('applies settings to a pc-scene nested inside a wrapper element', async () => {
+        // #313 resolved this as *descendant*, not direct-child. pc-asset and pc-material require a
+        // direct child because app.ts collects them with `:scope > `; nothing queries pc-scene, so
+        // there is no mechanical reason to restrict it - and connectedCallback already resolved the
+        // app with closestApp, so fog worked here all along. Only the gravity line, which read
+        // parentElement, threw.
+        const { get, appElement } = await bootUnsettled('<div><pc-scene fog="exp2" gravity="0 -5 0"></pc-scene></div>');
+        const scene = get<SceneElement>('pc-scene');
+
+        await readyWithin(scene);
+
+        expect(scene.scene?.fog.type).toBe('exp2');
+        expect(appElement.app?.systems.rigidbody?.gravity.y).toBe(-5);
+    });
 });

@@ -1,6 +1,5 @@
 import { Color, Scene, Vec3 } from 'playcanvas';
 
-import { AppElement } from './app';
 import { AsyncElement } from './async-element';
 import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
 
@@ -53,25 +52,48 @@ class SceneElement extends AsyncElement {
     }
 
     async connectedCallback() {
-        await this.closestApp?.ready();
+        const appElement = this.closestApp;
+        if (!appElement) {
+            console.warn('pc-scene must be a descendant of pc-app - scene settings not applied');
+            return;
+        }
 
-        this._scene = this.closestApp!.app!.scene;
+        await appElement.ready();
+
+        // The application is gone if the tree was torn down while we awaited readiness. There is
+        // nothing to configure and nothing the author can act on, so this stays silent.
+        const app = appElement.app;
+        if (!app) {
+            return;
+        }
+
+        this._scene = app.scene;
         this.updateSceneSettings();
 
         this._onReady();
     }
 
     updateSceneSettings() {
-        if (this.scene) {
-            this.scene.fog.type = this._fog;
-            this.scene.fog.color = this._fogColor;
-            this.scene.fog.density = this._fogDensity;
-            this.scene.fog.start = this._fogStart;
-            this.scene.fog.end = this._fogEnd;
+        if (this._scene) {
+            this._scene.fog.type = this._fog;
+            this._scene.fog.color = this._fogColor;
+            this._scene.fog.density = this._fogDensity;
+            this._scene.fog.start = this._fogStart;
+            this._scene.fog.end = this._fogEnd;
 
-            const appElement = this.parentElement as AppElement;
-            appElement.app!.systems.rigidbody!.gravity.copy(this._gravity);
+            this._applyGravity(this._gravity);
         }
+    }
+
+    /**
+     * Applies gravity to the rigid body system. Resolved through `closestApp` rather than
+     * `parentElement` so that a `<pc-scene>` nested inside a wrapper element behaves the same as
+     * a direct child, matching how `connectedCallback` resolves the application.
+     *
+     * @param value - The gravity to apply.
+     */
+    private _applyGravity(value: Vec3) {
+        this.closestApp?.app?.systems.rigidbody?.gravity.copy(value);
     }
 
     /**
@@ -176,9 +198,8 @@ class SceneElement extends AsyncElement {
      */
     set gravity(value: Vec3) {
         this._gravity = value;
-        if (this.scene) {
-            const appElement = this.parentElement as AppElement;
-            appElement.app!.systems.rigidbody!.gravity.copy(value);
+        if (this._scene) {
+            this._applyGravity(value);
         }
     }
 
