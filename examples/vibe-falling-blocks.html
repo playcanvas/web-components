@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-        <title>PlayCanvas Web Components - Vibe-Coded Falling Blocks Game</title>
+        <title>PlayCanvas Web Components - Falling Blocks</title>
         <script type="importmap">
             {
                 "imports": {
@@ -15,159 +15,535 @@
         <script type="module" src="../dist/pwc.mjs"></script>
         <link rel="stylesheet" href="css/example.css">
         <style>
-            #game-ui {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
+            :root {
+                --bg: #05030f;
+                --ink: #eaf2ff;
+                --dim: #8a93b8;
+                --cyan: #00e5ff;
+                --magenta: #ff3df0;
+                --panel: rgba(10, 8, 28, 0.72);
+                --hairline: rgba(0, 229, 255, 0.25);
+                --font-display: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+                --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+            }
+
+            body {
+                background: var(--bg);
+                color: var(--ink);
+                font-family: var(--font-display);
+            }
+
+            :focus-visible {
+                outline: 1px solid rgba(255, 255, 255, 0.7);
+                outline-offset: 3px;
+            }
+
+            /*
+                The canvas is transparent (see the camera's clear-color), so the page
+                itself is the sky: a deep-space gradient with a faint holo-grid, layered
+                behind the 3D scene.
+            */
+
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                z-index: -2;
+                background:
+                    radial-gradient(ellipse 120% 80% at 50% -10%, rgba(64, 32, 128, 0.4), transparent 60%),
+                    radial-gradient(ellipse 80% 60% at 12% 110%, rgba(0, 229, 255, 0.14), transparent 60%),
+                    radial-gradient(ellipse 80% 60% at 88% 110%, rgba(255, 61, 240, 0.13), transparent 60%);
+            }
+
+            body::after {
+                content: '';
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                background:
+                    repeating-linear-gradient(0deg, rgba(120, 160, 255, 0.06) 0 1px, transparent 1px 48px),
+                    repeating-linear-gradient(90deg, rgba(120, 160, 255, 0.06) 0 1px, transparent 1px 48px);
+                mask-image: radial-gradient(ellipse at 50% 45%, black 30%, transparent 80%);
+                -webkit-mask-image: radial-gradient(ellipse at 50% 45%, black 30%, transparent 80%);
+            }
+
+            pc-app {
+                display: block;
+                position: fixed;
+                inset: 0;
+                z-index: 1;
+            }
+
+            /* -------- HUD -------- */
+
+            #hud {
+                position: fixed;
+                inset: 0;
+                z-index: 2;
                 pointer-events: none;
-                font-family: Arial, sans-serif;
             }
 
-            #score, #level, #lines {
+            #stats {
                 position: absolute;
-                background-color: rgba(0, 0, 0, 0.5);
-                color: white;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 18px;
+                top: max(16px, env(safe-area-inset-top));
+                left: max(16px, env(safe-area-inset-left));
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
             }
 
-            #score {
-                top: 20px;
-                right: 20px;
-            }
-
-            #level {
-                top: 70px;
-                right: 20px;
-            }
-
-            #lines {
-                top: 120px;
-                right: 20px;
-            }
-
-            #game-over {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background-color: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 30px;
+            .stat {
+                min-width: 130px;
+                padding: 10px 16px 12px;
+                background: var(--panel);
+                border: 1px solid var(--hairline);
                 border-radius: 10px;
-                text-align: center;
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
+            }
+
+            .stat-label {
+                margin-bottom: 4px;
+                font-size: 0.62rem;
+                letter-spacing: 0.28em;
+                text-transform: uppercase;
+                color: var(--dim);
+            }
+
+            .stat-value {
+                font-family: var(--font-mono);
+                font-size: 1.5rem;
+                text-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+            }
+
+            .stat.bump {
+                animation: level-pop 0.7s ease;
+            }
+
+            @keyframes level-pop {
+                30% {
+                    transform: scale(1.08);
+                    border-color: var(--magenta);
+                    box-shadow: 0 0 24px rgba(255, 61, 240, 0.5);
+                }
+            }
+
+            #pause-button {
+                position: absolute;
+                top: max(16px, env(safe-area-inset-top));
+                right: max(16px, env(safe-area-inset-right));
                 pointer-events: auto;
-                display: none;
-            }
-
-            #restart-button {
-                background-color: #4CAF50;
-                border: none;
-                color: white;
-                padding: 15px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;
-                margin: 20px 0 0 0;
+                width: 44px;
+                height: 44px;
+                background: var(--panel);
+                border: 1px solid var(--hairline);
+                border-radius: 10px;
+                color: var(--ink);
+                font-size: 0.8rem;
                 cursor: pointer;
-                border-radius: 5px;
-                transition: background-color 0.3s;
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
             }
 
-            #restart-button:hover {
-                background-color: #45a049;
+            #pause-button:hover {
+                background: rgba(0, 229, 255, 0.15);
+            }
+
+            body:not([data-state='playing']) #pause-button {
+                display: none;
             }
 
             #controls {
                 position: absolute;
-                bottom: 20px;
-                left: 20px;
-                background-color: rgba(0, 0, 0, 0.5);
-                color: white;
-                padding: 10px 20px;
+                bottom: max(16px, env(safe-area-inset-bottom));
+                left: max(16px, env(safe-area-inset-left));
+                font-size: 0.78rem;
+                line-height: 2;
+                color: var(--dim);
+            }
+
+            #controls kbd {
+                display: inline-block;
+                min-width: 1.3em;
+                padding: 0 0.45em;
+                background: rgba(10, 8, 28, 0.6);
+                border: 1px solid rgba(138, 147, 184, 0.5);
                 border-radius: 5px;
-                font-size: 16px;
+                font-family: var(--font-mono);
+                font-size: 0.72rem;
+                text-align: center;
+                color: var(--ink);
+            }
+
+            /* Show gesture hints instead of key hints on touch devices */
+            #controls .touch {
+                display: none;
+            }
+
+            @media (pointer: coarse) {
+                #controls .keys {
+                    display: none;
+                }
+
+                #controls .touch {
+                    display: block;
+                }
+            }
+
+            /* -------- overlays -------- */
+
+            /* Overlay visibility is pure CSS, keyed off the game state that the page
+               glue mirrors onto <body data-state> */
+            .overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 3;
+                display: none;
+                place-items: center;
+                background: rgba(5, 3, 15, 0.55);
+            }
+
+            .overlay.blur {
+                background: rgba(5, 3, 15, 0.7);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+
+            body[data-state='ready'] #overlay-start,
+            body[data-state='paused'] #overlay-paused,
+            body[data-state='over'] #overlay-over {
+                display: grid;
+            }
+
+            .panel {
+                max-width: min(84vw, 26rem);
+                padding: 2.2rem 3rem 2.5rem;
+                background: var(--panel);
+                border: 1px solid var(--hairline);
+                border-radius: 14px;
+                box-shadow: 0 0 60px rgba(0, 229, 255, 0.12);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                text-align: center;
+            }
+
+            .overline {
+                margin: 0;
+                font-family: var(--font-mono);
+                font-size: 0.66rem;
+                letter-spacing: 0.3em;
+                text-transform: uppercase;
+                color: var(--dim);
+            }
+
+            .panel h1,
+            .panel h2 {
+                margin: 0.6rem 0 1.7rem;
+                font-size: clamp(1.6rem, 5vw, 2.4rem);
+                font-weight: 300;
+                letter-spacing: 0.22em;
+                text-transform: uppercase;
+                text-shadow: 0 0 18px rgba(255, 61, 240, 0.8), 0 0 60px rgba(255, 61, 240, 0.4);
+            }
+
+            .neon-button {
+                pointer-events: auto;
+                padding: 0.85rem 2.6rem;
+                background: rgba(0, 229, 255, 0.08);
+                border: 1px solid var(--cyan);
+                border-radius: 8px;
+                color: var(--ink);
+                font-family: var(--font-mono);
+                font-size: 0.9rem;
+                letter-spacing: 0.3em;
+                text-transform: uppercase;
+                cursor: pointer;
+                box-shadow: 0 0 18px rgba(0, 229, 255, 0.25), inset 0 0 12px rgba(0, 229, 255, 0.08);
+                transition: background 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .neon-button:hover:not([disabled]) {
+                background: rgba(0, 229, 255, 0.18);
+                box-shadow: 0 0 26px rgba(0, 229, 255, 0.5), inset 0 0 12px rgba(0, 229, 255, 0.15);
+            }
+
+            .neon-button[disabled] {
+                opacity: 0.45;
+                cursor: default;
+            }
+
+            .final-stats {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.4rem;
+                margin: 0 0 1.8rem;
+            }
+
+            .final-stats dt {
+                margin-bottom: 0.3rem;
+                font-size: 0.6rem;
+                letter-spacing: 0.24em;
+                text-transform: uppercase;
+                color: var(--dim);
+            }
+
+            .final-stats dd {
+                margin: 0;
+                font-family: var(--font-mono);
+                font-size: 1.35rem;
+                text-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .stat.bump {
+                    animation: none;
+                }
             }
         </style>
     </head>
-    <body>
+    <body data-state="ready">
         <pc-app>
             <!-- Assets -->
             <pc-asset src="assets/scripts/falling-blocks.mjs"></pc-asset>
-            <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
-            <pc-asset src="assets/sounds/clear1.mp3" id="clear1-sound"></pc-asset>
-            <pc-asset src="assets/sounds/clear4.mp3" id="clear4-sound"></pc-asset>
+            <pc-asset src="assets/models/rounded-box.glb" id="rounded-box"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <pc-asset src="assets/fonts/kenney-future.json" type="font" id="kenney-future"></pc-asset>
             <pc-asset src="assets/sounds/rotate.mp3" id="rotate-sound"></pc-asset>
             <pc-asset src="assets/sounds/drop.mp3" id="drop-sound"></pc-asset>
+            <pc-asset src="assets/sounds/clear1.mp3" id="clear1-sound"></pc-asset>
+            <pc-asset src="assets/sounds/clear4.mp3" id="clear4-sound"></pc-asset>
             <pc-asset src="assets/sounds/gameover.mp3" id="gameover-sound"></pc-asset>
-            <pc-asset src="assets/models/rounded-box.glb" id="rounded-box"></pc-asset>
 
-            <!-- Materials for Blocks -->
-            <pc-material id="block-i" diffuse="0 1 1"></pc-material>
-            <pc-material id="block-j" diffuse="0 0 1"></pc-material>
-            <pc-material id="block-l" diffuse="1 0.5 0"></pc-material>
-            <pc-material id="block-o" diffuse="1 1 0"></pc-material>
-            <pc-material id="block-s" diffuse="0 1 0"></pc-material>
-            <pc-material id="block-t" diffuse="0.5 0 0.5"></pc-material>
-            <pc-material id="block-z" diffuse="1 0 0"></pc-material>
-            <pc-material id="block-grid" diffuse="0.2 0.2 0.2"></pc-material>
-            <pc-material id="block-wall" diffuse="0.3 0.3 0.3"></pc-material>
+            <!-- Block materials, one per tetromino: dark tinted bodies with an emissive
+                 core in the classic piece hue, glossy enough to catch the studio
+                 reflections. The game looks pieces up by id: piece K wears block-k. -->
+            <pc-material id="block-i" diffuse="#005a60" emissive="#00e5ff" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
+            <pc-material id="block-j" diffuse="#12246e" emissive="#3d64ff" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
+            <pc-material id="block-l" diffuse="#663c00" emissive="#ff9d00" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
+            <pc-material id="block-o" diffuse="#666000" emissive="#ffe600" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
+            <pc-material id="block-s" diffuse="#00591c" emissive="#00e561" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
+            <pc-material id="block-t" diffuse="#46106e" emissive="#c44dff" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
+            <pc-material id="block-z" diffuse="#660d18" emissive="#ff2e4d" emissive-intensity="0.4" metalness="0.35" gloss="0.85"></pc-material>
 
-            <!-- Scene -->
+            <!-- Cleared rows swap to this before they shrink away -->
+            <pc-material id="block-flash" diffuse="#ffffff" emissive="#ffffff" emissive-intensity="2.5"></pc-material>
+
+            <!-- The well -->
+            <pc-material id="well-frame" diffuse="#1a2140" metalness="0.6" gloss="0.7"></pc-material>
+            <pc-material id="well-back" diffuse="#05070f" metalness="0.2" gloss="0.45"></pc-material>
+            <pc-material id="grid-line" diffuse="#000000" emissive="#0d3a47"></pc-material>
+
             <pc-scene>
-                <!-- Sky -->
-                <pc-sky asset="shanghai" type="infinite" level="3" lighting></pc-sky>
+                <!-- The studio environment lights and reflects the scene but is never
+                     drawn: the transparent canvas lets the CSS backdrop show through -->
+                <pc-sky asset="studio" type="none" lighting intensity="0.45"></pc-sky>
 
-                <!-- Camera -->
-                <pc-entity name="camera" position="0 9.5 27">
-                    <pc-camera></pc-camera>
-                </pc-entity>
-
-                <pc-entity name="ambient">
-                    <pc-light type="ambient" intensity="0.2"></pc-light>
-                </pc-entity>
-
-                <!-- Game Board -->
-                <pc-entity name="game-board" position="0 0 0">
+                <!-- Camera: framed by boardCamera every frame, jolted by cameraShake -->
+                <pc-entity name="camera" position="0 12 32">
+                    <pc-camera clear-color="0 0 0 0" fov="45" tonemap="neutral" far-clip="200"></pc-camera>
                     <pc-scripts>
-                        <pc-script name="fallingBlocksGame" board-width="10" board-height="20" block-size="1"></pc-script>
+                        <pc-script name="boardCamera" target="0 10.5 0" frame-width="14" frame-height="26" elevation="1.5"></pc-script>
+                        <pc-script name="cameraShake" intensity="0.4" decay="1.4"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+
+                <!-- A warm key light casts the block shadows; a faint cool fill lifts
+                     the undersides -->
+                <pc-entity name="key-light" rotation="45 -30 0">
+                    <pc-light type="directional" color="#fff4e6" intensity="1.6" cast-shadows shadow-distance="60" shadow-resolution="2048"></pc-light>
+                </pc-entity>
+                <pc-entity name="fill-light" rotation="135 20 0">
+                    <pc-light type="directional" color="#4a5dff" intensity="0.35"></pc-light>
+                </pc-entity>
+
+                <!-- The well frame, hand-authored for the default 10x20 board of 1-unit
+                     cells: interior x from -5 to 5, y from 0 to 20 -->
+                <pc-entity name="well">
+                    <pc-entity name="back-panel" position="0 10.15 -0.7" scale="11.4 21.7 0.3">
+                        <pc-render type="box" material="well-back" cast-shadows="false"></pc-render>
+                    </pc-entity>
+                    <pc-entity name="left-rail" position="-5.35 10.5 0" scale="0.7 21 1.4">
+                        <pc-render type="box" material="well-frame"></pc-render>
+                    </pc-entity>
+                    <pc-entity name="right-rail" position="5.35 10.5 0" scale="0.7 21 1.4">
+                        <pc-render type="box" material="well-frame"></pc-render>
+                    </pc-entity>
+                    <pc-entity name="floor" position="0 -0.35 0" scale="11.4 0.7 1.4">
+                        <pc-render type="box" material="well-frame"></pc-render>
+                    </pc-entity>
+                </pc-entity>
+
+                <!-- World-space marquee above the well -->
+                <pc-entity name="marquee" position="0 22.2 -0.2">
+                    <pc-element type="text" font-asset="kenney-future" text="FALLING BLOCKS" color="#ff3df0" font-size="1.1"></pc-element>
+                </pc-entity>
+
+                <!-- The game. Dynamic block entities are spawned under this entity by
+                     the fallingBlocks script; everything static lives in the markup
+                     above. The grid child gets its cell lines built by boardGrid. -->
+                <pc-entity name="game-board">
+                    <pc-entity name="grid" position="0 0 -0.5">
+                        <pc-scripts>
+                            <pc-script name="boardGrid" width="10" height="20" material="grid-line"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="fallingBlocks"
+                                   block-asset="asset:rounded-box"
+                                   board-width="10"
+                                   board-height="20"
+                                   drop-interval="1000"
+                                   min-drop-interval="100"
+                                   speed-step="100"
+                                   flash-duration="0.25"></pc-script>
+                        <pc-script name="touchControls" drag-cell="24" drag-row="28"></pc-script>
                     </pc-scripts>
                     <pc-sounds>
+                        <pc-sound name="rotate" asset="rotate-sound" overlap volume="0.6"></pc-sound>
+                        <pc-sound name="drop" asset="drop-sound" overlap></pc-sound>
+                        <!-- The lock tick reuses the drop sample, pitched down and quieter -->
+                        <pc-sound name="lock" asset="drop-sound" overlap pitch="0.7" volume="0.45"></pc-sound>
                         <pc-sound name="clear1" asset="clear1-sound" overlap></pc-sound>
                         <pc-sound name="clear4" asset="clear4-sound" overlap></pc-sound>
-                        <pc-sound name="rotate" asset="rotate-sound" overlap></pc-sound>
-                        <pc-sound name="drop" asset="drop-sound" overlap></pc-sound>
-                        <pc-sound name="gameover" asset="gameover-sound" overlap></pc-sound>
+                        <pc-sound name="gameover" asset="gameover-sound"></pc-sound>
                     </pc-sounds>
                 </pc-entity>
             </pc-scene>
         </pc-app>
-        
-        <!-- UI Overlay -->
-        <div id="game-ui">
-            <div id="score">Score: <span id="score-value">0</span></div>
-            <div id="level">Level: <span id="level-value">1</span></div>
-            <div id="lines">Lines: <span id="lines-value">0</span></div>
-            
-            <div id="controls">
-                <div>← → : Move left/right</div>
-                <div>↑ : Rotate</div>
-                <div>↓ : Soft drop</div>
-                <div>Space : Hard drop</div>
-                <div>P : Pause</div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="stats">
+                <div class="stat">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-value" id="score">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Lines</div>
+                    <div class="stat-value" id="lines">0</div>
+                </div>
+                <div class="stat" id="level-stat">
+                    <div class="stat-label">Level</div>
+                    <div class="stat-value" id="level">1</div>
+                </div>
             </div>
-            
-            <div id="game-over">
-                <h2>Game Over</h2>
-                <p>Final Score: <span id="final-score">0</span></p>
-                <button id="restart-button">Play Again</button>
+            <button id="pause-button" title="Pause (P)">&#10074;&#10074;</button>
+            <div id="controls">
+                <div class="keys">
+                    <div><kbd>&#8592;</kbd> <kbd>&#8594;</kbd> Move</div>
+                    <div><kbd>&#8593;</kbd> Rotate</div>
+                    <div><kbd>&#8595;</kbd> Soft drop</div>
+                    <div><kbd>Space</kbd> Hard drop</div>
+                    <div><kbd>P</kbd> Pause</div>
+                </div>
+                <div class="touch">
+                    <div>Drag &mdash; Move</div>
+                    <div>Tap &mdash; Rotate</div>
+                    <div>Drag down &mdash; Soft drop</div>
+                    <div>Flick down &mdash; Hard drop</div>
+                </div>
             </div>
         </div>
-        
+
+        <!-- Overlays, shown and hidden purely by the body's data-state -->
+        <div class="overlay" id="overlay-start">
+            <div class="panel">
+                <p class="overline">PlayCanvas Web Components</p>
+                <h1>Falling Blocks</h1>
+                <button class="neon-button" id="start-button" disabled>Loading&hellip;</button>
+            </div>
+        </div>
+
+        <div class="overlay blur" id="overlay-paused">
+            <div class="panel">
+                <h2>Paused</h2>
+                <button class="neon-button" id="resume-button">Resume</button>
+            </div>
+        </div>
+
+        <div class="overlay blur" id="overlay-over">
+            <div class="panel">
+                <h2>Game Over</h2>
+                <dl class="final-stats">
+                    <div><dt>Score</dt><dd id="final-score">0</dd></div>
+                    <div><dt>Lines</dt><dd id="final-lines">0</dd></div>
+                    <div><dt>Level</dt><dd id="final-level">1</dd></div>
+                </dl>
+                <button class="neon-button" id="again-button">Play Again</button>
+            </div>
+        </div>
+
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const scoreValue = document.getElementById('score');
+            const linesValue = document.getElementById('lines');
+            const levelValue = document.getElementById('level');
+            const levelStat = document.getElementById('level-stat');
+            const finalScore = document.getElementById('final-score');
+            const finalLines = document.getElementById('final-lines');
+            const finalLevel = document.getElementById('final-level');
+            const startButton = document.getElementById('start-button');
+
+            // Respect reduced motion by zeroing the camera shake - per-property script
+            // attributes can be set at any time, even before the app has booted
+            if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector('pc-script[name="cameraShake"]').setAttribute('intensity', '0');
+            }
+
+            const { app } = await whenReady('pc-app');
+
+            // The game reports everything that happens as application events, so the
+            // page just listens and updates the DOM...
+            app.on('game:state', (state) => {
+                document.body.dataset.state = state;
+            });
+
+            let lastLevel = 1;
+            app.on('game:score', ({ score, lines, level }) => {
+                scoreValue.textContent = score;
+                linesValue.textContent = lines;
+                levelValue.textContent = level;
+                if (level !== lastLevel) {
+                    if (level > lastLevel) {
+                        levelStat.classList.remove('bump');
+                        void levelStat.offsetWidth; // restart the animation
+                        levelStat.classList.add('bump');
+                    }
+                    lastLevel = level;
+                }
+            });
+
+            app.on('game:over', ({ score, lines, level }) => {
+                finalScore.textContent = score;
+                finalLines.textContent = lines;
+                finalLevel.textContent = level;
+            });
+
+            // ...and drives it the same way. Buttons are blurred after use so that a
+            // held Space bar can't re-trigger the focused button.
+            const wire = (id, event, arg) => {
+                const button = document.getElementById(id);
+                button.addEventListener('click', () => {
+                    app.fire(event, arg);
+                    button.blur();
+                });
+            };
+            wire('start-button', 'game:start');
+            wire('again-button', 'game:start');
+            wire('resume-button', 'game:pause', false);
+            wire('pause-button', 'game:pause', true);
+
+            // Losing sight of the tab pauses the game
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    app.fire('game:pause', true);
+                }
+            });
+
+            startButton.disabled = false;
+            startButton.textContent = 'Start';
+        </script>
         <script type="module" src="js/example.mjs"></script>
     </body>
-</html> 
+</html>
