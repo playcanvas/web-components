@@ -150,22 +150,51 @@ describe('teardown', () => {
         container.appendChild(parentElement);
         await settleTask();
 
-        // The parent comes back, because its own disconnectedCallback reset both _entity and
-        // _built.
         expect(app.root.findByName('parent')).toBeTruthy();
         expect(uncaught.seen).toEqual([]);
 
-        // KNOWN BUG (#315): the child does not. src/entity.ts:151-153 nulls _entity on every
-        // descendant, but line 158 resets _built only for `this` - and because the parent has
-        // already nulled the child's _entity, the child's own disconnectedCallback skips its reset
-        // behind the `if (this.entity)` guard. So on re-insertion createEntity() makes a fresh
-        // entity while buildHierarchy() bails on the stale _built, leaving it orphaned: created,
-        // never parented, and never ready again.
+        // The nested entity comes back too, and is re-parented rather than merely recreated. This
+        // is what #315 fixed: disconnectedCallback resets _built alongside _entity on every
+        // descendant, so buildHierarchy no longer bails on a stale _built and leaves the child
+        // orphaned - created, never parented, never ready again.
+        const parentEntity = app.root.findByName('parent');
+        const childEntity = app.root.findByName('child');
         const childElement = all<EntityElement>('pc-entity')[1];
-        expect(childElement.entity, 'the child entity is recreated').toBeTruthy();
-        expect(app.root.findByName('child'), 'but never attached to the hierarchy').toBeNull();
-        expect(childElement.entity?.parent, 'and has no parent').toBeNull();
+
+        expect(childEntity, 'the child is attached to the hierarchy').toBeTruthy();
+        expect(childElement.entity, 'and is the element\'s own entity').toBe(childEntity);
+        expect(childEntity?.parent, 'parented under the parent entity, not the root').toBe(parentEntity);
     });
 
-    it.todo('re-attaches a nested pc-entity when its subtree is removed and re-added');
+    it('restores every level when a three-deep pc-entity subtree is removed and re-added', async () => {
+        // The two-level case above cannot distinguish "descendants are reset" from "the first
+        // descendant is reset". This also pins buildHierarchy's dependence on document order:
+        // connectedCallback builds the querySelectorAll result in sequence, so each level has to be
+        // parented before the level below it looks up closestEntity.
+        const { app, all } = await bootApp(`
+            <pc-entity name="a">
+                <pc-entity name="b">
+                    <pc-entity name="c"></pc-entity>
+                </pc-entity>
+            </pc-entity>
+        `);
+        const root = all<EntityElement>('pc-entity')[0];
+        const container = root.parentElement as AppElement;
+
+        root.remove();
+        await settleTask();
+        expect(app.root.findByName('c')).toBeNull();
+
+        container.appendChild(root);
+        await settleTask();
+
+        const a = app.root.findByName('a');
+        const b = app.root.findByName('b');
+        const c = app.root.findByName('c');
+
+        expect([a, b, c].every(Boolean), 'all three levels are back').toBe(true);
+        expect(b?.parent, 'b under a').toBe(a);
+        expect(c?.parent, 'c under b').toBe(b);
+        expect(uncaught.seen).toEqual([]);
+    });
 });
