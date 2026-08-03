@@ -121,6 +121,9 @@ class AppElement extends AsyncElement {
 
     private _hoveredEntity: EntityElement | null = null;
 
+    // Identifies the newest in-flight hover pick, so out-of-order results can be discarded
+    private _pickToken = 0;
+
     private _pointerHandlers: { [key: string]: EventListener | null } = {
         pointermove: null,
         pointerdown: null,
@@ -372,10 +375,18 @@ class AppElement extends AsyncElement {
         const { width, height } = this.app!.graphicsDevice;
         this._picker = new Picker(this.app!, width, height);
 
-        // Create bound handlers but don't attach them yet
-        this._pointerHandlers.pointermove = this._onPointerMove.bind(this) as EventListener;
-        this._pointerHandlers.pointerdown = this._onPointerDown.bind(this) as EventListener;
-        this._pointerHandlers.pointerup = this._onPointerUp.bind(this) as EventListener;
+        // Create bound handlers but don't attach them yet. The handlers pick asynchronously, so
+        // each is wrapped to discard the promise - a listener must not return one, and nothing
+        // awaits the result.
+        const listener = (handler: (event: PointerEvent) => Promise<void>): EventListener => {
+            return (event: Event) => {
+                handler.call(this, event as PointerEvent);
+            };
+        };
+
+        this._pointerHandlers.pointermove = listener(this._onPointerMove);
+        this._pointerHandlers.pointerdown = listener(this._onPointerDown);
+        this._pointerHandlers.pointerup = listener(this._onPointerUp);
 
         // Listen for pointer listeners being added/removed
         ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'].forEach((type) => {
@@ -429,31 +440,51 @@ class AppElement extends AsyncElement {
         return { x, y };
     }
 
-    _onPointerMove(event: PointerEvent) {
-        if (!this._picker || !this.app) return;
-
+    /**
+     * Picks the scene under the pointer and returns the graph node that was hit, or `null`.
+     *
+     * The read back is asynchronous because the synchronous {@link Picker.getSelection} is not
+     * supported on WebGPU, where it returns an empty selection rather than failing - which
+     * silently disabled every `onpointer*` handler once WebGPU became the resolved backend. The
+     * async variant works on both backends and does not block the main thread on a GPU read.
+     *
+     * @param event - The pointer event to pick under.
+     * @returns The graph node under the pointer, or `null` if nothing was hit.
+     */
+    private async _pickNode(event: PointerEvent): Promise<GraphNode | null> {
         const camera = this.app!.root.findComponent('camera') as CameraComponent;
-        if (!camera) return;
+        if (!camera) return null;
 
-        // Use the helper to convert event coordinates into canvas/picker coordinates.
         const { x, y } = this._getPickerCoordinates(event);
 
-        this._picker.prepare(camera, this.app!.scene);
-        const selection = this._picker.getSelection(x, y);
+        this._picker!.prepare(camera, this.app!.scene);
+        const selection = await this._picker!.getSelectionAsync(x, y);
+        if (selection.length === 0) return null;
+
+        const item = selection[0];
+        return item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
+    }
+
+    async _onPointerMove(event: PointerEvent) {
+        if (!this._picker || !this.app) return;
+
+        // Moves arrive faster than a pick resolves, so results can land out of order. Only the
+        // newest pick may update the hover state - an older one describes a pointer position the
+        // user has already left.
+        const token = ++this._pickToken;
+        const node = await this._pickNode(event);
+        if (token !== this._pickToken || !this._picker) return;
 
         // Get the currently hovered entity by walking up the hierarchy
         let newHoverEntity: EntityElement | null = null;
-        if (selection.length > 0) {
-            const item = selection[0];
-            let currentNode: GraphNode | null = item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
-            while (currentNode !== null) {
-                const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
-                if (entityElement) {
-                    newHoverEntity = entityElement;
-                    break;
-                }
-                currentNode = currentNode.parent;
+        let currentNode = node;
+        while (currentNode !== null) {
+            const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
+            if (entityElement) {
+                newHoverEntity = entityElement;
+                break;
             }
+            currentNode = currentNode.parent;
         }
 
         // Handle enter/leave events
@@ -475,51 +506,31 @@ class AppElement extends AsyncElement {
         }
     }
 
-    _onPointerDown(event: PointerEvent) {
+    async _onPointerDown(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
-        const camera = this.app!.root.findComponent('camera') as CameraComponent;
-        if (!camera) return;
+        let currentNode = await this._pickNode(event);
+        if (!this._picker) return; // the element disconnected while the pick was in flight
 
-        // Convert the event's pointer coordinates
-        const { x, y } = this._getPickerCoordinates(event);
-
-        this._picker.prepare(camera, this.app!.scene);
-        const selection = this._picker.getSelection(x, y);
-
-        if (selection.length > 0) {
-            const item = selection[0];
-            let currentNode: GraphNode | null = item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
-            while (currentNode !== null) {
-                const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
-                if (entityElement && entityElement.hasListeners('pointerdown')) {
-                    entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
-                    break;
-                }
-                currentNode = currentNode.parent;
+        while (currentNode !== null) {
+            const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
+            if (entityElement && entityElement.hasListeners('pointerdown')) {
+                entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
+                break;
             }
+            currentNode = currentNode.parent;
         }
     }
 
-    _onPointerUp(event: PointerEvent) {
+    async _onPointerUp(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
-        const camera = this.app!.root.findComponent('camera') as CameraComponent;
-        if (!camera) return;
+        const node = await this._pickNode(event);
+        if (!node || !this._picker) return;
 
-        // Convert CSS coordinates to picker coordinates
-        const { x, y } = this._getPickerCoordinates(event);
-
-        this._picker.prepare(camera, this.app!.scene);
-        const selection = this._picker.getSelection(x, y);
-
-        if (selection.length > 0) {
-            const item = selection[0];
-            const node = item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
-            const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
-            if (entityElement && entityElement.hasListeners('pointerup')) {
-                entityElement.dispatchEvent(new PointerEvent('pointerup', event));
-            }
+        const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
+        if (entityElement && entityElement.hasListeners('pointerup')) {
+            entityElement.dispatchEvent(new PointerEvent('pointerup', event));
         }
     }
 
