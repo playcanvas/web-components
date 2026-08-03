@@ -76,12 +76,13 @@ class EntityElement extends AsyncElement {
     private _entity: Entity | null = null;
 
     /**
-     * The PlayCanvas entity instance. Available once the element is ready — await
-     * {@link whenReady} or the element's `ready()` promise before accessing it.
-     * @returns The entity instance.
+     * The PlayCanvas entity instance. `null` until the element is ready, and again once it has
+     * been removed from the document — await {@link whenReady} or the element's `ready()`
+     * promise before accessing it.
+     * @returns The entity instance, or `null`.
      */
-    get entity(): Entity {
-        return this._entity!;
+    get entity(): Entity | null {
+        return this._entity;
     }
 
     createEntity(app: AppBase) {

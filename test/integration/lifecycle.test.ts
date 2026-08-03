@@ -36,7 +36,7 @@ describe('<pc-app> lifecycle', () => {
         expect(uncaught.seen).toEqual([]);
 
         // Clean up after the bug, so the leak does not follow us into the next test.
-        appElement.app.destroy();
+        appElement.app?.destroy();
     });
 
     it.todo('abandons boot when pc-app is detached before its graphics device resolves');

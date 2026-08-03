@@ -73,12 +73,13 @@ class ComponentElement extends AsyncElement {
     }
 
     /**
-     * The PlayCanvas component instance. Available once the element is ready — await
-     * {@link whenReady} or the element's `ready()` promise before accessing it.
-     * @returns The component instance.
+     * The PlayCanvas component instance. `null` until the element is ready, and also for an
+     * element that is not a descendant of a `<pc-entity>` — await {@link whenReady} or the
+     * element's `ready()` promise before accessing it.
+     * @returns The component instance, or `null`.
      */
-    get component(): Component {
-        return this._component!;
+    get component(): Component | null {
+        return this._component;
     }
 
     /**

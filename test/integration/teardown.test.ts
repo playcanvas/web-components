@@ -164,7 +164,7 @@ describe('teardown', () => {
         const childElement = all<EntityElement>('pc-entity')[1];
         expect(childElement.entity, 'the child entity is recreated').toBeTruthy();
         expect(app.root.findByName('child'), 'but never attached to the hierarchy').toBeNull();
-        expect(childElement.entity.parent, 'and has no parent').toBeNull();
+        expect(childElement.entity?.parent, 'and has no parent').toBeNull();
     });
 
     it.todo('re-attaches a nested pc-entity when its subtree is removed and re-added');

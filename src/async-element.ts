@@ -20,12 +20,22 @@ class AsyncElement extends HTMLElement {
         });
     }
 
-    get closestApp(): AppElement {
-        return this.parentElement?.closest('pc-app') as AppElement;
+    /**
+     * The nearest ancestor `<pc-app>` element, or `null` if this element has no `<pc-app>`
+     * ancestor. The search starts at the parent, so an element never resolves to itself.
+     * @returns The closest app element, or `null`.
+     */
+    get closestApp(): AppElement | null {
+        return this.parentElement?.closest('pc-app') as AppElement | null ?? null;
     }
 
-    get closestEntity(): EntityElement {
-        return this.parentElement?.closest('pc-entity') as EntityElement;
+    /**
+     * The nearest ancestor `<pc-entity>` element, or `null` if this element has no `<pc-entity>`
+     * ancestor. The search starts at the parent, so an element never resolves to itself.
+     * @returns The closest entity element, or `null`.
+     */
+    get closestEntity(): EntityElement | null {
+        return this.parentElement?.closest('pc-entity') as EntityElement | null ?? null;
     }
 
     /**
