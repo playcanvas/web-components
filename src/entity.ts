@@ -147,10 +147,15 @@ class EntityElement extends AsyncElement {
 
     disconnectedCallback() {
         if (this.entity) {
-            // Notify all children that their entities are about to become invalid
-            const children = this.querySelectorAll('pc-entity');
+            // Notify all children that their entities are about to become invalid. Both fields have
+            // to be reset here, not just _entity: a descendant's own disconnectedCallback runs after
+            // this one and skips its reset behind the `if (this.entity)` guard, because we have
+            // already nulled the entity it tests. Leaving _built set would make buildHierarchy bail
+            // on re-insertion, so the descendant would get a fresh entity that is never parented.
+            const children = this.querySelectorAll<EntityElement>('pc-entity');
             children.forEach((child) => {
-                (child as EntityElement)._entity = null;
+                child._entity = null;
+                child._built = false;
             });
 
             // Destroy the entity
