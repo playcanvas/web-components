@@ -44,6 +44,14 @@ const DIVERGENT: Record<string, { value: unknown, why: string }> = {
     'use-metalness': {
         value: true,
         why: 'the element is metal/rough by default so that metalness-map has any effect at all'
+    },
+    metalness: {
+        value: 0,
+        // Paired with use-metalness above: the engine's 1 is unreachable under its own useMetalness
+        // of false, so adopting it alongside the workflow made every material fully metallic - no
+        // diffuse lobe, albedo demoted to a specular tint, and nothing to reflect without a skybox
+        why: 'the engine default of 1 is a don\'t-care under its useMetalness of false, and would ' +
+            'make every material fully metallic once the workflow is enabled'
     }
 };
 
