@@ -76,8 +76,12 @@ export const bootApp = async (html = '', options: BootOptions = {}): Promise<Boo
     await readyWithin(appElement, options.timeout);
     await settle(handle.container, options.timeout);
 
+    // Thrown rather than asserted with `expect`, which does not narrow away the `null` that
+    // `AppElement.app` legitimately returns before boot and after teardown.
     const app = appElement.app;
-    expect(app, 'pc-app became ready without an application').toBeTruthy();
+    if (!app) {
+        throw new Error('bootApp: pc-app became ready without an application');
+    }
     expect(app.graphicsDevice.isNull, 'expected the null graphics device').toBe(true);
 
     // app.start() has already requested a frame. Frames are stepped explicitly from here so that

@@ -44,12 +44,12 @@ class SceneElement extends AsyncElement {
     private _scene: Scene | null = null;
 
     /**
-     * The PlayCanvas scene instance. Available once the element is ready — await
+     * The PlayCanvas scene instance. `null` until the element is ready — await
      * {@link whenReady} or the element's `ready()` promise before accessing it.
-     * @returns The scene instance.
+     * @returns The scene instance, or `null`.
      */
-    get scene(): Scene {
-        return this._scene!;
+    get scene(): Scene | null {
+        return this._scene;
     }
 
     async connectedCallback() {

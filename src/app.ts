@@ -120,12 +120,13 @@ class AppElement extends AsyncElement {
     private _app: AppBase | null = null;
 
     /**
-     * The PlayCanvas application instance. Available once the element is ready — await
-     * {@link whenReady} or the element's `ready()` promise before accessing it.
-     * @returns The application instance.
+     * The PlayCanvas application instance. `null` until the element is ready, and again once it
+     * has been removed from the document — await {@link whenReady} or the element's `ready()`
+     * promise before accessing it.
+     * @returns The application instance, or `null`.
      */
-    get app(): AppBase {
-        return this._app!;
+    get app(): AppBase | null {
+        return this._app;
     }
 
     /**
@@ -234,11 +235,12 @@ class AppElement extends AsyncElement {
         createOptions.batchManager = BatchManager;
         createOptions.xr = XrManager;
 
-        this._app = new AppBase(this._canvas);
-        this.app.init(createOptions);
+        const app = new AppBase(this._canvas);
+        this._app = app;
+        app.init(createOptions);
 
-        this.app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
-        this.app.setCanvasResolution(RESOLUTION_AUTO);
+        app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(RESOLUTION_AUTO);
 
         this._pickerCreate();
 
@@ -248,7 +250,7 @@ class AppElement extends AsyncElement {
             assetElement.createAsset();
             const asset = assetElement.asset;
             if (asset) {
-                this.app!.assets.add(asset);
+                app.assets.add(asset);
             }
         });
 
@@ -261,20 +263,20 @@ class AppElement extends AsyncElement {
         // Create all entities
         const entityElements = this.querySelectorAll<EntityElement>('pc-entity');
         Array.from(entityElements).forEach((entityElement) => {
-            entityElement.createEntity(this.app!);
+            entityElement.createEntity(app);
         });
 
         // Build hierarchy
         entityElements.forEach((entityElement) => {
-            entityElement.buildHierarchy(this.app!);
+            entityElement.buildHierarchy(app);
         });
 
         this._hierarchyReady = true;
 
         // Load assets before starting the application
-        this.app.preload(() => {
+        app.preload(() => {
             // Start the application
-            this.app!.start();
+            app.start();
 
             // Handle window resize to keep the canvas responsive
             window.addEventListener('resize', this._onWindowResize);
@@ -287,8 +289,8 @@ class AppElement extends AsyncElement {
         this._pickerDestroy();
 
         // Clean up the application
-        if (this.app) {
-            this.app.destroy();
+        if (this._app) {
+            this._app.destroy();
             this._app = null;
         }
 
