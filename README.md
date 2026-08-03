@@ -38,6 +38,39 @@ See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-c
 
 Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) for installation and usage instructions.
 
+## Loading
+
+While `<pc-app>` boots and preloads its assets, it shows a slim built-in loading bar along the top of the window — no JavaScript required. Disable it if you are building your own loading UI:
+
+```html
+<pc-app loading-bar="false">
+```
+
+Theme it with CSS custom properties, from `pc-app` or `:root`:
+
+| Custom property | Default | Purpose |
+| --- | --- | --- |
+| `--pc-loading-bar-color` | `#f60` | The fill color |
+| `--pc-loading-bar-background` | `rgba(0, 0, 0, 0.1)` | The track color |
+| `--pc-loading-bar-height` | `3px` | The bar height |
+
+To drive your own loading UI, listen for `progress` on `<pc-app>`. It fires at least once per boot with `loaded` and `total` as asset counts (an asset that fails still counts as loaded), and the final event always has `loaded` equal to `total`. The `loadProgress` property holds the current fraction for listeners that attach late:
+
+```js
+const appElement = document.querySelector('pc-app');
+appElement.addEventListener('progress', ({ loaded, total }) => {
+    myBar.style.width = `${total ? (100 * loaded) / total : 100}%`;
+});
+```
+
+Each `<pc-asset>` fires `load` when it finishes loading and `error` (an `ErrorEvent` with the engine's message) when it fails. Like `<img>`, neither event bubbles — listen on the element, or observe every asset with a capture-phase listener on an ancestor:
+
+```js
+appElement.addEventListener('error', (event) => {
+    console.warn(`Failed to load ${event.target.getAttribute('src')}: ${event.message}`);
+}, true);
+```
+
 ## Editor Support
 
 The package ships a [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest), which editors use to offer tag and attribute completions, valid attribute values and hover documentation when authoring HTML.
