@@ -158,6 +158,13 @@ if (manifest) {
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-scrollview', 'horizontal-scrollbar-visibility', 2, 'when-required');
 
+    // The description comes from the getter's "Gets whether ..." JSDoc, so it exercises
+    // toAttributeDescription's rewrite as well as the boolean default. Pinned because the terse
+    // "The x flag." accessor style would make a useless tooltip for a behaviour switch.
+    expectAttribute('pc-app', 'loading-bar', { type: 'boolean', default: 'true', fieldName: 'loadingBar' });
+    check(/^Whether .* built-in loading bar/.test(attribute('pc-app', 'loading-bar')?.description ?? ''),
+        `pc-app[loading-bar] lost its descriptive tooltip: ${JSON.stringify(attribute('pc-app', 'loading-bar')?.description)}`);
+
     // Attributes read with getAttribute, so declared with @attribute
     for (const name of ['name', 'glue', 'wasm', 'fallback']) {
         expectAttribute('pc-module', name, { type: 'string' });
