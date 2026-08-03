@@ -518,8 +518,9 @@
             <div id="sun-halo"></div>
         </div>
 
-        <!-- 3D scene (transparent canvas over the starfield) -->
-        <pc-app>
+        <!-- 3D scene (transparent canvas over the starfield). The page has its own themed
+             loader, so the built-in loading bar is disabled -->
+        <pc-app loading-bar="false">
             <!-- Modules -->
             <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
             <!-- Assets -->
@@ -945,19 +946,12 @@
 
             // ---- loading progress ----
 
-            // The app instance exists well before preload finishes, so poll for it and then
-            // listen for per-asset preload progress
+            // The final progress event is guaranteed to have loaded === total, so the bar always
+            // ends full
             const appElement = document.querySelector('pc-app');
-            const pollProgress = () => {
-                if (appElement.app) {
-                    appElement.app.on('preload:progress', (value) => {
-                        loaderFill.style.transform = `scaleX(${value})`;
-                    });
-                } else {
-                    requestAnimationFrame(pollProgress);
-                }
-            };
-            pollProgress();
+            appElement.addEventListener('progress', ({ loaded, total }) => {
+                loaderFill.style.transform = `scaleX(${total ? loaded / total : 1})`;
+            });
 
             // ---- boot ----
 
@@ -967,7 +961,6 @@
 
             ({ app } = await whenReady('pc-app'));
 
-            loaderFill.style.transform = 'scaleX(1)';
             document.body.classList.add('ready');
             measure();
             onScroll();
