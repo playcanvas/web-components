@@ -78,6 +78,11 @@ import { parseBool, parseEnum } from './parse';
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-app/ | `<pc-app>`} elements.
  * The AppElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * @fires {ProgressEvent} progress - Fired while the application preloads its assets. `loaded` and
+ * `total` are asset counts, not bytes, and an asset that fails to load still counts as loaded.
+ * Fired at least once per boot, and the final event always has `loaded` equal to `total`. Does
+ * not bubble.
  */
 class AppElement extends AsyncElement {
     /**
@@ -119,6 +124,8 @@ class AppElement extends AsyncElement {
 
     private _app: AppBase | null = null;
 
+    private _loadProgress = 0;
+
     /**
      * The PlayCanvas application instance. `null` until the element is ready, and again once it
      * has been removed from the document — await {@link whenReady} or the element's `ready()`
@@ -127,6 +134,17 @@ class AppElement extends AsyncElement {
      */
     get app(): AppBase | null {
         return this._app;
+    }
+
+    /**
+     * The asset preload progress of the application, as a fraction from 0 to 1. It is 0 until
+     * preloading begins (and again once the element has been removed from the document), and 1
+     * once preloading has finished — including when there was nothing to preload. Read this to
+     * initialize a loading UI; subsequent updates arrive via the `progress` event.
+     * @returns The preload progress.
+     */
+    get loadProgress(): number {
+        return this._loadProgress;
     }
 
     /**
@@ -273,8 +291,28 @@ class AppElement extends AsyncElement {
 
         this._hierarchyReady = true;
 
+        // Forward the engine's preload lifecycle as DOM ProgressEvents on this element. The
+        // listener must be attached before preload() is called: an asset that is already loaded
+        // ticks synchronously inside it.
+        const total = app.assets.list({ preload: true }).length;
+        let loaded = 0;
+        const onPreloadProgress = () => {
+            loaded += 1;
+            this._loadProgress = loaded / total;
+            this.dispatchEvent(new ProgressEvent('progress', { lengthComputable: true, loaded, total }));
+        };
+        app.on('preload:progress', onPreloadProgress);
+
+        this._loadProgress = total === 0 ? 1 : 0;
+        this.dispatchEvent(new ProgressEvent('progress', { lengthComputable: true, loaded: 0, total }));
+
         // Load assets before starting the application
         app.preload(() => {
+            // Scope the counter to this preload pass, so a later app.preload() call by user code
+            // cannot push `loaded` past `total`
+            app.off('preload:progress', onPreloadProgress);
+            this._loadProgress = 1;
+
             // Start the application
             app.start();
 
@@ -293,6 +331,7 @@ class AppElement extends AsyncElement {
             this._app.destroy();
             this._app = null;
         }
+        this._loadProgress = 0;
 
         // Remove event listeners
         window.removeEventListener('resize', this._onWindowResize);
