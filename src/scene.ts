@@ -60,6 +60,15 @@ class SceneElement extends AsyncElement {
 
         await appElement.ready();
 
+        // The element may have been removed or re-parented while waiting for the app. Matches the
+        // guard in AssetElement and MaterialElement, but compares closestApp rather than
+        // parentElement because pc-scene resolves its app by ancestor rather than direct child.
+        // Without this, a scene re-parented mid-await would take its Scene from the app it started
+        // under while _applyGravity resolved the app it ended up under, splitting the two.
+        if (!this.isConnected || this.closestApp !== appElement) {
+            return;
+        }
+
         // The application is gone if the tree was torn down while we awaited readiness. There is
         // nothing to configure and nothing the author can act on, so this stays silent.
         const app = appElement.app;

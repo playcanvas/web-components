@@ -131,4 +131,24 @@ describe('misplaced elements', () => {
         expect(scene.scene?.fog.type).toBe('exp2');
         expect(appElement.app?.systems.rigidbody?.gravity.y).toBe(-5);
     });
+
+    it('configures nothing when a pc-scene is removed while the app is still booting', async () => {
+        // connectedCallback captures its pc-app, then awaits readiness. Removing the element inside
+        // that window used to leave it configuring - and becoming ready against - an app it was no
+        // longer attached to. The guard also covers the re-parent case, where taking the Scene from
+        // the captured app while _applyGravity resolved the new one would split the two.
+        const handle = mount('<pc-app backend="null"><pc-scene fog="exp2" gravity="0 -5 0"></pc-scene></pc-app>');
+        const appElement = handle.get<AppElement>('pc-app');
+        const scene = handle.get<SceneElement>('pc-scene');
+
+        // Synchronous, so the app has not resolved its ready promise yet
+        scene.remove();
+
+        await readyWithin(appElement);
+        await expectNeverReady(scene);
+
+        expect(scene.scene, 'no Scene is captured').toBeNull();
+        expect(appElement.app?.scene.fog.type, 'fog is left at its default').toBe('none');
+        expect(appElement.app?.systems.rigidbody?.gravity.y, 'gravity is left at its default').toBeCloseTo(-9.81);
+    });
 });
