@@ -153,10 +153,10 @@ describe('teardown', () => {
         expect(app.root.findByName('parent')).toBeTruthy();
         expect(uncaught.seen).toEqual([]);
 
-        // The nested entity comes back too, and is re-parented rather than merely recreated. This
-        // is what #315 fixed: disconnectedCallback resets _built alongside _entity on every
-        // descendant, so buildHierarchy no longer bails on a stale _built and leaves the child
-        // orphaned - created, never parented, never ready again.
+        // The nested entity comes back too, and is re-parented rather than merely recreated.
+        // disconnectedCallback resets _built alongside _entity on every descendant, so
+        // buildHierarchy no longer bails on a stale _built and leaves the child orphaned -
+        // created, never parented, and never ready again.
         const parentEntity = app.root.findByName('parent');
         const childEntity = app.root.findByName('child');
         const childElement = all<EntityElement>('pc-entity')[1];
