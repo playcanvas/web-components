@@ -114,8 +114,14 @@ type TextureSlot = 'aoMap' | 'diffuseMap' | 'emissiveMap' | 'glossMap' | 'height
  * created on insertion.
  *
  * The element is metal/rough by default: unlike a bare `StandardMaterial` it enables the metalness
- * workflow, which is what the `metalness-*` attributes assume and what glTF means by PBR. The
- * `roughness` and `roughness-map` attributes are aliases for `gloss` and `gloss-map` that
+ * workflow, which is what the `metalness-*` attributes assume and what glTF means by PBR. It also
+ * defaults `metalness` to 0 rather than the engine's 1, because those two defaults have to be
+ * chosen together - the engine's 1 is unreachable under its own `useMetalness` of false, and with
+ * the workflow on it would make every material fully metallic, so `<pc-material diffuse="crimson">`
+ * would render as dark tinted reflections of an environment that may not exist rather than as a
+ * crimson surface. `metalness="1"` remains one attribute away.
+ *
+ * The `roughness` and `roughness-map` attributes are aliases for `gloss` and `gloss-map` that
  * additionally invert the gloss channel; do not mix the two families on one element.
  *
  * The two aliases are documented here rather than on an accessor, because they resolve to the
@@ -222,7 +228,7 @@ class MaterialElement extends HTMLElement {
 
     private _heightMapUv = 0;
 
-    private _metalness = 1;
+    private _metalness = 0;
 
     private _metalnessMap = '';
 
@@ -2386,7 +2392,7 @@ class MaterialElement extends HTMLElement {
                 this.heightMapUv = parseNumber(newValue, 0, name);
                 break;
             case 'metalness':
-                this.metalness = parseNumber(newValue, 1, name);
+                this.metalness = parseNumber(newValue, 0, name);
                 break;
             case 'metalness-map':
                 this.metalnessMap = newValue ?? '';

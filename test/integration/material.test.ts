@@ -43,12 +43,17 @@ describe('<pc-material> integration', () => {
         expect(material!.twoSidedLighting).toBe(true);
     });
 
-    it('enables the metalness workflow, unlike a bare StandardMaterial', async () => {
-        // Without this, useMetalness is false and metalnessMap is never sampled - the LIT_METALNESS
-        // define is driven straight off it - so the metalness-* attributes would do nothing at all.
+    it('enables the metalness workflow on a dielectric, unlike a bare StandardMaterial', async () => {
+        // Without useMetalness, metalnessMap is never sampled - the LIT_METALNESS define is driven
+        // straight off it - so the metalness-* attributes would do nothing at all. metalness has to
+        // be 0 to go with it: the engine's 1 is a don't-care under its own useMetalness of false,
+        // and enabling the workflow while adopting it makes every material fully metallic, which
+        // drops the diffuse lobe and leaves a bare <pc-material diffuse="..."> nearly black.
         const { get } = await bootApp('<pc-material id="m"></pc-material>');
 
-        expect(get<MaterialElement>('pc-material').material!.useMetalness).toBe(true);
+        const material = get<MaterialElement>('pc-material').material!;
+        expect(material.useMetalness).toBe(true);
+        expect(material.metalness).toBe(0);
     });
 
     it('honours use-metalness="false" for the older specular workflow', async () => {
