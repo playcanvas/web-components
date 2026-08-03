@@ -93,18 +93,20 @@ class EntityElement extends AsyncElement {
             return;
         }
 
-        // Create a new entity
-        const entity = new Entity(this.getAttribute('name') || this._name, app);
+        // Seed from the cached fields rather than re-reading the attributes. Every observed
+        // attribute is routed through its property setter by attributeChangedCallback, so the field
+        // already holds the parsed attribute value - and it also holds anything assigned through the
+        // property API before the app booted, which reading the attribute back would discard.
+        const entity = new Entity(this._name, app);
         this._entity = entity;
 
-        entity.enabled = parseBool(this.getAttribute('enabled'), true);
-        entity.setLocalPosition(parseVec3(this.getAttribute('position'), Vec3.ZERO, 'position'));
-        entity.setLocalEulerAngles(parseVec3(this.getAttribute('rotation'), Vec3.ZERO, 'rotation'));
-        entity.setLocalScale(parseVec3(this.getAttribute('scale'), Vec3.ONE, 'scale'));
+        entity.enabled = this._enabled;
+        entity.setLocalPosition(this._position);
+        entity.setLocalEulerAngles(this._rotation);
+        entity.setLocalScale(this._scale);
 
-        const tags = parseTags(this.getAttribute('tags'));
-        if (tags.length > 0) {
-            entity.tags.add(tags);
+        if (this._tags.length > 0) {
+            entity.tags.add(this._tags);
         }
     }
 
@@ -125,7 +127,15 @@ class EntityElement extends AsyncElement {
     connectedCallback() {
         // Wait for app to be ready
         const closestApp = this.closestApp;
-        if (!closestApp) return;
+        if (!closestApp) {
+            // An entity outside an application is inert and never becomes ready, so awaiting it
+            // hangs. Warn rather than fail silently, naming the parent it requires, as every other
+            // misplaced element does.
+            const name = this.getAttribute('name');
+            const label = name ? ` '${name}'` : '';
+            console.warn(`pc-entity${label} must be a descendant of pc-app - entity not created`);
+            return;
+        }
 
         // If app is already running, create entity immediately
         if (closestApp.hierarchyReady) {
