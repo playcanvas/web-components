@@ -1,7 +1,16 @@
 import { SCALEMODE_BLEND, SCALEMODE_NONE, ScreenComponent, Vec2 } from 'playcanvas';
 
 import { ComponentElement } from './component';
-import { parseBool, parseNumber, parseVec2 } from '../parse';
+import { parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
+
+// The engine's SCALEMODE_* constants are the strings 'none' and 'blend', so this map happens to be
+// an identity. It is still the right shape: it supplies parseEnum's valid-name list, it is what the
+// manifest generator reads the enum values from, and it keeps the attribute vocabulary independent
+// of constants the engine is free to change.
+const scaleModes = new Map<'none' | 'blend', string>([
+    ['none', SCALEMODE_NONE],
+    ['blend', SCALEMODE_BLEND]
+]);
 
 /**
  * The ScreenComponentElement interface provides properties and methods for manipulating
@@ -20,7 +29,7 @@ class ScreenComponentElement extends ComponentElement {
 
     private _priority = 0;
 
-    private _blend = false;
+    private _scaleMode: 'none' | 'blend' = 'none';
 
     private _scaleBlend = 0.5;
 
@@ -35,7 +44,7 @@ class ScreenComponentElement extends ComponentElement {
             referenceResolution: this._referenceResolution,
             resolution: this._resolution,
             scaleBlend: this._scaleBlend,
-            scaleMode: this._blend ? SCALEMODE_BLEND : SCALEMODE_NONE,
+            scaleMode: scaleModes.get(this._scaleMode),
             screenSpace: this._screenSpace
         };
     }
@@ -81,6 +90,12 @@ class ScreenComponentElement extends ComponentElement {
         return this._resolution;
     }
 
+    /**
+     * Sets how the screen's `resolution` and `referenceResolution` are weighted against each other
+     * when `scaleMode` is `blend`, from 0 (follow the resolution) to 1 (follow the reference
+     * resolution). Ignored while `scaleMode` is `none`.
+     * @param value - The scale blend factor.
+     */
     set scaleBlend(value: number) {
         this._scaleBlend = value;
         if (this.component) {
@@ -88,19 +103,34 @@ class ScreenComponentElement extends ComponentElement {
         }
     }
 
+    /**
+     * Gets how the screen's resolutions are weighted against each other.
+     * @returns The scale blend factor.
+     */
     get scaleBlend() {
         return this._scaleBlend;
     }
 
-    set blend(value: boolean) {
-        this._blend = value;
+    /**
+     * Sets how the screen scales its contents. `none` renders at `resolution` and ignores
+     * `referenceResolution`; `blend` scales between the two, weighted by `scaleBlend`, which is what
+     * keeps a UI laid out at one resolution usable at another. Requires `screenSpace` - the engine
+     * forces `none` on a world-space screen, which does not support scaling.
+     * @param value - The scale mode ('none' or 'blend').
+     */
+    set scaleMode(value: 'none' | 'blend') {
+        this._scaleMode = value;
         if (this.component) {
-            this.component.scaleMode = this._blend ? SCALEMODE_BLEND : SCALEMODE_NONE;
+            this.component.scaleMode = scaleModes.get(value) ?? SCALEMODE_NONE;
         }
     }
 
-    get blend() {
-        return this._blend;
+    /**
+     * Gets how the screen scales its contents.
+     * @returns The scale mode.
+     */
+    get scaleMode() {
+        return this._scaleMode;
     }
 
     set screenSpace(value: boolean) {
@@ -117,12 +147,12 @@ class ScreenComponentElement extends ComponentElement {
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
-            'blend',
             'screen-space',
             'resolution',
             'reference-resolution',
             'priority',
-            'scale-blend'
+            'scale-blend',
+            'scale-mode'
         ];
     }
 
@@ -142,8 +172,8 @@ class ScreenComponentElement extends ComponentElement {
             case 'scale-blend':
                 this.scaleBlend = parseNumber(newValue, 0.5, name);
                 break;
-            case 'blend':
-                this.blend = parseBool(newValue, false);
+            case 'scale-mode':
+                this.scaleMode = parseEnum(newValue, scaleModes, 'none', name);
                 break;
             case 'screen-space':
                 this.screenSpace = parseBool(newValue, false);
