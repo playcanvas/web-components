@@ -44,7 +44,10 @@ class ScreenComponentElement extends ComponentElement {
             referenceResolution: this._referenceResolution,
             resolution: this._resolution,
             scaleBlend: this._scaleBlend,
-            scaleMode: scaleModes.get(this._scaleMode),
+            // Coalesced for symmetry with the setter rather than out of necessity: ScreenComponentSystem
+            // skips an undefined scaleMode, so the component would keep its own default anyway. This
+            // just avoids depending on that.
+            scaleMode: scaleModes.get(this._scaleMode) ?? SCALEMODE_NONE,
             screenSpace: this._screenSpace
         };
     }

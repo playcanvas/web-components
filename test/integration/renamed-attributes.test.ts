@@ -75,6 +75,24 @@ describe('renamed enum attributes', () => {
         expect(screen.component.scaleMode).toBe(SCALEMODE_BLEND);
     });
 
+    it('survives an out-of-union value assigned before the component exists', async () => {
+        // Only reachable from untyped JS - parseEnum can never yield a non-member - but the camera
+        // path is the one that punishes it. CameraComponentSystem gates on hasOwnProperty, which is
+        // true for a key explicitly set to undefined, and CameraComponent.projection does not
+        // validate, so a bare map lookup would put undefined straight onto the engine camera.
+        const camera = document.createElement('pc-camera') as HTMLElement & {
+            projection: string,
+            component: { projection: number }
+        };
+        (camera as unknown as Record<string, string>).projection = 'isometric';
+
+        const { get } = await bootApp('<pc-entity name="camera"></pc-entity>');
+        get('pc-entity').appendChild(camera);
+        await (camera as unknown as { ready(): Promise<unknown> }).ready();
+
+        expect(camera.component.projection).toBe(PROJECTION_PERSPECTIVE);
+    });
+
     it('carries pc-sky[mip-level] through a real boot', async () => {
         const { get } = await bootApp('<pc-scene><pc-sky mip-level="3"></pc-sky></pc-scene>');
 
