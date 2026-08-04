@@ -19,7 +19,7 @@ class SkyElement extends AsyncElement {
 
     private _rotation = new Vec3();
 
-    private _level = 0;
+    private _mipLevel = 0;
 
     private _lighting = false;
 
@@ -65,7 +65,7 @@ class SkyElement extends AsyncElement {
         this._scene.sky.node.setLocalScale(this._scale);
         this._scene.sky.center = this._center;
         this._scene.skyboxIntensity = this._intensity;
-        this._scene.skyboxMip = this._level;
+        this._scene.skyboxMip = this._mipLevel;
     }
 
     private async _loadSkybox() {
@@ -171,25 +171,6 @@ class SkyElement extends AsyncElement {
     }
 
     /**
-     * Sets the mip level of the skybox.
-     * @param value - The mip level.
-     */
-    set level(value: number) {
-        this._level = value;
-        if (this._scene) {
-            this._scene.skyboxMip = this._level;
-        }
-    }
-
-    /**
-     * Gets the mip level of the skybox.
-     * @returns The mip level.
-     */
-    get level() {
-        return this._level;
-    }
-
-    /**
      * Sets whether the skybox is used as a light source.
      * @param value - Whether to use lighting.
      */
@@ -203,6 +184,26 @@ class SkyElement extends AsyncElement {
      */
     get lighting() {
         return this._lighting;
+    }
+
+    /**
+     * Sets the mip level of the skybox, where 0 is the sharpest. Raising it selects a blurrier mip,
+     * which is how a skybox is softened without blurring the texture itself.
+     * @param value - The mip level.
+     */
+    set mipLevel(value: number) {
+        this._mipLevel = value;
+        if (this._scene) {
+            this._scene.skyboxMip = this._mipLevel;
+        }
+    }
+
+    /**
+     * Gets the mip level of the skybox.
+     * @returns The mip level.
+     */
+    get mipLevel() {
+        return this._mipLevel;
     }
 
     /**
@@ -267,7 +268,7 @@ class SkyElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'center', 'intensity', 'level', 'lighting', 'rotation', 'scale', 'type'];
+        return ['asset', 'center', 'intensity', 'lighting', 'mip-level', 'rotation', 'scale', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -281,11 +282,11 @@ class SkyElement extends AsyncElement {
             case 'intensity':
                 this.intensity = parseNumber(newValue, 1, name);
                 break;
-            case 'level':
-                this.level = parseNumber(newValue, 0, name);
-                break;
             case 'lighting':
                 this.lighting = parseBool(newValue, false);
+                break;
+            case 'mip-level':
+                this.mipLevel = parseNumber(newValue, 0, name);
                 break;
             case 'rotation':
                 this.rotation = parseVec3(newValue, Vec3.ZERO, name);

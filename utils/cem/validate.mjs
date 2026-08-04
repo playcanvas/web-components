@@ -158,6 +158,19 @@ if (manifest) {
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-scrollview', 'horizontal-scrollbar-visibility', 2, 'when-required');
 
+    // Two-value enums that replaced booleans. Both are named for the engine property they drive, so
+    // the description has to survive as well - the old names ('blend', 'orthographic') are what made
+    // pc-screen[blend] publish a description claiming it enabled alpha blending.
+    expectEnum('pc-screen', 'scale-mode', 2, 'none');
+    expectEnum('pc-camera', 'projection', 2, 'perspective');
+    for (const [tag, name, pattern] of [
+        ['pc-screen', 'scale-mode', /^How the screen scales/],
+        ['pc-camera', 'projection', /^The projection of the camera/]
+    ]) {
+        check(pattern.test(attribute(tag, name)?.description ?? ''),
+            `${tag}[${name}] lost its description: ${JSON.stringify(attribute(tag, name)?.description)}`);
+    }
+
     // The description comes from the getter's "Gets whether ..." JSDoc, so it exercises
     // toAttributeDescription's rewrite as well as the boolean default. Pinned because the terse
     // "The x flag." accessor style would make a useless tooltip for a behaviour switch.

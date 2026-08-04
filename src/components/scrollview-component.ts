@@ -99,7 +99,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets whether horizontal scrolling is enabled.
+     * Sets whether scrolling along the horizontal axis is enabled. This is a toggle, unlike the
+     * `orientation` of a `<pc-scrollbar>`, for which `horizontal` is one of the accepted values.
      * @param value - Whether horizontal scrolling is enabled.
      */
     set horizontal(value: boolean) {
@@ -110,7 +111,7 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets whether horizontal scrolling is enabled.
+     * Gets whether scrolling along the horizontal axis is enabled.
      * @returns Whether horizontal scrolling is enabled.
      */
     get horizontal() {
@@ -118,7 +119,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets whether vertical scrolling is enabled.
+     * Sets whether scrolling along the vertical axis is enabled. This is a toggle, unlike the
+     * `orientation` of a `<pc-scrollbar>`, for which `vertical` is one of the accepted values.
      * @param value - Whether vertical scrolling is enabled.
      */
     set vertical(value: boolean) {
@@ -129,7 +131,7 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets whether vertical scrolling is enabled.
+     * Gets whether scrolling along the vertical axis is enabled.
      * @returns Whether vertical scrolling is enabled.
      */
     get vertical() {

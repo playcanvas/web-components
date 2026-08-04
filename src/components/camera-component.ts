@@ -3,6 +3,11 @@ import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOG
 import { ComponentElement } from './component';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 
+const projections = new Map<'perspective' | 'orthographic', number>([
+    ['perspective', PROJECTION_PERSPECTIVE],
+    ['orthographic', PROJECTION_ORTHOGRAPHIC]
+]);
+
 const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral', number>([
     ['none', TONEMAP_NONE],
     ['linear', TONEMAP_LINEAR],
@@ -46,7 +51,7 @@ class CameraComponentElement extends ComponentElement {
 
     private _nearClip = 0.1;
 
-    private _orthographic = false;
+    private _projection: 'perspective' | 'orthographic' = 'perspective';
 
     private _orthoHeight = 10;
 
@@ -77,12 +82,12 @@ class CameraComponentElement extends ComponentElement {
             gammaCorrection: this._gamma === 'srgb' ? GAMMA_SRGB : GAMMA_NONE,
             horizontalFov: this._horizontalFov,
             nearClip: this._nearClip,
-            projection: this._orthographic ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE,
+            projection: projections.get(this._projection) ?? PROJECTION_PERSPECTIVE,
             orthoHeight: this._orthoHeight,
             priority: this._priority,
             rect: this._rect,
             scissorRect: this._scissorRect,
-            toneMapping: tonemaps.get(this._tonemap)
+            toneMapping: tonemaps.get(this._tonemap) ?? TONEMAP_NONE
         };
     }
 
@@ -353,25 +358,6 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the orthographic projection of the camera.
-     * @param value - The orthographic projection.
-     */
-    set orthographic(value) {
-        this._orthographic = value;
-        if (this.component) {
-            this.component.projection = value ? PROJECTION_ORTHOGRAPHIC : PROJECTION_PERSPECTIVE;
-        }
-    }
-
-    /**
-     * Gets the orthographic projection of the camera.
-     * @returns The orthographic projection.
-     */
-    get orthographic(): boolean {
-        return this._orthographic;
-    }
-
-    /**
      * Sets the orthographic height of the camera.
      * @param value - The orthographic height.
      */
@@ -407,6 +393,25 @@ class CameraComponentElement extends ComponentElement {
      */
     get priority(): number {
         return this._priority;
+    }
+
+    /**
+     * Sets the projection of the camera. Use `orthoHeight` to size an orthographic projection.
+     * @param value - The projection ('perspective' or 'orthographic').
+     */
+    set projection(value: 'perspective' | 'orthographic') {
+        this._projection = value;
+        if (this.component) {
+            this.component.projection = projections.get(value) ?? PROJECTION_PERSPECTIVE;
+        }
+    }
+
+    /**
+     * Gets the projection of the camera.
+     * @returns The projection.
+     */
+    get projection() {
+        return this._projection;
     }
 
     /**
@@ -481,9 +486,9 @@ class CameraComponentElement extends ComponentElement {
             'gamma',
             'horizontal-fov',
             'near-clip',
-            'orthographic',
             'ortho-height',
             'priority',
+            'projection',
             'rect',
             'scissor-rect',
             'tonemap'
@@ -530,14 +535,14 @@ class CameraComponentElement extends ComponentElement {
             case 'near-clip':
                 this.nearClip = parseNumber(newValue, 0.1, name);
                 break;
-            case 'orthographic':
-                this.orthographic = parseBool(newValue, false);
-                break;
             case 'ortho-height':
                 this.orthoHeight = parseNumber(newValue, 10, name);
                 break;
             case 'priority':
                 this.priority = parseNumber(newValue, 0, name);
+                break;
+            case 'projection':
+                this.projection = parseEnum(newValue, projections, 'perspective', name);
                 break;
             case 'rect':
                 this.rect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);

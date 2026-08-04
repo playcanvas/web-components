@@ -113,21 +113,23 @@ export const parseColor = <T extends Color | null>(value: string | null, default
  * the value is invalid — the latter also logs a warning listing the valid names.
  *
  * @param value - The attribute value to parse (`null` when the attribute is absent).
- * @param valid - The valid names: an array, or a map whose keys are the valid names.
+ * @param valid - The valid names: an array, or a map whose keys are the valid names. Only the keys
+ * are read, so the map's value type is unconstrained - engine enums are mostly numeric constants,
+ * but some (e.g. `SCALEMODE_BLEND`) are strings.
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The resolved enum name.
  */
 export const parseEnum = <T extends string>(
     value: string | null,
-    valid: readonly T[] | ReadonlyMap<T, number>,
+    valid: readonly T[] | ReadonlyMap<T, unknown>,
     defaultValue: T,
     attribute: string
 ): T => {
     if (value === null) {
         return defaultValue;
     }
-    const names = Array.isArray(valid) ? valid : [...(valid as ReadonlyMap<T, number>).keys()];
+    const names: readonly T[] = Array.isArray(valid) ? valid : [...valid.keys()];
     if (names.includes(value as T)) {
         return value as T;
     }
