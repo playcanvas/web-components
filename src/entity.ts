@@ -1,5 +1,6 @@
 import { AppBase, Entity, Vec3 } from 'playcanvas';
 
+import type { AppElement } from './app';
 import { AsyncElement } from './async-element';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
@@ -76,6 +77,12 @@ class EntityElement extends AsyncElement {
     private _entity: Entity | null = null;
 
     /**
+     * The application element this entity is registered with, cached at creation time so the
+     * entity can be unregistered even once this element has left the DOM.
+     */
+    private _appElement: AppElement | null = null;
+
+    /**
      * The PlayCanvas entity instance. `null` until the element is ready, and again once it has
      * been removed from the document — await {@link whenReady} or the element's `ready()`
      * promise before accessing it.
@@ -108,6 +115,29 @@ class EntityElement extends AsyncElement {
         if (this._tags.length > 0) {
             entity.tags.add(this._tags);
         }
+
+        // Register with the owning application, which joins engine nodes back to elements by
+        // identity (never by name), and hook the entity's destruction. The engine fires 'destroy'
+        // for every entity in a destroyed subtree, so the element learns of its entity's death no
+        // matter who causes it: this element, an ancestor, the whole application, or a user
+        // script calling entity.destroy().
+        this._appElement = this.closestApp;
+        this._appElement?._registerEntityElement(entity, this);
+        entity.once('destroy', this._onEntityDestroy, this);
+    }
+
+    /**
+     * Handles the destruction of the backing entity. Resets the element so a later re-insertion
+     * starts clean: `_built` must be cleared alongside `_entity`, or buildHierarchy would bail
+     * and a re-created entity would never be parented.
+     *
+     * @param entity - The entity that was destroyed.
+     */
+    private _onEntityDestroy(entity: Entity) {
+        this._appElement?._unregisterEntityElement(entity);
+        this._appElement = null;
+        this._entity = null;
+        this._built = false;
     }
 
     buildHierarchy(app: AppBase) {
@@ -156,23 +186,11 @@ class EntityElement extends AsyncElement {
     }
 
     disconnectedCallback() {
-        if (this.entity) {
-            // Notify all children that their entities are about to become invalid. Both fields have
-            // to be reset here, not just _entity: a descendant's own disconnectedCallback runs after
-            // this one and skips its reset behind the `if (this.entity)` guard, because we have
-            // already nulled the entity it tests. Leaving _built set would make buildHierarchy bail
-            // on re-insertion, so the descendant would get a fresh entity that is never parented.
-            const children = this.querySelectorAll<EntityElement>('pc-entity');
-            children.forEach((child) => {
-                child._entity = null;
-                child._built = false;
-            });
-
-            // Destroy the entity
-            this.entity.destroy();
-            this._entity = null;
-            this._built = false;
-        }
+        // Destroying the entity destroys its whole subtree, and the engine fires 'destroy' for
+        // every entity in it - so _onEntityDestroy resets this element AND every descendant
+        // element before the descendants' own disconnectedCallbacks run. Their entities are null
+        // by then, making this call a no-op for them.
+        this._entity?.destroy();
     }
 
     /**
