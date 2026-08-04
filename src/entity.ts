@@ -1,6 +1,6 @@
 import { AppBase, Entity, Vec3 } from 'playcanvas';
 
-import { AppElement } from './app';
+import type { AppElement } from './app';
 import { AsyncElement } from './async-element';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
