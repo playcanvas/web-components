@@ -270,6 +270,12 @@ const renderDefault = (ts, expression) => {
             return undefined;
     }
 
+    // A numeric attribute whose default is "no limit", e.g. pc-app's max-pixel-ratio. Published so
+    // the tooltip states the default rather than leaving it blank; nobody is expected to type it.
+    if (ts.isIdentifier(expression) && expression.text === 'Infinity') {
+        return 'Infinity';
+    }
+
     // Negative numbers, e.g. the -9.81 in `new Vec3(0, -9.81, 0)`
     if (ts.isPrefixUnaryExpression(expression) &&
         expression.operator === ts.SyntaxKind.MinusToken &&

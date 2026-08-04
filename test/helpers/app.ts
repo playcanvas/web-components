@@ -20,7 +20,7 @@ export interface BootedApp extends Mounted {
 }
 
 export interface BootOptions {
-    /** Extra attributes for the `<pc-app>` element, for example `high-resolution="false"`. */
+    /** Extra attributes for the `<pc-app>` element, for example `max-pixel-ratio="1"`. */
     appAttributes?: string;
     /** Per-element ready deadline in milliseconds. */
     timeout?: number;

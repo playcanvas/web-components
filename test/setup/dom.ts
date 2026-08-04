@@ -89,8 +89,10 @@ HTMLCanvasElement.prototype.getContext = function getContext() {
 };
 
 /**
- * jsdom already reports 1, but AppElement maps the `high-resolution` attribute straight onto
- * device.maxPixelRatio, so tests need to be able to move it.
+ * jsdom already reports 1, which is also the ratio the canvas assertions in
+ * test/integration/environment.test.ts are written against. Declared writable because AppElement
+ * leaves device.maxPixelRatio uncapped by default, so this is what actually decides the canvas
+ * size, and a test covering `max-pixel-ratio` has to be able to move it.
  */
 Object.defineProperty(window, 'devicePixelRatio', {
     configurable: true,

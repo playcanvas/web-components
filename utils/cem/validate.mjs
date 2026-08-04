@@ -165,6 +165,18 @@ if (manifest) {
     check(/^Whether .* built-in loading bar/.test(attribute('pc-app', 'loading-bar')?.description ?? ''),
         `pc-app[loading-bar] lost its descriptive tooltip: ${JSON.stringify(attribute('pc-app', 'loading-bar')?.description)}`);
 
+    // pc-app's frame buffer options. Named for the buffer each one allocates, matching pc-camera's
+    // clear-depth-buffer / clear-stencil-buffer, so the pairing is pinned at both ends.
+    expectAttribute('pc-app', 'depth-buffer', { type: 'boolean', default: 'true', fieldName: 'depthBuffer' });
+    expectAttribute('pc-app', 'stencil-buffer', { type: 'boolean', default: 'true', fieldName: 'stencilBuffer' });
+    for (const name of ['clear-depth-buffer', 'clear-stencil-buffer']) {
+        check(Boolean(attribute('pc-camera', name)), `pc-camera is missing the '${name}' attribute`);
+    }
+
+    // The only default in the library that is not a value a user would ever type: Infinity means
+    // "no cap", which renderDefault has a dedicated branch for.
+    expectAttribute('pc-app', 'max-pixel-ratio', { type: 'number', default: 'Infinity', fieldName: 'maxPixelRatio' });
+
     // Attributes read with getAttribute, so declared with @attribute
     for (const name of ['name', 'glue', 'wasm', 'fallback']) {
         expectAttribute('pc-module', name, { type: 'string' });
