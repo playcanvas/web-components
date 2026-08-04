@@ -129,7 +129,7 @@ export const parseEnum = <T extends string>(
     if (value === null) {
         return defaultValue;
     }
-    const names = Array.isArray(valid) ? valid : [...(valid as ReadonlyMap<T, unknown>).keys()];
+    const names: readonly T[] = Array.isArray(valid) ? valid : [...valid.keys()];
     if (names.includes(value as T)) {
         return value as T;
     }
