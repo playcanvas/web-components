@@ -73,7 +73,7 @@ import { EntityElement } from './entity';
 import { LoadingBar } from './loading-bar';
 import { MaterialElement } from './material';
 import { ModuleElement } from './module';
-import { parseBool, parseEnum } from './parse';
+import { parseBool, parseEnum, parseNumber } from './parse';
 
 /**
  * The AppElement interface provides properties and methods for manipulating
@@ -98,13 +98,20 @@ class AppElement extends AsyncElement {
 
     private _antialias = true;
 
-    private _depth = true;
+    private _depthBuffer = true;
 
-    private _stencil = true;
+    private _stencilBuffer = true;
 
-    private _highResolution = true;
+    private _maxPixelRatio = Infinity;
 
     private _loadingBar = true;
+
+    /**
+     * Set once the graphics options above have been handed to `createGraphicsDevice`, after which
+     * writing any of them changes nothing. Guards the warning in {@link _warnIfBooted}, and is
+     * cleared on disconnect so a re-connected element boots from its current attributes.
+     */
+    private _optionsLocked = false;
 
     private _bar: LoadingBar | null = null;
 
@@ -200,15 +207,21 @@ class AppElement extends AsyncElement {
         };
         const deviceTypes = backendToDeviceTypes[this._backend] || [];
 
+        this._optionsLocked = true;
+
         const device = await createGraphicsDevice(this._canvas, {
             // @ts-ignore - alpha needs to be documented
             alpha: this._alpha,
             antialias: this._antialias,
-            depth: this._depth,
+            depth: this._depthBuffer,
             deviceTypes: deviceTypes,
-            stencil: this._stencil
+            stencil: this._stencilBuffer
         });
-        device.maxPixelRatio = this._highResolution ? window.devicePixelRatio : 1;
+
+        // Assigned rather than resolved to a number here: the engine caps against the live
+        // window.devicePixelRatio on every resize, so an uncapped Infinity keeps following the
+        // display when a window moves between monitors of differing density.
+        device.maxPixelRatio = this._maxPixelRatio;
 
         const createOptions = new AppOptions();
         createOptions.graphicsDevice = device;
@@ -352,6 +365,7 @@ class AppElement extends AsyncElement {
     }
 
     disconnectedCallback() {
+        this._optionsLocked = false;
         this._pickerDestroy();
 
         // Clean up the application. Destroying it destroys every entity, whose destroy hooks
@@ -638,15 +652,30 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Sets the alpha flag.
+     * Warns that a graphics option was written too late to have any effect. These options are read
+     * once, when the element connects and creates its graphics device, so a later write updates
+     * only the element's own property - silently, without this.
+     *
+     * @param name - The name of the option, as its attribute.
+     */
+    private _warnIfBooted(name: string) {
+        if (this._optionsLocked) {
+            console.warn(`Attribute '${name}' on <pc-app> is only read when the application boots, so this change has no effect. Set it before the element is connected, or remove and re-insert the element to reboot with the new value.`);
+        }
+    }
+
+    /**
+     * Sets whether the frame buffer has an alpha channel, which is what lets the page show through
+     * wherever the scene has not drawn. Read only when the application boots.
      * @param value - The alpha flag.
      */
     set alpha(value: boolean) {
+        this._warnIfBooted('alpha');
         this._alpha = value;
     }
 
     /**
-     * Gets the alpha flag.
+     * Gets whether the frame buffer has an alpha channel.
      * @returns The alpha flag.
      */
     get alpha() {
@@ -654,15 +683,16 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Sets the antialias flag.
+     * Sets whether the frame buffer is anti-aliased. Read only when the application boots.
      * @param value - The antialias flag.
      */
     set antialias(value: boolean) {
+        this._warnIfBooted('antialias');
         this._antialias = value;
     }
 
     /**
-     * Gets the antialias flag.
+     * Gets whether the frame buffer is anti-aliased.
      * @returns The antialias flag.
      */
     get antialias() {
@@ -671,10 +701,11 @@ class AppElement extends AsyncElement {
 
     /**
      * Sets the graphics backend. Defaults to 'webgpu', which falls back to 'webgl2' if WebGPU
-     * is not supported by the browser.
+     * is not supported by the browser. Read only when the application boots.
      * @param value - The graphics backend ('webgpu', 'webgl2', or 'null').
      */
     set backend(value: 'webgpu' | 'webgl2' | 'null') {
+        this._warnIfBooted('backend');
         this._backend = value;
     }
 
@@ -687,19 +718,21 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Sets the depth flag.
-     * @param value - The depth flag.
+     * Sets whether the frame buffer has a depth buffer, which the renderer needs to resolve which
+     * surface is nearest the camera. Read only when the application boots.
+     * @param value - The depth buffer flag.
      */
-    set depth(value: boolean) {
-        this._depth = value;
+    set depthBuffer(value: boolean) {
+        this._warnIfBooted('depth-buffer');
+        this._depthBuffer = value;
     }
 
     /**
-     * Gets the depth flag.
-     * @returns The depth flag.
+     * Gets whether the frame buffer has a depth buffer.
+     * @returns The depth buffer flag.
      */
-    get depth() {
-        return this._depth;
+    get depthBuffer() {
+        return this._depthBuffer;
     }
 
     /**
@@ -709,26 +742,6 @@ class AppElement extends AsyncElement {
      */
     get hierarchyReady() {
         return this._hierarchyReady;
-    }
-
-    /**
-     * Sets the high resolution flag. When true, the application will render at the device's
-     * physical resolution. When false, the application will render at CSS resolution.
-     * @param value - The high resolution flag.
-     */
-    set highResolution(value: boolean) {
-        this._highResolution = value;
-        if (this.app) {
-            this.app.graphicsDevice.maxPixelRatio = value ? window.devicePixelRatio : 1;
-        }
-    }
-
-    /**
-     * Gets the high resolution flag.
-     * @returns The high resolution flag.
-     */
-    get highResolution() {
-        return this._highResolution;
     }
 
     /**
@@ -757,23 +770,49 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Sets the stencil flag.
-     * @param value - The stencil flag.
+     * Sets the cap on the pixel ratio the application renders at. The canvas is sized by the
+     * smaller of this value and the display's own device pixel ratio, so the default of `Infinity`
+     * renders at full physical resolution, `1` renders at CSS resolution, and an intermediate
+     * value such as `2` keeps a dense display sharp without paying for every one of its pixels.
+     * Must be greater than 0. Unlike the other graphics options, this applies immediately.
+     * @param value - The maximum pixel ratio.
      */
-    set stencil(value: boolean) {
-        this._stencil = value;
+    set maxPixelRatio(value: number) {
+        this._maxPixelRatio = value;
+        if (this.app) {
+            this.app.graphicsDevice.maxPixelRatio = value;
+            this.app.resizeCanvas();
+        }
     }
 
     /**
-     * Gets the stencil flag.
-     * @returns The stencil flag.
+     * Gets the cap on the pixel ratio the application renders at.
+     * @returns The maximum pixel ratio.
      */
-    get stencil() {
-        return this._stencil;
+    get maxPixelRatio() {
+        return this._maxPixelRatio;
+    }
+
+    /**
+     * Sets whether the frame buffer has a stencil buffer, which stencil-based effects and UI
+     * masking need. Read only when the application boots.
+     * @param value - The stencil buffer flag.
+     */
+    set stencilBuffer(value: boolean) {
+        this._warnIfBooted('stencil-buffer');
+        this._stencilBuffer = value;
+    }
+
+    /**
+     * Gets whether the frame buffer has a stencil buffer.
+     * @returns The stencil buffer flag.
+     */
+    get stencilBuffer() {
+        return this._stencilBuffer;
     }
 
     static get observedAttributes() {
-        return ['alpha', 'antialias', 'backend', 'depth', 'stencil', 'high-resolution', 'loading-bar'];
+        return ['alpha', 'antialias', 'backend', 'depth-buffer', 'loading-bar', 'max-pixel-ratio', 'stencil-buffer'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -787,17 +826,17 @@ class AppElement extends AsyncElement {
             case 'backend':
                 this.backend = parseEnum(newValue, ['webgpu', 'webgl2', 'null'], 'webgpu', name);
                 break;
-            case 'depth':
-                this.depth = parseBool(newValue, true);
-                break;
-            case 'high-resolution':
-                this.highResolution = parseBool(newValue, true);
+            case 'depth-buffer':
+                this.depthBuffer = parseBool(newValue, true);
                 break;
             case 'loading-bar':
                 this.loadingBar = parseBool(newValue, true);
                 break;
-            case 'stencil':
-                this.stencil = parseBool(newValue, true);
+            case 'max-pixel-ratio':
+                this.maxPixelRatio = parseNumber(newValue, Infinity, name);
+                break;
+            case 'stencil-buffer':
+                this.stencilBuffer = parseBool(newValue, true);
                 break;
         }
     }
