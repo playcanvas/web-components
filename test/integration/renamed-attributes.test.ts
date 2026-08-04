@@ -76,10 +76,10 @@ describe('renamed enum attributes', () => {
     });
 
     it('survives an out-of-union value assigned before the component exists', async () => {
-        // Only reachable from untyped JS - parseEnum can never yield a non-member - but the camera
-        // path is the one that punishes it. CameraComponentSystem gates on hasOwnProperty, which is
-        // true for a key explicitly set to undefined, and CameraComponent.projection does not
-        // validate, so a bare map lookup would put undefined straight onto the engine camera.
+        // Assigned as a property rather than an attribute because parseEnum can never yield a
+        // non-member, so untyped JS is the only way in. Camera is the component that punishes it:
+        // its system applies a key that is present but undefined, and its projection setter does
+        // not validate, so a bare map lookup reaches the engine as undefined.
         const camera = document.createElement('pc-camera') as HTMLElement & {
             projection: string,
             component: { projection: number }

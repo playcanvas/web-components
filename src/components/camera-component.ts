@@ -82,11 +82,6 @@ class CameraComponentElement extends ComponentElement {
             gammaCorrection: this._gamma === 'srgb' ? GAMMA_SRGB : GAMMA_NONE,
             horizontalFov: this._horizontalFov,
             nearClip: this._nearClip,
-            // Coalesced because CameraComponentSystem gates on hasOwnProperty, which is true for a
-            // key explicitly set to undefined - so an out-of-union value reaching these maps (only
-            // possible from untyped JS, never from parseEnum) would assign undefined straight onto
-            // the component, whose projection setter does no validation of its own. The screen and
-            // scroll-view systems skip undefined instead, so their maps do not need this.
             projection: projections.get(this._projection) ?? PROJECTION_PERSPECTIVE,
             orthoHeight: this._orthoHeight,
             priority: this._priority,
