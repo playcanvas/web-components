@@ -4,6 +4,7 @@ import {
     CameraComponent,
     createGraphicsDevice,
     ElementInput,
+    Entity,
     FILLMODE_FILL_WINDOW,
     GraphNode,
     Keyboard,
@@ -108,6 +109,13 @@ class AppElement extends AsyncElement {
     private _bar: LoadingBar | null = null;
 
     private _hierarchyReady = false;
+
+    /**
+     * The elements backing this application's entities, keyed by the entity itself. Registered
+     * by EntityElement at creation and removed when an entity is destroyed, this joins engine
+     * scene nodes back to their owning elements by identity - never by name.
+     */
+    private _entityElements = new Map<GraphNode, EntityElement>();
 
     private _picker: Picker | null = null;
 
@@ -346,11 +354,13 @@ class AppElement extends AsyncElement {
     disconnectedCallback() {
         this._pickerDestroy();
 
-        // Clean up the application
+        // Clean up the application. Destroying it destroys every entity, whose destroy hooks
+        // unregister them - clear() covers any entity the engine no longer reached.
         if (this._app) {
             this._app.destroy();
             this._app = null;
         }
+        this._entityElements.clear();
         this._loadProgress = 0;
         this._bar?.destroy();
         this._bar = null;
@@ -427,6 +437,79 @@ class AppElement extends AsyncElement {
         };
     }
 
+    /**
+     * Registers the element that created an entity. Called by EntityElement when it creates its
+     * entity.
+     *
+     * @param entity - The entity.
+     * @param element - The element that created it.
+     * @ignore
+     */
+    _registerEntityElement(entity: Entity, element: EntityElement) {
+        this._entityElements.set(entity, element);
+    }
+
+    /**
+     * Removes the registration for a destroyed entity. Called by EntityElement.
+     *
+     * @param entity - The entity.
+     * @ignore
+     */
+    _unregisterEntityElement(entity: Entity) {
+        this._entityElements.delete(entity);
+    }
+
+    /**
+     * Returns the `<pc-entity>` element whose backing entity is `entity`, or `null` if the
+     * entity was not created by an element of this application - for example, a node inside a
+     * model's instantiated hierarchy, or an entity created through the engine API.
+     *
+     * @param entity - The entity to look up.
+     * @returns The element backing the entity, or `null`.
+     */
+    elementFromEntity(entity: Entity): EntityElement | null {
+        return this._entityElements.get(entity) ?? null;
+    }
+
+    /**
+     * Resolves the element that owns a picked node: the nearest node up the parent chain -
+     * starting with the node itself - that was created by a `<pc-entity>` of this application.
+     * A hit inside a model's instantiated hierarchy therefore resolves to the element hosting
+     * the model.
+     *
+     * @param node - The picked node, or `null`.
+     * @returns The owning element, or `null`.
+     */
+    private _elementFromNode(node: GraphNode | null): EntityElement | null {
+        while (node !== null) {
+            const element = this._entityElements.get(node);
+            if (element) {
+                return element;
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+
+    /**
+     * Like {@link _elementFromNode}, but skips elements without a listener for `type`, so a hit
+     * on an unlistened child still reaches a listening ancestor.
+     *
+     * @param node - The picked node, or `null`.
+     * @param type - The pointer event type a listener is required for.
+     * @returns The nearest listening element, or `null`.
+     */
+    private _elementWithListener(node: GraphNode | null, type: string): EntityElement | null {
+        while (node !== null) {
+            const element = this._entityElements.get(node);
+            if (element?.hasListeners(type)) {
+                return element;
+            }
+            node = node.parent;
+        }
+        return null;
+    }
+
     // New helper to convert CSS coordinates to canvas (picker) coordinates
     private _getPickerCoordinates(event: PointerEvent): { x: number, y: number } {
         // Get the canvas' bounding rectangle in CSS pixels.
@@ -475,17 +558,9 @@ class AppElement extends AsyncElement {
         const node = await this._pickNode(event);
         if (token !== this._pickToken || !this._picker) return;
 
-        // Get the currently hovered entity by walking up the hierarchy
-        let newHoverEntity: EntityElement | null = null;
-        let currentNode = node;
-        while (currentNode !== null) {
-            const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
-            if (entityElement) {
-                newHoverEntity = entityElement;
-                break;
-            }
-            currentNode = currentNode.parent;
-        }
+        // The hovered element is the nearest one up the node's parent chain, listening or not -
+        // dispatch is gated per event type below
+        const newHoverEntity = this._elementFromNode(node);
 
         // Handle enter/leave events
         if (this._hoveredEntity !== newHoverEntity) {
@@ -509,16 +584,12 @@ class AppElement extends AsyncElement {
     async _onPointerDown(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
-        let currentNode = await this._pickNode(event);
+        const node = await this._pickNode(event);
         if (!this._picker) return; // the element disconnected while the pick was in flight
 
-        while (currentNode !== null) {
-            const entityElement = this.querySelector(`pc-entity[name="${currentNode.name}"]`) as EntityElement;
-            if (entityElement && entityElement.hasListeners('pointerdown')) {
-                entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
-                break;
-            }
-            currentNode = currentNode.parent;
+        const entityElement = this._elementWithListener(node, 'pointerdown');
+        if (entityElement) {
+            entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
         }
     }
 
@@ -526,10 +597,10 @@ class AppElement extends AsyncElement {
         if (!this._picker || !this.app) return;
 
         const node = await this._pickNode(event);
-        if (!node || !this._picker) return;
+        if (!this._picker) return; // the element disconnected while the pick was in flight
 
-        const entityElement = this.querySelector(`pc-entity[name="${node.name}"]`) as EntityElement;
-        if (entityElement && entityElement.hasListeners('pointerup')) {
+        const entityElement = this._elementWithListener(node, 'pointerup');
+        if (entityElement) {
             entityElement.dispatchEvent(new PointerEvent('pointerup', event));
         }
     }
