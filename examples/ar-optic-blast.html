@@ -229,7 +229,7 @@
                 setStatus('Camera unavailable — click and hold to fire anyway', 'error');
             });
 
-            app.on('visor:ready', () => {
+            app.on('face:ready', () => {
                 if (!cameraError) setStatus(sim ? touchHint : 'Show your face');
             });
 

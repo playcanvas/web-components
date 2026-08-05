@@ -13,6 +13,7 @@ export const examples = [
     { name: 'AR Avatar', path: 'ar-avatar.html', category: 'XR' },
     { name: 'AR Hand Gestures', path: 'ar-hand-gestures.html', category: 'XR' },
     { name: 'AR Optic Blast', path: 'ar-optic-blast.html', category: 'XR' },
+    { name: 'AR Sunglasses', path: 'ar-sunglasses.html', category: 'XR' },
     { name: 'First Person Teleport', path: 'first-person-teleport.html', category: 'XR' },
     // Graphics
     { name: 'Basic Shapes', path: 'basic-shapes.html', category: 'Graphics' },
