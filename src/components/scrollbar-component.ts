@@ -32,7 +32,7 @@ class ScrollbarComponentElement extends ComponentElement {
         super('scrollbar');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         const data: Record<string, any> = {
             orientation: orientations.get(this._orientation),
             value: this._value,

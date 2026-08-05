@@ -78,7 +78,7 @@ class SceneElement extends AsyncElement {
         }
 
         this._scene = app.scene;
-        this.updateSceneSettings();
+        this._updateSceneSettings();
 
         this._onReady();
     }
@@ -91,7 +91,7 @@ class SceneElement extends AsyncElement {
         this._resetReady();
     }
 
-    updateSceneSettings() {
+    private _updateSceneSettings() {
         if (this._scene) {
             this._scene.fog.type = this._fog;
             this._scene.fog.color = this._fogColor;

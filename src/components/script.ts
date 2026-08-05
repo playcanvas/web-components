@@ -43,7 +43,7 @@ class ScriptElement extends AsyncElement {
 
     /**
      * The Script instance created for this element by its parent `<pc-scripts>` element.
-     * @ignore
+     * @internal
      */
     _script: Script | null = null;
 
@@ -152,7 +152,7 @@ class ScriptElement extends AsyncElement {
      * Called by the parent `<pc-scripts>` element when the script instance has been created.
      * Creation can happen more than once per connection (a runtime `name` change recreates the
      * instance), but `_onReady` signals readiness at most once per cycle.
-     * @ignore
+     * @internal
      */
     _onScriptCreated() {
         this._onReady();

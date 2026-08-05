@@ -64,7 +64,7 @@ class RigidBodyComponentElement extends ComponentElement {
         super('rigidbody');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             angularDamping: this._angularDamping,
             angularFactor: this._angularFactor,

@@ -9,6 +9,7 @@
     ],
     "declaration": true,
     "declarationDir": "./dist",
+    "stripInternal": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

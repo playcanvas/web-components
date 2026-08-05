@@ -155,7 +155,7 @@ describe('teardown', () => {
 
         // The nested entity comes back too, and is re-parented rather than merely recreated.
         // disconnectedCallback resets _built alongside _entity on every descendant, so
-        // buildHierarchy no longer bails on a stale _built and leaves the child orphaned -
+        // _buildHierarchy no longer bails on a stale _built and leaves the child orphaned -
         // created, never parented, and never ready again.
         const parentEntity = app.root.findByName('parent');
         const childEntity = app.root.findByName('child');
@@ -168,7 +168,7 @@ describe('teardown', () => {
 
     it('restores every level when a three-deep pc-entity subtree is removed and re-added', async () => {
         // The two-level case above cannot distinguish "descendants are reset" from "the first
-        // descendant is reset". This also pins buildHierarchy's dependence on document order:
+        // descendant is reset". This also pins _buildHierarchy's dependence on document order:
         // connectedCallback builds the querySelectorAll result in sequence, so each level has to be
         // parented before the level below it looks up closestEntity.
         const { app, all } = await bootApp(`

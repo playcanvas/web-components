@@ -274,7 +274,7 @@ class ScriptComponentElement extends ComponentElement {
         return super.connectedCallback();
     }
 
-    initComponent() {
+    protected initComponent() {
         // Handle initial script elements
         this.querySelectorAll<ScriptElement>(':scope > pc-script').forEach((scriptElement) => {
             this.createScript(scriptElement);

@@ -244,6 +244,107 @@ if (manifest) {
     check(strayAssetEvents.length === 0,
         `pc-app should not declare asset events: ${strayAssetEvents.join(', ')}`);
 
+    // ---- Members: the manifest's public API surface ----
+    //
+    // cleanup-plugin.mjs drops every member that is not public API (private and protected
+    // members, plus underscore-prefixed internals). That filter has two failure modes, and each
+    // direction is pinned here: under-filtering ships an internal member as API, and
+    // over-filtering silently drops a real public member - which no other check would notice.
+
+    // Under-filtering: nothing non-public survives, in any class of any module (the base
+    // classes have no tag, so the per-element map below never sees them)
+    for (const module of manifest.modules ?? []) {
+        for (const declaration of module.declarations ?? []) {
+            if (declaration.kind !== 'class') {
+                continue;
+            }
+            for (const member of declaration.members ?? []) {
+                check(Boolean(member.name) && !member.name.startsWith('_'),
+                    `${declaration.name}.${member.name} is underscore-internal but ships in the manifest`);
+                check((member.privacy ?? 'public') === 'public',
+                    `${declaration.name}.${member.name} is ${member.privacy} but ships in the manifest`);
+            }
+        }
+    }
+
+    // Over-filtering, part 1: every attribute's backing accessor is still a member. pc-entity's
+    // onpointer* attributes are exempt - they are handled by a dispatch helper rather than by
+    // accessors, so the fieldName the attributes plugin falls back to names a member that has
+    // never existed.
+    const PHANTOM_FIELDS = new Set(pointerEvents.map(name => `on${name}`));
+    for (const [tag, declaration] of elements) {
+        const members = new Set((declaration.members ?? []).map(member => member.name));
+        for (const item of declaration.attributes ?? []) {
+            if (!item.fieldName || PHANTOM_FIELDS.has(item.name)) {
+                continue;
+            }
+            check(members.has(item.fieldName),
+                `${tag}[${item.name}] is backed by '${item.fieldName}', which is missing from the members`);
+        }
+    }
+
+    // Over-filtering, part 2: the members that do not back an attribute are pinned exactly, per
+    // element, so dropping one (or leaking a new public-looking internal) fails the build. A
+    // genuinely new public member belongs in this list.
+    const ASYNC_MEMBERS = ['closestApp', 'closestEntity', 'ready'];
+    const EXTRA_MEMBERS = new Map([
+        ['pc-app', ['app', 'elementFromEntity', 'loadProgress', ...ASYNC_MEMBERS]],
+        ['pc-asset', ['asset', 'get', ...ASYNC_MEMBERS]],
+        ['pc-camera', ['component', 'endXr', 'startXr', 'xrAvailable', ...ASYNC_MEMBERS]],
+        ['pc-entity', ['addEventListener', 'entity', 'removeEventListener', ...ASYNC_MEMBERS]],
+        // roughness and roughnessMap are the alias accessors: their attributes resolve to the
+        // gloss fields, so no attribute claims them as its backing member
+        ['pc-material', ['get', 'material', 'roughness', 'roughnessMap']],
+        ['pc-model', ['entity', ...ASYNC_MEMBERS]],
+        ['pc-module', []],
+        ['pc-particles', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
+        ['pc-scene', ['scene', ...ASYNC_MEMBERS]],
+        ['pc-script', ['script', ...ASYNC_MEMBERS]],
+        ['pc-sound', ['soundSlot', ...ASYNC_MEMBERS]]
+    ]);
+    for (const tag of COMPONENT_TAGS) {
+        if (!EXTRA_MEMBERS.has(tag)) {
+            EXTRA_MEMBERS.set(tag, ['component', ...ASYNC_MEMBERS]);
+        }
+    }
+    for (const tag of TAGS) {
+        if (!EXTRA_MEMBERS.has(tag)) {
+            EXTRA_MEMBERS.set(tag, ASYNC_MEMBERS);
+        }
+    }
+    for (const [tag, declaration] of elements) {
+        const backing = new Set((declaration.attributes ?? []).map(item => item.fieldName));
+        const extras = (declaration.members ?? [])
+            .map(member => member.name)
+            .filter(name => !backing.has(name))
+            .sort();
+        const expected = [...EXTRA_MEMBERS.get(tag)].sort();
+        check(extras.join() === expected.join(),
+            `${tag} non-attribute members are [${extras.join(', ')}], expected [${expected.join(', ')}]`);
+    }
+
+    // The base classes and whenReady sit outside the per-tag map, but their surface is
+    // inherited by (or waits on) every element, so losing it would break all of them at once
+    const classes = new Map();
+    for (const module of manifest.modules ?? []) {
+        for (const declaration of module.declarations ?? []) {
+            if (declaration.kind === 'class') {
+                classes.set(declaration.name, declaration);
+            }
+        }
+    }
+    for (const [name, expected] of [
+        ['AsyncElement', ASYNC_MEMBERS],
+        ['ComponentElement', ['component', 'enabled', ...ASYNC_MEMBERS]]
+    ]) {
+        const actual = (classes.get(name)?.members ?? []).map(member => member.name).sort();
+        check(actual.join() === [...expected].sort().join(),
+            `${name} members are [${actual.join(', ')}], expected [${expected.join(', ')}]`);
+    }
+    check((manifest.modules ?? []).some(module => (module.declarations ?? [])
+        .some(declaration => declaration.kind === 'function' && declaration.name === 'whenReady')),
+    "the manifest lost the 'whenReady' function declaration");
+
     // Global invariants
     for (const [tag, declaration] of elements) {
         for (const item of declaration.attributes ?? []) {

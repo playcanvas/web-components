@@ -33,7 +33,7 @@ export type BootOptions = {
  *
  * This is load bearing rather than convenient. <pc-app> resolves its own ready promise from inside
  * the app.preload() callback, which is BEFORE its descendants' async connectedCallbacks have run to
- * completion. Tearing the tree down in that window makes ComponentElement.addComponent()
+ * completion. Tearing the tree down in that window makes ComponentElement._addComponent()
  * dereference an entity that is already null, and SoundSlotElement.connectedCallback() dereference
  * a component that is already null - both surfacing as unhandled rejections that fail the whole
  * file. Measured: removing the tree immediately after `await appElement.ready()` produces 2-3 such

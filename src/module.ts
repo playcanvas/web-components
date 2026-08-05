@@ -43,7 +43,14 @@ class ModuleElement extends HTMLElement {
         }
     }
 
-    public getLoadPromise(): Promise<void> {
+    /**
+     * Returns the promise that settles when the module has loaded. Awaited by the containing
+     * `<pc-app>` element before it creates its graphics device.
+     *
+     * @returns The load promise.
+     * @internal
+     */
+    _getLoadPromise(): Promise<void> {
         return this.loadPromise;
     }
 }

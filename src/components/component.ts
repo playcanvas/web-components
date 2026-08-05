@@ -39,12 +39,17 @@ class ComponentElement extends AsyncElement {
         this._componentName = componentName;
     }
 
-    // Method to be overridden by subclasses to provide initial component data
-    getInitialComponentData() {
+    /**
+     * Returns the data the component is created with. Overridden by subclasses to supply the
+     * initial values of their cached properties.
+     *
+     * @returns The initial component data.
+     */
+    protected getInitialComponentData() {
         return {};
     }
 
-    async addComponent() {
+    private async _addComponent() {
         const generation = this._connectionGeneration;
 
         const entityElement = this.closestEntity;
@@ -71,7 +76,11 @@ class ComponentElement extends AsyncElement {
         this._component = entityElement.entity!.addComponent(this._componentName, data);
     }
 
-    initComponent() {
+    /**
+     * Configures the newly added component. Overridden by subclasses whose setup goes beyond
+     * the initial data — child-element handling, asset resolution and the like.
+     */
+    protected initComponent() {
         // optional hook
     }
 
@@ -88,7 +97,7 @@ class ComponentElement extends AsyncElement {
             return;
         }
 
-        await this.addComponent();
+        await this._addComponent();
 
         if (generation !== this._connectionGeneration) {
             return;

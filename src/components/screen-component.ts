@@ -40,7 +40,7 @@ class ScreenComponentElement extends ComponentElement {
         super('screen');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             priority: this._priority,
             referenceResolution: this._referenceResolution,

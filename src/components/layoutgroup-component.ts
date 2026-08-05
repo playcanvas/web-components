@@ -58,7 +58,7 @@ class LayoutGroupComponentElement extends ComponentElement {
         super('layoutgroup');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             orientation: orientations.get(this._orientation),
             reverseX: this._reverseX,

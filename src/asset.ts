@@ -132,7 +132,7 @@ class AssetElement extends AsyncElement {
             const app = appElement.app;
             if (!app) return; // pc-app is re-connecting; its own boot will create this asset
 
-            this.createAsset();
+            this._createAsset();
             if (this.asset) {
                 app.assets.add(this.asset); // add() auto-loads when preload is true
                 if (!this.lazy) {
@@ -141,14 +141,14 @@ class AssetElement extends AsyncElement {
             }
         }
 
-        // Never ready if createAsset failed (unsupported asset type)
+        // Never ready if _createAsset failed (unsupported asset type)
         if (this.asset) {
             this._onReady();
         }
     }
 
     disconnectedCallback() {
-        this.destroyAsset();
+        this._destroyAsset();
         // Re-arm readiness so a re-inserted element announces the asset it creates then
         this._resetReady();
     }
@@ -165,7 +165,14 @@ class AssetElement extends AsyncElement {
         );
     }
 
-    createAsset() {
+    /**
+     * Creates the asset from the element's attributes. Called by the containing `<pc-app>`
+     * element during its boot sweep, and on connection for elements inserted while the
+     * application is already running.
+     *
+     * @internal
+     */
+    _createAsset() {
         const id = this.getAttribute('id') || '';
         const src = this.getAttribute('src') || '';
         let type = this.getAttribute('type');
@@ -267,7 +274,7 @@ class AssetElement extends AsyncElement {
         return data;
     }
 
-    destroyAsset() {
+    private _destroyAsset() {
         if (this.asset) {
             // A caller that keeps the Asset alive must not dispatch on a removed element
             this.asset.off('load', this._onAssetLoad, this);
@@ -298,6 +305,13 @@ class AssetElement extends AsyncElement {
         return this._lazy;
     }
 
+    /**
+     * Returns the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
+     * `undefined` if there is no such element or its asset has not been created yet.
+     *
+     * @param id - The `id` of the `<pc-asset>` element.
+     * @returns The asset, or `undefined`.
+     */
     static get(id: string) {
         const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
         return assetElement?.asset;

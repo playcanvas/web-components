@@ -31,7 +31,7 @@ class RenderComponentElement extends ComponentElement {
         super('render');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             type: this._type,
             castShadows: this._castShadows,

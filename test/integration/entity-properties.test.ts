@@ -12,7 +12,7 @@ import { readyWithin } from '../helpers/ready';
  * The imperative construction path: a scene assembled with document.createElement and property
  * assignments rather than markup, which is what examples/spinning-cube-api.html demonstrates.
  *
- * createEntity used to seed the entity by reading the attributes back, so anything assigned through
+ * _createEntity used to seed the entity by reading the attributes back, so anything assigned through
  * the property API before the entity existed was silently discarded - every value below came out as
  * its default. It now reads the cached fields, which hold the parsed attribute value and the
  * property value alike, since attributeChangedCallback routes attributes through the same setters.
@@ -64,7 +64,7 @@ describe('<pc-entity> pre-boot property values', () => {
     });
 
     it('lets a property assigned before boot override the attribute it shadows', async () => {
-        // The sharpest form of the defect: with an attribute present, re-reading it in createEntity
+        // The sharpest form of the defect: with an attribute present, re-reading it in _createEntity
         // beat the later property assignment, so the entity silently used the stale markup value.
         const { element } = await bootWith((entity) => {
             entity.setAttribute('position', '1 1 1');

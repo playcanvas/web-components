@@ -72,7 +72,7 @@ class ElementComponentElement extends ComponentElement {
         super('element');
     }
 
-    initComponent() {
+    protected initComponent() {
         const component = this.component as any;
         if (!component) {
             return;
@@ -91,7 +91,7 @@ class ElementComponentElement extends ComponentElement {
         component._dirtifyMask?.();
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         const data: Record<string, any> = {
             anchor: this._anchor,
             autoWidth: this._autoWidth,

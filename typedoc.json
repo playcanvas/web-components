@@ -52,6 +52,7 @@
     "exclude": [
         "**/node_modules/**"
     ],
+    "excludeInternal": true,
     "excludeNotDocumented": true,
     "externalSymbolLinkMappings": {
         "playcanvas": {
@@ -70,7 +71,9 @@
             "RigidBodyComponent": "https://api.playcanvas.com/engine/classes/RigidBodyComponent.html",
             "Scene": "https://api.playcanvas.com/engine/classes/Scene.html",
             "ScreenComponent": "https://api.playcanvas.com/engine/classes/ScreenComponent.html",
+            "Script": "https://api.playcanvas.com/engine/classes/Script.html",
             "ScriptComponent": "https://api.playcanvas.com/engine/classes/ScriptComponent.html",
+            "StandardMaterial": "https://api.playcanvas.com/engine/classes/StandardMaterial.html",
             "SoundComponent": "https://api.playcanvas.com/engine/classes/SoundComponent.html",
             "SoundSlot": "https://api.playcanvas.com/engine/classes/SoundSlot.html",
             "Vec2": "https://api.playcanvas.com/engine/classes/Vec2.html",

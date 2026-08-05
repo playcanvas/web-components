@@ -92,7 +92,7 @@ class LightComponentElement extends ComponentElement {
         super('light');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             castShadows: this._castShadows,
             color: this._color,
