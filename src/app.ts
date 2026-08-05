@@ -75,6 +75,9 @@ import { MaterialElement } from './material';
 import { ModuleElement } from './module';
 import { parseBool, parseEnum, parseNumber } from './parse';
 
+/** The pointer event types the application synthesizes on `<pc-entity>` elements via picking. */
+const pointerEventTypes = ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'] as const;
+
 /**
  * The AppElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-app/ | `<pc-app>`} elements.
@@ -188,6 +191,14 @@ class AppElement extends AsyncElement {
 
         // Bind methods to maintain 'this' context
         this._onWindowResize = this._onWindowResize.bind(this);
+
+        // Track pointer listeners being added to and removed from descendant entities.
+        // Registered once here rather than on every boot - the handlers no-op while there is no
+        // canvas, and a re-booted element must not stack a second set.
+        pointerEventTypes.forEach((type) => {
+            this.addEventListener(`${type}:connect`, () => this._onPointerListenerAdded(type));
+            this.addEventListener(`${type}:disconnect`, () => this._onPointerListenerRemoved(type));
+        });
     }
 
     async connectedCallback() {
@@ -348,6 +359,14 @@ class AppElement extends AsyncElement {
             entityElement.buildHierarchy(app);
         });
 
+        // Building the hierarchy dispatched each entity's ready event synchronously, and a
+        // listener may have removed the element. The sweep itself degrades safely - destroying
+        // the application nulls every element's entity, so the remaining builds no-op - but the
+        // teardown's reset must not be overwritten here.
+        if (generation !== this._bootGeneration) {
+            return;
+        }
+
         this._hierarchyReady = true;
 
         // Forward the engine's preload lifecycle as DOM ProgressEvents on this element. The
@@ -366,6 +385,12 @@ class AppElement extends AsyncElement {
         this._loadProgress = total === 0 ? 1 : 0;
         this._bar?.progress(0, total);
         this.dispatchEvent(new ProgressEvent('progress', { lengthComputable: true, loaded: 0, total }));
+
+        // The progress dispatch above ran listeners synchronously, and one may have removed the
+        // element. The application is already destroyed - it must not be asked to preload.
+        if (generation !== this._bootGeneration) {
+            return;
+        }
 
         // Load assets before starting the application
         app.preload(() => {
@@ -453,13 +478,10 @@ class AppElement extends AsyncElement {
         this._pointerHandlers.pointerdown = listener(this._onPointerDown);
         this._pointerHandlers.pointerup = listener(this._onPointerUp);
 
-        // Listen for pointer listeners being added/removed
-        ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'].forEach((type) => {
-            this.addEventListener(`${type}:connect`, () => this._onPointerListenerAdded(type));
-            this.addEventListener(`${type}:disconnect`, () => this._onPointerListenerRemoved(type));
-
-            // Attach canvas handlers for listeners registered before this point (e.g. handlers
-            // created from onpointer* attributes when their elements were first upgraded)
+        // Attach canvas handlers for listeners registered before this boot (e.g. handlers
+        // created from onpointer* attributes when their elements were first upgraded, or
+        // listeners carried over from before a re-boot)
+        pointerEventTypes.forEach((type) => {
             const anyListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity'))
             .some(entity => entity.hasListeners(type));
             if (anyListeners) {

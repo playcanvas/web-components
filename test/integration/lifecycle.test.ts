@@ -39,6 +39,57 @@ describe('<pc-app> lifecycle', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
+    it('abandons boot when a ready listener removes pc-app during the hierarchy build', async () => {
+        // Building the hierarchy dispatches each entity's ready event synchronously from inside
+        // boot, so a listener can tear the element down mid-sweep. The teardown's reset must
+        // survive the rest of the boot: hierarchyReady flipping back to true would send the
+        // descendants of a later re-insertion down the runtime-insertion path into a null app.
+        const handle = mount(`
+            <pc-app backend="null">
+                <pc-entity name="first"></pc-entity>
+                <pc-entity name="second"></pc-entity>
+            </pc-app>
+        `);
+        const appElement = handle.get<AppElement>('pc-app');
+
+        // Fires for the first entity to become ready - the first ready event of the boot
+        appElement.addEventListener('ready', () => appElement.remove(), { once: true });
+
+        await expectNeverReady(appElement);
+
+        expect(appElement.app, 'the application is destroyed').toBeNull();
+        expect(appElement.hierarchyReady, 'the reset survives the abandoned boot').toBe(false);
+        expect(uncaught.seen).toEqual([]);
+
+        // And the element recovers: re-inserting it boots afresh, entities and all.
+        handle.container.appendChild(appElement);
+        await readyWithin(appElement);
+        await settle(handle.container);
+
+        appElement.app!.autoRender = false;
+        const entities = handle.all<EntityElement>('pc-entity');
+        expect(entities).toHaveLength(2);
+        expect(entities.every(entity => entity.entity !== null)).toBe(true);
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('abandons boot when a progress listener removes pc-app', async () => {
+        // Boot dispatches a progress event synchronously between building the hierarchy and
+        // asking the application to preload. A listener that removes the element there must not
+        // leave boot to preload and start an application that disconnect has already destroyed.
+        const handle = mount('<pc-app backend="null"><pc-entity name="e"></pc-entity></pc-app>');
+        const appElement = handle.get<AppElement>('pc-app');
+
+        appElement.addEventListener('progress', () => appElement.remove(), { once: true });
+
+        await expectNeverReady(appElement);
+
+        expect(appElement.app, 'the application is destroyed').toBeNull();
+        expect(appElement.hierarchyReady).toBe(false);
+        expect(appElement.loadProgress, 'preload never ran against the destroyed application').toBe(0);
+        expect(uncaught.seen).toEqual([]);
+    });
+
     it('resets hierarchyReady and re-arms readiness when pc-app is removed', async () => {
         // Descendants branch on both of these: a stale hierarchyReady sends a re-inserted
         // pc-entity down the runtime-insertion path against a null app, and a stale-resolved
