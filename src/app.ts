@@ -334,13 +334,21 @@ class AppElement extends AsyncElement {
 
         // Get all pc-asset elements that are direct children of the pc-app element
         const assetElements = this.querySelectorAll<AssetElement>(':scope > pc-asset');
-        Array.from(assetElements).forEach((assetElement) => {
+        for (const assetElement of Array.from(assetElements)) {
             assetElement.createAsset();
             const asset = assetElement.asset;
             if (asset) {
                 app.assets.add(asset);
+
+                // Adding a fileless asset (one built purely from data, such as a sprite)
+                // completes it synchronously, dispatching the element's load event - whose
+                // listeners may have removed this element. Stop before the next addition
+                // reaches the destroyed registry, and before orphan entities are created.
+                if (generation !== this._bootGeneration) {
+                    return;
+                }
             }
-        });
+        }
 
         // Get all pc-material elements that are direct children of the pc-app element
         const materialElements = this.querySelectorAll<MaterialElement>(':scope > pc-material');

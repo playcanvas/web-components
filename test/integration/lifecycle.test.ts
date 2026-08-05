@@ -39,6 +39,33 @@ describe('<pc-app> lifecycle', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
+    it('abandons boot when an asset load listener removes pc-app during the asset sweep', async () => {
+        // A fileless asset completes synchronously inside app.assets.add() during boot's asset
+        // sweep, dispatching the pc-asset element's documented load event - so a listener can
+        // tear the element down from inside the sweep. Boot must stop there: the entities it
+        // would otherwise go on to create belong to no application, and parenting them
+        // dereferences the destroyed application's root.
+        const handle = mount(`
+            <pc-app backend="null">
+                <pc-asset id="inline-data" type="json" data='{"answer": 42}'></pc-asset>
+                <pc-entity name="e"></pc-entity>
+            </pc-app>
+        `);
+        const appElement = handle.get<AppElement>('pc-app');
+        // Grabbed before the listener fires - the removal takes the subtree out of the container
+        const entityElement = handle.get<EntityElement>('pc-entity');
+
+        // The load event does not bubble, so listen on the asset element itself
+        handle.get('pc-asset').addEventListener('load', () => appElement.remove(), { once: true });
+
+        await expectNeverReady(appElement);
+
+        expect(appElement.app, 'the application is destroyed').toBeNull();
+        expect(appElement.hierarchyReady).toBe(false);
+        expect(entityElement.entity, 'no orphan entity was created').toBeNull();
+        expect(uncaught.seen).toEqual([]);
+    });
+
     it('abandons boot when a ready listener removes pc-app during the hierarchy build', async () => {
         // Building the hierarchy dispatches each entity's ready event synchronously from inside
         // boot, so a listener can tear the element down mid-sweep. The teardown's reset must
