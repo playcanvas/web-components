@@ -39,6 +39,7 @@ class SkyElement extends AsyncElement {
     disconnectedCallback() {
         this._unloadSkybox();
         this._appElement = null;
+        this._resetReady();
     }
 
     private _generateSkybox(asset: Asset) {

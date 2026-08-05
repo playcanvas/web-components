@@ -118,6 +118,14 @@ class AppElement extends AsyncElement {
     private _hierarchyReady = false;
 
     /**
+     * Incremented on every connect and disconnect. Boot captures the value on entry and abandons
+     * itself wherever it resumes from an await if the value has moved on — so a boot whose
+     * element was removed cannot complete against a torn-down element, and a boot whose element
+     * was removed and re-inserted (which starts a boot of its own) cannot race the newer one.
+     */
+    private _bootGeneration = 0;
+
+    /**
      * The elements backing this application's entities, keyed by the entity itself. Registered
      * by EntityElement at creation and removed when an entity is destroyed, this joins engine
      * scene nodes back to their owning elements by identity - never by name.
@@ -183,6 +191,8 @@ class AppElement extends AsyncElement {
     }
 
     async connectedCallback() {
+        const generation = ++this._bootGeneration;
+
         // Created before the first await, so the bar is visible while modules and the graphics
         // device are created, and exists before any disconnect could need to clean it up
         if (this._loadingBar && !this._bar) {
@@ -194,6 +204,12 @@ class AppElement extends AsyncElement {
 
         // Wait for all modules to load
         await Promise.all(Array.from(moduleElements).map(module => module.getLoadPromise()));
+
+        // The element may have been removed while the modules loaded. Nothing beyond the loading
+        // bar exists yet, and disconnectedCallback has already destroyed that.
+        if (generation !== this._bootGeneration) {
+            return;
+        }
 
         // Create and append the canvas to the element
         this._canvas = document.createElement('canvas');
@@ -217,6 +233,14 @@ class AppElement extends AsyncElement {
             deviceTypes: deviceTypes,
             stencil: this._stencilBuffer
         });
+
+        // The element may have been removed while the device was created. disconnectedCallback
+        // has already cleaned up the canvas; the device was created inside the await, so it is
+        // this boot's to release.
+        if (generation !== this._bootGeneration) {
+            device.destroy();
+            return;
+        }
 
         // Assigned rather than resolved to a number here: the engine caps against the live
         // window.devicePixelRatio on every resize, so an uncapped Infinity keeps following the
@@ -345,6 +369,13 @@ class AppElement extends AsyncElement {
 
         // Load assets before starting the application
         app.preload(() => {
+            // The element may have been removed while assets loaded. The application is already
+            // destroyed, so it must not be started — and readiness must not be signaled for a
+            // boot that no longer owns the element.
+            if (generation !== this._bootGeneration) {
+                return;
+            }
+
             // Scope the counter to this preload pass, so a later app.preload() call by user code
             // cannot push `loaded` past `total`
             app.off('preload:progress', onPreloadProgress);
@@ -365,6 +396,10 @@ class AppElement extends AsyncElement {
     }
 
     disconnectedCallback() {
+        // Invalidate any boot still in flight, so it abandons itself when it next resumes
+        // instead of completing against a torn-down element.
+        this._bootGeneration++;
+
         this._optionsLocked = false;
         this._pickerDestroy();
 
@@ -378,6 +413,12 @@ class AppElement extends AsyncElement {
         this._loadProgress = 0;
         this._bar?.destroy();
         this._bar = null;
+
+        // Return the element to its pre-boot state, so re-inserting it boots afresh: descendants
+        // must neither see a hierarchy that no longer exists nor resume against a readiness that
+        // no longer holds.
+        this._hierarchyReady = false;
+        this._resetReady();
 
         // Remove event listeners
         window.removeEventListener('resize', this._onWindowResize);
@@ -437,6 +478,7 @@ class AppElement extends AsyncElement {
         }
 
         this._picker = null;
+        this._hoveredEntity = null;
         this._pointerHandlers = {
             pointermove: null,
             pointerdown: null,

@@ -42,13 +42,6 @@ class ScriptElement extends AsyncElement {
     private _enabled: boolean = true;
 
     /**
-     * Whether readiness has been signalled. Creation can happen more than once over an
-     * element's life (a runtime `name` change recreates the instance), but `ready` is a
-     * one-shot signal, so only the first successful creation fires it.
-     */
-    private _readySignalled: boolean = false;
-
-    /**
      * The Script instance created for this element by its parent `<pc-scripts>` element.
      * @ignore
      */
@@ -141,13 +134,21 @@ class ScriptElement extends AsyncElement {
         }
     }
 
+    disconnectedCallback() {
+        // Re-arm readiness so a re-inserted element announces the instance created for it then.
+        // `_script` is deliberately NOT cleared here: the parent's mutation observer processes
+        // this removal afterwards and reads it to establish which engine script this element
+        // owned - the parent is what clears it.
+        this._resetReady();
+    }
+
     /**
      * Called by the parent `<pc-scripts>` element when the script instance has been created.
+     * Creation can happen more than once per connection (a runtime `name` change recreates the
+     * instance), but `_onReady` signals readiness at most once per cycle.
      * @ignore
      */
     _onScriptCreated() {
-        if (this._readySignalled) return;
-        this._readySignalled = true;
         this._onReady();
     }
 

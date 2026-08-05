@@ -19,6 +19,15 @@ class ComponentElement extends AsyncElement {
     private _appElement: AppElement | null = null;
 
     /**
+     * Incremented on every connect and disconnect. connectedCallback captures the value on entry
+     * and abandons itself wherever it resumes from an await if the value has moved on — so a
+     * callback whose element was removed cannot act on a torn-down tree, and one whose element
+     * was removed and re-inserted (which runs a callback of its own) cannot add the component a
+     * second time.
+     */
+    private _connectionGeneration = 0;
+
+    /**
      * Creates a new ComponentElement instance.
      *
      * @param componentName - The name of the component.
@@ -36,6 +45,8 @@ class ComponentElement extends AsyncElement {
     }
 
     async addComponent() {
+        const generation = this._connectionGeneration;
+
         const entityElement = this.closestEntity;
         if (!entityElement) {
             // A component can only exist on an entity, so an element placed outside one is inert.
@@ -46,6 +57,13 @@ class ComponentElement extends AsyncElement {
         }
 
         await entityElement.ready();
+
+        // The element may have been removed, or removed and re-inserted, while the entity became
+        // ready — the component belongs to the connection that owns the current generation.
+        if (generation !== this._connectionGeneration) {
+            return;
+        }
+
         // Add the component to the entity
         const data = this.getInitialComponentData();
         this._component = entityElement.entity!.addComponent(this._componentName, data);
@@ -54,14 +72,32 @@ class ComponentElement extends AsyncElement {
     initComponent() {}
 
     async connectedCallback() {
+        const generation = ++this._connectionGeneration;
+
         this._appElement = this.closestApp ?? null;
         await this._appElement?.ready();
+
+        // The element may have been removed, or removed and re-inserted, while the application
+        // became ready. A re-insertion runs a connectedCallback of its own, so a stale resume
+        // must not add the component alongside it.
+        if (generation !== this._connectionGeneration) {
+            return;
+        }
+
         await this.addComponent();
+
+        if (generation !== this._connectionGeneration) {
+            return;
+        }
+
         this.initComponent();
         this._onReady();
     }
 
     disconnectedCallback() {
+        // Invalidate any connectedCallback still suspended on an await
+        this._connectionGeneration++;
+
         // Remove the component when the element is disconnected. Skip this when the owning
         // application has already been destroyed — removing a <pc-app> disconnects it before
         // its children, taking the component systems with it.
@@ -70,6 +106,7 @@ class ComponentElement extends AsyncElement {
         }
         this._component = null;
         this._appElement = null;
+        this._resetReady();
     }
 
     /**

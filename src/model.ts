@@ -21,6 +21,7 @@ class ModelElement extends AsyncElement {
 
     disconnectedCallback() {
         this._unloadModel();
+        this._resetReady();
     }
 
     private _instantiate(container: ContainerResource) {

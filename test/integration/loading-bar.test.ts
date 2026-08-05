@@ -4,7 +4,7 @@ import type { AppElement } from '../../src/app';
 import { bootApp, settle } from '../helpers/app';
 import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
-import { readyWithin } from '../helpers/ready';
+import { expectNeverReady, readyWithin } from '../helpers/ready';
 
 
 /**
@@ -90,10 +90,10 @@ describe('<pc-app> loading bar', () => {
         expect(barOf(appElement), 'boot must not resurrect a disabled bar').toBeNull();
     });
 
-    it('is destroyed by a detach mid-boot and not recreated by the leaked boot', async () => {
-        // Pairs with the pinned #311 behaviour: a synchronously detached pc-app still completes
-        // boot. The bar is created before the first await, so disconnectedCallback has something
-        // to destroy, and every later touch is null-guarded.
+    it('is destroyed by a detach mid-boot and not recreated by the abandoned boot', async () => {
+        // The bar is created before the first await, so disconnectedCallback has something to
+        // destroy. The detached boot abandons itself when it resumes, so nothing recreates the
+        // bar - and the element never becomes ready.
         const handle = mount('<pc-app backend="null"></pc-app>');
         const appElement = handle.get<AppElement>('pc-app');
 
@@ -103,13 +103,10 @@ describe('<pc-app> loading bar', () => {
 
         expect(barOf(appElement), 'disconnect destroys the bar immediately').toBeNull();
 
-        await readyWithin(appElement);
+        await expectNeverReady(appElement);
 
-        expect(barOf(appElement), 'the detached boot must not recreate it').toBeNull();
+        expect(barOf(appElement), 'the abandoned boot must not recreate it').toBeNull();
         expect(uncaught.seen).toEqual([]);
-
-        // Clean up after the pinned bug, so the leak does not follow us into the next test.
-        appElement.app?.destroy();
     });
 
     it('stays clean across repeated mount and teardown cycles', async () => {

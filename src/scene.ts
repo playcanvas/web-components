@@ -82,6 +82,14 @@ class SceneElement extends AsyncElement {
         this._onReady();
     }
 
+    disconnectedCallback() {
+        // The scene belongs to the application, and removing this element - or the <pc-app>
+        // above it, which disconnects first - parts the two. Re-arm readiness so a re-inserted
+        // element announces the scene it acquires then, not the one it lost here.
+        this._scene = null;
+        this._resetReady();
+    }
+
     updateSceneSettings() {
         if (this._scene) {
             this._scene.fog.type = this._fog;
