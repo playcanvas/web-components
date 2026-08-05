@@ -1,7 +1,24 @@
-import { CameraComponent, Color, Vec4, GAMMA_NONE, GAMMA_SRGB, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_NEUTRAL, TONEMAP_ACES2, TONEMAP_ACES, TONEMAP_HEJL, TONEMAP_NONE, XRTYPE_VR } from 'playcanvas';
+import type { CameraComponent } from 'playcanvas';
+import {
+    Color,
+    Vec4,
+    GAMMA_NONE,
+    GAMMA_SRGB,
+    PROJECTION_ORTHOGRAPHIC,
+    PROJECTION_PERSPECTIVE,
+    TONEMAP_LINEAR,
+    TONEMAP_FILMIC,
+    TONEMAP_NEUTRAL,
+    TONEMAP_ACES2,
+    TONEMAP_ACES,
+    TONEMAP_HEJL,
+    TONEMAP_NONE,
+    XRTYPE_VR
+} from 'playcanvas';
+
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 
 const projections = new Map<'perspective' | 'orthographic', number>([
     ['perspective', PROJECTION_PERSPECTIVE],
@@ -101,7 +118,10 @@ class CameraComponentElement extends ComponentElement {
      * @param type - The type of XR mode to start.
      * @param space - The space to start the camera in.
      */
-    startXr(type: 'immersive-ar' | 'immersive-vr', space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer') {
+    startXr(
+        type: 'immersive-ar' | 'immersive-vr',
+        space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer'
+    ) {
         if (this.component && this.xrAvailable) {
             this.component.startXr(type, space, {
                 callback: (err: any) => {
@@ -558,11 +578,5 @@ class CameraComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-camera', CameraComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-camera': CameraComponentElement;
-    }
-}
 
 export { CameraComponentElement };

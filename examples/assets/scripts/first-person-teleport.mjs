@@ -34,7 +34,7 @@ function normalizeAngle(angle) {
 }
 
 function cubicEaseInOut(t) {
-    return (t < 0.5) ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
 /**
@@ -113,7 +113,7 @@ export class FirstPersonTeleport extends Script {
 
     initialize() {
         // Camera source (this entity or one tagged 'camera')
-        this.cameraEntity = this.entity.camera ? this.entity : (this.app.root.findByTag('camera')[0] || this.entity);
+        this.cameraEntity = this.entity.camera ? this.entity : this.app.root.findByTag('camera')[0] || this.entity;
 
         // Movement state
         this.moving = false;
@@ -218,7 +218,7 @@ export class FirstPersonTeleport extends Script {
 
         // Draw inner circle
         ctx.beginPath();
-        ctx.arc(centerX, centerY, size * 0.20, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, size * 0.2, 0, Math.PI * 2);
         ctx.fillStyle = colorStr;
         ctx.fill();
 
@@ -298,10 +298,7 @@ export class FirstPersonTeleport extends Script {
         this.isLooking = false;
 
         const coords = this._getCanvasCoords(e);
-        const dragDistance = Math.hypot(
-            coords.x - this.clickStartX,
-            coords.y - this.clickStartY
-        );
+        const dragDistance = Math.hypot(coords.x - this.clickStartX, coords.y - this.clickStartY);
 
         // If drag distance is small, treat as click-to-move
         if (dragDistance < DRAG_THRESHOLD_PIXELS) {
@@ -379,10 +376,7 @@ export class FirstPersonTeleport extends Script {
         this.targetPos.set(hit.x, this.eyeHeight, hit.z);
 
         // Calculate horizontal distance
-        const dist = this._getHorizontalDistance(
-            this.startPos.x, this.startPos.z,
-            this.targetPos.x, this.targetPos.z
-        );
+        const dist = this._getHorizontalDistance(this.startPos.x, this.startPos.z, this.targetPos.x, this.targetPos.z);
 
         if (dist < MIN_MOVE_DISTANCE) return;
         if (this.maxRange > 0 && dist > this.maxRange) return;
@@ -405,8 +399,10 @@ export class FirstPersonTeleport extends Script {
 
         // Calculate movement duration
         const moveDistance = this._getHorizontalDistance(
-            this.startPos.x, this.startPos.z,
-            this.targetPos.x, this.targetPos.z
+            this.startPos.x,
+            this.startPos.z,
+            this.targetPos.x,
+            this.targetPos.z
         );
         this.duration = moveDistance / Math.max(this.speed, EPSILON);
         this.elapsed = 0;

@@ -1,9 +1,10 @@
-import { SoundSlot } from 'playcanvas';
+import type { SoundSlot } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { AsyncElement } from '../async-element';
-import { SoundComponentElement } from './sound-component';
 import { parseBool, parseNumber } from '../parse';
+
+import { SoundComponentElement } from './sound-component';
 
 /**
  * The SoundSlotElement interface provides properties and methods for manipulating
@@ -11,23 +12,23 @@ import { parseBool, parseNumber } from '../parse';
  * methods of the {@link AsyncElement} interface.
  */
 class SoundSlotElement extends AsyncElement {
-    private _asset: string = '';
+    private _asset = '';
 
-    private _autoPlay: boolean = false;
+    private _autoPlay = false;
 
     private _duration: number | null = null;
 
-    private _loop: boolean = false;
+    private _loop = false;
 
-    private _name: string = '';
+    private _name = '';
 
-    private _overlap: boolean = false;
+    private _overlap = false;
 
-    private _pitch: number = 1;
+    private _pitch = 1;
 
-    private _startTime: number = 0;
+    private _startTime = 0;
 
-    private _volume: number = 1;
+    private _volume = 1;
 
     /**
      * The `<pc-sounds>` this slot was added to, captured at connect time.
@@ -309,11 +310,5 @@ class SoundSlotElement extends AsyncElement {
 }
 
 customElements.define('pc-sound', SoundSlotElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-sound': SoundSlotElement;
-    }
-}
 
 export { SoundSlotElement };

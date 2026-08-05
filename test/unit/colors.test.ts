@@ -11,7 +11,7 @@ describe('CSS_COLORS', () => {
     });
 
     it('keys are lowercase letters only, so the toLowerCase() lookup in parseColor always hits', () => {
-        const malformed = entries.map(([name]) => name).filter(name => !/^[a-z]+$/.test(name));
+        const malformed = entries.map(([name]) => name).filter((name) => !/^[a-z]+$/.test(name));
         expect(malformed).toEqual([]);
     });
 

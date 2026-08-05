@@ -24,7 +24,7 @@ const EasingFunction = {
 };
 
 /** @interface */
-class TweenDescriptor { /* eslint-disable-line no-unused-vars */
+export class TweenDescriptor {
     /**
      * Path to the property to tween
      * @type {string}
@@ -190,10 +190,7 @@ export class Tweener extends Script {
         }
 
         if (property instanceof Color) {
-            return [
-                new Color(start.x, start.y, start.z, start.w),
-                new Color(end.x, end.y, end.z, end.w)
-            ];
+            return [new Color(start.x, start.y, start.z, start.w), new Color(end.x, end.y, end.z, end.w)];
         }
 
         console.error('ERROR: tween - specified property must be a number, vec2, vec3, vec4 or color');
@@ -263,47 +260,47 @@ export class Tweener extends Script {
 
         // Create and start the tween
         this.tweenInstances[idx] = new Tween(startValue)
-        .to(endValue, tween.duration)
-        .easing(this.getEasingFunction(tween))
-        .onStart(() => {
-            if (tween.startEvent) {
-                this.app.fire(tween.startEvent);
-            }
-        })
-        .onStop(() => {
-            if (tween.stopEvent) {
-                this.app.fire(tween.stopEvent);
-            }
-            this.tweenInstances[idx] = null;
-        })
-        .onUpdate((obj) => {
-            propertyOwner[propertyName] = isNumber ? obj.x : obj;
-            this.handleSpecialProperties(propertyName, propertyOwner, obj);
+            .to(endValue, tween.duration)
+            .easing(this.getEasingFunction(tween))
+            .onStart(() => {
+                if (tween.startEvent) {
+                    this.app.fire(tween.startEvent);
+                }
+            })
+            .onStop(() => {
+                if (tween.stopEvent) {
+                    this.app.fire(tween.stopEvent);
+                }
+                this.tweenInstances[idx] = null;
+            })
+            .onUpdate((obj) => {
+                propertyOwner[propertyName] = isNumber ? obj.x : obj;
+                this.handleSpecialProperties(propertyName, propertyOwner, obj);
 
-            if (propertyOwner instanceof Material) {
-                propertyOwner.update();
-            }
+                if (propertyOwner instanceof Material) {
+                    propertyOwner.update();
+                }
 
-            if (tween.updateEvent) {
-                this.app.fire(tween.updateEvent);
-            }
-        })
-        .onComplete(() => {
-            if (tween.completeEvent) {
-                this.app.fire(tween.completeEvent);
-            }
-            this.tweenInstances[idx] = null;
-        })
-        .onRepeat(() => {
-            if (tween.repeatEvent) {
-                this.app.fire(tween.repeatEvent);
-            }
-        })
-        .repeat(tween.repeat)
-        .repeatDelay(tween.repeatDelay)
-        .yoyo(tween.yoyo)
-        .delay(tween.delay)
-        .start(this.time);
+                if (tween.updateEvent) {
+                    this.app.fire(tween.updateEvent);
+                }
+            })
+            .onComplete(() => {
+                if (tween.completeEvent) {
+                    this.app.fire(tween.completeEvent);
+                }
+                this.tweenInstances[idx] = null;
+            })
+            .onRepeat(() => {
+                if (tween.repeatEvent) {
+                    this.app.fire(tween.repeatEvent);
+                }
+            })
+            .repeat(tween.repeat)
+            .repeatDelay(tween.repeatDelay)
+            .yoyo(tween.yoyo)
+            .delay(tween.delay)
+            .start(this.time);
     }
 
     stop(idx) {

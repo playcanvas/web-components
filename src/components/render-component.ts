@@ -1,8 +1,9 @@
-import { RenderComponent, StandardMaterial } from 'playcanvas';
+import type { RenderComponent, StandardMaterial } from 'playcanvas';
 
-import { ComponentElement } from './component';
 import { MaterialElement } from '../material';
 import { parseBool, parseEnum } from '../parse';
+
+import { ComponentElement } from './component';
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -19,7 +20,7 @@ import { parseBool, parseEnum } from '../parse';
 class RenderComponentElement extends ComponentElement {
     private _castShadows = true;
 
-    private _material: string = '';
+    private _material = '';
 
     private _receiveShadows = true;
 
@@ -153,11 +154,5 @@ class RenderComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-render', RenderComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-render': RenderComponentElement;
-    }
-}
 
 export { RenderComponentElement };

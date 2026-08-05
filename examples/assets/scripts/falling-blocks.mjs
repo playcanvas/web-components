@@ -1,5 +1,19 @@
+import {
+    BoundingBox,
+    Entity,
+    KEY_DOWN,
+    KEY_LEFT,
+    KEY_P,
+    KEY_RETURN,
+    KEY_RIGHT,
+    KEY_SPACE,
+    KEY_UP,
+    Script,
+    Vec3,
+    math
+} from 'playcanvas';
+
 import { MaterialElement } from '@playcanvas/web-components';
-import { BoundingBox, Entity, KEY_DOWN, KEY_LEFT, KEY_P, KEY_RETURN, KEY_RIGHT, KEY_SPACE, KEY_UP, Script, Vec3, math } from 'playcanvas';
 
 /**
  * The seven tetrominoes. Each shape is authored as top-down rows for readability and
@@ -8,30 +22,16 @@ import { BoundingBox, Entity, KEY_DOWN, KEY_LEFT, KEY_P, KEY_RETURN, KEY_RIGHT, 
  * the `pc-material` whose id is `block-k`.
  */
 const TETROMINOES = Object.entries({
-    I: ['....',
-        'XXXX',
-        '....',
-        '....'],
-    J: ['X..',
-        'XXX',
-        '...'],
-    L: ['..X',
-        'XXX',
-        '...'],
-    O: ['XX',
-        'XX'],
-    S: ['.XX',
-        'XX.',
-        '...'],
-    T: ['.X.',
-        'XXX',
-        '...'],
-    Z: ['XX.',
-        '.XX',
-        '...']
+    I: ['....', 'XXXX', '....', '....'],
+    J: ['X..', 'XXX', '...'],
+    L: ['..X', 'XXX', '...'],
+    O: ['XX', 'XX'],
+    S: ['.XX', 'XX.', '...'],
+    T: ['.X.', 'XXX', '...'],
+    Z: ['XX.', '.XX', '...']
 }).map(([key, rows]) => ({
     key,
-    matrix: rows.map(row => [...row].map(char => (char === 'X' ? 1 : 0))).reverse()
+    matrix: rows.map((row) => [...row].map((char) => (char === 'X' ? 1 : 0))).reverse()
 }));
 
 /**
@@ -288,7 +288,7 @@ export class FallingBlocks extends Script {
         // Position the piece so its topmost filled cell sits on the top row
         let top = 0;
         for (let y = 0; y < matrix.length; y++) {
-            if (matrix[y].some(cell => cell)) {
+            if (matrix[y].some((cell) => cell)) {
                 top = y;
             }
         }
@@ -339,7 +339,7 @@ export class FallingBlocks extends Script {
             }
         }
         const size = first ? 1 : 2 * Math.max(aabb.halfExtents.x, aabb.halfExtents.y, aabb.halfExtents.z);
-        const scale = probe.getLocalScale().x * 0.95 / size;
+        const scale = (probe.getLocalScale().x * 0.95) / size;
         probe.destroy();
         return scale;
     }
@@ -448,7 +448,7 @@ export class FallingBlocks extends Script {
 
         const rows = [];
         for (let by = 0; by < this.boardHeight; by++) {
-            if (this._cells[by].every(cell => cell !== null)) {
+            if (this._cells[by].every((cell) => cell !== null)) {
                 rows.push(by);
             }
         }
@@ -687,8 +687,7 @@ export class TouchControls extends Script {
         }
 
         // Enough total wander disqualifies the gesture as a tap
-        if (!this._dragged &&
-            Math.hypot(event.clientX - this._startX, event.clientY - this._startY) > 12) {
+        if (!this._dragged && Math.hypot(event.clientX - this._startX, event.clientY - this._startY) > 12) {
             this._dragged = true;
         }
     }
@@ -824,7 +823,7 @@ export class BoardCamera extends Script {
      */
     elevation = 1.5;
 
-    update(dt) {
+    update(_dt) {
         const camera = this.entity.camera;
         if (!camera) {
             return;
@@ -892,10 +891,6 @@ export class CameraShake extends Script {
         this._trauma = Math.max(this._trauma - this.decay * dt, 0);
 
         const amount = this._trauma * this._trauma * this.intensity;
-        this.entity.translateLocal(
-            Math.sin(this._time * 37) * amount,
-            Math.cos(this._time * 41) * amount,
-            0
-        );
+        this.entity.translateLocal(Math.sin(this._time * 37) * amount, Math.cos(this._time * 41) * amount, 0);
     }
 }

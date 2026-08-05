@@ -1,5 +1,5 @@
-import { AppElement } from './app';
-import { EntityElement } from './entity';
+import type { AppElement } from './app';
+import type { EntityElement } from './entity';
 
 /**
  * Base class for all PlayCanvas Web Components that initialize asynchronously.
@@ -26,7 +26,7 @@ class AsyncElement extends HTMLElement {
      * @returns The closest app element, or `null`.
      */
     get closestApp(): AppElement | null {
-        return this.parentElement?.closest('pc-app') as AppElement | null ?? null;
+        return (this.parentElement?.closest('pc-app') as AppElement | null) ?? null;
     }
 
     /**
@@ -35,7 +35,7 @@ class AsyncElement extends HTMLElement {
      * @returns The closest entity element, or `null`.
      */
     get closestEntity(): EntityElement | null {
-        return this.parentElement?.closest('pc-entity') as EntityElement | null ?? null;
+        return (this.parentElement?.closest('pc-entity') as EntityElement | null) ?? null;
     }
 
     /**
@@ -63,7 +63,7 @@ class AsyncElement extends HTMLElement {
  * classes extend {@link AsyncElement}).
  */
 type AsyncElementTagName = {
-    [K in keyof HTMLElementTagNameMap]: HTMLElementTagNameMap[K] extends AsyncElement ? K : never
+    [K in keyof HTMLElementTagNameMap]: HTMLElementTagNameMap[K] extends AsyncElement ? K : never;
 }[keyof HTMLElementTagNameMap];
 
 /**

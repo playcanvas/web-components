@@ -354,13 +354,13 @@ export class OpticBlastVisuals extends Script {
             this._arcs.push(this._createArc(i));
         }
 
-        const onTouch = side => this._onTouch(side);
-        const onRelease = side => this._onRelease(side);
+        const onTouch = (side) => this._onTouch(side);
+        const onRelease = (side) => this._onRelease(side);
         const onFaceFound = () => this._onFaceFound();
         const onFaceLost = () => this._onFaceLost();
         // Any input gesture may be the one that unlocks audio playback - the sim mode is
         // driven by the space bar and never produces a pointer event
-        const onUnlock = () => this._audio?.ctx.resume().catch(() => {});
+        const onUnlock = () => this._audio?.ctx.resume().catch(() => undefined);
 
         this.app.on('visor:touch', onTouch);
         this.app.on('visor:release', onRelease);
@@ -378,7 +378,7 @@ export class OpticBlastVisuals extends Script {
             this.app.off('face:lost', onFaceLost);
             window.removeEventListener('pointerdown', onUnlock);
             window.removeEventListener('keydown', onUnlock);
-            this._audio?.ctx.close().catch(() => {});
+            this._audio?.ctx.close().catch(() => undefined);
             this._audio = null;
             if (this._occluder) {
                 this.app.scene.layers.remove(this._occluder.layer);
@@ -523,7 +523,7 @@ export class OpticBlastVisuals extends Script {
 
     /**
      * Advances the active blast state.
-     * @param {number} dt - The delta time in seconds.
+     * @param {number} _dt - The delta time in seconds.
      * @private
      */
     _updateState(dt) {
@@ -672,8 +672,7 @@ export class OpticBlastVisuals extends Script {
      */
     _updateBeam(dt, strength) {
         // Erupt to full length quickly, then hold
-        const grow = this._state === 'firing' ?
-            easeOutCubic(Math.min(1, this._stateT / ERUPT_TIME)) : 1;
+        const grow = this._state === 'firing' ? easeOutCubic(Math.min(1, this._stateT / ERUPT_TIME)) : 1;
         const length = this.beamLength * grow;
 
         // The beam reads as a disc when it fires straight at (or away from) the viewer, so
@@ -682,7 +681,8 @@ export class OpticBlastVisuals extends Script {
         const att = 1 - 0.5 * smoothstep(0.85, 0.98, towards);
 
         // Pulse and vibrate: layered oscillations plus a little per-frame noise
-        const pulse = 1 +
+        const pulse =
+            1 +
             0.09 * Math.sin(this._phase * Math.PI * 2 * 11) +
             0.05 * Math.sin(this._phase * Math.PI * 2 * 17 + 1.7) +
             rand(0.05);
@@ -747,7 +747,9 @@ export class OpticBlastVisuals extends Script {
             );
             this._tmpB.set(rand(70), rand(70), BEAM_DIR_Z * (150 + Math.random() * 200));
             this._spawn(this._tmpA, this._tmpB, Math.random() < 0.3 ? HOT_PINK : RUBY, 2.8, {
-                life: 0.3 + Math.random() * 0.2, size: 3, drag: 1
+                life: 0.3 + Math.random() * 0.2,
+                size: 3,
+                drag: 1
             });
         }
 
@@ -842,7 +844,7 @@ export class OpticBlastVisuals extends Script {
      * @param {number} dt - The delta time in seconds.
      * @private
      */
-    _applyShake(dt) {
+    _applyShake(_dt) {
         if (!this.shake) return;
 
         let amp = 0;
@@ -878,11 +880,7 @@ export class OpticBlastVisuals extends Script {
 
             const pulse = 1 + 0.14 * Math.sin(this._phase * 3.2 + i * Math.PI);
             const size = 5.5 * pulse;
-            this._tmpA.set(
-                (i === 0 ? 1 : -1) * this.markerOffset.x,
-                this.markerOffset.y,
-                this.markerOffset.z
-            );
+            this._tmpA.set((i === 0 ? 1 : -1) * this.markerOffset.x, this.markerOffset.y, this.markerOffset.z);
             record.entity.setPosition(this._tmpA);
             record.entity.setRotation(camRot);
             record.entity.setLocalScale(size, size, QUAD_DEPTH);
@@ -1405,45 +1403,47 @@ export class OpticBlastVisuals extends Script {
     async _loadSounds() {
         const names = ['charge', 'fire', 'beam', 'shutoff', 'fizzle'];
 
-        await Promise.all(names.map(async (name) => {
-            try {
-                const response = await fetch(`assets/sounds/optic-${name}.mp3`);
-                const encoded = await response.arrayBuffer();
-                if (!this._audio) return;
-                const buffer = await this._audio.ctx.decodeAudioData(encoded);
-                if (!this._audio) return;
+        await Promise.all(
+            names.map(async (name) => {
+                try {
+                    const response = await fetch(`assets/sounds/optic-${name}.mp3`);
+                    const encoded = await response.arrayBuffer();
+                    if (!this._audio) return;
+                    const buffer = await this._audio.ctx.decodeAudioData(encoded);
+                    if (!this._audio) return;
 
-                const entry = { buffer, usable: buffer.duration };
+                    const entry = { buffer, usable: buffer.duration };
 
-                if (name === 'beam') {
-                    // The beam must hold a perfectly continuous roar
-                    entry.buffer = this._buildLoop(buffer);
-                    entry.usable = entry.buffer.duration;
-                } else {
-                    // Windowed RMS profile: the usable portion of a one-shot ends where
-                    // its trailing fade-out begins
-                    const data = buffer.getChannelData(0);
-                    const windows = 24;
-                    const size = Math.floor(data.length / windows);
-                    const rms = [];
-                    for (let w = 0; w < windows; w++) {
-                        let sum = 0;
-                        for (let i = w * size; i < (w + 1) * size; i += 4) {
-                            sum += data[i] * data[i];
+                    if (name === 'beam') {
+                        // The beam must hold a perfectly continuous roar
+                        entry.buffer = this._buildLoop(buffer);
+                        entry.usable = entry.buffer.duration;
+                    } else {
+                        // Windowed RMS profile: the usable portion of a one-shot ends where
+                        // its trailing fade-out begins
+                        const data = buffer.getChannelData(0);
+                        const windows = 24;
+                        const size = Math.floor(data.length / windows);
+                        const rms = [];
+                        for (let w = 0; w < windows; w++) {
+                            let sum = 0;
+                            for (let i = w * size; i < (w + 1) * size; i += 4) {
+                                sum += data[i] * data[i];
+                            }
+                            rms.push(Math.sqrt(sum / (size / 4)));
                         }
-                        rms.push(Math.sqrt(sum / (size / 4)));
+                        const peak = Math.max(...rms);
+                        let lastLoud = windows - 1;
+                        while (lastLoud > 0 && rms[lastLoud] < peak * 0.5) lastLoud--;
+                        entry.usable = ((lastLoud + 1) / windows) * buffer.duration;
                     }
-                    const peak = Math.max(...rms);
-                    let lastLoud = windows - 1;
-                    while (lastLoud > 0 && rms[lastLoud] < peak * 0.5) lastLoud--;
-                    entry.usable = ((lastLoud + 1) / windows) * buffer.duration;
-                }
 
-                this._audio.sounds[name] = entry;
-            } catch {
-                // Missing or undecodable sounds are simply skipped
-            }
-        }));
+                    this._audio.sounds[name] = entry;
+                } catch {
+                    // Missing or undecodable sounds are simply skipped
+                }
+            })
+        );
     }
 
     /**
@@ -1571,12 +1571,11 @@ export class OpticBlastVisuals extends Script {
 
         try {
             // Best-effort unlock: succeeds whenever the page already has user activation
-            this._audio.ctx.resume().catch(() => {});
+            this._audio.ctx.resume().catch(() => undefined);
 
             const entry = this._audio.sounds.charge;
             const duration = Math.max(0.1, this.chargeTime);
-            const rate = entry ?
-                Math.max(0.6, Math.min(1.8, entry.usable / duration)) : 1;
+            const rate = entry ? Math.max(0.6, Math.min(1.8, entry.usable / duration)) : 1;
             const nodes = this._playSound('charge', { gain: 0.35, rate });
             if (!nodes) return;
 

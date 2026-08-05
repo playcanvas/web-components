@@ -7,5 +7,4 @@
  * for a `.mts` specifier, which would not exist at runtime - hence the single exception here rather
  * than one at every call site.
  */
-// eslint-disable-next-line import/extensions
 export { COMPONENT_TAGS, READY_TAGS, TAGS } from '../../utils/cem/tags.mjs';

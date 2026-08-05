@@ -1,7 +1,9 @@
-import { CollisionComponent, Quat, Vec3 } from 'playcanvas';
+import type { CollisionComponent } from 'playcanvas';
+import { Quat, Vec3 } from 'playcanvas';
+
+import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../parse';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating
@@ -14,17 +16,17 @@ import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../pars
 class CollisionComponentElement extends ComponentElement {
     private _angularOffset: Quat = new Quat();
 
-    private _axis: number = 1;
+    private _axis = 1;
 
-    private _convexHull: boolean = false;
+    private _convexHull = false;
 
     private _halfExtents: Vec3 = new Vec3(0.5, 0.5, 0.5);
 
-    private _height: number = 2;
+    private _height = 2;
 
     private _linearOffset: Vec3 = new Vec3();
 
-    private _radius: number = 0.5;
+    private _radius = 0.5;
 
     private _type: 'box' | 'capsule' | 'compound' | 'cone' | 'cylinder' | 'mesh' | 'sphere' = 'box';
 
@@ -143,7 +145,17 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'angular-offset', 'axis', 'convex-hull', 'half-extents', 'height', 'linear-offset', 'radius', 'type'];
+        return [
+            ...super.observedAttributes,
+            'angular-offset',
+            'axis',
+            'convex-hull',
+            'half-extents',
+            'height',
+            'linear-offset',
+            'radius',
+            'type'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -172,18 +184,17 @@ class CollisionComponentElement extends ComponentElement {
                 this.radius = parseNumber(newValue, 0.5, name);
                 break;
             case 'type':
-                this.type = parseEnum(newValue, ['box', 'capsule', 'compound', 'cone', 'cylinder', 'mesh', 'sphere'], 'box', name);
+                this.type = parseEnum(
+                    newValue,
+                    ['box', 'capsule', 'compound', 'cone', 'cylinder', 'mesh', 'sphere'],
+                    'box',
+                    name
+                );
                 break;
         }
     }
 }
 
 customElements.define('pc-collision', CollisionComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-collision': CollisionComponentElement;
-    }
-}
 
 export { CollisionComponentElement };

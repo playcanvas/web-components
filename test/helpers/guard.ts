@@ -12,7 +12,7 @@ const matches = (text: string, pattern: Pattern) => {
  * @param args - The arguments the console method was called with.
  * @returns The joined message.
  */
-const format = (args: unknown[]) => args.map(arg => String(arg)).join(' ');
+const format = (args: unknown[]) => args.map((arg) => String(arg)).join(' ');
 
 /**
  * Records messages on one channel and lets a test claim the ones it expects. Anything left
@@ -53,13 +53,13 @@ class Recorder {
      * @returns The claimed messages.
      */
     expect(pattern: Pattern, count = 1): string[] {
-        const claimed = this.pending.filter(message => matches(message, pattern));
+        const claimed = this.pending.filter((message) => matches(message, pattern));
         expect(
             claimed.length,
             `expected ${count} ${this.channel} message(s) matching ${String(pattern)}, saw ${claimed.length}.\n` +
-            `All ${this.channel} messages:\n${this.seen.map(message => `  - ${message}`).join('\n') || '  (none)'}`
+                `All ${this.channel} messages:\n${this.seen.map((message) => `  - ${message}`).join('\n') || '  (none)'}`
         ).toBe(count);
-        this.pending = this.pending.filter(message => !matches(message, pattern));
+        this.pending = this.pending.filter((message) => !matches(message, pattern));
         return claimed;
     }
 
@@ -69,7 +69,7 @@ class Recorder {
      * @param pattern - A substring or regular expression to match.
      */
     allow(pattern: Pattern) {
-        this.pending = this.pending.filter(message => !matches(message, pattern));
+        this.pending = this.pending.filter((message) => !matches(message, pattern));
     }
 
     /** Claims everything remaining. Always accompany with a comment saying why. */
@@ -86,14 +86,14 @@ class Recorder {
     }
 }
 
-export interface Guard {
+export type Guard = {
     /** console.warn - the library's entire negative-path surface. */
     readonly warnings: Recorder;
     /** console.error. */
     readonly errors: Recorder;
     /** Uncaught exceptions and unhandled rejections. Async connectedCallbacks land here. */
     readonly uncaught: Recorder;
-}
+};
 
 let active: Guard | null = null;
 

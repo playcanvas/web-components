@@ -1,4 +1,12 @@
-import { Color, Script, Texture, PIXELFORMAT_R8_G8_B8, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE } from 'playcanvas';
+import {
+    Color,
+    Script,
+    Texture,
+    PIXELFORMAT_R8_G8_B8,
+    FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR,
+    ADDRESS_CLAMP_TO_EDGE
+} from 'playcanvas';
 
 export class VideoTexture extends Script {
     static scriptName = 'videoTexture';

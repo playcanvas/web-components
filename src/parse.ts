@@ -16,7 +16,8 @@
  * literal, and returns `null` instead of falling back to a default.
  */
 
-import { Color, Entity, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import type { Entity } from 'playcanvas';
+import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { CSS_COLORS } from './colors';
 
@@ -31,7 +32,7 @@ import { CSS_COLORS } from './colors';
  */
 export const parseComponents = (value: string, count: number): number[] | null => {
     const components = value.trim().split(/\s+/).map(Number);
-    if (components.length !== count || components.some(component => !Number.isFinite(component))) {
+    if (components.length !== count || components.some((component) => !Number.isFinite(component))) {
         return null;
     }
     return components;
@@ -77,7 +78,11 @@ export const parseBool = (value: string | null, defaultValue: boolean): boolean 
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Color object.
  */
-export const parseColor = <T extends Color | null>(value: string | null, defaultValue: T, attribute: string): Color | T => {
+export const parseColor = <T extends Color | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): Color | T => {
     if (value === null) {
         return cloneDefault(defaultValue);
     }
@@ -92,7 +97,10 @@ export const parseColor = <T extends Color | null>(value: string | null, default
     if (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) {
         let hex = value.slice(1);
         if (hex.length === 3 || hex.length === 4) {
-            hex = hex.split('').map(char => char + char).join('');
+            hex = hex
+                .split('')
+                .map((char) => char + char)
+                .join('');
         }
         return new Color().fromString(`#${hex}`);
     }
@@ -103,7 +111,9 @@ export const parseColor = <T extends Color | null>(value: string | null, default
         return new Color(components);
     }
 
-    console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected a CSS color name, a hex color or 3 or 4 space-separated numbers. Using '${defaultValue}'.`);
+    console.warn(
+        `Invalid value '${value}' for attribute '${attribute}'. Expected a CSS color name, a hex color or 3 or 4 space-separated numbers. Using '${defaultValue}'.`
+    );
     return cloneDefault(defaultValue);
 };
 
@@ -133,7 +143,9 @@ export const parseEnum = <T extends string>(
     if (names.includes(value as T)) {
         return value as T;
     }
-    console.warn(`Invalid value '${value}' for attribute '${attribute}'. Valid values: ${names.join(', ')}. Using '${defaultValue}'.`);
+    console.warn(
+        `Invalid value '${value}' for attribute '${attribute}'. Valid values: ${names.join(', ')}. Using '${defaultValue}'.`
+    );
     return defaultValue;
 };
 
@@ -147,13 +159,19 @@ export const parseEnum = <T extends string>(
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed number.
  */
-export const parseNumber = <T extends number | null>(value: string | null, defaultValue: T, attribute: string): number | T => {
+export const parseNumber = <T extends number | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): number | T => {
     if (value === null) {
         return defaultValue;
     }
     const number = value.trim() === '' ? NaN : Number(value);
     if (!Number.isFinite(number)) {
-        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected a finite number. Using '${defaultValue}'.`);
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected a finite number. Using '${defaultValue}'.`
+        );
         return defaultValue;
     }
     return number;
@@ -170,13 +188,19 @@ export const parseNumber = <T extends number | null>(value: string | null, defau
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Quat object.
  */
-export const parseQuat = <T extends Quat | null>(value: string | null, defaultValue: T, attribute: string): Quat | T => {
+export const parseQuat = <T extends Quat | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): Quat | T => {
     if (value === null) {
         return cloneDefault(defaultValue);
     }
     const components = parseComponents(value, 3);
     if (!components) {
-        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 3 space-separated numbers. Using '${defaultValue}'.`);
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected 3 space-separated numbers. Using '${defaultValue}'.`
+        );
         return cloneDefault(defaultValue);
     }
     return new Quat().setFromEulerAngles(components[0], components[1], components[2]);
@@ -200,7 +224,10 @@ export const parseTags = (value: string | null, defaultValue: string[] = []): st
         // caller's default, or a later mutation would write back through it.
         return [...defaultValue];
     }
-    return value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+    return value
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag !== '');
 };
 
 /**
@@ -213,13 +240,19 @@ export const parseTags = (value: string | null, defaultValue: string[] = []): st
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec2 object.
  */
-export const parseVec2 = <T extends Vec2 | null>(value: string | null, defaultValue: T, attribute: string): Vec2 | T => {
+export const parseVec2 = <T extends Vec2 | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): Vec2 | T => {
     if (value === null) {
         return cloneDefault(defaultValue);
     }
     const components = parseComponents(value, 2);
     if (!components) {
-        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 2 space-separated numbers. Using '${defaultValue}'.`);
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected 2 space-separated numbers. Using '${defaultValue}'.`
+        );
         return cloneDefault(defaultValue);
     }
     return new Vec2(components);
@@ -235,13 +268,19 @@ export const parseVec2 = <T extends Vec2 | null>(value: string | null, defaultVa
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec3 object.
  */
-export const parseVec3 = <T extends Vec3 | null>(value: string | null, defaultValue: T, attribute: string): Vec3 | T => {
+export const parseVec3 = <T extends Vec3 | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): Vec3 | T => {
     if (value === null) {
         return cloneDefault(defaultValue);
     }
     const components = parseComponents(value, 3);
     if (!components) {
-        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 3 space-separated numbers. Using '${defaultValue}'.`);
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected 3 space-separated numbers. Using '${defaultValue}'.`
+        );
         return cloneDefault(defaultValue);
     }
     return new Vec3(components);
@@ -257,13 +296,19 @@ export const parseVec3 = <T extends Vec3 | null>(value: string | null, defaultVa
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec4 object.
  */
-export const parseVec4 = <T extends Vec4 | null>(value: string | null, defaultValue: T, attribute: string): Vec4 | T => {
+export const parseVec4 = <T extends Vec4 | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): Vec4 | T => {
     if (value === null) {
         return cloneDefault(defaultValue);
     }
     const components = parseComponents(value, 4);
     if (!components) {
-        console.warn(`Invalid value '${value}' for attribute '${attribute}'. Expected 4 space-separated numbers. Using '${defaultValue}'.`);
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected 4 space-separated numbers. Using '${defaultValue}'.`
+        );
         return cloneDefault(defaultValue);
     }
     return new Vec4(components);

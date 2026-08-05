@@ -160,7 +160,7 @@ export class HandVisuals extends Script {
             this._hands = hands;
         };
         const onGesture = (slot, name) => this._onGesture(slot, name);
-        const onHandLost = slot => this._onHandLost(slot);
+        const onHandLost = (slot) => this._onHandLost(slot);
         const onCelebrate = () => this._celebrate();
 
         this.app.on('hands:update', onHandsUpdate);
@@ -188,7 +188,7 @@ export class HandVisuals extends Script {
 
         // World units per CSS pixel at the working depth (fov is vertical)
         const canvas = this.app.graphicsDevice.canvas;
-        this._worldPerPixel = 2 * DEPTH * Math.tan(camera.fov * Math.PI / 360) / canvas.clientHeight;
+        this._worldPerPixel = (2 * DEPTH * Math.tan((camera.fov * Math.PI) / 360)) / canvas.clientHeight;
 
         for (const state of this._states) {
             state.payload = null;
@@ -404,7 +404,11 @@ export class HandVisuals extends Script {
             }
 
             // The index fingertip glows white-hot while Pointing_Up is held
-            lerpColor(state.joints[INDEX_TIP].color, state.comet ? COMET_COLOR : state.tipColor, Math.min(1, 1 - Math.exp(-8 * dt)));
+            lerpColor(
+                state.joints[INDEX_TIP].color,
+                state.comet ? COMET_COLOR : state.tipColor,
+                Math.min(1, 1 - Math.exp(-8 * dt))
+            );
 
             this._updateTrail(state, dt);
         } else {
@@ -438,7 +442,7 @@ export class HandVisuals extends Script {
                 const dx = b.x - a.x;
                 const dy = b.y - a.y;
                 const length = Math.sqrt(dx * dx + dy * dy);
-                bone.entity.setLocalEulerAngles(0, 0, Math.atan2(dy, dx) * 180 / Math.PI);
+                bone.entity.setLocalEulerAngles(0, 0, (Math.atan2(dy, dx) * 180) / Math.PI);
                 bone.entity.setLocalScale(length, BONE_PX * wpp, QUAD_DEPTH);
                 bone.mi.setParameter('material_opacity', state.alpha * 0.55);
             }
@@ -471,18 +475,20 @@ export class HandVisuals extends Script {
 
         for (let i = 0; i < count; i++) {
             this._tmpA.set(tip.x + rand(0.04), tip.y + rand(0.04), tip.z);
-            this._tmpB.set(
-                state.tipVel.x * 0.2 + rand(0.3),
-                state.tipVel.y * 0.2 + rand(0.3) + 0.15,
-                0
-            );
+            this._tmpB.set(state.tipVel.x * 0.2 + rand(0.3), state.tipVel.y * 0.2 + rand(0.3) + 0.15, 0);
             if (state.comet) {
                 this._spawn(this._tmpA, this._tmpB, GESTURE_COLORS.Pointing_Up, 3.2, {
-                    life: 0.45, size: 15, gravity: 0.2, drag: 2
+                    life: 0.45,
+                    size: 15,
+                    gravity: 0.2,
+                    drag: 2
                 });
             } else {
                 this._spawn(this._tmpA, this._tmpB, state.rgb, 2.2, {
-                    life: 0.6, size: 9, gravity: 0.25, drag: 2.5
+                    life: 0.6,
+                    size: 9,
+                    gravity: 0.25,
+                    drag: 2.5
                 });
             }
         }
@@ -539,7 +545,12 @@ export class HandVisuals extends Script {
                 boost = 1 + orb.t * 2.5;
                 if (orb.t >= 1) {
                     orb.state = 'idle';
-                    this._burstRadial(orb.pos, state.rgb, 30, 2.6, 3, { life: 0.75, size: 13, gravity: -0.6, drag: 1.2 });
+                    this._burstRadial(orb.pos, state.rgb, 30, 2.6, 3, {
+                        life: 0.75,
+                        size: 13,
+                        gravity: -0.6,
+                        drag: 1.2
+                    });
                 }
                 break;
             default:
@@ -726,10 +737,19 @@ export class HandVisuals extends Script {
                 break;
             case 'ILoveYou':
                 this._palmCenter(state, this._tmpA);
-                this._burstRadial(this._tmpA, GESTURE_COLORS.ILoveYou, 30, 2, 2.8, { life: 0.8, size: 12, gravity: -1, drag: 1.2 });
+                this._burstRadial(this._tmpA, GESTURE_COLORS.ILoveYou, 30, 2, 2.8, {
+                    life: 0.8,
+                    size: 12,
+                    gravity: -1,
+                    drag: 1.2
+                });
                 break;
             case 'Pointing_Up':
-                this._burstRadial(state.world[INDEX_TIP], GESTURE_COLORS.Pointing_Up, 8, 0.9, 3, { life: 0.4, size: 8, drag: 2 });
+                this._burstRadial(state.world[INDEX_TIP], GESTURE_COLORS.Pointing_Up, 8, 0.9, 3, {
+                    life: 0.4,
+                    size: 8,
+                    drag: 2
+                });
                 break;
             default:
                 break;
@@ -787,7 +807,7 @@ export class HandVisuals extends Script {
             const dx = Math.cos(angle);
             const dy = Math.sin(angle);
             this._tmpB.set(center.x + dx * radius, center.y + dy * radius, center.z);
-            this._tmpC.set(-dx * radius / life, -dy * radius / life, 0);
+            this._tmpC.set((-dx * radius) / life, (-dy * radius) / life, 0);
             this._spawn(this._tmpB, this._tmpC, state.rgb, 2.4, { life, size: 9, alpha: 0.9 });
         }
         // A brief flash at the center

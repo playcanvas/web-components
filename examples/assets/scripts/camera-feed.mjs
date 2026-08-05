@@ -64,7 +64,7 @@ export class CameraFeed extends Script {
         this.on('destroy', () => {
             if (this.video && this.video.srcObject) {
                 // Stop the video stream
-                this.video.srcObject.getTracks().forEach(track => track.stop());
+                this.video.srcObject.getTracks().forEach((track) => track.stop());
             }
             // Remove the video element from the DOM
             document.body.removeChild(this.video);
@@ -73,26 +73,31 @@ export class CameraFeed extends Script {
 
         // Request access to the webcam (prefer the front-facing camera on mobile)
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
-            .then((stream) => {
-                // Stream the webcam to the video element and play it
-                this.video.srcObject = stream;
-                this.video.addEventListener('loadedmetadata', () => {
-                    this.app.fire('camera:ready', this.video);
-                }, { once: true });
-                this.video.play();
-            })
-            .catch((error) => {
-                console.error('Error accessing the webcam:', error);
-                this.app.fire('camera:error', error);
-            });
+            navigator.mediaDevices
+                .getUserMedia({ video: { facingMode: 'user' }, audio: false })
+                .then((stream) => {
+                    // Stream the webcam to the video element and play it
+                    this.video.srcObject = stream;
+                    this.video.addEventListener(
+                        'loadedmetadata',
+                        () => {
+                            this.app.fire('camera:ready', this.video);
+                        },
+                        { once: true }
+                    );
+                    this.video.play();
+                })
+                .catch((error) => {
+                    console.error('Error accessing the webcam:', error);
+                    this.app.fire('camera:error', error);
+                });
         } else {
             console.error('getUserMedia is not supported in this browser.');
             this.app.fire('camera:error', new Error('getUserMedia is not supported in this browser.'));
         }
     }
 
-    update(dt) {
+    update(_dt) {
         // Optional per-frame logic.
     }
 }

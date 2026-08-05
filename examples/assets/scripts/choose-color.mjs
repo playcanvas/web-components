@@ -18,7 +18,7 @@ export class ChooseColor extends Script {
     ];
 
     // Constants
-    static TRANSITION_SPEED = 2;  // 0.5 seconds transition
+    static TRANSITION_SPEED = 2; // 0.5 seconds transition
 
     static METALNESS = {
         METALLIC: 0.9,
@@ -102,9 +102,7 @@ export class ChooseColor extends Script {
         this.fromColor.copy(this.material.diffuse);
         this.toColor.copy(color.color);
         this.fromMetalness = this.material.metalness;
-        this.toMetalness = color.metallic ?
-            ChooseColor.METALNESS.METALLIC :
-            ChooseColor.METALNESS.NON_METALLIC;
+        this.toMetalness = color.metallic ? ChooseColor.METALNESS.METALLIC : ChooseColor.METALNESS.NON_METALLIC;
         this.lerpTime = 0;
         this.isTransitioning = true;
     }

@@ -42,10 +42,10 @@ import '../../src/index';
  * 1024x768) - it is only the layout read-back that is dead, so the stubs go on the layout
  * accessors and not on style.
  */
-interface Viewport {
+type Viewport = {
     width: number;
     height: number;
-}
+};
 
 const DEFAULT_VIEWPORT: Readonly<Viewport> = Object.freeze({ width: 800, height: 600 });
 

@@ -5,7 +5,6 @@ import type { RenderComponentElement } from '../../src/components/render-compone
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * pc-render[material] against a real render component. This is the one unparsed string attribute
  * whose removal reached the engine rather than stopping at the element, so it gets engine-level

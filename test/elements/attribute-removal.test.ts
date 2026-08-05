@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * Removal semantics for every attribute that assigns `newValue` straight to a string-typed
  * property, rather than routing through a null-tolerant `parse*` helper.
@@ -51,8 +50,7 @@ describe('attribute removal', () => {
     it.for(cases)('%s[%s] restores its default on removal', ([tag, attribute, property, restored]) => {
         const element = document.createElement(tag) as unknown as Record<string, unknown>;
 
-        expect(element[property], `${tag}[${attribute}] does not start at its documented default`)
-        .toBe(restored);
+        expect(element[property], `${tag}[${attribute}] does not start at its documented default`).toBe(restored);
 
         (element as unknown as Element).setAttribute(attribute, 'some-reference');
         expect(element[property]).toBe('some-reference');
@@ -60,8 +58,7 @@ describe('attribute removal', () => {
         // Reactions on an upgraded element run in the caller's stack, so a parser that mishandles
         // null throws straight out of removeAttribute() - the #309 shape.
         expect(() => (element as unknown as Element).removeAttribute(attribute)).not.toThrow();
-        expect(element[property], `${tag}[${attribute}] leaked null instead of its default`)
-        .toBe(restored);
+        expect(element[property], `${tag}[${attribute}] leaked null instead of its default`).toBe(restored);
     });
 
     it('covers every unparsed string attribute in the library', () => {

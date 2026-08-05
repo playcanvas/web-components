@@ -6,7 +6,6 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { readyWithin } from '../helpers/ready';
 
-
 /**
  * <pc-app> boot and teardown state. Both cases here are known bugs, pinned as current behaviour
  * with an it.todo beside them for the intent.
@@ -14,9 +13,10 @@ import { readyWithin } from '../helpers/ready';
 describe('<pc-app> lifecycle', () => {
     const { uncaught } = useGuard();
 
-    const settleTask = () => new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
+    const settleTask = () =>
+        new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
     it('completes boot after being detached, leaking a live application', async () => {
         // KNOWN BUG (#311): connectedCallback never re-checks isConnected after its awaits, unlike
