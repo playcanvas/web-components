@@ -126,6 +126,7 @@
             <pc-asset src="assets/scripts/face-tracking.mjs"></pc-asset>
             <pc-asset src="assets/scripts/head-occluder.mjs"></pc-asset>
             <pc-asset src="assets/scripts/lens-tint.mjs"></pc-asset>
+            <pc-asset src="assets/models/canonical-face.glb" id="face"></pc-asset>
             <pc-asset src="assets/models/sunglasses.glb" id="sunglasses"></pc-asset>
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="sky"></pc-asset>
             <!-- Scene -->
@@ -140,10 +141,14 @@
                         <pc-script name="faceTracking"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- An invisible ellipsoid that hides the arms of the glasses behind the head -->
+                <!-- An invisible head that hides the arms of the glasses behind the skull and
+                     lets the nose occlude the far rim on head turns: MediaPipe's canonical
+                     face mesh (which registers with the tracked face by definition) plus an
+                     ellipsoid approximating the cranium -->
                 <pc-entity name="head-occluder">
+                    <pc-model asset="face"></pc-model>
                     <pc-scripts>
-                        <pc-script name="headOccluder" center="0 0.5 -2" size="13.5 20 16"></pc-script>
+                        <pc-script name="headOccluder" center="0 1 -3.5" size="13.5 20 13"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- The sunglasses, worn at the nose bridge of canonical face space. The model
