@@ -24,8 +24,7 @@ const EasingFunction = {
 };
 
 /** @interface */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-class TweenDescriptor {
+export class TweenDescriptor {
     /**
      * Path to the property to tween
      * @type {string}
