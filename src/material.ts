@@ -542,12 +542,12 @@ class MaterialElement extends HTMLElement {
 
     /**
      * @param slot - The material property to write.
-     * @param texture - The loaded texture.
+     * @param texture - The loaded texture, applied with its sampler state untouched - anisotropy
+     * and friends belong to the `pc-asset`'s texture options.
      */
     private _applyMap(slot: TextureSlot, texture: Texture) {
         if (!this.material) return;
         this.material[slot] = texture;
-        texture.anisotropy = 4;
         this._scheduleUpdate();
     }
 

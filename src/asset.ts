@@ -1,4 +1,19 @@
-import { Asset, SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from 'playcanvas';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    ADDRESS_MIRRORED_REPEAT,
+    ADDRESS_REPEAT,
+    Asset,
+    FILTER_LINEAR,
+    FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR_MIPMAP_NEAREST,
+    FILTER_NEAREST,
+    FILTER_NEAREST_MIPMAP_LINEAR,
+    FILTER_NEAREST_MIPMAP_NEAREST,
+    SPRITE_RENDERMODE_SIMPLE,
+    SPRITE_RENDERMODE_SLICED,
+    SPRITE_RENDERMODE_TILED
+} from 'playcanvas';
+import type { Texture, TextureAtlas } from 'playcanvas';
 
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
@@ -10,6 +25,66 @@ const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([
     ['sliced', SPRITE_RENDERMODE_SLICED],
     ['tiled', SPRITE_RENDERMODE_TILED]
 ]);
+
+type AddressMode = 'repeat' | 'clamp' | 'mirror';
+
+const addressModes = new Map<AddressMode, number>([
+    ['repeat', ADDRESS_REPEAT],
+    ['clamp', ADDRESS_CLAMP_TO_EDGE],
+    ['mirror', ADDRESS_MIRRORED_REPEAT]
+]);
+
+type MinFilterMode =
+    'nearest' | 'linear' | 'nearest-mip-nearest' | 'linear-mip-nearest' | 'nearest-mip-linear' | 'linear-mip-linear';
+
+const minFilterModes = new Map<MinFilterMode, number>([
+    ['nearest', FILTER_NEAREST],
+    ['linear', FILTER_LINEAR],
+    ['nearest-mip-nearest', FILTER_NEAREST_MIPMAP_NEAREST],
+    ['linear-mip-nearest', FILTER_LINEAR_MIPMAP_NEAREST],
+    ['nearest-mip-linear', FILTER_NEAREST_MIPMAP_LINEAR],
+    ['linear-mip-linear', FILTER_LINEAR_MIPMAP_LINEAR]
+]);
+
+// Magnification has no mip variants - the engine (and the GPU) only accepts these two.
+type MagFilterMode = 'nearest' | 'linear';
+
+const magFilterModes = new Map<MagFilterMode, number>([
+    ['nearest', FILTER_NEAREST],
+    ['linear', FILTER_LINEAR]
+]);
+
+// The engine's texture JSON spells the filter names with underscores ('linear_mip_linear'); the
+// attribute values are kebab-case like every other enum attribute in this library. The address
+// mode names contain no dashes, so for them the rename is the identity.
+const toTextureJson = (name: string) => name.replace(/-/g, '_');
+
+/** The Texture properties written by the texture option attributes. */
+type TextureOptionProperty =
+    'addressU' | 'addressV' | 'anisotropy' | 'flipY' | 'magFilter' | 'minFilter' | 'mipmaps' | 'srgb';
+
+// Engine Texture constructor defaults, restored on a loaded texture when a texture option
+// attribute is removed.
+const textureOptionDefaults: Record<TextureOptionProperty, number | boolean> = {
+    addressU: ADDRESS_REPEAT,
+    addressV: ADDRESS_REPEAT,
+    anisotropy: 1,
+    flipY: false,
+    magFilter: FILTER_LINEAR,
+    minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
+    mipmaps: true,
+    srgb: false
+};
+
+// Attributes that only apply to certain asset types, used to warn when one is set on an asset of
+// any other type (where it would otherwise be silently ignored).
+const typeScopedAttributes: [attributes: string[], types: string[]][] = [
+    [
+        ['address-u', 'address-v', 'anisotropy', 'flip-y', 'mag-filter', 'min-filter', 'mipmaps', 'srgb'],
+        ['texture', 'textureatlas']
+    ],
+    [['atlas', 'frame-keys', 'pixels-per-unit', 'render-mode'], ['sprite']]
+];
 
 const extToType = new Map([
     ['bin', 'binary'],
@@ -78,8 +153,16 @@ const processBufferView = (
  * immediately unless `lazy`. A `pc-asset` must be a direct child of `pc-app` — elements placed
  * elsewhere, or with an unsupported asset type, never become ready.
  *
- * Apart from `lazy`, these attributes are read once when the asset is created, so changing them
- * later has no effect.
+ * For `texture` and `textureatlas` assets, the texture options (`address-u`, `address-v`,
+ * `min-filter`, `mag-filter`, `anisotropy`, `mipmaps`, `srgb`, `flip-y`) apply when the texture is
+ * created and — like `lazy` — are observed: changing one updates a texture that has already
+ * loaded, and removing one restores the engine default. Changing `srgb` or `mipmaps` on a loaded
+ * texture recreates the underlying GPU resource, so prefer declaring those up front. Each option
+ * overrides the matching key in the `data` JSON; options left unset write nothing, leaving the
+ * engine's per-format defaults in force.
+ *
+ * Apart from `lazy` and the texture options, these attributes are read once when the asset is
+ * created, so changing them later has no effect.
  *
  * @attribute {string} id - The identifier used to reference the asset from other elements.
  * @attribute {string} src - The URL of the asset to load.
@@ -101,7 +184,23 @@ const processBufferView = (
  * not that it succeeded.
  */
 class AssetElement extends AsyncElement {
+    private _addressU: AddressMode | null = null;
+
+    private _addressV: AddressMode | null = null;
+
+    private _anisotropy: number | null = null;
+
+    private _flipY: boolean | null = null;
+
     private _lazy = false;
+
+    private _magFilter: MagFilterMode | null = null;
+
+    private _minFilter: MinFilterMode | null = null;
+
+    private _mipmaps: boolean | null = null;
+
+    private _srgb: boolean | null = null;
 
     /**
      * The asset that is loaded. Available once the element is ready — await
@@ -188,6 +287,18 @@ class AssetElement extends AsyncElement {
             return;
         }
 
+        // Attributes scoped to other asset types have no effect here - say so rather than
+        // failing silently.
+        const inapplicable = typeScopedAttributes
+            .filter(([, types]) => !types.includes(type))
+            .flatMap(([attributes]) => attributes)
+            .filter((attribute) => this.hasAttribute(attribute));
+        if (inapplicable.length > 0) {
+            console.warn(
+                `pc-asset '${id || src}' has attributes that do not apply to asset type '${type}' and are ignored: ${inapplicable.join(', ')}`
+            );
+        }
+
         // Optional inline asset data, used by data-driven assets such as texture atlases (frame
         // definitions) and sprites (atlas reference, frame keys, etc.).
         const data = this._buildData(type);
@@ -217,9 +328,11 @@ class AssetElement extends AsyncElement {
     }
 
     /**
-     * Builds the `data` object for the asset from an optional inline `data` attribute (JSON) and,
-     * for sprites, from the convenience attributes (`atlas`, `frame-keys`, `pixels-per-unit`,
-     * `render-mode`). Returns `undefined` when there is no data to apply.
+     * Builds the `data` object for the asset from an optional inline `data` attribute (JSON), the
+     * texture option attributes (for `texture` and `textureatlas` assets), and the sprite
+     * convenience attributes (`atlas`, `frame-keys`, `pixels-per-unit`, `render-mode`). An
+     * attribute overrides the matching `data` JSON key. Returns `undefined` when there is no data
+     * to apply.
      * @param type - The resolved asset type.
      * @returns The asset data, or `undefined`.
      */
@@ -232,6 +345,39 @@ class AssetElement extends AsyncElement {
                 data = JSON.parse(dataAttr);
             } catch (e) {
                 console.warn(`Invalid 'data' JSON on pc-asset: ${dataAttr}`);
+            }
+        }
+
+        if (type === 'texture' || type === 'textureatlas') {
+            data = data ?? {};
+
+            // Only options the user actually set are written: the engine reads these keys with
+            // hasOwnProperty semantics, and an absent key leaves its per-format default (an HDR's
+            // 'rgbe' type, a KTX2's transcoded format) in force.
+            if (this._addressU !== null) {
+                data.addressu = this._addressU;
+            }
+            if (this._addressV !== null) {
+                data.addressv = this._addressV;
+            }
+            if (this._anisotropy !== null) {
+                data.anisotropy = this._anisotropy;
+            }
+            if (this._flipY !== null) {
+                // 'flipY' is the one camelCase key in the engine's texture JSON
+                data.flipY = this._flipY;
+            }
+            if (this._magFilter !== null) {
+                data.magfilter = toTextureJson(this._magFilter);
+            }
+            if (this._minFilter !== null) {
+                data.minfilter = toTextureJson(this._minFilter);
+            }
+            if (this._mipmaps !== null) {
+                data.mipmaps = this._mipmaps;
+            }
+            if (this._srgb !== null) {
+                data.srgb = this._srgb;
             }
         }
 
@@ -274,6 +420,60 @@ class AssetElement extends AsyncElement {
         return data;
     }
 
+    /**
+     * Returns the engine texture behind this asset, when there is one: the resource itself for a
+     * `texture` asset, the atlas's texture for a `textureatlas` asset, `null` otherwise
+     * (including before the asset has loaded).
+     * @returns The texture, or `null`.
+     */
+    private _texture(): Texture | null {
+        const asset = this.asset;
+        if (!asset?.resource) return null;
+        if (asset.type === 'texture') return asset.resource as Texture;
+        if (asset.type === 'textureatlas') return (asset.resource as TextureAtlas).texture ?? null;
+        return null;
+    }
+
+    /**
+     * Writes one texture option through to the created asset, if any. The engine-JSON key is
+     * written into `asset.data`, mutated in place - replacing the whole object would make the
+     * registry re-patch every key, and a re-patched `srgb` or `mipmaps` recreates the texture
+     * even when unchanged. The in-place key is what a not-yet-started load reads at texture
+     * construction, and what any later reload reads. When the texture already exists, the
+     * corresponding property is assigned directly; `null` (attribute removed) deletes the key
+     * and restores the engine default. Assets of any other type are left untouched.
+     *
+     * @param key - The engine texture JSON key in `asset.data`.
+     * @param property - The Texture property to assign.
+     * @param dataValue - The engine-JSON value for `asset.data`, or `null` to delete the key.
+     * @param textureValue - The value for the Texture property, or `null` for the engine default.
+     */
+    private _applyTextureOption(
+        key: string,
+        property: TextureOptionProperty,
+        dataValue: string | number | boolean | null,
+        textureValue: number | boolean | null
+    ) {
+        const asset = this.asset;
+        if (!asset || (asset.type !== 'texture' && asset.type !== 'textureatlas')) return;
+
+        const data = asset.data as Record<string, any>;
+        if (dataValue === null) {
+            delete data[key];
+        } else {
+            data[key] = dataValue;
+        }
+
+        const texture = this._texture();
+        if (texture) {
+            // Every option here is a number- or boolean-valued Texture property; the
+            // value/property pairing is fixed by the callers, which TypeScript cannot see
+            // through the union.
+            (texture as unknown as Record<TextureOptionProperty, number | boolean>)[property] =
+                textureValue ?? textureOptionDefaults[property];
+        }
+    }
+
     private _destroyAsset() {
         if (this.asset) {
             // A caller that keeps the Asset alive must not dispatch on a removed element
@@ -284,6 +484,83 @@ class AssetElement extends AsyncElement {
             this.asset.unload();
             this.asset = null;
         }
+    }
+
+    /**
+     * Sets the texture's horizontal (U) address mode: how texture coordinates outside the 0 to 1
+     * range sample the texture. Applies to `texture` and `textureatlas` assets, both when the
+     * texture is created and after it has loaded.
+     * @param value - The address mode, or `null` to use the engine default of 'repeat'.
+     */
+    set addressU(value: AddressMode | null) {
+        this._addressU = value;
+        const constant = value === null ? null : (addressModes.get(value) ?? ADDRESS_REPEAT);
+        this._applyTextureOption('addressu', 'addressU', value, constant);
+    }
+
+    /**
+     * Gets the texture's horizontal (U) address mode.
+     * @returns The address mode, or `null` when unset.
+     */
+    get addressU(): AddressMode | null {
+        return this._addressU;
+    }
+
+    /**
+     * Sets the texture's vertical (V) address mode: how texture coordinates outside the 0 to 1
+     * range sample the texture. Applies to `texture` and `textureatlas` assets, both when the
+     * texture is created and after it has loaded.
+     * @param value - The address mode, or `null` to use the engine default of 'repeat'.
+     */
+    set addressV(value: AddressMode | null) {
+        this._addressV = value;
+        const constant = value === null ? null : (addressModes.get(value) ?? ADDRESS_REPEAT);
+        this._applyTextureOption('addressv', 'addressV', value, constant);
+    }
+
+    /**
+     * Gets the texture's vertical (V) address mode.
+     * @returns The address mode, or `null` when unset.
+     */
+    get addressV(): AddressMode | null {
+        return this._addressV;
+    }
+
+    /**
+     * Sets the texture's maximum anisotropic filtering level, which improves quality at oblique
+     * viewing angles. Applies to `texture` and `textureatlas` assets, both when the texture is
+     * created and after it has loaded.
+     * @param value - The anisotropy level, or `null` to use the engine default of 1.
+     */
+    set anisotropy(value: number | null) {
+        this._anisotropy = value;
+        this._applyTextureOption('anisotropy', 'anisotropy', value, value);
+    }
+
+    /**
+     * Gets the texture's maximum anisotropic filtering level.
+     * @returns The anisotropy level, or `null` when unset.
+     */
+    get anisotropy(): number | null {
+        return this._anisotropy;
+    }
+
+    /**
+     * Sets whether the texture's image data is flipped vertically at upload. Applies to `texture`
+     * and `textureatlas` assets, both when the texture is created and after it has loaded.
+     * @param value - The flip flag, or `null` to use the engine default of `false`.
+     */
+    set flipY(value: boolean | null) {
+        this._flipY = value;
+        this._applyTextureOption('flipY', 'flipY', value, value);
+    }
+
+    /**
+     * Gets whether the texture's image data is flipped vertically at upload.
+     * @returns The flip flag, or `null` when unset.
+     */
+    get flipY(): boolean | null {
+        return this._flipY;
     }
 
     /**
@@ -306,6 +583,87 @@ class AssetElement extends AsyncElement {
     }
 
     /**
+     * Sets the texture's magnification filter, used when the texture is displayed larger than its
+     * source size. Applies to `texture` and `textureatlas` assets, both when the texture is
+     * created and after it has loaded.
+     * @param value - The filter, or `null` to use the engine default of 'linear'.
+     */
+    set magFilter(value: MagFilterMode | null) {
+        this._magFilter = value;
+        const json = value === null ? null : toTextureJson(value);
+        const constant = value === null ? null : (magFilterModes.get(value) ?? FILTER_LINEAR);
+        this._applyTextureOption('magfilter', 'magFilter', json, constant);
+    }
+
+    /**
+     * Gets the texture's magnification filter.
+     * @returns The filter, or `null` when unset.
+     */
+    get magFilter(): MagFilterMode | null {
+        return this._magFilter;
+    }
+
+    /**
+     * Sets the texture's minification filter, used when the texture is displayed smaller than its
+     * source size. The mip variants blend within (and, for the second `linear`, between) mipmap
+     * levels. Applies to `texture` and `textureatlas` assets, both when the texture is created
+     * and after it has loaded.
+     * @param value - The filter, or `null` to use the engine default of 'linear-mip-linear'.
+     */
+    set minFilter(value: MinFilterMode | null) {
+        this._minFilter = value;
+        const json = value === null ? null : toTextureJson(value);
+        const constant = value === null ? null : (minFilterModes.get(value) ?? FILTER_LINEAR_MIPMAP_LINEAR);
+        this._applyTextureOption('minfilter', 'minFilter', json, constant);
+    }
+
+    /**
+     * Gets the texture's minification filter.
+     * @returns The filter, or `null` when unset.
+     */
+    get minFilter(): MinFilterMode | null {
+        return this._minFilter;
+    }
+
+    /**
+     * Sets whether the texture generates and uses mipmaps. Changing this on a loaded texture
+     * recreates the underlying GPU resource, so prefer declaring it up front. Applies to
+     * `texture` and `textureatlas` assets.
+     * @param value - The mipmaps flag, or `null` to use the engine default of `true`.
+     */
+    set mipmaps(value: boolean | null) {
+        this._mipmaps = value;
+        this._applyTextureOption('mipmaps', 'mipmaps', value, value);
+    }
+
+    /**
+     * Gets whether the texture generates and uses mipmaps.
+     * @returns The mipmaps flag, or `null` when unset.
+     */
+    get mipmaps(): boolean | null {
+        return this._mipmaps;
+    }
+
+    /**
+     * Sets whether the texture holds sRGB (gamma-encoded) color data, enabling hardware gamma
+     * decode. Free when set before the texture loads; changing it on a loaded texture recreates
+     * the underlying GPU resource. Applies to `texture` and `textureatlas` assets.
+     * @param value - The sRGB flag, or `null` to use the engine default of `false`.
+     */
+    set srgb(value: boolean | null) {
+        this._srgb = value;
+        this._applyTextureOption('srgb', 'srgb', value, value);
+    }
+
+    /**
+     * Gets whether the texture holds sRGB (gamma-encoded) color data.
+     * @returns The sRGB flag, or `null` when unset.
+     */
+    get srgb(): boolean | null {
+        return this._srgb;
+    }
+
+    /**
      * Returns the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
      * `undefined` if there is no such element or its asset has not been created yet.
      *
@@ -318,12 +676,84 @@ class AssetElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['lazy'];
+        return [
+            'address-u',
+            'address-v',
+            'anisotropy',
+            'flip-y',
+            'lazy',
+            'mag-filter',
+            'min-filter',
+            'mipmaps',
+            'srgb'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        if (name === 'lazy') {
-            this.lazy = parseBool(newValue, false);
+        // Each texture option keeps its parse* call as the branch's first assignment (the CEM
+        // manifest derives the attribute's type and default from it - a ternary would degrade
+        // both to plain string) and treats a removed attribute (null) as a reset to unset,
+        // which restores the engine default on a loaded texture.
+        switch (name) {
+            case 'address-u':
+                if (newValue !== null) {
+                    this.addressU = parseEnum(newValue, addressModes, 'repeat', name);
+                } else {
+                    this.addressU = null;
+                }
+                break;
+            case 'address-v':
+                if (newValue !== null) {
+                    this.addressV = parseEnum(newValue, addressModes, 'repeat', name);
+                } else {
+                    this.addressV = null;
+                }
+                break;
+            case 'anisotropy':
+                if (newValue !== null) {
+                    this.anisotropy = parseNumber(newValue, 1, name);
+                } else {
+                    this.anisotropy = null;
+                }
+                break;
+            case 'flip-y':
+                if (newValue !== null) {
+                    this.flipY = parseBool(newValue, false);
+                } else {
+                    this.flipY = null;
+                }
+                break;
+            case 'lazy':
+                this.lazy = parseBool(newValue, false);
+                break;
+            case 'mag-filter':
+                if (newValue !== null) {
+                    this.magFilter = parseEnum(newValue, magFilterModes, 'linear', name);
+                } else {
+                    this.magFilter = null;
+                }
+                break;
+            case 'min-filter':
+                if (newValue !== null) {
+                    this.minFilter = parseEnum(newValue, minFilterModes, 'linear-mip-linear', name);
+                } else {
+                    this.minFilter = null;
+                }
+                break;
+            case 'mipmaps':
+                if (newValue !== null) {
+                    this.mipmaps = parseBool(newValue, true);
+                } else {
+                    this.mipmaps = null;
+                }
+                break;
+            case 'srgb':
+                if (newValue !== null) {
+                    this.srgb = parseBool(newValue, false);
+                } else {
+                    this.srgb = null;
+                }
+                break;
         }
     }
 }

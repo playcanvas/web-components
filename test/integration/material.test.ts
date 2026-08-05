@@ -127,7 +127,19 @@ describe('<pc-material> integration', () => {
             asset.fire('load', asset);
 
             expect(element.material!.diffuseMap).toBe(texture);
-            expect(texture.anisotropy).toBe(4);
+        });
+
+        it("leaves the texture's sampler state alone when applying a map", async () => {
+            // The element used to force anisotropy = 4 on every texture it applied; sampler state
+            // belongs to the pc-asset's texture options now, so the texture arrives untouched
+            const { app, asset, element } = await bootWithLazyTexture('diffuse-map="tex"');
+            const texture = new Texture(app.graphicsDevice, { width: 1, height: 1, anisotropy: 8 });
+
+            asset.resource = texture;
+            asset.fire('load', asset);
+
+            expect(element.material!.diffuseMap).toBe(texture);
+            expect(texture.anisotropy, 'the applied texture keeps its own sampler state').toBe(8);
         });
 
         it('clears the slot when the attribute is removed', async () => {
