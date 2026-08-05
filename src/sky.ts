@@ -31,12 +31,20 @@ class SkyElement extends AsyncElement {
 
     private _appElement: AppElement | null = null;
 
+    /**
+     * Incremented on every new load and on disconnect, and captured by a load when it starts. A
+     * load that resumes from an await or a load callback abandons itself if the value has moved
+     * on, so a superseded load cannot generate a skybox for a scene it no longer configures.
+     */
+    private _loadGeneration = 0;
+
     connectedCallback() {
         this._loadSkybox();
         this._onReady();
     }
 
     disconnectedCallback() {
+        this._loadGeneration++;
         this._unloadSkybox();
         this._appElement = null;
         this._resetReady();
@@ -70,7 +78,16 @@ class SkyElement extends AsyncElement {
     }
 
     private async _loadSkybox() {
+        // Supersede any load already in flight - only the newest load may generate the skybox
+        const generation = ++this._loadGeneration;
+
         const appElement = await this.closestApp?.ready();
+
+        // The element may have been removed, or another load started, while we waited
+        if (generation !== this._loadGeneration) {
+            return;
+        }
+
         const app = appElement?.app;
         if (!appElement || !app) {
             return;
@@ -89,6 +106,9 @@ class SkyElement extends AsyncElement {
             this._generateSkybox(asset);
         } else {
             asset.once('load', () => {
+                if (generation !== this._loadGeneration) {
+                    return;
+                }
                 this._generateSkybox(asset);
             });
             app.assets.load(asset);

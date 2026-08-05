@@ -14,36 +14,66 @@ class ModelElement extends AsyncElement {
 
     private _entity: Entity | null = null;
 
+    /**
+     * Incremented on every new load and on disconnect, and captured by a load when it starts. A
+     * load that resumes from an await or a load callback abandons itself if the value has moved
+     * on, so a superseded load can neither instantiate a second entity nor parent one that has
+     * since been destroyed.
+     */
+    private _loadGeneration = 0;
+
+    /**
+     * The root entity of the instantiated model. `null` until the container asset has loaded
+     * and been instantiated, and again once the element has been removed from the document.
+     * @returns The model's root entity, or `null`.
+     */
+    get entity(): Entity | null {
+        return this._entity;
+    }
+
     connectedCallback() {
         this._loadModel();
         this._onReady();
     }
 
     disconnectedCallback() {
+        this._loadGeneration++;
         this._unloadModel();
         this._resetReady();
     }
 
     private _instantiate(container: ContainerResource) {
-        this._entity = container.instantiateRenderEntity();
+        const generation = this._loadGeneration;
+
+        const entity = container.instantiateRenderEntity();
+        this._entity = entity;
 
         // @ts-ignore
         if (container.animations.length > 0) {
-            this._entity.addComponent('anim');
+            entity.addComponent('anim');
             // @ts-ignore
-            this._entity.anim.assignAnimation('animation', container.animations[0].resource);
+            entity.anim.assignAnimation('animation', container.animations[0].resource);
         }
 
+        // The parent's readiness re-arms when it is torn down, so these can resume in a later
+        // connection cycle. The entity is captured above and the generation re-checked, so a
+        // stale resume cannot parent an entity a newer cycle has already destroyed.
         const parentEntityElement = this.closestEntity;
         if (parentEntityElement) {
             parentEntityElement.ready().then(() => {
-                parentEntityElement.entity!.addChild(this._entity!);
+                if (generation !== this._loadGeneration) {
+                    return;
+                }
+                parentEntityElement.entity!.addChild(entity);
             });
         } else {
             const appElement = this.closestApp;
             if (appElement) {
                 appElement.ready().then(() => {
-                    appElement.app!.root.addChild(this._entity!);
+                    if (generation !== this._loadGeneration) {
+                        return;
+                    }
+                    appElement.app!.root.addChild(entity);
                 });
             }
         }
@@ -52,7 +82,16 @@ class ModelElement extends AsyncElement {
     private async _loadModel() {
         this._unloadModel();
 
+        // Supersede any load already in flight - only the newest load may instantiate
+        const generation = ++this._loadGeneration;
+
         const appElement = await this.closestApp?.ready();
+
+        // The element may have been removed, or another load started, while we waited
+        if (generation !== this._loadGeneration) {
+            return;
+        }
+
         const app = appElement?.app;
 
         const asset = AssetElement.get(this._asset);
@@ -64,6 +103,9 @@ class ModelElement extends AsyncElement {
             this._instantiate(asset.resource as ContainerResource);
         } else {
             asset.once('load', () => {
+                if (generation !== this._loadGeneration) {
+                    return;
+                }
                 this._instantiate(asset.resource as ContainerResource);
             });
             app!.assets.load(asset);
