@@ -1,0 +1,6 @@
+Sunglasses (SunglassesKhronos) by Eric Chadwick of Darmstadt Graphics Group GmbH, 2024,
+from the Khronos glTF Sample Assets:
+
+https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/SunglassesKhronos
+
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/

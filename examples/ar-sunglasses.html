@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-        <title>PlayCanvas Web Components - AR Optic Blast</title>
+        <title>PlayCanvas Web Components - AR Sunglasses</title>
         <script type="importmap">
             {
                 "imports": {
@@ -19,48 +19,10 @@
         <style>
             :root {
                 --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
-                --hud-bg: rgba(20, 6, 12, 0.55);
-                --hud-border: rgba(255, 120, 140, 0.22);
-                --hud-ink: #ffeef1;
-                --ruby: #ff2b4a;
-            }
-
-            body {
-                background-color: #0a0507;
-            }
-
-            /* Dim the camera feed a little so the ruby visuals read over it */
-            video {
-                filter: brightness(0.75) saturate(1.1);
-            }
-
-            #vignette {
-                position: fixed;
-                inset: 0;
-                z-index: 1;
-                pointer-events: none;
-                background: radial-gradient(ellipse at center, transparent 52%, rgba(10, 2, 6, 0.55) 100%);
-                transition: box-shadow 0.25s ease;
-            }
-            #vignette.blast {
-                box-shadow: inset 0 0 18vmin rgba(255, 30, 60, 0.55);
-            }
-
-            /* A brief full-screen flash when the beam erupts */
-            #flash {
-                position: fixed;
-                inset: 0;
-                z-index: 2;
-                pointer-events: none;
-                opacity: 0;
-                background: radial-gradient(circle at center, rgba(255, 150, 160, 0.7), rgba(255, 30, 60, 0.3) 45%, transparent 75%);
-            }
-            #flash.on {
-                animation: flash-fade 0.5s ease-out;
-            }
-            @keyframes flash-fade {
-                0% { opacity: 1; }
-                100% { opacity: 0; }
+                --hud-bg: rgba(10, 12, 14, 0.55);
+                --hud-border: rgba(255, 255, 255, 0.16);
+                --hud-ink: #f2f5f7;
+                --accent: #6fd3b2;
             }
 
             /* Status banner */
@@ -94,7 +56,7 @@
                 width: 8px;
                 height: 8px;
                 border-radius: 50%;
-                background: var(--ruby);
+                background: var(--accent);
                 animation: pulse 1.2s ease-in-out infinite;
             }
             #status.error .status-dot {
@@ -106,33 +68,36 @@
                 50% { opacity: 1; }
             }
 
-            /* Charge progress bar */
-            #charge {
+            /* Lens tint swatches */
+            #swatches {
                 position: fixed;
                 bottom: max(26px, env(safe-area-inset-bottom));
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 10;
-                width: 200px;
-                padding: 5px;
+                display: flex;
+                gap: 10px;
+                padding: 8px;
                 background: var(--hud-bg);
                 border: 1px solid var(--hud-border);
                 border-radius: 999px;
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
-                opacity: 0;
-                transition: opacity 0.2s ease;
-                pointer-events: none;
             }
-            #charge.active {
-                opacity: 1;
+            #swatches button {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 2px solid rgba(255, 255, 255, 0.25);
+                padding: 0;
+                cursor: pointer;
+                transition: transform 0.15s ease, border-color 0.15s ease;
             }
-            #charge-fill {
-                height: 6px;
-                width: 0%;
-                border-radius: 999px;
-                background: linear-gradient(90deg, #ff8fa0, var(--ruby));
-                box-shadow: 0 0 10px var(--ruby);
+            #swatches button:hover {
+                transform: scale(1.12);
+            }
+            #swatches button.active {
+                border-color: #fff;
             }
 
             /* Badge shown when running the synthetic ?sim preview */
@@ -158,9 +123,10 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/optic-blast-tracking.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/optic-blast-visuals.mjs"></pc-asset>
-            <pc-asset src="assets/models/visor.glb" id="visor"></pc-asset>
+            <pc-asset src="assets/scripts/face-tracking.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/head-occluder.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/lens-tint.mjs"></pc-asset>
+            <pc-asset src="assets/models/sunglasses.glb" id="sunglasses"></pc-asset>
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="sky"></pc-asset>
             <!-- Scene -->
             <pc-scene>
@@ -171,13 +137,23 @@
                     <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
                     <pc-scripts>
                         <pc-script name="cameraFeed"></pc-script>
-                        <pc-script name="opticBlastTracking"></pc-script>
-                        <pc-script name="opticBlastVisuals"></pc-script>
+                        <pc-script name="faceTracking"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- The visor, worn at the origin of canonical face space -->
-                <pc-entity name="visor" position="0 -5 1" scale="0.085 0.085 0.085">
-                    <pc-model asset="visor"></pc-model>
+                <!-- An invisible ellipsoid that hides the arms of the glasses behind the head -->
+                <pc-entity name="head-occluder">
+                    <pc-scripts>
+                        <pc-script name="headOccluder" center="0 0.5 -2" size="13.5 20 16"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- The sunglasses, worn at the nose bridge of canonical face space. The model
+                     is authored resting on a flat surface, so a slight pantoscopic tilt (the
+                     bottom of the lenses tucking toward the cheeks) makes it sit naturally -->
+                <pc-entity name="sunglasses" position="0 -0.7 7.5" rotation="8 0 0" scale="100 100 100">
+                    <pc-model asset="sunglasses"></pc-model>
+                    <pc-scripts>
+                        <pc-script name="lensTint"></pc-script>
+                    </pc-scripts>
                 </pc-entity>
             </pc-scene>
         </pc-app>
@@ -193,10 +169,14 @@
         </script>
 
         <!-- HUD -->
-        <div id="vignette"></div>
-        <div id="flash"></div>
-        <div id="status"><span class="status-dot"></span><span id="status-text">Loading optic trackers…</span></div>
-        <div id="charge"><div id="charge-fill"></div></div>
+        <div id="status"><span class="status-dot"></span><span id="status-text">Loading face tracker…</span></div>
+        <div id="swatches">
+            <button type="button" class="active" data-color="#1e3a30" style="background: #1e3a30" aria-label="Green lenses"></button>
+            <button type="button" data-color="#4a2f1d" style="background: #4a2f1d" aria-label="Brown lenses"></button>
+            <button type="button" data-color="#1d3a5f" style="background: #1d3a5f" aria-label="Blue lenses"></button>
+            <button type="button" data-color="#8a3b53" style="background: #8a3b53" aria-label="Rose lenses"></button>
+            <button type="button" data-color="#2a2a2e" style="background: #2a2a2e" aria-label="Gray lenses"></button>
+        </div>
         <div id="sim-badge">SIM</div>
 
         <script type="module">
@@ -205,10 +185,6 @@
             const { app } = await whenReady('pc-app');
 
             const sim = new URLSearchParams(window.location.search).has('sim');
-            const touchHint = sim ?
-                'Hold Space or the pointer to charge the visor' :
-                'Touch and hold the side of your head to charge the visor';
-
             if (sim) document.getElementById('sim-badge').style.display = 'block';
 
             // Status banner
@@ -220,81 +196,33 @@
             };
 
             let cameraError = false;
-            let faceSeen = false;
-            let hintRetired = false;
 
             app.on('camera:error', () => {
                 if (sim) return;
                 cameraError = true;
-                setStatus('Camera unavailable — click and hold to fire anyway', 'error');
+                setStatus('Camera unavailable — previewing without tracking', 'error');
             });
 
             app.on('face:ready', () => {
-                if (!cameraError) setStatus(sim ? touchHint : 'Show your face');
+                if (!cameraError) setStatus('Show your face');
             });
 
             app.on('face:found', () => {
-                faceSeen = true;
-                if (cameraError) return;
-                if (hintRetired) {
-                    // The user already knows the trigger - keep the banner retired
-                    status.classList.add('hidden');
-                } else {
-                    setStatus(touchHint);
-                }
+                if (!cameraError) status.classList.add('hidden');
             });
 
             app.on('face:lost', () => {
                 if (!cameraError) setStatus('Show your face');
             });
 
-            // Charge progress bar, synced to the script's charge-time attribute
-            const chargeSecs = parseFloat(
-                document.querySelector('pc-script[name="opticBlastVisuals"]')?.getAttribute('charge-time') ?? '3'
-            ) || 3;
-            const charge = document.getElementById('charge');
-            const chargeFill = document.getElementById('charge-fill');
-
-            app.on('blast:charging', () => {
-                vignette.classList.remove('blast');
-                charge.classList.add('active');
-                chargeFill.style.transition = 'none';
-                chargeFill.style.width = '0%';
-                void chargeFill.offsetWidth;
-                chargeFill.style.transition = `width ${chargeSecs}s linear`;
-                chargeFill.style.width = '100%';
-            });
-
-            const resetCharge = () => {
-                charge.classList.remove('active');
-                chargeFill.style.transition = 'none';
-                chargeFill.style.width = '0%';
-            };
-
-            // Vignette and flash while the beam fires
-            const vignette = document.getElementById('vignette');
-            const flash = document.getElementById('flash');
-
-            app.on('blast:fire', (side) => {
-                resetCharge();
-                vignette.classList.add('blast');
-                flash.classList.remove('on');
-                void flash.offsetWidth;
-                flash.classList.add('on');
-
-                // The user has found the trigger - retire the instructions
-                if (side !== 'screen' || sim) {
-                    hintRetired = true;
-                    status.classList.add('hidden');
-                }
-            });
-
-            app.on('blast:end', () => {
-                resetCharge();
-                vignette.classList.remove('blast');
-                if (faceSeen && !hintRetired && !status.classList.contains('hidden') && !cameraError) {
-                    setStatus(touchHint);
-                }
+            // Lens tint swatches
+            const swatches = document.querySelectorAll('#swatches button');
+            swatches.forEach((swatch) => {
+                swatch.addEventListener('click', () => {
+                    swatches.forEach(other => other.classList.remove('active'));
+                    swatch.classList.add('active');
+                    app.fire('lens:color', swatch.dataset.color);
+                });
             });
         </script>
         <script type="module" src="js/example.mjs"></script>
