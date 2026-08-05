@@ -10,6 +10,10 @@ export default [
                 ...globals.browser
             }
         },
+        settings: {
+            // keep self-import ordering stable before dist exists
+            'import-x/internal-regex': '^@playcanvas/web-components(?:/|$)'
+        },
         rules: {
             // The package self-import resolves to dist/pwc.mjs, a build output that is absent
             // when linting an unbuilt checkout
