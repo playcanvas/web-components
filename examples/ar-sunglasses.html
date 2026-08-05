@@ -133,8 +133,10 @@
             <pc-scene>
                 <!-- Sky (lighting only) -->
                 <pc-sky asset="sky" type="none" lighting></pc-sky>
-                <!-- Camera (driven by face tracking) -->
-                <pc-entity name="camera">
+                <!-- Camera (driven by face tracking). It starts pulled back so the glasses
+                     read as a small product shot while the tracker loads, rather than the
+                     inside of the temple arms -->
+                <pc-entity name="camera" position="0 2.5 46">
                     <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
                     <pc-scripts>
                         <pc-script name="cameraFeed"></pc-script>
