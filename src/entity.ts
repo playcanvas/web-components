@@ -130,7 +130,9 @@ class EntityElement extends AsyncElement {
     /**
      * Handles the destruction of the backing entity. Resets the element so a later re-insertion
      * starts clean: `_built` must be cleared alongside `_entity`, or buildHierarchy would bail
-     * and a re-created entity would never be parented.
+     * and a re-created entity would never be parented. Readiness is re-armed for the same
+     * reason — with the entity gone, a resolved ready promise would resume its awaiters against
+     * a null `entity`.
      *
      * @param entity - The entity that was destroyed.
      */
@@ -139,6 +141,7 @@ class EntityElement extends AsyncElement {
         this._appElement = null;
         this._entity = null;
         this._built = false;
+        this._resetReady();
     }
 
     buildHierarchy(app: AppBase) {

@@ -40,19 +40,30 @@ class SoundSlotElement extends AsyncElement {
     private _soundElement: SoundComponentElement | null = null;
 
     /**
+     * Incremented on every connect and disconnect, and captured by connectedCallback on entry —
+     * a resume from an await abandons itself if the value has moved on, so a stale callback can
+     * neither act on a torn-down tree nor add its slot alongside a re-inserted element's own
+     * callback.
+     */
+    private _connectionGeneration = 0;
+
+    /**
      * The sound slot.
      */
     soundSlot: SoundSlot | null = null;
 
     async connectedCallback() {
+        const generation = ++this._connectionGeneration;
+
         const soundElement = this.soundElement;
         await soundElement?.ready();
 
-        // The element may have been removed, or its parent torn down, while we were waiting. A
-        // <pc-app> disconnects before its children, so by the time we resume the component can
-        // already be gone - see the matching guard in disconnectedCallback below.
+        // The element may have been removed (perhaps re-inserted, which runs a callback of its
+        // own), or its parent torn down, while we were waiting. A <pc-app> disconnects before
+        // its children, so by the time we resume the component can already be gone - see the
+        // matching guard in disconnectedCallback below.
         const component = soundElement?.component;
-        if (!this.isConnected || !component) {
+        if (generation !== this._connectionGeneration || !component) {
             return;
         }
 
@@ -79,12 +90,16 @@ class SoundSlotElement extends AsyncElement {
     }
 
     disconnectedCallback() {
+        // Invalidate any connectedCallback still suspended on an await
+        this._connectionGeneration++;
+
         // Uses the cached parent rather than a fresh lookup, since parentElement is already null
         // by now. The component itself is null if the parent <pc-sound> (or the whole <pc-app>) is
         // being torn down — parents disconnect first and have already removed the component.
         this._soundElement?.component?.removeSlot(this._name);
         this._soundElement = null;
         this.soundSlot = null;
+        this._resetReady();
     }
 
     protected get soundElement(): SoundComponentElement | null {

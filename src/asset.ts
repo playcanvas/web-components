@@ -149,6 +149,8 @@ class AssetElement extends AsyncElement {
 
     disconnectedCallback() {
         this.destroyAsset();
+        // Re-arm readiness so a re-inserted element announces the asset it creates then
+        this._resetReady();
     }
 
     private _onAssetLoad() {
