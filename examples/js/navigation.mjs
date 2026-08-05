@@ -11,7 +11,7 @@ export function setupNavigation(loadExample) {
 
     window.addEventListener('popstate', () => {
         const hash = window.location.hash.slice(1);
-        if (hash && examples.some(ex => ex.path === hash)) {
+        if (hash && examples.some((ex) => ex.path === hash)) {
             loadExample(hash);
             document.querySelectorAll('.example-link').forEach((link) => {
                 link.classList.toggle('active', link.getAttribute('href') === `#${hash}`);
@@ -24,10 +24,9 @@ export function setupNavigation(loadExample) {
             e.preventDefault();
             const links = Array.from(document.querySelectorAll('.example-link:not(.hidden)'));
             if (links.length === 0) return;
-            const currentIndex = links.findIndex(link => link.classList.contains('active'));
-            const nextIndex = e.key === 'ArrowUp' ?
-                Math.max(0, currentIndex - 1) :
-                Math.min(links.length - 1, currentIndex + 1);
+            const currentIndex = links.findIndex((link) => link.classList.contains('active'));
+            const nextIndex =
+                e.key === 'ArrowUp' ? Math.max(0, currentIndex - 1) : Math.min(links.length - 1, currentIndex + 1);
 
             links[nextIndex].click();
         }

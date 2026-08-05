@@ -9,7 +9,6 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
 
-
 /**
  * <pc-app> boot and teardown state. Removing the element must return it - and everything that
  * keyed off its readiness - to the pre-boot state, so that re-inserting it boots afresh, and so
@@ -19,9 +18,10 @@ import { expectNeverReady, readyWithin } from '../helpers/ready';
 describe('<pc-app> lifecycle', () => {
     const { uncaught } = useGuard();
 
-    const settleTask = () => new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
+    const settleTask = () =>
+        new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
     it('abandons boot when pc-app is detached while it boots', async () => {
         // The removal lands while connectedCallback is parked at its first await, which is before

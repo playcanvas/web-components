@@ -1,11 +1,11 @@
-import { whenReady } from '@playcanvas/web-components';
 import { MiniStats, XRTYPE_AR, XRTYPE_VR } from 'playcanvas';
+
+import { whenReady } from '@playcanvas/web-components';
 
 const { app } = await whenReady('pc-app');
 
 // Add MiniStats if the query parameter is present
 if (new URLSearchParams(window.location.search).has('ministats')) {
-    // eslint-disable-next-line no-new
     new MiniStats(app);
 }
 
@@ -74,11 +74,18 @@ if (document.documentElement.requestFullscreen && document.exitFullscreen) {
 
 // Add view-source button linking to this page's source on GitHub
 const filename = window.location.pathname.split('/').pop();
-container.appendChild(createButton({
-    iconClass: 'icon-source',
-    title: 'View Source',
-    onClick: () => window.open(`https://github.com/playcanvas/web-components/tree/main/examples/${filename}`, '_blank', 'noopener')
-}));
+container.appendChild(
+    createButton({
+        iconClass: 'icon-source',
+        title: 'View Source',
+        onClick: () =>
+            window.open(
+                `https://github.com/playcanvas/web-components/tree/main/examples/${filename}`,
+                '_blank',
+                'noopener'
+            )
+    })
+);
 
 document.body.appendChild(container);
 

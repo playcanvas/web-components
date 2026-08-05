@@ -6,7 +6,6 @@ import type { MaterialElement } from '../../src/material';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * <pc-material> against a real StandardMaterial on the null graphics device. The element tier
  * covers parsing; this tier covers what actually reaches the engine.
@@ -77,7 +76,7 @@ describe('<pc-material> integration', () => {
     it('warns when the roughness and gloss families are mixed', async () => {
         await bootApp('<pc-material id="mixed" gloss="0.5" roughness="0.5"></pc-material>');
 
-        warnings.expect('pc-material \'mixed\' sets both \'roughness\' and \'gloss\'');
+        warnings.expect("pc-material 'mixed' sets both 'roughness' and 'gloss'");
     });
 
     it('coalesces update() across a burst of attribute writes', async () => {
@@ -168,8 +167,7 @@ describe('<pc-material> integration', () => {
             expect(element.material, 'the material is destroyed on disconnect').toBeNull();
 
             asset.resource = texture;
-            expect(() => asset.fire('load', asset), 'a late load must not touch the torn-down element')
-            .not.toThrow();
+            expect(() => asset.fire('load', asset), 'a late load must not touch the torn-down element').not.toThrow();
         });
     });
 });

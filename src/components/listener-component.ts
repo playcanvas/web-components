@@ -1,4 +1,4 @@
-import { AudioListenerComponent } from 'playcanvas';
+import type { AudioListenerComponent } from 'playcanvas';
 
 import { ComponentElement } from './component';
 
@@ -26,11 +26,5 @@ class ListenerComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-listener', ListenerComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-listener': ListenerComponentElement;
-    }
-}
 
 export { ListenerComponentElement };

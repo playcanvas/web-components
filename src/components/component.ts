@@ -1,6 +1,6 @@
-import { Component } from 'playcanvas';
+import type { Component } from 'playcanvas';
 
-import { AppElement } from '../app';
+import type { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
 import { parseBool } from '../parse';
 
@@ -52,7 +52,9 @@ class ComponentElement extends AsyncElement {
             // A component can only exist on an entity, so an element placed outside one is inert.
             // It still becomes ready (with a null `component`), so warn rather than fail silently
             const label = this.id ? ` '${this.id}'` : '';
-            console.warn(`${this.tagName.toLowerCase()}${label} must be a descendant of pc-entity - component not added`);
+            console.warn(
+                `${this.tagName.toLowerCase()}${label} must be a descendant of pc-entity - component not added`
+            );
             return;
         }
 
@@ -69,7 +71,9 @@ class ComponentElement extends AsyncElement {
         this._component = entityElement.entity!.addComponent(this._componentName, data);
     }
 
-    initComponent() {}
+    initComponent() {
+        // optional hook
+    }
 
     async connectedCallback() {
         const generation = ++this._connectionGeneration;

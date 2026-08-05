@@ -7,7 +7,7 @@
  * @module EngineWebComponents
  */
 
-/* eslint-disable import/order */
+/* eslint-disable import-x/order */
 
 // Note that order matters here (e.g. pc-entity must be defined before components)
 import { AsyncElement, whenReady } from './async-element';
@@ -39,6 +39,50 @@ import { MaterialElement } from './material';
 import { ModelElement } from './model';
 import { SceneElement } from './scene';
 import { SkyElement } from './sky';
+
+import type {
+    ScriptAttributesChangeEvent,
+    ScriptEnableChangeEvent,
+    ScriptNameChangeEvent
+} from './components/script-component';
+
+declare global {
+    interface HTMLElementEventMap {
+        scriptattributeschange: ScriptAttributesChangeEvent;
+        scriptenablechange: ScriptEnableChangeEvent;
+        scriptnamechange: ScriptNameChangeEvent;
+    }
+
+    interface HTMLElementTagNameMap {
+        'pc-app': AppElement;
+        'pc-asset': AssetElement;
+        'pc-button': ButtonComponentElement;
+        'pc-camera': CameraComponentElement;
+        'pc-collision': CollisionComponentElement;
+        'pc-element': ElementComponentElement;
+        'pc-entity': EntityElement;
+        'pc-gsplat': GSplatComponentElement;
+        'pc-layoutchild': LayoutChildComponentElement;
+        'pc-layoutgroup': LayoutGroupComponentElement;
+        'pc-light': LightComponentElement;
+        'pc-listener': ListenerComponentElement;
+        'pc-material': MaterialElement;
+        'pc-model': ModelElement;
+        'pc-module': ModuleElement;
+        'pc-particles': ParticleSystemComponentElement;
+        'pc-render': RenderComponentElement;
+        'pc-rigidbody': RigidBodyComponentElement;
+        'pc-scene': SceneElement;
+        'pc-screen': ScreenComponentElement;
+        'pc-script': ScriptElement;
+        'pc-scripts': ScriptComponentElement;
+        'pc-scrollbar': ScrollbarComponentElement;
+        'pc-scrollview': ScrollViewComponentElement;
+        'pc-sky': SkyElement;
+        'pc-sound': SoundSlotElement;
+        'pc-sounds': SoundComponentElement;
+    }
+}
 
 export {
     AsyncElement,

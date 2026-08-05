@@ -21,7 +21,7 @@ describe('renamed enum attributes', () => {
             </pc-entity>
         `);
 
-        const camera = get<HTMLElement & { component: { projection: number, orthoHeight: number } }>('pc-camera');
+        const camera = get<HTMLElement & { component: { projection: number; orthoHeight: number } }>('pc-camera');
 
         expect(camera.component.projection).toBe(PROJECTION_ORTHOGRAPHIC);
         expect(camera.component.orthoHeight, 'ortho-height still reaches the component').toBe(4);
@@ -36,7 +36,7 @@ describe('renamed enum attributes', () => {
             </pc-entity>
         `);
 
-        const screen = get<HTMLElement & { component: { scaleMode: string, scaleBlend: number } }>('pc-screen');
+        const screen = get<HTMLElement & { component: { scaleMode: string; scaleBlend: number } }>('pc-screen');
 
         expect(screen.component.scaleMode).toBe(SCALEMODE_BLEND);
         expect(screen.component.scaleBlend, 'scale-blend is what scale-mode="blend" weights').toBe(1);
@@ -81,8 +81,8 @@ describe('renamed enum attributes', () => {
         // its system applies a key that is present but undefined, and its projection setter does
         // not validate, so a bare map lookup reaches the engine as undefined.
         const camera = document.createElement('pc-camera') as HTMLElement & {
-            projection: string,
-            component: { projection: number }
+            projection: string;
+            component: { projection: number };
         };
         (camera as unknown as Record<string, string>).projection = 'isometric';
 

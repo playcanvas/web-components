@@ -29,12 +29,11 @@ export class FaceDetection extends Script {
     offscreenCtx = null;
 
     async initialize() {
-        const wasmFileset = await FilesetResolver.forVisionTasks(
-            '../node_modules/@mediapipe/tasks-vision/wasm'
-        );
+        const wasmFileset = await FilesetResolver.forVisionTasks('../node_modules/@mediapipe/tasks-vision/wasm');
         this.faceLandmarker = await FaceLandmarker.createFromOptions(wasmFileset, {
             baseOptions: {
-                modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                modelAssetPath:
+                    'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
                 delegate: 'GPU'
             },
             outputFaceBlendshapes: true,
@@ -44,7 +43,7 @@ export class FaceDetection extends Script {
         });
     }
 
-    update(dt) {
+    update(_dt) {
         if (!this.faceLandmarker) return;
 
         const video = document.querySelector('video');

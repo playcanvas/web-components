@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * The attributes renamed to say what they control. Element tier, so no engine boots - these cover
  * attributeChangedCallback and the accessors only. That the two new enums reach the right engine
@@ -15,7 +14,7 @@ describe('renamed attributes', () => {
     const { warnings } = useGuard();
 
     describe('<pc-screen> scale-mode', () => {
-        it('replaces the boolean blend attribute with the engine\'s scale mode', () => {
+        it("replaces the boolean blend attribute with the engine's scale mode", () => {
             const element = document.createElement('pc-screen');
 
             expect(element.scaleMode).toBe('none');
@@ -34,12 +33,14 @@ describe('renamed attributes', () => {
             // reach for, so it is the value worth pinning as rejected rather than silently accepted.
             element.setAttribute('scale-mode', 'true');
             expect(element.scaleMode).toBe('none');
-            warnings.expect('Invalid value \'true\' for attribute \'scale-mode\'. Valid values: none, blend. Using \'none\'.');
+            warnings.expect(
+                "Invalid value 'true' for attribute 'scale-mode'. Valid values: none, blend. Using 'none'."
+            );
         });
     });
 
     describe('<pc-camera> projection', () => {
-        it('replaces the boolean orthographic attribute with the engine\'s projection', () => {
+        it("replaces the boolean orthographic attribute with the engine's projection", () => {
             const element = document.createElement('pc-camera');
 
             expect(element.projection).toBe('perspective');
@@ -65,7 +66,9 @@ describe('renamed attributes', () => {
 
             element.setAttribute('projection', 'ortho');
             expect(element.projection).toBe('perspective');
-            warnings.expect('Invalid value \'ortho\' for attribute \'projection\'. Valid values: perspective, orthographic. Using \'perspective\'.');
+            warnings.expect(
+                "Invalid value 'ortho' for attribute 'projection'. Valid values: perspective, orthographic. Using 'perspective'."
+            );
         });
     });
 

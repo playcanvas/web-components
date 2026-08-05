@@ -25,7 +25,7 @@ export class VideoRecorderUI extends Script {
         container.style.alignItems = 'stretch';
         // Apply a consistent font family and font size to all elements.
         container.style.fontFamily = 'Arial, sans-serif';
-        container.style.fontSize = '14px';  // Set a common font size
+        container.style.fontSize = '14px'; // Set a common font size
 
         // Create options container to hold resolution and framerate selectors.
         // Stacking them vertically.
@@ -104,7 +104,7 @@ export class VideoRecorderUI extends Script {
         const button = document.createElement('button');
         button.textContent = 'Record';
         button.style.padding = '10px 20px';
-        button.style.width = '100%';  // Make button same width as rows
+        button.style.width = '100%'; // Make button same width as rows
         button.style.fontSize = 'inherit';
 
         // Store the button reference on the instance for later access.

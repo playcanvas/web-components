@@ -22,7 +22,7 @@ class ExampleBrowser {
     }
 
     setupNavigation() {
-        this.updateURL = setupNavigation(path => this.loadExample(path)).updateURL;
+        this.updateURL = setupNavigation((path) => this.loadExample(path)).updateURL;
     }
 
     loadExample(path) {
@@ -82,7 +82,7 @@ class ExampleBrowser {
         const buttonContainer = this.createButtonContainer(example);
         link.appendChild(buttonContainer);
 
-        link.onclick = e => this.handleExampleClick(e, example, link);
+        link.onclick = (e) => this.handleExampleClick(e, example, link);
 
         return link;
     }
@@ -139,8 +139,7 @@ class ExampleBrowser {
             e.preventDefault();
             this.loadExample(example.path);
             this.updateURL(example.path);
-            document.querySelectorAll('.example-link')
-            .forEach(l => l.classList.remove('active'));
+            document.querySelectorAll('.example-link').forEach((l) => l.classList.remove('active'));
             link.classList.add('active');
         }
     }
@@ -194,7 +193,7 @@ class ExampleBrowser {
     loadInitialExample() {
         if (examples.length > 0) {
             const hash = window.location.hash.slice(1);
-            if (hash && examples.some(ex => ex.path === hash)) {
+            if (hash && examples.some((ex) => ex.path === hash)) {
                 this.loadExample(hash);
                 document.querySelector(`a[href="#${hash}"]`)?.classList.add('active');
             } else {
@@ -226,5 +225,5 @@ class ExampleBrowser {
 
 // Initialize the browser when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const browser = new ExampleBrowser(); /* eslint-disable-line no-unused-vars */
+    new ExampleBrowser();
 });

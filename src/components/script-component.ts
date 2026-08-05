@@ -1,9 +1,21 @@
-import { Color, Quat, ScriptComponent, Script, Vec2, Vec3, Vec4 } from 'playcanvas';
+import type { ScriptComponent, Script } from 'playcanvas';
+import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
+import {
+    getEntity,
+    parseBool,
+    parseColor,
+    parseComponents,
+    parseNumber,
+    parseQuat,
+    parseVec2,
+    parseVec3,
+    parseVec4
+} from '../parse';
+
 import { ComponentElement } from './component';
 import { ScriptElement } from './script';
-import { getEntity, parseBool, parseColor, parseComponents, parseNumber, parseQuat, parseVec2, parseVec3, parseVec4 } from '../parse';
 
 /**
  * Attributes on `pc-script` that never map to script attributes: the element's own API (derived
@@ -11,10 +23,34 @@ import { getEntity, parseBool, parseColor, parseComponents, parseNumber, parseQu
  */
 const RESERVED_ATTRIBUTES = new Set([
     ...ScriptElement.observedAttributes,
-    'accesskey', 'autocapitalize', 'autofocus', 'class', 'contenteditable', 'dir', 'draggable',
-    'exportparts', 'hidden', 'id', 'inert', 'is', 'itemid', 'itemprop', 'itemref', 'itemscope',
-    'itemtype', 'lang', 'nonce', 'part', 'popover', 'role', 'slot', 'spellcheck', 'style',
-    'tabindex', 'title', 'translate'
+    'accesskey',
+    'autocapitalize',
+    'autofocus',
+    'class',
+    'contenteditable',
+    'dir',
+    'draggable',
+    'exportparts',
+    'hidden',
+    'id',
+    'inert',
+    'is',
+    'itemid',
+    'itemprop',
+    'itemref',
+    'itemscope',
+    'itemtype',
+    'lang',
+    'nonce',
+    'part',
+    'popover',
+    'role',
+    'slot',
+    'spellcheck',
+    'style',
+    'tabindex',
+    'title',
+    'translate'
 ]);
 
 /**
@@ -27,11 +63,13 @@ const RESERVED_ATTRIBUTES = new Set([
  * @returns Whether the attribute name is reserved.
  */
 const isReservedAttribute = (name: string): boolean => {
-    return RESERVED_ATTRIBUTES.has(name) ||
+    return (
+        RESERVED_ATTRIBUTES.has(name) ||
         name.startsWith('data-') ||
         name.startsWith('aria-') ||
         name.startsWith('_') ||
-        (name.startsWith('on') && name in HTMLElement.prototype);
+        (name.startsWith('on') && name in HTMLElement.prototype)
+    );
 };
 
 /**
@@ -39,7 +77,14 @@ const isReservedAttribute = (name: string): boolean => {
  * the (optional, so possibly undefined) lifecycle methods.
  */
 const SCRIPT_API_MEMBERS = new Set([
-    'app', 'entity', 'destroy', 'initialize', 'postInitialize', 'postUpdate', 'swap', 'update'
+    'app',
+    'entity',
+    'destroy',
+    'initialize',
+    'postInitialize',
+    'postUpdate',
+    'swap',
+    'update'
 ]);
 
 /**
@@ -57,7 +102,7 @@ const kebabToCamel = (name: string): string => {
  * @returns The kebab-case name.
  */
 const camelToKebab = (name: string): string => {
-    return name.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`);
+    return name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 };
 
 /**
@@ -110,7 +155,9 @@ const vectorConversion = (length: 2 | 3 | 4, Ctor: new (components: number[]) =>
         if (components) {
             return new Ctor(components);
         }
-        console.warn(`Invalid script attribute value '${raw}'. Expected ${length} space-separated numbers after 'vec${length}:'.`);
+        console.warn(
+            `Invalid script attribute value '${raw}'. Expected ${length} space-separated numbers after 'vec${length}:'.`
+        );
         return raw;
     };
 };
@@ -183,27 +230,17 @@ const findCaseMatch = (script: any, key: string): string | null => {
     return null;
 };
 
-// Add these interfaces at the top of the file, after the imports
-interface ScriptAttributesChangeEvent extends CustomEvent {
+export type ScriptAttributesChangeEvent = {
     detail: { attributes: Record<string, any> };
-}
+} & CustomEvent;
 
-interface ScriptEnableChangeEvent extends CustomEvent {
+export type ScriptEnableChangeEvent = {
     detail: { enabled: boolean };
-}
+} & CustomEvent;
 
-interface ScriptNameChangeEvent extends CustomEvent {
-    detail: { oldName: string, newName: string };
-}
-
-// Add this interface before the ScriptComponentElement class
-declare global {
-    interface HTMLElementEventMap {
-        'scriptattributeschange': ScriptAttributesChangeEvent;
-        'scriptenablechange': ScriptEnableChangeEvent;
-        'scriptnamechange': ScriptNameChangeEvent;
-    }
-}
+export type ScriptNameChangeEvent = {
+    detail: { oldName: string; newName: string };
+} & CustomEvent;
 
 /**
  * The ScriptComponentElement interface provides properties and methods for manipulating
@@ -303,7 +340,12 @@ class ScriptComponentElement extends ComponentElement {
             // Only recurse into plain objects. Class instances (Vec3, Color, Asset, Entity...)
             // are leaf values assigned whole, so accessor-typed script attributes receive them
             // through their setters instead of having a getter's returned copy mutated.
-            if (value && typeof value === 'object' && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype) {
+            if (
+                value &&
+                typeof value === 'object' &&
+                !Array.isArray(value) &&
+                Object.getPrototypeOf(value) === Object.prototype
+            ) {
                 if (!current || typeof current !== 'object') {
                     target[key] = {};
                 }
@@ -321,7 +363,13 @@ class ScriptComponentElement extends ComponentElement {
      * @returns Whether the value is a math type.
      */
     private isMathType(value: any): value is Vec2 | Vec3 | Vec4 | Color | Quat {
-        return value instanceof Vec2 || value instanceof Vec3 || value instanceof Vec4 || value instanceof Color || value instanceof Quat;
+        return (
+            value instanceof Vec2 ||
+            value instanceof Vec3 ||
+            value instanceof Vec4 ||
+            value instanceof Color ||
+            value instanceof Quat
+        );
     }
 
     /**
@@ -334,15 +382,22 @@ class ScriptComponentElement extends ComponentElement {
      * @param key - The property name, used in the warning message.
      * @returns The converted value, or `null`.
      */
-    private arrayToMathType(current: Vec2 | Vec3 | Vec4 | Color | Quat, value: any[], key: string): Vec2 | Vec3 | Vec4 | Color | Quat | null {
-        if (value.every(component => typeof component === 'number' && Number.isFinite(component))) {
+    private arrayToMathType(
+        current: Vec2 | Vec3 | Vec4 | Color | Quat,
+        value: any[],
+        key: string
+    ): Vec2 | Vec3 | Vec4 | Color | Quat | null {
+        if (value.every((component) => typeof component === 'number' && Number.isFinite(component))) {
             if (current instanceof Vec2 && value.length === 2) return new Vec2(value);
             if (current instanceof Vec3 && value.length === 3) return new Vec3(value);
             if (current instanceof Vec4 && value.length === 4) return new Vec4(value);
             if (current instanceof Color && (value.length === 3 || value.length === 4)) return new Color(value);
-            if (current instanceof Quat && value.length === 3) return new Quat().setFromEulerAngles(value[0], value[1], value[2]);
+            if (current instanceof Quat && value.length === 3)
+                return new Quat().setFromEulerAngles(value[0], value[1], value[2]);
         }
-        console.warn(`Cannot convert script attribute '${key}' array [${value}] to ${current.constructor.name}. Keeping the current value.`);
+        console.warn(
+            `Cannot convert script attribute '${key}' array [${value}] to ${current.constructor.name}. Keeping the current value.`
+        );
         return null;
     }
 
@@ -540,7 +595,9 @@ class ScriptComponentElement extends ComponentElement {
             const current = script[key];
 
             if (typeof current === 'function' || SCRIPT_API_MEMBERS.has(key)) {
-                console.warn(`Ignoring attribute '${attributeName}' on pc-script '${scriptName}' - '${key}' is part of the Script API.`);
+                console.warn(
+                    `Ignoring attribute '${attributeName}' on pc-script '${scriptName}' - '${key}' is part of the Script API.`
+                );
                 return;
             }
 
@@ -570,14 +627,20 @@ class ScriptComponentElement extends ComponentElement {
             } else {
                 const match = findCaseMatch(script, key);
                 if (match) {
-                    console.warn(`Script '${scriptName}' has no attribute '${key}' - did you mean '${camelToKebab(match)}'? Attribute names are kebab-case.`);
+                    console.warn(
+                        `Script '${scriptName}' has no attribute '${key}' - did you mean '${camelToKebab(match)}'? Attribute names are kebab-case.`
+                    );
                     return;
                 }
-                console.warn(`Script '${scriptName}' has no typed attribute '${key}' - assigning the raw string from '${attributeName}'.`);
+                console.warn(
+                    `Script '${scriptName}' has no typed attribute '${key}' - assigning the raw string from '${attributeName}'.`
+                );
                 script[key] = value;
             }
         } catch (error) {
-            console.warn(`Error applying attribute '${attributeName}' to script '${scriptName}': ${(error as Error).message}`);
+            console.warn(
+                `Error applying attribute '${attributeName}' to script '${scriptName}': ${(error as Error).message}`
+            );
         }
     }
 
@@ -616,7 +679,12 @@ class ScriptComponentElement extends ComponentElement {
             mutation.removedNodes.forEach((node) => {
                 if (node instanceof ScriptElement) {
                     const scriptName = node.getAttribute('name');
-                    if (scriptName && node._script && this.component && this.component.get(scriptName) === node._script) {
+                    if (
+                        scriptName &&
+                        node._script &&
+                        this.component &&
+                        this.component.get(scriptName) === node._script
+                    ) {
                         this.destroyScript(scriptName);
                     }
                     node._script = null;
@@ -647,11 +715,5 @@ class ScriptComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-scripts', ScriptComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-scripts': ScriptComponentElement;
-    }
-}
 
 export { ScriptComponentElement };

@@ -6,13 +6,12 @@ import type { EntityElement } from '../../src/entity';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * A stand-in for a node inside a model's instantiated hierarchy. Element resolution matches
  * nodes against the entity map by object identity and follows `parent`, so a plain object is
  * never matched itself - the chain has to terminate at a real entity (or null) to resolve.
  */
-type ModelNode = { name: string, parent: ModelNode | Entity | null };
+type ModelNode = { name: string; parent: ModelNode | Entity | null };
 
 const modelNode = (name: string, parent: ModelNode | Entity | null = null): ModelNode => ({ name, parent });
 
@@ -50,11 +49,14 @@ const deferred = <T>() => {
  * @param queue - Selections to hand out, one per call. A deferred entry is resolved by the test.
  * @returns The per-API call counts.
  */
-const stubPicker = (appElement: AppElement, queue: (ReturnType<typeof hit>[] | Promise<ReturnType<typeof hit>[]>)[]) => {
+const stubPicker = (
+    appElement: AppElement,
+    queue: (ReturnType<typeof hit>[] | Promise<ReturnType<typeof hit>[]>)[]
+) => {
     const calls = { sync: 0, async: 0 };
 
     (appElement as unknown as { _picker: unknown })._picker = {
-        prepare: () => {},
+        prepare: () => undefined,
         getSelection: () => {
             calls.sync++;
             return [];
@@ -73,9 +75,10 @@ const stubPicker = (appElement: AppElement, queue: (ReturnType<typeof hit>[] | P
  *
  * @returns A promise that settles once queued work has run.
  */
-const flush = () => new Promise((resolve) => {
-    setTimeout(resolve, 0);
-});
+const flush = () =>
+    new Promise((resolve) => {
+        setTimeout(resolve, 0);
+    });
 
 describe('pc-app pointer picking', () => {
     useGuard();
@@ -176,7 +179,7 @@ describe('pc-app pointer picking', () => {
         const fresh = deferred<ReturnType<typeof hit>[]>();
         stubPicker(appElement, [stale.promise, fresh.promise]);
 
-        canvas.dispatchEvent(move(10, 10));   // pick 1, resolved last
+        canvas.dispatchEvent(move(10, 10)); // pick 1, resolved last
         canvas.dispatchEvent(move(400, 300)); // pick 2, resolved first
 
         fresh.resolve([hit(entity)]);

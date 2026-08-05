@@ -1,8 +1,10 @@
-import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, ButtonComponent, Color, Vec4 } from 'playcanvas';
+import type { ButtonComponent } from 'playcanvas';
+import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Color, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
-import { ComponentElement } from './component';
 import { getEntity, parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
+
+import { ComponentElement } from './component';
 
 const transitionModes = new Map<'tint' | 'sprite', number>([
     ['tint', BUTTON_TRANSITION_MODE_TINT],
@@ -447,11 +449,5 @@ class ButtonComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-button', ButtonComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-button': ButtonComponentElement;
-    }
-}
 
 export { ButtonComponentElement };

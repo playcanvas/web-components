@@ -353,7 +353,10 @@ export class OpticBlastTracking extends Script {
     /** @private */
     _payload = {
         face: false,
-        anchors: [{ side: 'right', x: 0, y: 0 }, { side: 'left', x: 0, y: 0 }],
+        anchors: [
+            { side: 'right', x: 0, y: 0 },
+            { side: 'left', x: 0, y: 0 }
+        ],
         nearest: null
     };
 
@@ -457,15 +460,14 @@ export class OpticBlastTracking extends Script {
         // Sim mode never touches the camera or MediaPipe
         if (this._sim) return;
 
-        const wasmFileset = await FilesetResolver.forVisionTasks(
-            '../node_modules/@mediapipe/tasks-vision/wasm'
-        );
+        const wasmFileset = await FilesetResolver.forVisionTasks('../node_modules/@mediapipe/tasks-vision/wasm');
         if (this._destroyed) return;
 
         const [faceLandmarker, handLandmarker] = await Promise.all([
             FaceLandmarker.createFromOptions(wasmFileset, {
                 baseOptions: {
-                    modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                    modelAssetPath:
+                        'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
                     delegate: 'GPU'
                 },
                 outputFaceBlendshapes: false,
@@ -475,7 +477,8 @@ export class OpticBlastTracking extends Script {
             }),
             HandLandmarker.createFromOptions(wasmFileset, {
                 baseOptions: {
-                    modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+                    modelAssetPath:
+                        'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
                     delegate: 'GPU'
                 },
                 runningMode: 'VIDEO',
@@ -690,8 +693,10 @@ export class OpticBlastTracking extends Script {
             this._bridge.seeded = true;
         } else if (this._sampleSeconds > 0) {
             // The anchor pins the pose, so it needs its own velocity for prediction
-            this._bridge.vel.x += ((this._bridge.raw.x - prevX) / this._sampleSeconds - this._bridge.vel.x) * VELOCITY_SMOOTHING;
-            this._bridge.vel.y += ((this._bridge.raw.y - prevY) / this._sampleSeconds - this._bridge.vel.y) * VELOCITY_SMOOTHING;
+            this._bridge.vel.x +=
+                ((this._bridge.raw.x - prevX) / this._sampleSeconds - this._bridge.vel.x) * VELOCITY_SMOOTHING;
+            this._bridge.vel.y +=
+                ((this._bridge.raw.y - prevY) / this._sampleSeconds - this._bridge.vel.y) * VELOCITY_SMOOTHING;
         }
     }
 
@@ -722,8 +727,7 @@ export class OpticBlastTracking extends Script {
                 this._tmpScreen.y = knuckle.y;
                 this._toScreen(this._tmpScreen, this._tmpScreen);
                 const span = Math.hypot(this._tmpScreen.x - wx, this._tmpScreen.y - wy);
-                if (span < HAND_SIZE_MIN * this._faceSize.px ||
-                    span > HAND_SIZE_MAX * this._faceSize.px) continue;
+                if (span < HAND_SIZE_MIN * this._faceSize.px || span > HAND_SIZE_MAX * this._faceSize.px) continue;
             }
 
             for (const index of FINGERTIPS) {
@@ -830,7 +834,7 @@ export class OpticBlastTracking extends Script {
 
     /**
      * Advances the face and hand loss grace timers. Runs at render rate.
-     * @param {number} dt - The delta time in seconds.
+     * @param {number} _dt - The delta time in seconds.
      * @private
      */
     _updateFaceLoss(dt) {
@@ -910,8 +914,13 @@ export class OpticBlastTracking extends Script {
         // Pin the pose: shift the camera so that the canonical anchor point projects
         // exactly onto the observed nose bridge landmark. The matrix alone drifts a
         // little when the head turns; the landmark says where the bridge really is.
-        if (this.anchorCorrection && this._facePresent && this._bridge.seeded &&
-            this.entity.camera && this.video?.videoWidth) {
+        if (
+            this.anchorCorrection &&
+            this._facePresent &&
+            this._bridge.seeded &&
+            this.entity.camera &&
+            this.video?.videoWidth
+        ) {
             // The anchor leads by the same measurement age as the pose
             const tx = this._bridge.raw.x + Math.max(-0.03, Math.min(0.03, this._bridge.vel.x * age));
             const ty = this._bridge.raw.y + Math.max(-0.03, Math.min(0.03, this._bridge.vel.y * age));
@@ -956,7 +965,7 @@ export class OpticBlastTracking extends Script {
      * @param {number} dt - The delta time in seconds.
      * @private
      */
-    _fireUpdate(dt) {
+    _fireUpdate(_dt) {
         const payload = this._payload;
         payload.face = this._facePresent;
         payload.nearest = null;

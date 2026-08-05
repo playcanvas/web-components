@@ -1,7 +1,8 @@
 import { expect } from 'vitest';
 
-import { currentGuard } from './guard';
 import type { AsyncElement } from '../../src/async-element';
+
+import { currentGuard } from './guard';
 
 /** No ready promise in this library ever rejects, so every wait needs a deadline. */
 export const READY_TIMEOUT = 5000;
@@ -62,21 +63,23 @@ export const readyWithin = async <T extends AsyncElement>(element: T, timeout = 
     const warnings = guard?.warnings.seen ?? [];
     const uncaught = guard?.uncaught.seen ?? [];
 
-    throw new Error([
-        `readyWithin: ${describeElement(element)} did not become ready within ${timeout}ms.`,
-        `  connected:      ${element.isConnected}`,
-        `  closestApp:     ${describeElement(element.closestApp)}`,
-        `  closestEntity:  ${describeElement(element.closestEntity)}`,
-        `  app created:    ${Boolean(element.closestApp?.app)}`,
-        `  hierarchyReady: ${element.closestApp?.hierarchyReady ?? 'n/a'}`,
-        warnings.length ?
-            `  warnings so far:\n${warnings.map(message => `    - ${message}`).join('\n')}` :
-            '  warnings so far: (none)',
-        uncaught.length ?
-            `  uncaught so far:\n${uncaught.map(message => `    - ${message}`).join('\n')}` :
-            '',
-        'A misplaced element warns and never settles; check the warnings above first.'
-    ].filter(Boolean).join('\n'));
+    throw new Error(
+        [
+            `readyWithin: ${describeElement(element)} did not become ready within ${timeout}ms.`,
+            `  connected:      ${element.isConnected}`,
+            `  closestApp:     ${describeElement(element.closestApp)}`,
+            `  closestEntity:  ${describeElement(element.closestEntity)}`,
+            `  app created:    ${Boolean(element.closestApp?.app)}`,
+            `  hierarchyReady: ${element.closestApp?.hierarchyReady ?? 'n/a'}`,
+            warnings.length
+                ? `  warnings so far:\n${warnings.map((message) => `    - ${message}`).join('\n')}`
+                : '  warnings so far: (none)',
+            uncaught.length ? `  uncaught so far:\n${uncaught.map((message) => `    - ${message}`).join('\n')}` : '',
+            'A misplaced element warns and never settles; check the warnings above first.'
+        ]
+            .filter(Boolean)
+            .join('\n')
+    );
 };
 
 /**

@@ -1,7 +1,9 @@
-import { RigidBodyComponent, Vec3 } from 'playcanvas';
+import type { RigidBodyComponent } from 'playcanvas';
+import { Vec3 } from 'playcanvas';
+
+import { parseEnum, parseNumber, parseVec3 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseEnum, parseNumber, parseVec3 } from '../parse';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
@@ -15,7 +17,7 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The angular damping of the rigidbody.
      */
-    private _angularDamping: number = 0;
+    private _angularDamping = 0;
 
     /**
      * The angular factor of the rigidbody.
@@ -25,12 +27,12 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The friction of the rigidbody.
      */
-    private _friction: number = 0.5;
+    private _friction = 0.5;
 
     /**
      * The linear damping of the rigidbody.
      */
-    private _linearDamping: number = 0;
+    private _linearDamping = 0;
 
     /**
      * The linear factor of the rigidbody.
@@ -40,17 +42,17 @@ class RigidBodyComponentElement extends ComponentElement {
     /**
      * The mass of the rigidbody.
      */
-    private _mass: number = 1;
+    private _mass = 1;
 
     /**
      * The restitution of the rigidbody.
      */
-    private _restitution: number = 0;
+    private _restitution = 0;
 
     /**
      * The rolling friction of the rigidbody.
      */
-    private _rollingFriction: number = 0;
+    private _rollingFriction = 0;
 
     /**
      * The type of the rigidbody.
@@ -184,7 +186,18 @@ class RigidBodyComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'angular-damping', 'angular-factor', 'friction', 'linear-damping', 'linear-factor', 'mass', 'restitution', 'rolling-friction', 'type'];
+        return [
+            ...super.observedAttributes,
+            'angular-damping',
+            'angular-factor',
+            'friction',
+            'linear-damping',
+            'linear-factor',
+            'mass',
+            'restitution',
+            'rolling-friction',
+            'type'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -223,11 +236,5 @@ class RigidBodyComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-rigidbody', RigidBodyComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-rigidbody': RigidBodyComponentElement;
-    }
-}
 
 export { RigidBodyComponentElement };

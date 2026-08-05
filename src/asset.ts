@@ -1,8 +1,9 @@
 import { Asset, SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from 'playcanvas';
 
+import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
+
 import { AsyncElement } from './async-element';
 import { parseBool, parseEnum, parseNumber } from './parse';
-import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
 const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([
     ['simple', SPRITE_RENDERMODE_SIMPLE],
@@ -33,12 +34,11 @@ const extToType = new Map([
     ['webp', 'texture']
 ]);
 
-
 // provide buffer view callback so we can handle models compressed with MeshOptimizer
 // https://github.com/zeux/meshoptimizer
 const processBufferView = (
     gltfBuffer: any,
-    buffers: Array<any>,
+    buffers: any[],
     continuation: (err: string | null, result: any) => void
 ) => {
     if (gltfBuffer.extensions && gltfBuffer.extensions.EXT_meshopt_compression) {
@@ -56,14 +56,7 @@ const processBufferView = (
             const result = new Uint8Array(count * stride);
             const source = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
 
-            MeshoptDecoder.decodeGltfBuffer(
-                result,
-                count,
-                stride,
-                source,
-                extensionDef.mode,
-                extensionDef.filter
-            );
+            MeshoptDecoder.decodeGltfBuffer(result, count, stride, source, extensionDef.mode, extensionDef.filter);
 
             continuation(null, result);
         });
@@ -108,7 +101,7 @@ const processBufferView = (
  * not that it succeeded.
  */
 class AssetElement extends AsyncElement {
-    private _lazy: boolean = false;
+    private _lazy = false;
 
     /**
      * The asset that is loaded. Available once the element is ready — await
@@ -122,7 +115,9 @@ class AssetElement extends AsyncElement {
 
         // Assets must be direct children of pc-app (matches the boot query ':scope > pc-asset')
         if (this.parentElement !== appElement) {
-            console.warn(`pc-asset '${this.getAttribute('id') ?? this.getAttribute('src')}' must be a direct child of pc-app - asset not created`);
+            console.warn(
+                `pc-asset '${this.getAttribute('id') ?? this.getAttribute('src')}' must be a direct child of pc-app - asset not created`
+            );
             return;
         }
 
@@ -163,9 +158,11 @@ class AssetElement extends AsyncElement {
     }
 
     private _onAssetError(err: string | Error) {
-        this.dispatchEvent(new ErrorEvent('error', {
-            message: err instanceof Error ? err.message : String(err)
-        }));
+        this.dispatchEvent(
+            new ErrorEvent('error', {
+                message: err instanceof Error ? err.message : String(err)
+            })
+        );
     }
 
     createAsset() {
@@ -270,7 +267,6 @@ class AssetElement extends AsyncElement {
         return data;
     }
 
-
     destroyAsset() {
         if (this.asset) {
             // A caller that keeps the Asset alive must not dispatch on a removed element
@@ -319,11 +315,5 @@ class AssetElement extends AsyncElement {
 }
 
 customElements.define('pc-asset', AssetElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-asset': AssetElement;
-    }
-}
 
 export { AssetElement };

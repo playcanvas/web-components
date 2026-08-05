@@ -5,7 +5,6 @@ import type { EntityElement } from '../../src/entity';
 import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * Element-level behaviour, with no <pc-app> and therefore no engine. Every setter caches to a
  * private field and only writes through when `this.entity` exists, so attribute handling is fully
@@ -68,7 +67,7 @@ describe('<pc-entity>', () => {
             const element = create();
             element.setAttribute('position', '1 2');
             expect(element.position).toEqual(Vec3.ZERO);
-            warnings.expect('Invalid value \'1 2\' for attribute \'position\'. Expected 3 space-separated numbers.');
+            warnings.expect("Invalid value '1 2' for attribute 'position'. Expected 3 space-separated numbers.");
         });
     });
 

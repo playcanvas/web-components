@@ -6,7 +6,6 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
 
-
 /**
  * The built-in loading bar <pc-app> shows by default. It is a plain <div role="progressbar">
  * child of the element - deliberately not a custom element - created synchronously on connect
@@ -16,9 +15,10 @@ import { expectNeverReady, readyWithin } from '../helpers/ready';
 describe('<pc-app> loading bar', () => {
     const { uncaught } = useGuard();
 
-    const settleTask = () => new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
+    const settleTask = () =>
+        new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
     const barOf = (appElement: AppElement) => appElement.querySelector<HTMLDivElement>('[role="progressbar"]');
 
@@ -30,8 +30,7 @@ describe('<pc-app> loading bar', () => {
         if (!bar) {
             throw new Error('the bar should exist before connectedCallback first awaits');
         }
-        expect(bar.getAttribute('aria-valuenow'), 'no valuenow marks a progressbar indeterminate')
-        .toBeNull();
+        expect(bar.getAttribute('aria-valuenow'), 'no valuenow marks a progressbar indeterminate').toBeNull();
         expect(bar.getAttribute('aria-label')).toBe('Loading');
 
         await readyWithin(appElement);
@@ -52,16 +51,18 @@ describe('<pc-app> loading bar', () => {
             throw new Error('the bar should still be visible at ready; dismissal waits for a frame');
         }
         expect(bar.getAttribute('aria-valuenow')).toBe('100');
-        expect(bar.firstElementChild instanceof HTMLElement &&
-            bar.firstElementChild.style.transform).toBe('scaleX(1)');
+        expect(bar.firstElementChild instanceof HTMLElement && bar.firstElementChild.style.transform).toBe('scaleX(1)');
     });
 
     it('is dismissed after the first rendered frame', async () => {
         const { appElement } = await bootApp();
 
-        await vi.waitFor(() => {
-            expect(barOf(appElement)).toBeNull();
-        }, { timeout: 2000 });
+        await vi.waitFor(
+            () => {
+                expect(barOf(appElement)).toBeNull();
+            },
+            { timeout: 2000 }
+        );
     });
 
     it('never appears when opted out with loading-bar="false"', async () => {

@@ -10,7 +10,6 @@ export class FollowPointer extends Script {
     initialize() {
         const canvas = this.app.graphicsDevice.canvas;
         canvas.addEventListener('pointermove', (event) => {
-
             /** @type {CameraComponent} */
             const camera = this.app.root.findComponent('camera');
             const { z } = camera.entity.getPosition();

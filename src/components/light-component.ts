@@ -1,9 +1,25 @@
-import { Color, LightComponent, SHADOW_PCF1_16F, SHADOW_PCF1_32F, SHADOW_PCF3_16F, SHADOW_PCF3_32F, SHADOW_PCF5_16F, SHADOW_PCF5_32F, SHADOW_PCSS_32F, SHADOW_VSM_16F, SHADOW_VSM_32F } from 'playcanvas';
+import type { LightComponent } from 'playcanvas';
+import {
+    Color,
+    SHADOW_PCF1_16F,
+    SHADOW_PCF1_32F,
+    SHADOW_PCF3_16F,
+    SHADOW_PCF3_32F,
+    SHADOW_PCF5_16F,
+    SHADOW_PCF5_32F,
+    SHADOW_PCSS_32F,
+    SHADOW_VSM_16F,
+    SHADOW_VSM_32F
+} from 'playcanvas';
 
-import { ComponentElement } from './component';
 import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';
 
-const shadowTypes = new Map<'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f', number>([
+import { ComponentElement } from './component';
+
+const shadowTypes = new Map<
+    'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f',
+    number
+>([
     ['pcf1-16f', SHADOW_PCF1_16F],
     ['pcf1-32f', SHADOW_PCF1_32F],
     ['pcf3-16f', SHADOW_PCF3_16F],
@@ -46,7 +62,16 @@ class LightComponentElement extends ComponentElement {
 
     private _shadowResolution = 1024;
 
-    private _shadowType: 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f' = 'pcf3-32f';
+    private _shadowType:
+        | 'pcf1-16f'
+        | 'pcf1-32f'
+        | 'pcf3-16f'
+        | 'pcf3-32f'
+        | 'pcf5-16f'
+        | 'pcf5-32f'
+        | 'vsm-16f'
+        | 'vsm-32f'
+        | 'pcss-32f' = 'pcf3-32f';
 
     private _type: 'directional' | 'omni' | 'spot' = 'directional';
 
@@ -322,7 +347,18 @@ class LightComponentElement extends ComponentElement {
      * - `vsm-32f` - Variance shadow map with 32-bit depth.
      * - `pcss-32f` - Percentage-closer soft shadow with 32-bit depth.
      */
-    set shadowType(value: 'pcf1-16f' | 'pcf1-32f' | 'pcf3-16f' | 'pcf3-32f' | 'pcf5-16f' | 'pcf5-32f' | 'vsm-16f' | 'vsm-32f' | 'pcss-32f') {
+    set shadowType(
+        value:
+            | 'pcf1-16f'
+            | 'pcf1-32f'
+            | 'pcf3-16f'
+            | 'pcf3-32f'
+            | 'pcf5-16f'
+            | 'pcf5-32f'
+            | 'vsm-16f'
+            | 'vsm-32f'
+            | 'pcss-32f'
+    ) {
         this._shadowType = value;
         if (this.component) {
             this.component.shadowType = shadowTypes.get(value) ?? SHADOW_PCF3_32F;
@@ -562,11 +598,5 @@ class LightComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-light', LightComponentElement);
-
-declare global {
-    interface HTMLElementTagNameMap {
-        'pc-light': LightComponentElement;
-    }
-}
 
 export { LightComponentElement };
