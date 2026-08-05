@@ -103,6 +103,9 @@ export class LensTint extends Script {
         material.useDynamicRefraction = false;
         material.refraction = 0;
         material.blendType = BLEND_NORMAL;
+        // Blended surfaces should not write depth: the interior and exterior lens
+        // surfaces sit almost on top of each other and would z-fight over draw order
+        material.depthWrite = false;
     }
 
     /**

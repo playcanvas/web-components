@@ -129,7 +129,7 @@ export class FaceTracking extends Script {
 
     /**
      * @type {FaceLandmarker|null}
-     * @private
+     * @protected
      */
     faceLandmarker = null;
 
@@ -142,13 +142,19 @@ export class FaceTracking extends Script {
     /** @private */
     _destroyed = false;
 
-    /** @private */
+    /**
+     * Whether `?sim` mode is active.
+     * @protected
+     */
     _sim = false;
 
     /** @private */
     _simTime = 0;
 
-    /** @private */
+    /**
+     * Whether the sim or fallback view has reported itself ready.
+     * @protected
+     */
     _simReady = false;
 
     /** @private */
@@ -160,7 +166,10 @@ export class FaceTracking extends Script {
     /** @private */
     _lastTimestamp = 0;
 
-    /** @private */
+    /**
+     * Whether a face is currently detected.
+     * @protected
+     */
     _facePresent = false;
 
     /** @private */
@@ -208,7 +217,11 @@ export class FaceTracking extends Script {
     /** @private */
     _tmpQuat2 = new Quat();
 
-    /** @private */
+    /**
+     * The pose smoothing factor applied this frame (0-1), for subclasses that smooth
+     * tracked points of their own at the same rate.
+     * @protected
+     */
     _k = 1;
 
     /** @private */
@@ -237,7 +250,10 @@ export class FaceTracking extends Script {
     /** @private */
     _sampleSeconds = 0;
 
-    /** @private */
+    /**
+     * Scratch storage for screen-space conversions, valid within a single method.
+     * @protected
+     */
     _tmpScreen = { x: 0, y: 0 };
 
     /** @private */
