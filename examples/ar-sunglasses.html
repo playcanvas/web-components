@@ -145,8 +145,10 @@
                 <!-- An invisible head that hides the arms of the glasses behind the skull and
                      lets the nose occlude the far rim on head turns: MediaPipe's canonical
                      face mesh (which registers with the tracked face by definition) plus an
-                     ellipsoid approximating the cranium -->
-                <pc-entity name="head-occluder">
+                     ellipsoid approximating the cranium. Nudged forward to counter the
+                     backward drift the nose bridge anchor shows on strong head turns
+                     (fit found live with the ?debug view) -->
+                <pc-entity name="head-occluder" position="0 0 2.5">
                     <pc-model asset="face"></pc-model>
                     <pc-scripts>
                         <pc-script name="headOccluder" center="0 1 -3.5" size="13.5 20 13"></pc-script>
