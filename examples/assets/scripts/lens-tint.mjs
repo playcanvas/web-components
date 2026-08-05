@@ -53,13 +53,24 @@ export class LensTint extends Script {
         this.on('destroy', () => {
             this.app.off('lens:color', this._onColor, this);
         });
+
+        // Patch immediately when possible: if the entity starts disabled and is enabled
+        // once a face is found, this runs before the frame renders, so the lenses never
+        // draw with their original transmission materials
+        this._tryPatch();
     }
 
     update(_dt) {
         // The model may not be instantiated yet when the script initializes, so keep
         // looking until its mesh instances (and materials) exist, then patch them once
-        if (this._patched) return;
+        if (!this._patched) this._tryPatch();
+    }
 
+    /**
+     * Converts the lens and nose pad materials once their mesh instances exist.
+     * @private
+     */
+    _tryPatch() {
         for (const render of this.entity.findComponents('render')) {
             for (const meshInstance of render.meshInstances) {
                 const material = meshInstance.material;

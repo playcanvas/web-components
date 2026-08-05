@@ -133,9 +133,8 @@
             <pc-scene>
                 <!-- Sky (lighting only) -->
                 <pc-sky asset="sky" type="none" lighting></pc-sky>
-                <!-- Camera (driven by face tracking). It starts pulled back so the glasses
-                     read as a small product shot while the tracker loads, rather than the
-                     inside of the temple arms -->
+                <!-- Camera (driven by face tracking). It starts on the same pulled-back
+                     orbit that the sim and no-camera fallback modes use -->
                 <pc-entity name="camera" position="0 2.5 46">
                     <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
                     <pc-scripts>
@@ -153,10 +152,11 @@
                         <pc-script name="headOccluder" center="0 1 -3.5" size="13.5 20 13"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- The sunglasses, worn at the nose bridge of canonical face space. The model
-                     is authored resting on a flat surface, so a slight pantoscopic tilt (the
+                <!-- The sunglasses, worn at the nose bridge of canonical face space and hidden
+                     until there is a face to wear them (see the page script). The model is
+                     authored resting on a flat surface, so a slight pantoscopic tilt (the
                      bottom of the lenses tucking toward the cheeks) makes it sit naturally -->
-                <pc-entity name="sunglasses" position="0 -0.7 7.5" rotation="8 0 0" scale="100 100 100">
+                <pc-entity name="sunglasses" enabled="false" position="0 -0.7 7.5" rotation="8 0 0" scale="100 100 100">
                     <pc-model asset="sunglasses"></pc-model>
                     <pc-scripts>
                         <pc-script name="lensTint"></pc-script>
@@ -170,8 +170,14 @@
             // the camera feed script before the app boots (this classic script runs at
             // parse time, ahead of the deferred module scripts) so no camera permission
             // is ever requested
-            if (new URLSearchParams(window.location.search).has('sim')) {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('sim')) {
                 document.querySelector('pc-script[name="cameraFeed"]')?.remove();
+            }
+            // ?debug renders the normally invisible head occluder (the face mesh in green,
+            // the cranium ellipsoid in blue) to check its fit against the tracked face
+            if (params.has('debug')) {
+                document.querySelector('pc-script[name="headOccluder"]')?.setAttribute('debug', 'true');
             }
         </script>
 
@@ -214,11 +220,16 @@
                 if (!cameraError) setStatus('Show your face');
             });
 
+            // The glasses only exist while there is a face to wear them
+            const sunglasses = document.querySelector('pc-entity[name="sunglasses"]');
+
             app.on('face:found', () => {
+                sunglasses.enabled = true;
                 if (!cameraError) status.classList.add('hidden');
             });
 
             app.on('face:lost', () => {
+                sunglasses.enabled = false;
                 if (!cameraError) setStatus('Show your face');
             });
 

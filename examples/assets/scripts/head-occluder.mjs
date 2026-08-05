@@ -36,6 +36,14 @@ export class HeadOccluder extends Script {
     size = new Vec3(15.5, 21, 19);
 
     /**
+     * Whether to render the occluder visibly to debug its fit: the attached model in
+     * green and the cranium ellipsoid in blue, instead of invisible depth-only geometry.
+     * @type {boolean}
+     * @attribute
+     */
+    debug = false;
+
+    /**
      * @type {StandardMaterial|null}
      * @private
      */
@@ -66,19 +74,14 @@ export class HeadOccluder extends Script {
         const camera = this.app.root.findComponent('camera');
         if (camera) camera.layers = camera.layers.concat(layer.id);
 
-        const material = new StandardMaterial();
-        material.redWrite = false;
-        material.greenWrite = false;
-        material.blueWrite = false;
-        material.alphaWrite = false;
-        material.depthWrite = true;
-        material.update();
+        const material = this._createMaterial(0.3, 0.85, 0.5);
         this._material = material;
+        const ellipsoidMaterial = this.debug ? this._createMaterial(0.35, 0.55, 0.9) : material;
 
         const ellipsoid = new Entity('head-occluder-ellipsoid');
         ellipsoid.addComponent('render', {
             type: 'sphere',
-            material,
+            material: ellipsoidMaterial,
             castShadows: false,
             receiveShadows: false,
             layers: [layer.id]
@@ -91,9 +94,34 @@ export class HeadOccluder extends Script {
         this.on('destroy', () => {
             if (camera) camera.layers = camera.layers.filter(id => id !== layer.id);
             ellipsoid.destroy();
+            if (ellipsoidMaterial !== material) ellipsoidMaterial.destroy();
             material.destroy();
             layers.remove(layer);
         });
+    }
+
+    /**
+     * Creates an occluder material: invisible and depth-only normally, or a visible
+     * diffuse color in debug mode.
+     * @param {number} r - The red component of the debug color.
+     * @param {number} g - The green component of the debug color.
+     * @param {number} b - The blue component of the debug color.
+     * @returns {StandardMaterial} The material.
+     * @private
+     */
+    _createMaterial(r, g, b) {
+        const material = new StandardMaterial();
+        if (this.debug) {
+            material.diffuse.set(r, g, b);
+        } else {
+            material.redWrite = false;
+            material.greenWrite = false;
+            material.blueWrite = false;
+            material.alphaWrite = false;
+        }
+        material.depthWrite = true;
+        material.update();
+        return material;
     }
 
     update(_dt) {
