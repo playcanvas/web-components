@@ -21,19 +21,10 @@
 
             import { whenReady } from '@playcanvas/web-components';
 
-            // Use the DOM API to programmatically create the scene
+            // Build the scene with the DOM API - no waiting needed: elements appended
+            // while the application boots are picked up when it becomes ready
             const app = document.createElement('pc-app');
             document.body.appendChild(app);
-
-            await whenReady(app);
-
-            class Rotate extends Script { 
-                update(dt) {
-                    this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
-                }
-            }                
-
-            registerScript(Rotate, 'rotate');
 
             const scene = document.createElement('pc-scene');
             app.appendChild(scene);
@@ -69,6 +60,19 @@
             const scriptsComponent = document.createElement('pc-scripts');
             cube.appendChild(scriptsComponent);
 
+            // Engine APIs are different: registerScript resolves the application's script
+            // registry, so it can only run once the application exists
+            await whenReady(app);
+
+            class Rotate extends Script {
+                update(dt) {
+                    this.entity.rotate(10 * dt, 20 * dt, 30 * dt);
+                }
+            }
+
+            registerScript(Rotate, 'rotate');
+
+            // Appended after registration, so the instance is created immediately
             const script = document.createElement('pc-script');
             script.setAttribute('name', 'rotate');
             scriptsComponent.appendChild(script);
