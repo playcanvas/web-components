@@ -93,7 +93,14 @@ class EntityElement extends AsyncElement {
         return this._entity;
     }
 
-    createEntity(app: AppBase) {
+    /**
+     * Creates the backing entity. Called by the containing `<pc-app>` element during its boot
+     * sweep, and on connection for elements inserted while the application is already running.
+     *
+     * @param app - The application to create the entity in.
+     * @internal
+     */
+    _createEntity(app: AppBase) {
         // Guard against double creation. When a subtree is inserted at runtime (e.g. cloning a
         // `<template>`), an ancestor's connectedCallback eagerly creates descendant entities; the
         // descendants' own connectedCallbacks would otherwise create them a second time.
@@ -129,7 +136,7 @@ class EntityElement extends AsyncElement {
 
     /**
      * Handles the destruction of the backing entity. Resets the element so a later re-insertion
-     * starts clean: `_built` must be cleared alongside `_entity`, or buildHierarchy would bail
+     * starts clean: `_built` must be cleared alongside `_entity`, or _buildHierarchy would bail
      * and a re-created entity would never be parented. Readiness is re-armed for the same
      * reason — with the entity gone, a resolved ready promise would resume its awaiters against
      * a null `entity`.
@@ -144,7 +151,16 @@ class EntityElement extends AsyncElement {
         this._resetReady();
     }
 
-    buildHierarchy(app: AppBase) {
+    /**
+     * Parents the backing entity: under the entity of the nearest ancestor `<pc-entity>` when
+     * there is one, and under the application root otherwise. Called by the containing `<pc-app>`
+     * element once a sweep has created every entity, so a parent's existence never depends on
+     * document order.
+     *
+     * @param app - The application whose root adopts parentless entities.
+     * @internal
+     */
+    _buildHierarchy(app: AppBase) {
         if (!this.entity || this._built) return;
         this._built = true;
 
@@ -172,19 +188,19 @@ class EntityElement extends AsyncElement {
         }
 
         // If app is already running, create entity immediately
-        if (closestApp.hierarchyReady) {
+        if (closestApp._hierarchyReady) {
             const app = closestApp.app!;
 
-            this.createEntity(app);
-            this.buildHierarchy(app);
+            this._createEntity(app);
+            this._buildHierarchy(app);
 
             // Handle any child entities that might exist
             const childEntities = this.querySelectorAll<EntityElement>('pc-entity');
             childEntities.forEach((child) => {
-                child.createEntity(app);
+                child._createEntity(app);
             });
             childEntities.forEach((child) => {
-                child.buildHierarchy(app);
+                child._buildHierarchy(app);
             });
         }
     }
@@ -404,7 +420,16 @@ class EntityElement extends AsyncElement {
         }
     }
 
-    hasListeners(type: string): boolean {
+    /**
+     * Whether the element has a listener for an event type, registered either with
+     * {@link addEventListener} or with the matching inline `onpointer*` attribute. Read by the
+     * containing `<pc-app>` element to gate pointer event synthesis.
+     *
+     * @param type - The event type.
+     * @returns Whether a listener is registered.
+     * @internal
+     */
+    _hasListeners(type: string): boolean {
         return Boolean(this._listeners[type]?.length) || this._inlineHandlerTypes.has(type);
     }
 }

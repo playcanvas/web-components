@@ -38,7 +38,7 @@ describe('<pc-entity>', () => {
         it.for(['', '   ', ',', 'enemy,', ',enemy', 'enemy,,flying'])('discards empty names in %o', (value) => {
             // Both tags call sites now route through parseTags, which drops empty names. Before
             // that, `tags=""` set the element property to [''] - a single blank tag - while
-            // createEntity's `if (tags)` truthiness check skipped it entirely, so the element and
+            // _createEntity's `if (tags)` truthiness check skipped it entirely, so the element and
             // its backing entity disagreed. See the integration test for the agreement assertion.
             const element = create();
             element.setAttribute('tags', value);

@@ -31,7 +31,7 @@ this.
 `console.warn` and returns a promise that _never settles_. Two consequences:
 
 - Every wait goes through `readyWithin()`, never a bare `await element.ready()`. On timeout it
-  reports connection state, `closestApp`, `closestEntity`, `hierarchyReady` and every warning seen
+  reports connection state, `closestApp`, `closestEntity`, `_hierarchyReady` and every warning seen
   so far, instead of a bare 10-second timeout.
 - Negative cases are asserted with the console guard or `expectNeverReady()`, never with
   `expect(...).toThrow()`.
@@ -76,7 +76,7 @@ and its boot queries would find nothing.
 **Settle before tearing down.** `<pc-app>` resolves its own ready promise from inside the
 `app.preload()` callback, _before_ its descendants' async `connectedCallback`s have finished. So
 `bootApp()` awaits `settle()` over the whole subtree, not just the app. Removing a tree in that
-window makes `addComponent` and `addSlot` dereference nulls.
+window makes `_addComponent` and `addSlot` dereference nulls.
 
 **Per-file isolation is mandatory.** `src/` performs 27 `customElements.define()` calls at module
 scope and a second define for the same tag throws. Vitest's default per-file isolation gives each

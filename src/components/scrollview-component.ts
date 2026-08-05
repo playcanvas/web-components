@@ -63,7 +63,7 @@ class ScrollViewComponentElement extends ComponentElement {
         super('scrollview');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         const data: Record<string, any> = {
             horizontal: this._horizontal,
             vertical: this._vertical,

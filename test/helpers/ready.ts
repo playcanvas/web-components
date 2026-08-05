@@ -70,7 +70,7 @@ export const readyWithin = async <T extends AsyncElement>(element: T, timeout = 
             `  closestApp:     ${describeElement(element.closestApp)}`,
             `  closestEntity:  ${describeElement(element.closestEntity)}`,
             `  app created:    ${Boolean(element.closestApp?.app)}`,
-            `  hierarchyReady: ${element.closestApp?.hierarchyReady ?? 'n/a'}`,
+            `  hierarchyReady: ${element.closestApp?._hierarchyReady ?? 'n/a'}`,
             warnings.length
                 ? `  warnings so far:\n${warnings.map((message) => `    - ${message}`).join('\n')}`
                 : '  warnings so far: (none)',

@@ -32,7 +32,7 @@ class LayoutChildComponentElement extends ComponentElement {
         super('layoutchild');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             minWidth: this._minWidth,
             minHeight: this._minHeight,

@@ -35,7 +35,7 @@ class CollisionComponentElement extends ComponentElement {
         super('collision');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             axis: this._axis,
             angularOffset: this._angularOffset,

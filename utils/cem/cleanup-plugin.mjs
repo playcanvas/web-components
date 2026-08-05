@@ -1,8 +1,13 @@
 /**
  * Custom Elements Manifest plugin that tidies the assembled manifest.
  *
- * Three things need correcting after analysis:
+ * A few things need correcting after analysis:
  *
+ * - Only public API ships as a member. The analyzer already omits members tagged `@ignore` or
+ *   `@internal`, but it keeps `private` and `protected` ones (merely marking their `privacy`),
+ *   and it keeps underscore-prefixed members that carry no marker at all. Manifest consumers
+ *   such as editor plugins and Storybook surface every member they are given, so anything that
+ *   is not public API is dropped here.
  * - `src/entity.ts` dispatches internal wiring events with computed names (`` `${type}:connect` ``)
  *   that cannot be resolved statically, so whatever the analyzer makes of them is dropped.
  * - `src/app.ts` dispatches the pointer events *onto* `<pc-entity>` elements rather than onto
@@ -137,6 +142,23 @@ export const manifestCleanupPlugin = () => ({
     packageLinkPhase({ customElementsManifest }) {
         const declarations = collectDeclarations(customElementsManifest);
 
+        // Keep only public API in the members list. Privacy modifiers cover `private` and
+        // `protected`; the underscore test covers internal members that TypeScript cannot mark,
+        // because they are the cross-module contract between elements (`_createEntity` and the
+        // like) - those normally carry `@internal`, which the analyzer omits on its own, so the
+        // name test is the backstop for one that loses its tag.
+        for (const { declaration } of declarations.values()) {
+            if (!declaration.members) {
+                continue;
+            }
+            declaration.members = declaration.members.filter(member => member.name &&
+                !member.name.startsWith('_') &&
+                (member.privacy ?? 'public') === 'public');
+            if (declaration.members.length === 0) {
+                delete declaration.members;
+            }
+        }
+
         for (const { declaration } of declarations.values()) {
             if (!declaration.events) {
                 continue;
@@ -172,6 +194,7 @@ export const manifestCleanupPlugin = () => ({
         for (const { declaration } of declarations.values()) {
             declaration.attributes?.sort(byName);
             declaration.events?.sort(byName);
+            declaration.members?.sort(byName);
         }
 
         rewriteDescriptions(customElementsManifest);

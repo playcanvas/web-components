@@ -85,7 +85,7 @@ class CameraComponentElement extends ComponentElement {
         super('camera');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             clearColor: this._clearColor,
             clearColorBuffer: this._clearColorBuffer,

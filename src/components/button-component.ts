@@ -53,7 +53,7 @@ class ButtonComponentElement extends ComponentElement {
         super('button');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         const data: Record<string, any> = {
             active: this._active,
             hitPadding: this._hitPadding,

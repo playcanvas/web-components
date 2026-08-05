@@ -31,7 +31,7 @@ class GSplatComponentElement extends ComponentElement {
         super('gsplat');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             asset: AssetElement.get(this._asset),
             castShadows: this._castShadows,

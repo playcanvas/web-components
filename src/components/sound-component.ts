@@ -32,7 +32,7 @@ class SoundComponentElement extends ComponentElement {
         super('sound');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         return {
             distanceModel: this._distanceModel,
             maxDistance: this._maxDistance,

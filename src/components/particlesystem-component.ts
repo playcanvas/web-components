@@ -20,7 +20,7 @@ class ParticleSystemComponentElement extends ComponentElement {
         super('particlesystem');
     }
 
-    getInitialComponentData() {
+    protected getInitialComponentData() {
         const asset = AssetElement.get(this._asset);
         if (!asset) {
             return {};

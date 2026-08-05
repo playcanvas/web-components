@@ -295,7 +295,7 @@ class MaterialElement extends HTMLElement {
 
     private _useLighting = true;
 
-    // Diverges from the engine default of false - see the class docblock and createMaterial()
+    // Diverges from the engine default of false - see the class docblock and _createMaterial()
     private _useMetalness = true;
 
     private _useMetalnessSpecularColor = false;
@@ -315,6 +315,10 @@ class MaterialElement extends HTMLElement {
 
     private _glossConflictWarned = false;
 
+    /**
+     * The material. `null` until the containing application has created it — an element present
+     * at startup has its material once the application is ready.
+     */
     material: StandardMaterial | null = null;
 
     async connectedCallback() {
@@ -335,11 +339,18 @@ class MaterialElement extends HTMLElement {
         // elements inserted (or re-inserted) after the app is already running
         if (!this.material) {
             if (!appElement.app) return; // pc-app is re-connecting; its own boot will create this
-            this.createMaterial();
+            this._createMaterial();
         }
     }
 
-    createMaterial() {
+    /**
+     * Creates the material from the element's cached properties. Called by the containing
+     * `<pc-app>` element during its boot sweep, and on connection for elements inserted while
+     * the application is already running.
+     *
+     * @internal
+     */
+    _createMaterial() {
         const material = new StandardMaterial();
         this.material = material;
 
@@ -499,7 +510,7 @@ class MaterialElement extends HTMLElement {
      * @param id - The id of the `pc-asset`, or an empty string to clear the slot.
      * @param slot - The material property to write.
      */
-    setMap(id: string, slot: TextureSlot) {
+    private _setMap(id: string, slot: TextureSlot) {
         // Drop any load still pending for this slot - its texture is no longer the one we want
         this._mapHandles.get(slot)?.off();
         this._mapHandles.delete(slot);
@@ -606,7 +617,7 @@ class MaterialElement extends HTMLElement {
      */
     set aoMap(value: string) {
         this._aoMap = value;
-        this.setMap(value, 'aoMap');
+        this._setMap(value, 'aoMap');
     }
 
     /**
@@ -864,7 +875,7 @@ class MaterialElement extends HTMLElement {
      */
     set diffuseMap(value: string) {
         this._diffuseMap = value;
-        this.setMap(value, 'diffuseMap');
+        this._setMap(value, 'diffuseMap');
     }
 
     /**
@@ -1021,7 +1032,7 @@ class MaterialElement extends HTMLElement {
      */
     set emissiveMap(value: string) {
         this._emissiveMap = value;
-        this.setMap(value, 'emissiveMap');
+        this._setMap(value, 'emissiveMap');
     }
 
     /**
@@ -1219,7 +1230,7 @@ class MaterialElement extends HTMLElement {
      */
     set glossMap(value: string) {
         this._glossMap = value;
-        this.setMap(value, 'glossMap');
+        this._setMap(value, 'glossMap');
     }
 
     /**
@@ -1336,7 +1347,7 @@ class MaterialElement extends HTMLElement {
      */
     set heightMap(value: string) {
         this._heightMap = value;
-        this.setMap(value, 'heightMap');
+        this._setMap(value, 'heightMap');
     }
 
     /**
@@ -1493,7 +1504,7 @@ class MaterialElement extends HTMLElement {
      */
     set metalnessMap(value: string) {
         this._metalnessMap = value;
-        this.setMap(value, 'metalnessMap');
+        this._setMap(value, 'metalnessMap');
     }
 
     /**
@@ -1610,7 +1621,7 @@ class MaterialElement extends HTMLElement {
      */
     set normalMap(value: string) {
         this._normalMap = value;
-        this.setMap(value, 'normalMap');
+        this._setMap(value, 'normalMap');
     }
 
     /**
@@ -1708,7 +1719,7 @@ class MaterialElement extends HTMLElement {
     set occludeDirect(value: boolean) {
         this._occludeDirect = value;
         if (this.material) {
-            // @ts-ignore see createMaterial() - the engine mistypes occludeDirect as a number
+            // @ts-ignore see _createMaterial() - the engine mistypes occludeDirect as a number
             this.material.occludeDirect = value;
             this._scheduleUpdate();
         }
@@ -1810,7 +1821,7 @@ class MaterialElement extends HTMLElement {
      */
     set opacityMap(value: string) {
         this._opacityMap = value;
-        this.setMap(value, 'opacityMap');
+        this._setMap(value, 'opacityMap');
     }
 
     /**
@@ -2164,6 +2175,13 @@ class MaterialElement extends HTMLElement {
         return this._useTonemap;
     }
 
+    /**
+     * Returns the {@link StandardMaterial} created by the `<pc-material>` element with the given
+     * `id`, or `undefined` if there is no such element or its material has not been created yet.
+     *
+     * @param id - The `id` of the `<pc-material>` element.
+     * @returns The material, or `undefined`.
+     */
     static get(id: string) {
         const materialElement = document.querySelector<MaterialElement>(`pc-material[id="${id}"]`);
         return materialElement?.material;

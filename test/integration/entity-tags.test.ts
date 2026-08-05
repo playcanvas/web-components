@@ -7,13 +7,13 @@ import { useGuard } from '../helpers/guard';
 import { readyWithin } from '../helpers/ready';
 
 /**
- * `tags` is set from two independent places - createEntity, which runs when the app builds the
+ * `tags` is set from two independent places - _createEntity, which runs when the app builds the
  * hierarchy, and attributeChangedCallback, which runs on upgrade and on every later change. Both now
  * route through parseTags, so these tests assert the thing that actually matters: that the element's
  * `tags` property and the backing entity's tags agree, whichever path produced them.
  *
  * Before parseTags they disagreed for any value containing an empty name. `tags=""` set the element
- * property to [''] - one blank tag - while createEntity's `if (tags)` truthiness check skipped the
+ * property to [''] - one blank tag - while _createEntity's `if (tags)` truthiness check skipped the
  * value entirely, leaving the entity with none.
  */
 describe('<pc-entity> tags', () => {

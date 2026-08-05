@@ -61,7 +61,7 @@ describe('<pc-app> lifecycle', () => {
         await expectNeverReady(appElement);
 
         expect(appElement.app, 'the application is destroyed').toBeNull();
-        expect(appElement.hierarchyReady).toBe(false);
+        expect(appElement._hierarchyReady).toBe(false);
         expect(entityElement.entity, 'no orphan entity was created').toBeNull();
         expect(uncaught.seen).toEqual([]);
     });
@@ -69,7 +69,7 @@ describe('<pc-app> lifecycle', () => {
     it('abandons boot when a ready listener removes pc-app during the hierarchy build', async () => {
         // Building the hierarchy dispatches each entity's ready event synchronously from inside
         // boot, so a listener can tear the element down mid-sweep. The teardown's reset must
-        // survive the rest of the boot: hierarchyReady flipping back to true would send the
+        // survive the rest of the boot: _hierarchyReady flipping back to true would send the
         // descendants of a later re-insertion down the runtime-insertion path into a null app.
         const handle = mount(`
             <pc-app backend="null">
@@ -85,7 +85,7 @@ describe('<pc-app> lifecycle', () => {
         await expectNeverReady(appElement);
 
         expect(appElement.app, 'the application is destroyed').toBeNull();
-        expect(appElement.hierarchyReady, 'the reset survives the abandoned boot').toBe(false);
+        expect(appElement._hierarchyReady, 'the reset survives the abandoned boot').toBe(false);
         expect(uncaught.seen).toEqual([]);
 
         // And the element recovers: re-inserting it boots afresh, entities and all.
@@ -112,24 +112,24 @@ describe('<pc-app> lifecycle', () => {
         await expectNeverReady(appElement);
 
         expect(appElement.app, 'the application is destroyed').toBeNull();
-        expect(appElement.hierarchyReady).toBe(false);
+        expect(appElement._hierarchyReady).toBe(false);
         expect(appElement.loadProgress, 'preload never ran against the destroyed application').toBe(0);
         expect(uncaught.seen).toEqual([]);
     });
 
-    it('resets hierarchyReady and re-arms readiness when pc-app is removed', async () => {
-        // Descendants branch on both of these: a stale hierarchyReady sends a re-inserted
+    it('resets _hierarchyReady and re-arms readiness when pc-app is removed', async () => {
+        // Descendants branch on both of these: a stale _hierarchyReady sends a re-inserted
         // pc-entity down the runtime-insertion path against a null app, and a stale-resolved
         // ready promise resumes awaiting descendants against the same.
         const { appElement, unmount } = await bootApp('<pc-entity name="e"></pc-entity>');
 
-        expect(appElement.hierarchyReady).toBe(true);
+        expect(appElement._hierarchyReady).toBe(true);
 
         unmount();
         await settleTask();
 
         expect(appElement.app, 'the application is destroyed').toBeNull();
-        expect(appElement.hierarchyReady, 'the hierarchy is no longer claimed live').toBe(false);
+        expect(appElement._hierarchyReady, 'the hierarchy is no longer claimed live').toBe(false);
 
         // The ready promise is pending again, so a descendant awaiting it parks until the
         // element is next inserted and booted, rather than resuming against the null app above.
@@ -164,7 +164,7 @@ describe('<pc-app> lifecycle', () => {
         expect(app, 'and it is not the destroyed one').not.toBe(firstApp);
         app!.autoRender = false;
 
-        expect(appElement.hierarchyReady).toBe(true);
+        expect(appElement._hierarchyReady).toBe(true);
         expect(appElement.querySelectorAll('canvas'), 'exactly one canvas').toHaveLength(1);
         expect(appReadyEvents, 'readiness was announced again').toBe(1);
 

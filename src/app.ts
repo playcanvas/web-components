@@ -115,7 +115,13 @@ class AppElement extends AsyncElement {
 
     private _bar: LoadingBar | null = null;
 
-    private _hierarchyReady = false;
+    /**
+     * Whether the application has created its initial entity hierarchy. Read by EntityElement to
+     * decide whether a newly connected element must create its entity itself or leave it to the
+     * boot sweep.
+     * @internal
+     */
+    _hierarchyReady = false;
 
     /**
      * Incremented on every connect and disconnect. Boot captures the value on entry and abandons
@@ -211,7 +217,7 @@ class AppElement extends AsyncElement {
         const moduleElements = this.querySelectorAll<ModuleElement>(':scope > pc-module');
 
         // Wait for all modules to load
-        await Promise.all(Array.from(moduleElements).map((module) => module.getLoadPromise()));
+        await Promise.all(Array.from(moduleElements).map((module) => module._getLoadPromise()));
 
         // The element may have been removed while the modules loaded. Nothing beyond the loading
         // bar exists yet, and disconnectedCallback has already destroyed that.
@@ -332,7 +338,7 @@ class AppElement extends AsyncElement {
         // Get all pc-asset elements that are direct children of the pc-app element
         const assetElements = this.querySelectorAll<AssetElement>(':scope > pc-asset');
         for (const assetElement of Array.from(assetElements)) {
-            assetElement.createAsset();
+            assetElement._createAsset();
             const asset = assetElement.asset;
             if (asset) {
                 app.assets.add(asset);
@@ -350,18 +356,18 @@ class AppElement extends AsyncElement {
         // Get all pc-material elements that are direct children of the pc-app element
         const materialElements = this.querySelectorAll<MaterialElement>(':scope > pc-material');
         Array.from(materialElements).forEach((materialElement) => {
-            materialElement.createMaterial();
+            materialElement._createMaterial();
         });
 
         // Create all entities
         const entityElements = this.querySelectorAll<EntityElement>('pc-entity');
         Array.from(entityElements).forEach((entityElement) => {
-            entityElement.createEntity(app);
+            entityElement._createEntity(app);
         });
 
         // Build hierarchy
         entityElements.forEach((entityElement) => {
-            entityElement.buildHierarchy(app);
+            entityElement._buildHierarchy(app);
         });
 
         // Building the hierarchy dispatched each entity's ready event synchronously, and a
@@ -460,13 +466,13 @@ class AppElement extends AsyncElement {
         }
     }
 
-    _onWindowResize() {
+    private _onWindowResize() {
         if (this.app) {
             this.app.resizeCanvas();
         }
     }
 
-    _pickerCreate() {
+    private _pickerCreate() {
         const { width, height } = this.app!.graphicsDevice;
         this._picker = new Picker(this.app!, width, height);
 
@@ -488,7 +494,7 @@ class AppElement extends AsyncElement {
         // listeners carried over from before a re-boot)
         pointerEventTypes.forEach((type) => {
             const anyListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity')).some((entity) =>
-                entity.hasListeners(type)
+                entity._hasListeners(type)
             );
             if (anyListeners) {
                 this._onPointerListenerAdded(type);
@@ -496,7 +502,7 @@ class AppElement extends AsyncElement {
         });
     }
 
-    _pickerDestroy() {
+    private _pickerDestroy() {
         if (this._canvas) {
             Object.entries(this._pointerHandlers).forEach(([type, handler]) => {
                 if (handler) {
@@ -527,7 +533,7 @@ class AppElement extends AsyncElement {
      *
      * @param entity - The entity.
      * @param element - The element that created it.
-     * @ignore
+     * @internal
      */
     _registerEntityElement(entity: Entity, element: EntityElement) {
         this._entityElements.set(entity, element);
@@ -537,7 +543,7 @@ class AppElement extends AsyncElement {
      * Removes the registration for a destroyed entity. Called by EntityElement.
      *
      * @param entity - The entity.
-     * @ignore
+     * @internal
      */
     _unregisterEntityElement(entity: Entity) {
         this._entityElements.delete(entity);
@@ -586,7 +592,7 @@ class AppElement extends AsyncElement {
     private _elementWithListener(node: GraphNode | null, type: string): EntityElement | null {
         while (node !== null) {
             const element = this._entityElements.get(node);
-            if (element?.hasListeners(type)) {
+            if (element?._hasListeners(type)) {
                 return element;
             }
             node = node.parent;
@@ -632,7 +638,7 @@ class AppElement extends AsyncElement {
         return item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
     }
 
-    async _onPointerMove(event: PointerEvent) {
+    private async _onPointerMove(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
         // Moves arrive faster than a pick resolves, so results can land out of order. Only the
@@ -648,10 +654,10 @@ class AppElement extends AsyncElement {
 
         // Handle enter/leave events
         if (this._hoveredEntity !== newHoverEntity) {
-            if (this._hoveredEntity && this._hoveredEntity.hasListeners('pointerleave')) {
+            if (this._hoveredEntity && this._hoveredEntity._hasListeners('pointerleave')) {
                 this._hoveredEntity.dispatchEvent(new PointerEvent('pointerleave', event));
             }
-            if (newHoverEntity && newHoverEntity.hasListeners('pointerenter')) {
+            if (newHoverEntity && newHoverEntity._hasListeners('pointerenter')) {
                 newHoverEntity.dispatchEvent(new PointerEvent('pointerenter', event));
             }
         }
@@ -660,12 +666,12 @@ class AppElement extends AsyncElement {
         this._hoveredEntity = newHoverEntity;
 
         // Handle pointermove event
-        if (newHoverEntity && newHoverEntity.hasListeners('pointermove')) {
+        if (newHoverEntity && newHoverEntity._hasListeners('pointermove')) {
             newHoverEntity.dispatchEvent(new PointerEvent('pointermove', event));
         }
     }
 
-    async _onPointerDown(event: PointerEvent) {
+    private async _onPointerDown(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
         const node = await this._pickNode(event);
@@ -677,7 +683,7 @@ class AppElement extends AsyncElement {
         }
     }
 
-    async _onPointerUp(event: PointerEvent) {
+    private async _onPointerUp(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
         const node = await this._pickNode(event);
@@ -689,7 +695,7 @@ class AppElement extends AsyncElement {
         }
     }
 
-    _onPointerListenerAdded(type: string) {
+    private _onPointerListenerAdded(type: string) {
         if (!this._hasPointerListeners[type] && this._canvas) {
             this._hasPointerListeners[type] = true;
 
@@ -708,9 +714,9 @@ class AppElement extends AsyncElement {
         }
     }
 
-    _onPointerListenerRemoved(type: string) {
+    private _onPointerListenerRemoved(type: string) {
         const hasListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity')).some((entity) =>
-            entity.hasListeners(type)
+            entity._hasListeners(type)
         );
 
         if (!hasListeners && this._canvas) {
@@ -814,15 +820,6 @@ class AppElement extends AsyncElement {
      */
     get depthBuffer() {
         return this._depthBuffer;
-    }
-
-    /**
-     * Gets the hierarchy ready flag.
-     * @returns The hierarchy ready flag.
-     * @ignore
-     */
-    get hierarchyReady() {
-        return this._hierarchyReady;
     }
 
     /**
