@@ -70,7 +70,6 @@ class SkyElement extends AsyncElement {
         const source = asset.resource as Texture;
 
         const skybox = EnvLighting.generateSkyboxCubemap(source);
-        skybox.anisotropy = 4;
         // This element owns what it generated (see _unloadSkybox) - replacing a skybox from an
         // earlier load must release it, not orphan it on the GPU
         this._scene.skybox?.destroy();
