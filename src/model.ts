@@ -108,11 +108,4 @@ class ModelElement extends AsyncElement {
 
 customElements.define('pc-model', ModelElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-model': ModelElement;
-    }
-}
-
 export { ModelElement };

@@ -2522,11 +2522,4 @@ class MaterialElement extends HTMLElement {
 
 customElements.define('pc-material', MaterialElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-material': MaterialElement;
-    }
-}
-
 export { MaterialElement };

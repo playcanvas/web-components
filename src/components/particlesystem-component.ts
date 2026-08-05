@@ -150,11 +150,4 @@ class ParticleSystemComponentElement extends ComponentElement {
 
 customElements.define('pc-particles', ParticleSystemComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-particles': ParticleSystemComponentElement;
-    }
-}
-
 export { ParticleSystemComponentElement };

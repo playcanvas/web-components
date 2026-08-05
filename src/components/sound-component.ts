@@ -229,11 +229,4 @@ class SoundComponentElement extends ComponentElement {
 
 customElements.define('pc-sounds', SoundComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-sounds': SoundComponentElement;
-    }
-}
-
 export { SoundComponentElement };

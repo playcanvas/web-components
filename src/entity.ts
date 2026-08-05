@@ -408,11 +408,4 @@ class EntityElement extends AsyncElement {
 
 customElements.define('pc-entity', EntityElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-entity': EntityElement;
-    }
-}
-
 export { EntityElement };

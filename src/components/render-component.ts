@@ -155,11 +155,4 @@ class RenderComponentElement extends ComponentElement {
 
 customElements.define('pc-render', RenderComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-render': RenderComponentElement;
-    }
-}
-
 export { RenderComponentElement };

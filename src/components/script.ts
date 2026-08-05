@@ -198,11 +198,4 @@ class ScriptElement extends AsyncElement {
 
 customElements.define('pc-script', ScriptElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-script': ScriptElement;
-    }
-}
-
 export { ScriptElement };

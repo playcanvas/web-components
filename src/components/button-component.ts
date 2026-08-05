@@ -450,11 +450,4 @@ class ButtonComponentElement extends ComponentElement {
 
 customElements.define('pc-button', ButtonComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-button': ButtonComponentElement;
-    }
-}
-
 export { ButtonComponentElement };

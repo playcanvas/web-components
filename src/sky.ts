@@ -304,11 +304,4 @@ class SkyElement extends AsyncElement {
 
 customElements.define('pc-sky', SkyElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-sky': SkyElement;
-    }
-}
-
 export { SkyElement };

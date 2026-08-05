@@ -230,28 +230,17 @@ const findCaseMatch = (script: any, key: string): string | null => {
     return null;
 };
 
-// Add these interfaces at the top of the file, after the imports
-type ScriptAttributesChangeEvent = {
+export type ScriptAttributesChangeEvent = {
     detail: { attributes: Record<string, any> };
 } & CustomEvent;
 
-type ScriptEnableChangeEvent = {
+export type ScriptEnableChangeEvent = {
     detail: { enabled: boolean };
 } & CustomEvent;
 
-type ScriptNameChangeEvent = {
+export type ScriptNameChangeEvent = {
     detail: { oldName: string; newName: string };
 } & CustomEvent;
-
-// Add this interface before the ScriptComponentElement class
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementEventMap {
-        scriptattributeschange: ScriptAttributesChangeEvent;
-        scriptenablechange: ScriptEnableChangeEvent;
-        scriptnamechange: ScriptNameChangeEvent;
-    }
-}
 
 /**
  * The ScriptComponentElement interface provides properties and methods for manipulating
@@ -726,12 +715,5 @@ class ScriptComponentElement extends ComponentElement {
 }
 
 customElements.define('pc-scripts', ScriptComponentElement);
-
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-scripts': ScriptComponentElement;
-    }
-}
 
 export { ScriptComponentElement };

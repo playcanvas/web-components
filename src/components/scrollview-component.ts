@@ -439,11 +439,4 @@ class ScrollViewComponentElement extends ComponentElement {
 
 customElements.define('pc-scrollview', ScrollViewComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-scrollview': ScrollViewComponentElement;
-    }
-}
-
 export { ScrollViewComponentElement };

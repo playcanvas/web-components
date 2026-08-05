@@ -197,11 +197,4 @@ class CollisionComponentElement extends ComponentElement {
 
 customElements.define('pc-collision', CollisionComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-collision': CollisionComponentElement;
-    }
-}
-
 export { CollisionComponentElement };

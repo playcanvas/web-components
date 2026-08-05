@@ -853,11 +853,4 @@ class AppElement extends AsyncElement {
 
 customElements.define('pc-app', AppElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-app': AppElement;
-    }
-}
-
 export { AppElement };

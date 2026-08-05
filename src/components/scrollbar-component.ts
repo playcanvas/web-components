@@ -160,11 +160,4 @@ class ScrollbarComponentElement extends ComponentElement {
 
 customElements.define('pc-scrollbar', ScrollbarComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-scrollbar': ScrollbarComponentElement;
-    }
-}
-
 export { ScrollbarComponentElement };

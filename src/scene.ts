@@ -252,11 +252,4 @@ class SceneElement extends AsyncElement {
 
 customElements.define('pc-scene', SceneElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-scene': SceneElement;
-    }
-}
-
 export { SceneElement };

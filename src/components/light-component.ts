@@ -599,11 +599,4 @@ class LightComponentElement extends ComponentElement {
 
 customElements.define('pc-light', LightComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-light': LightComponentElement;
-    }
-}
-
 export { LightComponentElement };

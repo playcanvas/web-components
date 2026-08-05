@@ -237,11 +237,4 @@ class RigidBodyComponentElement extends ComponentElement {
 
 customElements.define('pc-rigidbody', RigidBodyComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-rigidbody': RigidBodyComponentElement;
-    }
-}
-
 export { RigidBodyComponentElement };

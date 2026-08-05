@@ -231,11 +231,4 @@ class LayoutChildComponentElement extends ComponentElement {
 
 customElements.define('pc-layoutchild', LayoutChildComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-layoutchild': LayoutChildComponentElement;
-    }
-}
-
 export { LayoutChildComponentElement };

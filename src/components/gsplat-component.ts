@@ -217,11 +217,4 @@ class GSplatComponentElement extends ComponentElement {
 
 customElements.define('pc-gsplat', GSplatComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-gsplat': GSplatComponentElement;
-    }
-}
-
 export { GSplatComponentElement };

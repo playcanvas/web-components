@@ -34,6 +34,12 @@ export default [
         }
     },
     {
+        files: ['src/index.ts'],
+        rules: {
+            '@typescript-eslint/consistent-type-definitions': ['error', 'interface']
+        }
+    },
+    {
         files: ['test/**/*.ts', 'vitest.config.ts'],
         languageOptions: {
             globals: {

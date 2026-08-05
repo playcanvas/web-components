@@ -186,11 +186,4 @@ class ScreenComponentElement extends ComponentElement {
 
 customElements.define('pc-screen', ScreenComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-screen': ScreenComponentElement;
-    }
-}
-
 export { ScreenComponentElement };

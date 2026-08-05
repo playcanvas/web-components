@@ -579,11 +579,4 @@ class CameraComponentElement extends ComponentElement {
 
 customElements.define('pc-camera', CameraComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-camera': CameraComponentElement;
-    }
-}
-
 export { CameraComponentElement };

@@ -306,11 +306,4 @@ class LayoutGroupComponentElement extends ComponentElement {
 
 customElements.define('pc-layoutgroup', LayoutGroupComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-layoutgroup': LayoutGroupComponentElement;
-    }
-}
-
 export { LayoutGroupComponentElement };

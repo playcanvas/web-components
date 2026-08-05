@@ -776,11 +776,4 @@ class ElementComponentElement extends ComponentElement {
 
 customElements.define('pc-element', ElementComponentElement);
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-    interface HTMLElementTagNameMap {
-        'pc-element': ElementComponentElement;
-    }
-}
-
 export { ElementComponentElement };
