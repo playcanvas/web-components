@@ -127,7 +127,40 @@ describe('<pc-material> integration', () => {
             asset.fire('load', asset);
 
             expect(element.material!.diffuseMap).toBe(texture);
-            expect(texture.anisotropy).toBe(4);
+            expect(texture.anisotropy, 'the library default applies when the asset declares nothing').toBe(4);
+        });
+
+        it('leaves an asset-declared anisotropy alone when applying a map', async () => {
+            const { app, get } = await bootApp(`
+                <pc-asset id="tex" src="tex.png" lazy anisotropy="8"></pc-asset>
+                <pc-material id="m" diffuse-map="tex"></pc-material>
+            `);
+            const asset = get<AssetElement>('pc-asset').asset!;
+            const element = get<MaterialElement>('pc-material');
+            // anisotropy 8 mirrors what the engine texture constructor reads from asset.data at load
+            const texture = new Texture(app.graphicsDevice, { width: 1, height: 1, anisotropy: 8 });
+
+            asset.resource = texture;
+            asset.fire('load', asset);
+
+            expect(element.material!.diffuseMap).toBe(texture);
+            expect(texture.anisotropy, 'the library default must not clobber the declared value').toBe(8);
+        });
+
+        it('leaves a data-JSON-declared anisotropy alone when applying a map', async () => {
+            const { app, get } = await bootApp(`
+                <pc-asset id="tex" src="tex.png" lazy data='{"anisotropy": 8}'></pc-asset>
+                <pc-material id="m" diffuse-map="tex"></pc-material>
+            `);
+            const asset = get<AssetElement>('pc-asset').asset!;
+            const element = get<MaterialElement>('pc-material');
+            const texture = new Texture(app.graphicsDevice, { width: 1, height: 1, anisotropy: 8 });
+
+            asset.resource = texture;
+            asset.fire('load', asset);
+
+            expect(element.material!.diffuseMap).toBe(texture);
+            expect(texture.anisotropy, 'the data JSON must win like the attribute does').toBe(8);
         });
 
         it('clears the slot when the attribute is removed', async () => {

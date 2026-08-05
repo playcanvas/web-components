@@ -199,6 +199,15 @@ if (manifest) {
     }
     expectAttribute('pc-asset', 'lazy', { type: 'boolean', default: 'false' });
 
+    // The texture options, derived from attributeChangedCallback - one of each shape. The
+    // defaults double as the invalid-value fallbacks and are deliberately the engine's own.
+    expectEnum('pc-asset', 'address-u', 3, 'repeat');
+    expectEnum('pc-asset', 'min-filter', 6, 'linear-mip-linear');
+    expectEnum('pc-asset', 'mag-filter', 2, 'linear');
+    expectAttribute('pc-asset', 'anisotropy', { type: 'number', default: '1', fieldName: 'anisotropy' });
+    expectAttribute('pc-asset', 'srgb', { type: 'boolean', default: 'false', fieldName: 'srgb' });
+    expectAttribute('pc-asset', 'mipmaps', { type: 'boolean', default: 'true', fieldName: 'mipmaps' });
+
     // Inherited from ComponentElement - pc-listener and pc-scripts declare no attributes of their
     // own, so they prove the inheritance step rather than merely surviving it
     for (const tag of COMPONENT_TAGS) {

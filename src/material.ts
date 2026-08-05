@@ -23,7 +23,7 @@ import {
     StandardMaterial,
     Vec2
 } from 'playcanvas';
-import type { EventHandle, Texture } from 'playcanvas';
+import type { Asset, EventHandle, Texture } from 'playcanvas';
 
 import type { AppElement } from './app';
 import { AssetElement } from './asset';
@@ -527,7 +527,7 @@ class MaterialElement extends HTMLElement {
         if (!asset) return;
 
         if (asset.loaded) {
-            this._applyMap(slot, asset.resource as Texture);
+            this._applyMap(slot, asset);
             return;
         }
 
@@ -535,19 +535,24 @@ class MaterialElement extends HTMLElement {
             slot,
             asset.once('load', () => {
                 this._mapHandles.delete(slot);
-                this._applyMap(slot, asset.resource as Texture);
+                this._applyMap(slot, asset);
             })
         );
     }
 
     /**
      * @param slot - The material property to write.
-     * @param texture - The loaded texture.
+     * @param asset - The loaded texture asset.
      */
-    private _applyMap(slot: TextureSlot, texture: Texture) {
+    private _applyMap(slot: TextureSlot, asset: Asset) {
         if (!this.material) return;
+        const texture = asset.resource as Texture;
         this.material[slot] = texture;
-        texture.anisotropy = 4;
+        // The library's default sampler quality - applied only when the pc-asset does not
+        // specify its own anisotropy (as an attribute or a `data` key), which must win
+        if (!Object.hasOwn(asset.data, 'anisotropy')) {
+            texture.anisotropy = 4;
+        }
         this._scheduleUpdate();
     }
 
