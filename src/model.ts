@@ -1,4 +1,4 @@
-import { ContainerResource, Entity } from 'playcanvas';
+import { ContainerResource, Entity, EventHandle } from 'playcanvas';
 
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
@@ -23,6 +23,13 @@ class ModelElement extends AsyncElement {
     private _loadGeneration = 0;
 
     /**
+     * The pending asset-load subscription of the current load, if it is waiting for its asset.
+     * Held so that whatever supersedes the load can detach the handler from the asset, rather
+     * than leave it registered until the asset loads (or forever, if it never does).
+     */
+    private _loadHandle: EventHandle | null = null;
+
+    /**
      * The root entity of the instantiated model. `null` until the container asset has loaded
      * and been instantiated, and again once the element has been removed from the document.
      * @returns The model's root entity, or `null`.
@@ -38,8 +45,14 @@ class ModelElement extends AsyncElement {
 
     disconnectedCallback() {
         this._loadGeneration++;
+        this._detachLoadHandler();
         this._unloadModel();
         this._resetReady();
+    }
+
+    private _detachLoadHandler() {
+        this._loadHandle?.off();
+        this._loadHandle = null;
     }
 
     private _instantiate(container: ContainerResource) {
@@ -84,6 +97,7 @@ class ModelElement extends AsyncElement {
 
         // Supersede any load already in flight - only the newest load may instantiate
         const generation = ++this._loadGeneration;
+        this._detachLoadHandler();
 
         const appElement = await this.closestApp?.ready();
 
@@ -102,7 +116,11 @@ class ModelElement extends AsyncElement {
         if (asset.loaded) {
             this._instantiate(asset.resource as ContainerResource);
         } else {
-            asset.once('load', () => {
+            // The generation is re-checked even though a superseded handler is detached: the
+            // detach relies on how the engine's event emitter treats removal, while the check
+            // holds on its own.
+            this._loadHandle = asset.once('load', () => {
+                this._loadHandle = null;
                 if (generation !== this._loadGeneration) {
                     return;
                 }

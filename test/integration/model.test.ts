@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AppElement } from '../../src/app';
 import { bootApp, settle } from '../helpers/app';
@@ -44,6 +44,32 @@ describe('<pc-model>', () => {
         await settleTask();
 
         expect(model.entity, 'no entity was instantiated for the removed element').toBeNull();
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('does not instantiate when the element is removed while its asset loads', async () => {
+        // With a lazy asset the load parks in the asset's load event rather than on the app's
+        // readiness. Removing the element detaches that subscription, so the asset finishing
+        // its load afterwards must not instantiate anything for the departed element.
+        const { appElement, get } = await bootApp(ASSET_TAG.replace('>', ' lazy>'));
+        const asset = get('pc-asset').asset!;
+        expect(asset.loaded, 'the lazy asset starts unloaded').toBe(false);
+
+        const model = document.createElement('pc-model');
+        model.setAttribute('asset', 'm');
+        appElement.appendChild(model);
+
+        // Two microtask hops: the app-ready continuation runs on the first, which resumes the
+        // load on the second - by then it has subscribed to the asset and started its load. The
+        // data: fetch needs a macrotask, so it cannot have completed yet.
+        await Promise.resolve();
+        await Promise.resolve();
+        model.remove();
+
+        await vi.waitFor(() => expect(asset.loaded).toBe(true));
+        await settleTask();
+
+        expect(model.entity, 'nothing was instantiated for the removed element').toBeNull();
         expect(uncaught.seen).toEqual([]);
     });
 

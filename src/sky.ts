@@ -1,4 +1,4 @@
-import { Asset, EnvLighting, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
+import { Asset, EnvLighting, EventHandle, LAYERID_SKYBOX, Quat, Scene, Texture, Vec3 } from 'playcanvas';
 
 import { AppElement } from './app';
 import { AssetElement } from './asset';
@@ -38,6 +38,13 @@ class SkyElement extends AsyncElement {
      */
     private _loadGeneration = 0;
 
+    /**
+     * The pending asset-load subscription of the current load, if it is waiting for its asset.
+     * Held so that whatever supersedes the load can detach the handler from the asset, rather
+     * than leave it registered until the asset loads (or forever, if it never does).
+     */
+    private _loadHandle: EventHandle | null = null;
+
     connectedCallback() {
         this._loadSkybox();
         this._onReady();
@@ -45,9 +52,15 @@ class SkyElement extends AsyncElement {
 
     disconnectedCallback() {
         this._loadGeneration++;
+        this._detachLoadHandler();
         this._unloadSkybox();
         this._appElement = null;
         this._resetReady();
+    }
+
+    private _detachLoadHandler() {
+        this._loadHandle?.off();
+        this._loadHandle = null;
     }
 
     private _generateSkybox(asset: Asset) {
@@ -57,11 +70,18 @@ class SkyElement extends AsyncElement {
 
         const skybox = EnvLighting.generateSkyboxCubemap(source);
         skybox.anisotropy = 4;
+        // This element owns what it generated (see _unloadSkybox) - replacing a skybox from an
+        // earlier load must release it, not orphan it on the GPU
+        this._scene.skybox?.destroy();
         this._scene.skybox = skybox;
 
         if (this._lighting) {
             const lighting = EnvLighting.generateLightingSource(source);
             const envAtlas = EnvLighting.generateAtlas(lighting);
+            // The lighting source is an intermediate: the atlas is rendered from it and it is
+            // not needed afterwards
+            lighting.destroy();
+            this._scene.envAtlas?.destroy();
             this._scene.envAtlas = envAtlas;
         }
 
@@ -80,6 +100,7 @@ class SkyElement extends AsyncElement {
     private async _loadSkybox() {
         // Supersede any load already in flight - only the newest load may generate the skybox
         const generation = ++this._loadGeneration;
+        this._detachLoadHandler();
 
         const appElement = await this.closestApp?.ready();
 
@@ -105,7 +126,11 @@ class SkyElement extends AsyncElement {
         if (asset.loaded) {
             this._generateSkybox(asset);
         } else {
-            asset.once('load', () => {
+            // The generation is re-checked even though a superseded handler is detached: the
+            // detach relies on how the engine's event emitter treats removal, while the check
+            // holds on its own.
+            this._loadHandle = asset.once('load', () => {
+                this._loadHandle = null;
                 if (generation !== this._loadGeneration) {
                     return;
                 }
