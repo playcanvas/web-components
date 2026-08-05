@@ -1,4 +1,4 @@
-import type { Scene} from 'playcanvas';
+import type { Scene } from 'playcanvas';
 import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
@@ -253,6 +253,7 @@ class SceneElement extends AsyncElement {
 customElements.define('pc-scene', SceneElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-scene': SceneElement;
     }

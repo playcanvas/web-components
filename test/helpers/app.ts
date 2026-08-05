@@ -1,30 +1,31 @@
 import type { AppBase } from 'playcanvas';
 import { expect } from 'vitest';
 
-import { mount, type Mounted } from './dom';
+import type { AppElement } from '../../src/app';
+import { AsyncElement } from '../../src/index';
+
+import { mount } from './dom';
+import type { Mounted } from './dom';
 import { describeElement, readyWithin, READY_TIMEOUT } from './ready';
 // Importing the barrel is deliberate: it runs all 27 customElements.define() calls in the
 // dependency order the library itself relies on, and gives us AsyncElement as a value for the
 // instanceof check in settle().
-import type { AppElement } from '../../src/app';
-import { AsyncElement } from '../../src/index';
 
-
-export interface BootedApp extends Mounted {
+export type BootedApp = {
     readonly appElement: AppElement;
     readonly app: AppBase;
     /** Advances one simulation frame without rendering. */
     step(dt?: number): void;
     /** Renders one frame. Only for tests that specifically need the render path. */
     render(): void;
-}
+} & Mounted;
 
-export interface BootOptions {
+export type BootOptions = {
     /** Extra attributes for the `<pc-app>` element, for example `max-pixel-ratio="1"`. */
     appAttributes?: string;
     /** Per-element ready deadline in milliseconds. */
     timeout?: number;
-}
+};
 
 /**
  * Waits for every AsyncElement under `root` to become ready, throwing a message that names the
@@ -42,22 +43,29 @@ export interface BootOptions {
  * @param timeout - Per-element deadline in milliseconds.
  */
 export const settle = async (root: ParentNode = document.body, timeout = READY_TIMEOUT) => {
-    const pending = Array.from(root.querySelectorAll('*'))
-    .filter((element): element is AsyncElement => element instanceof AsyncElement);
+    const pending = Array.from(root.querySelectorAll('*')).filter(
+        (element): element is AsyncElement => element instanceof AsyncElement
+    );
 
-    const stuck = (await Promise.all(pending.map(async (element) => {
-        try {
-            await readyWithin(element, timeout);
-            return null;
-        } catch {
-            return describeElement(element);
-        }
-    }))).filter(description => description !== null);
+    const stuck = (
+        await Promise.all(
+            pending.map(async (element) => {
+                try {
+                    await readyWithin(element, timeout);
+                    return null;
+                } catch {
+                    return describeElement(element);
+                }
+            })
+        )
+    ).filter((description) => description !== null);
 
     if (stuck.length > 0) {
-        throw new Error(`settle: ${stuck.length} element(s) never became ready: ${stuck.join(', ')}. ` +
-            'A ready promise that never settles means the element is misplaced - check the ' +
-            'console.warn output for the parent it requires.');
+        throw new Error(
+            `settle: ${stuck.length} element(s) never became ready: ${stuck.join(', ')}. ` +
+                'A ready promise that never settles means the element is misplaced - check the ' +
+                'console.warn output for the parent it requires.'
+        );
     }
 };
 

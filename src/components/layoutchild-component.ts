@@ -1,7 +1,8 @@
-import { LayoutChildComponent } from 'playcanvas';
+import type { LayoutChildComponent } from 'playcanvas';
+
+import { parseBool, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseBool, parseNumber } from '../parse';
 
 /**
  * The LayoutChildComponentElement interface provides properties and methods for manipulating
@@ -231,6 +232,7 @@ class LayoutChildComponentElement extends ComponentElement {
 customElements.define('pc-layoutchild', LayoutChildComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-layoutchild': LayoutChildComponentElement;
     }

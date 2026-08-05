@@ -1,17 +1,8 @@
-import {
-    BLEND_NONE,
-    Color,
-    CULLFACE_BACK,
-    FRESNEL_SCHLICK,
-    SPECOCC_AO,
-    StandardMaterial,
-    Vec2
-} from 'playcanvas';
+import { BLEND_NONE, Color, CULLFACE_BACK, FRESNEL_SCHLICK, SPECOCC_AO, StandardMaterial, Vec2 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import { MaterialElement } from '../../src/material';
 import { useGuard } from '../helpers/guard';
-
 
 const kebabToCamel = (name: string) => name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 
@@ -28,7 +19,7 @@ const ALIASES: Record<string, string> = {
  * (or, for dither, string) constant. `name` is the element's default, `engine` is the constant it
  * maps to, and `alt` is a different valid name used to exercise the round trip.
  */
-const ENUMS: Record<string, { name: string, engine: unknown, alt: string }> = {
+const ENUMS: Record<string, { name: string; engine: unknown; alt: string }> = {
     'blend-type': { name: 'none', engine: BLEND_NONE, alt: 'normal' },
     cull: { name: 'back', engine: CULLFACE_BACK, alt: 'none' },
     'fresnel-model': { name: 'schlick', engine: FRESNEL_SCHLICK, alt: 'none' },
@@ -40,7 +31,7 @@ const ENUMS: Record<string, { name: string, engine: unknown, alt: string }> = {
  * Element defaults that deliberately differ from the engine's, with the reason. Anything not
  * listed here must match the engine exactly.
  */
-const DIVERGENT: Record<string, { value: unknown, why: string }> = {
+const DIVERGENT: Record<string, { value: unknown; why: string }> = {
     'use-metalness': {
         value: true,
         why: 'the element is metal/rough by default so that metalness-map has any effect at all'
@@ -50,7 +41,8 @@ const DIVERGENT: Record<string, { value: unknown, why: string }> = {
         // Paired with use-metalness above: the engine's 1 is unreachable under its own useMetalness
         // of false, so adopting it alongside the workflow made every material fully metallic - no
         // diffuse lobe, albedo demoted to a specular tint, and nothing to reflect without a skybox
-        why: 'the engine default of 1 is a don\'t-care under its useMetalness of false, and would ' +
+        why:
+            "the engine default of 1 is a don't-care under its useMetalness of false, and would " +
             'make every material fully metallic once the workflow is enabled'
     }
 };
@@ -107,8 +99,9 @@ describe('<pc-material>', () => {
             const enumeration = ENUMS[attribute];
             if (enumeration) {
                 expect(actual).toBe(enumeration.name);
-                expect(engineValue, `'${enumeration.name}' no longer maps to the engine default`)
-                .toBe(enumeration.engine);
+                expect(engineValue, `'${enumeration.name}' no longer maps to the engine default`).toBe(
+                    enumeration.engine
+                );
                 return;
             }
 
@@ -117,8 +110,7 @@ describe('<pc-material>', () => {
 
         it('covers every property the element writes', () => {
             // Guards against a typo turning a real property into a silently-ignored one
-            const missing = attributes
-            .filter(attribute => !(propertyOf(attribute) in engine));
+            const missing = attributes.filter((attribute) => !(propertyOf(attribute) in engine));
             expect(missing, 'attributes naming a property StandardMaterial does not have').toEqual([]);
         });
     });
@@ -133,7 +125,7 @@ describe('<pc-material>', () => {
          * @param current - The element's default value for it.
          * @returns The markup value to set, and the property value it should produce.
          */
-        const sample = (attribute: string, current: unknown): { value: string, expected: unknown } => {
+        const sample = (attribute: string, current: unknown): { value: string; expected: unknown } => {
             if (isTextureSlot(attribute)) {
                 return { value: 'some-asset', expected: 'some-asset' };
             }
@@ -177,7 +169,7 @@ describe('<pc-material>', () => {
             element.setAttribute('cull', 'sideways');
 
             expect(element.cull).toBe('back');
-            warnings.expect('Invalid value \'sideways\' for attribute \'cull\'');
+            warnings.expect("Invalid value 'sideways' for attribute 'cull'");
         });
 
         it('does not touch a material it does not have', () => {
@@ -223,7 +215,7 @@ describe('<pc-material>', () => {
             element.setAttribute('gloss-map', 'a');
             element.setAttribute('roughness-map', 'b');
 
-            warnings.expect('sets both \'roughness-map\' and \'gloss-map\'');
+            warnings.expect("sets both 'roughness-map' and 'gloss-map'");
         });
 
         it('does not warn for roughness alone', () => {
@@ -261,7 +253,7 @@ describe('<pc-material>', () => {
             element.setAttribute('gloss-invert', 'false');
             element.setAttribute('roughness-map', 'b');
 
-            warnings.expect('sets both \'roughness-map\' and \'gloss-invert\'');
+            warnings.expect("sets both 'roughness-map' and 'gloss-invert'");
         });
 
         it('warns in either attribute order', () => {
@@ -270,13 +262,13 @@ describe('<pc-material>', () => {
             glossFirst.id = 'gloss-first';
             glossFirst.setAttribute('gloss', '0.8');
             glossFirst.setAttribute('roughness', '0.5');
-            warnings.expect('\'gloss-first\' sets both \'roughness\' and \'gloss\'');
+            warnings.expect("'gloss-first' sets both 'roughness' and 'gloss'");
 
             const roughnessFirst = create();
             roughnessFirst.id = 'roughness-first';
             roughnessFirst.setAttribute('roughness', '0.5');
             roughnessFirst.setAttribute('gloss', '0.8');
-            warnings.expect('\'roughness-first\' sets both \'roughness\' and \'gloss\'');
+            warnings.expect("'roughness-first' sets both 'roughness' and 'gloss'");
         });
     });
 });

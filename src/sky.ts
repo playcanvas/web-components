@@ -1,7 +1,7 @@
-import type { Asset, Scene, Texture} from 'playcanvas';
+import type { Asset, Scene, Texture } from 'playcanvas';
 import { EnvLighting, LAYERID_SKYBOX, Quat, Vec3 } from 'playcanvas';
 
-import { AppElement } from './app';
+import type { AppElement } from './app';
 import { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
 import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
@@ -305,6 +305,7 @@ class SkyElement extends AsyncElement {
 customElements.define('pc-sky', SkyElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-sky': SkyElement;
     }

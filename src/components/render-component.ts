@@ -1,10 +1,9 @@
 import type { RenderComponent, StandardMaterial } from 'playcanvas';
 
 import { MaterialElement } from '../material';
+import { parseBool, parseEnum } from '../parse';
 
 import { ComponentElement } from './component';
-import { MaterialElement } from '../material';
-import { parseBool, parseEnum } from '../parse';
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -157,6 +156,7 @@ class RenderComponentElement extends ComponentElement {
 customElements.define('pc-render', RenderComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-render': RenderComponentElement;
     }

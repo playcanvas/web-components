@@ -4,15 +4,15 @@ import type { EntityElement } from '../../src/entity';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * A macrotask turn, so disconnect callbacks and suspended awaits run to completion.
  *
  * @returns A promise that settles once queued work has run.
  */
-const settleTask = () => new Promise((resolve) => {
-    setTimeout(resolve, 0);
-});
+const settleTask = () =>
+    new Promise((resolve) => {
+        setTimeout(resolve, 0);
+    });
 
 /**
  * The entity map is what joins engine scene nodes back to their owning elements by identity.

@@ -82,10 +82,11 @@ class Polygon {
     }
 
     inside(p) {
-        let count = 0, cur = this.points[this.points.length - 1];
+        let count = 0,
+            cur = this.points[this.points.length - 1];
         this.points.forEach((next) => {
-            const p0 = (cur.y < next.y ? cur : next);
-            const p1 = (cur.y < next.y ? next : cur);
+            const p0 = cur.y < next.y ? cur : next;
+            const p1 = cur.y < next.y ? next : cur;
             if (p0.y < p.y + EPSILON && p1.y > p.y + EPSILON) {
                 if ((p1.x - p0.x) * (p.y - p0.y) > (p.x - p0.x) * (p1.y - p0.y)) {
                     count += 1;
@@ -93,7 +94,7 @@ class Polygon {
             }
             cur = next;
         });
-        return (count % 2) !== 0;
+        return count % 2 !== 0;
     }
 }
 
@@ -263,7 +264,7 @@ export class Text3D extends Script {
             vertexData.set(coords, vertexCount * 2);
 
             // Add index data
-            earcut(coords, holes).forEach(i => indices.push(i + vertexCount));
+            earcut(coords, holes).forEach((i) => indices.push(i + vertexCount));
             vertexCount += coords.length / 2;
         }
 
@@ -294,8 +295,20 @@ export class Text3D extends Script {
                 const base = vertices.length / 3;
                 const p1 = poly.points[i];
                 const p2 = poly.points[i + 1];
-                vertices.push(p1.x * scalar, p1.y * scalar, this.thickness, p2.x * scalar, p2.y * scalar, this.thickness,
-                    p1.x * scalar, p1.y * scalar, 0, p2.x * scalar, p2.y * scalar, 0);
+                vertices.push(
+                    p1.x * scalar,
+                    p1.y * scalar,
+                    this.thickness,
+                    p2.x * scalar,
+                    p2.y * scalar,
+                    this.thickness,
+                    p1.x * scalar,
+                    p1.y * scalar,
+                    0,
+                    p2.x * scalar,
+                    p2.y * scalar,
+                    0
+                );
                 indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
             }
         });
@@ -341,9 +354,14 @@ export class Text3D extends Script {
         const w = this.calculateWidth();
         let cursor = 0;
         switch (this.alignment) {
-            case 'left': break;
-            case 'center': cursor = -w * 0.5; break;
-            case 'right': cursor = -w; break;
+            case 'left':
+                break;
+            case 'center':
+                cursor = -w * 0.5;
+                break;
+            case 'right':
+                cursor = -w;
+                break;
         }
 
         const material = this.material?.resource || new StandardMaterial();

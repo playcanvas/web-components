@@ -1,4 +1,4 @@
-import { Script } from 'playcanvas';
+import type { Script } from 'playcanvas';
 
 import { AsyncElement } from '../async-element';
 import { parseBool } from '../parse';
@@ -46,7 +46,7 @@ class ScriptElement extends AsyncElement {
      * element's life (a runtime `name` change recreates the instance), but `ready` is a
      * one-shot signal, so only the first successful creation fires it.
      */
-    private _readySignalled: boolean = false;
+    private _readySignalled = false;
 
     /**
      * The Script instance created for this element by its parent `<pc-scripts>` element.
@@ -64,10 +64,12 @@ class ScriptElement extends AsyncElement {
      */
     set scriptAttributes(value: Record<string, any>) {
         this._attributes = value ?? {};
-        this.dispatchEvent(new CustomEvent('scriptattributeschange', {
-            detail: { attributes: this._attributes },
-            bubbles: true
-        }));
+        this.dispatchEvent(
+            new CustomEvent('scriptattributeschange', {
+                detail: { attributes: this._attributes },
+                bubbles: true
+            })
+        );
     }
 
     /**
@@ -84,10 +86,12 @@ class ScriptElement extends AsyncElement {
      */
     set enabled(value: boolean) {
         this._enabled = value;
-        this.dispatchEvent(new CustomEvent('scriptenablechange', {
-            detail: { enabled: value },
-            bubbles: true
-        }));
+        this.dispatchEvent(
+            new CustomEvent('scriptenablechange', {
+                detail: { enabled: value },
+                bubbles: true
+            })
+        );
     }
 
     /**
@@ -137,7 +141,9 @@ class ScriptElement extends AsyncElement {
         // Script instances are created by the parent pc-scripts element, so an element placed
         // anywhere else is inert and never becomes ready - warn rather than hang silently
         if (this.parentElement?.tagName !== 'PC-SCRIPTS') {
-            console.warn(`pc-script '${this.getAttribute('name')}' must be a direct child of pc-scripts - script not created`);
+            console.warn(
+                `pc-script '${this.getAttribute('name')}' must be a direct child of pc-scripts - script not created`
+            );
         }
     }
 
@@ -165,7 +171,9 @@ class ScriptElement extends AsyncElement {
                 try {
                     this.scriptAttributes = JSON.parse(newValue);
                 } catch (error) {
-                    console.warn(`Invalid 'attributes' JSON on pc-script '${this.getAttribute('name')}': ${(error as Error).message}`);
+                    console.warn(
+                        `Invalid 'attributes' JSON on pc-script '${this.getAttribute('name')}': ${(error as Error).message}`
+                    );
                 }
                 break;
             case 'enabled':
@@ -176,10 +184,12 @@ class ScriptElement extends AsyncElement {
                 // the added-node mutation), so only a genuine rename is signalled here. Note
                 // that setAttribute fires this callback even when the value is unchanged.
                 if (oldValue !== null && oldValue !== newValue) {
-                    this.dispatchEvent(new CustomEvent('scriptnamechange', {
-                        detail: { oldName: oldValue, newName: newValue },
-                        bubbles: true
-                    }));
+                    this.dispatchEvent(
+                        new CustomEvent('scriptnamechange', {
+                            detail: { oldName: oldValue, newName: newValue },
+                            bubbles: true
+                        })
+                    );
                 }
                 break;
         }
@@ -189,6 +199,7 @@ class ScriptElement extends AsyncElement {
 customElements.define('pc-script', ScriptElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-script': ScriptElement;
     }

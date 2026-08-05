@@ -1,8 +1,7 @@
-import type { ElementComponent} from 'playcanvas';
+import type { ElementComponent } from 'playcanvas';
 import { Color, Vec2, Vec4 } from 'playcanvas';
 
 import { AssetElement } from '../asset';
-import { ComponentElement } from './component';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
@@ -18,53 +17,53 @@ import { ComponentElement } from './component';
 class ElementComponentElement extends ComponentElement {
     private _anchor: Vec4 = new Vec4(0.5, 0.5, 0.5, 0.5);
 
-    private _autoWidth: boolean = true;
+    private _autoWidth = true;
 
-    private _autoHeight: boolean = true;
+    private _autoHeight = true;
 
-    private _autoFitWidth: boolean = false;
+    private _autoFitWidth = false;
 
-    private _autoFitHeight: boolean = false;
+    private _autoFitHeight = false;
 
     private _color: Color = new Color(1, 1, 1, 1);
 
     private _enableMarkup = false;
 
-    private _fontAsset: string = '';
+    private _fontAsset = '';
 
-    private _fontSize: number = 32;
+    private _fontSize = 32;
 
-    private _maxFontSize: number = 32;
+    private _maxFontSize = 32;
 
-    private _minFontSize: number = 8;
+    private _minFontSize = 8;
 
-    private _height: number = 0;
+    private _height = 0;
 
-    private _lineHeight: number = 32;
+    private _lineHeight = 32;
 
     private _margin: Vec4 | null = null;
 
-    private _mask: boolean = false;
+    private _mask = false;
 
-    private _opacity: number = 1;
+    private _opacity = 1;
 
     private _pivot: Vec2 = new Vec2(0.5, 0.5);
 
     private _pixelsPerUnit: number | null = null;
 
-    private _spriteAsset: string = '';
+    private _spriteAsset = '';
 
-    private _spriteFrame: number = 0;
+    private _spriteFrame = 0;
 
-    private _text: string = '';
+    private _text = '';
 
-    private _textureAsset: string = '';
+    private _textureAsset = '';
 
     private _type: 'group' | 'image' | 'text' = 'group';
 
-    private _useInput: boolean = false;
+    private _useInput = false;
 
-    private _width: number = 0;
+    private _width = 0;
 
     private _wrapLines = false;
 
@@ -778,6 +777,7 @@ class ElementComponentElement extends ComponentElement {
 customElements.define('pc-element', ElementComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-element': ElementComponentElement;
     }

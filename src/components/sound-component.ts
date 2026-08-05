@@ -1,7 +1,8 @@
 import type { SoundComponent } from 'playcanvas';
 
-import { ComponentElement } from './component';
 import { parseBool, parseEnum, parseNumber } from '../parse';
+
+import { ComponentElement } from './component';
 
 /**
  * The SoundComponentElement interface provides properties and methods for manipulating
@@ -229,6 +230,7 @@ class SoundComponentElement extends ComponentElement {
 customElements.define('pc-sounds', SoundComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-sounds': SoundComponentElement;
     }

@@ -1,10 +1,9 @@
-import type { ScreenComponent} from 'playcanvas';
+import type { ScreenComponent } from 'playcanvas';
 import { SCALEMODE_BLEND, SCALEMODE_NONE, Vec2 } from 'playcanvas';
 
-import { parseVec2 } from '../utils';
+import { parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
 
 // The engine's SCALEMODE_* constants are the strings 'none' and 'blend', so this map happens to be
 // an identity. It is still the right shape: it supplies parseEnum's valid-name list, it is what the
@@ -188,6 +187,7 @@ class ScreenComponentElement extends ComponentElement {
 customElements.define('pc-screen', ScreenComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-screen': ScreenComponentElement;
     }

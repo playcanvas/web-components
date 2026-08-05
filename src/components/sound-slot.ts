@@ -2,9 +2,9 @@ import type { SoundSlot } from 'playcanvas';
 
 import { AssetElement } from '../asset';
 import { AsyncElement } from '../async-element';
+import { parseBool, parseNumber } from '../parse';
 
 import { SoundComponentElement } from './sound-component';
-import { parseBool, parseNumber } from '../parse';
 
 /**
  * The SoundSlotElement interface provides properties and methods for manipulating
@@ -312,6 +312,7 @@ class SoundSlotElement extends AsyncElement {
 customElements.define('pc-sound', SoundSlotElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-sound': SoundSlotElement;
     }

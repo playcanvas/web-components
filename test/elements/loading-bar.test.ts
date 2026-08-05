@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * The loading-bar boolean attribute on an unconnected <pc-app>. No engine boots in this tier, so
  * only attributeChangedCallback and the accessor are exercised - the bar itself is covered in the

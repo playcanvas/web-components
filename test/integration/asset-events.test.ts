@@ -7,7 +7,6 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { readyWithin } from '../helpers/ready';
 
-
 /**
  * The `load` and `error` DOM events on <pc-asset>. Both mirror <img> resource semantics: they are
  * dispatched on the element and do not bubble, so a window-level bubble-phase 'error' listener
@@ -17,9 +16,10 @@ import { readyWithin } from '../helpers/ready';
 describe('<pc-asset> load and error events', () => {
     const { errors, uncaught } = useGuard();
 
-    const settleTask = () => new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
+    const settleTask = () =>
+        new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
     const boot = (assetHtml: string) => {
         const handle = mount(`<pc-app backend="null">${assetHtml}</pc-app>`);
@@ -29,18 +29,23 @@ describe('<pc-asset> load and error events', () => {
     };
 
     it('fires load on the element, visible to ancestors only in the capture phase', async () => {
-        const { handle, appElement, assetElement } =
-            boot('<pc-asset id="note" type="text" src="data:text/plain,hello"></pc-asset>');
+        const { handle, appElement, assetElement } = boot(
+            '<pc-asset id="note" type="text" src="data:text/plain,hello"></pc-asset>'
+        );
         const events: Event[] = [];
         let bubbled = 0;
         let captured = 0;
-        assetElement.addEventListener('load', event => events.push(event));
+        assetElement.addEventListener('load', (event) => events.push(event));
         appElement.addEventListener('load', () => {
             bubbled += 1;
         });
-        appElement.addEventListener('load', () => {
-            captured += 1;
-        }, true);
+        appElement.addEventListener(
+            'load',
+            () => {
+                captured += 1;
+            },
+            true
+        );
 
         await readyWithin(appElement);
         await settle(handle.container);
@@ -52,10 +57,11 @@ describe('<pc-asset> load and error events', () => {
     });
 
     it('fires error with the engine message, without reaching the window error channel', async () => {
-        const { handle, appElement, assetElement } =
-            boot('<pc-asset id="bad" type="container" src="data:model/gltf-binary,notaglb"></pc-asset>');
+        const { handle, appElement, assetElement } = boot(
+            '<pc-asset id="bad" type="container" src="data:model/gltf-binary,notaglb"></pc-asset>'
+        );
         const events: ErrorEvent[] = [];
-        assetElement.addEventListener('error', event => events.push(event));
+        assetElement.addEventListener('error', (event) => events.push(event));
 
         await readyWithin(appElement);
         await settle(handle.container);
@@ -72,8 +78,9 @@ describe('<pc-asset> load and error events', () => {
     });
 
     it('fires load for a lazy asset only once something loads it', async () => {
-        const { handle, appElement, assetElement } =
-            boot('<pc-asset id="later" type="text" src="data:text/plain,later" lazy></pc-asset>');
+        const { handle, appElement, assetElement } = boot(
+            '<pc-asset id="later" type="text" src="data:text/plain,later" lazy></pc-asset>'
+        );
         let loads = 0;
         assetElement.addEventListener('load', () => {
             loads += 1;
@@ -100,8 +107,9 @@ describe('<pc-asset> load and error events', () => {
     });
 
     it('stops dispatching once the element is removed', async () => {
-        const { handle, appElement, assetElement } =
-            boot('<pc-asset id="gone" type="text" src="data:text/plain,gone"></pc-asset>');
+        const { handle, appElement, assetElement } = boot(
+            '<pc-asset id="gone" type="text" src="data:text/plain,gone"></pc-asset>'
+        );
         let loads = 0;
         let errorCount = 0;
         assetElement.addEventListener('load', () => {

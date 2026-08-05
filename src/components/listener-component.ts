@@ -28,6 +28,7 @@ class ListenerComponentElement extends ComponentElement {
 customElements.define('pc-listener', ListenerComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-listener': ListenerComponentElement;
     }

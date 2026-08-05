@@ -5,7 +5,6 @@ import type { EntityElement } from '../../src/entity';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * Teardown is where this library is most fragile, because a <pc-app> disconnects BEFORE its
  * children - so a child's disconnectedCallback runs against an application that is already
@@ -21,9 +20,10 @@ describe('teardown', () => {
     const { warnings, uncaught } = useGuard();
 
     // A macrotask turn, so suspended callbacks resume and rejections are delivered.
-    const settleTask = () => new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
+    const settleTask = () =>
+        new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
     it('destroys the application and removes the canvas when pc-app is removed', async () => {
         const { appElement, app, unmount } = await bootApp('<pc-entity name="e"></pc-entity>');
@@ -162,7 +162,7 @@ describe('teardown', () => {
         const childElement = all<EntityElement>('pc-entity')[1];
 
         expect(childEntity, 'the child is attached to the hierarchy').toBeTruthy();
-        expect(childElement.entity, 'and is the element\'s own entity').toBe(childEntity);
+        expect(childElement.entity, "and is the element's own entity").toBe(childEntity);
         expect(childEntity?.parent, 'parented under the parent entity, not the root').toBe(parentEntity);
     });
 

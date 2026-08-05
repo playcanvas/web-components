@@ -1,14 +1,9 @@
-import type {
-    CameraComponent,
-    GraphNode,
-    GSplatComponent
-} from 'playcanvas';
+import type { CameraComponent, GraphNode, GSplatComponent, Entity } from 'playcanvas';
 import {
     AppBase,
     AppOptions,
     createGraphicsDevice,
     ElementInput,
-    Entity,
     FILLMODE_FILL_WINDOW,
     Keyboard,
     Mouse,
@@ -71,10 +66,10 @@ import {
 
 import type { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
-import { EntityElement } from './entity';
+import type { EntityElement } from './entity';
 import { LoadingBar } from './loading-bar';
-import { MaterialElement } from './material';
-import { ModuleElement } from './module';
+import type { MaterialElement } from './material';
+import type { ModuleElement } from './module';
 import { parseBool, parseEnum, parseNumber } from './parse';
 
 /**
@@ -141,7 +136,7 @@ class AppElement extends AsyncElement {
     // Identifies the newest in-flight hover pick, so out-of-order results can be discarded
     private _pickToken = 0;
 
-    private _pointerHandlers: { [key: string]: EventListener | null } = {
+    private _pointerHandlers: Record<string, EventListener | null> = {
         pointermove: null,
         pointerdown: null,
         pointerup: null
@@ -195,7 +190,7 @@ class AppElement extends AsyncElement {
         const moduleElements = this.querySelectorAll<ModuleElement>(':scope > pc-module');
 
         // Wait for all modules to load
-        await Promise.all(Array.from(moduleElements).map(module => module.getLoadPromise()));
+        await Promise.all(Array.from(moduleElements).map((module) => module.getLoadPromise()));
 
         // Create and append the canvas to the element
         this._canvas = document.createElement('canvas');
@@ -421,8 +416,9 @@ class AppElement extends AsyncElement {
 
             // Attach canvas handlers for listeners registered before this point (e.g. handlers
             // created from onpointer* attributes when their elements were first upgraded)
-            const anyListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity'))
-            .some(entity => entity.hasListeners(type));
+            const anyListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity')).some((entity) =>
+                entity.hasListeners(type)
+            );
             if (anyListeners) {
                 this._onPointerListenerAdded(type);
             }
@@ -527,7 +523,7 @@ class AppElement extends AsyncElement {
     }
 
     // New helper to convert CSS coordinates to canvas (picker) coordinates
-    private _getPickerCoordinates(event: PointerEvent): { x: number, y: number } {
+    private _getPickerCoordinates(event: PointerEvent): { x: number; y: number } {
         // Get the canvas' bounding rectangle in CSS pixels.
         const canvasRect = this._canvas!.getBoundingClientRect();
         // Compute scale factors based on canvas actual resolution vs. its CSS display size.
@@ -626,29 +622,38 @@ class AppElement extends AsyncElement {
             this._hasPointerListeners[type] = true;
 
             // For enter/leave events, we need the move handler
-            const handler = (type === 'pointerenter' || type === 'pointerleave') ?
-                this._pointerHandlers.pointermove :
-                this._pointerHandlers[type];
+            const handler =
+                type === 'pointerenter' || type === 'pointerleave'
+                    ? this._pointerHandlers.pointermove
+                    : this._pointerHandlers[type];
 
             if (handler) {
-                this._canvas.addEventListener(type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type, handler);
+                this._canvas.addEventListener(
+                    type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type,
+                    handler
+                );
             }
         }
     }
 
     _onPointerListenerRemoved(type: string) {
-        const hasListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity'))
-        .some(entity => entity.hasListeners(type));
+        const hasListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity')).some((entity) =>
+            entity.hasListeners(type)
+        );
 
         if (!hasListeners && this._canvas) {
             this._hasPointerListeners[type] = false;
 
-            const handler = (type === 'pointerenter' || type === 'pointerleave') ?
-                this._pointerHandlers.pointermove :
-                this._pointerHandlers[type];
+            const handler =
+                type === 'pointerenter' || type === 'pointerleave'
+                    ? this._pointerHandlers.pointermove
+                    : this._pointerHandlers[type];
 
             if (handler) {
-                this._canvas.removeEventListener(type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type, handler);
+                this._canvas.removeEventListener(
+                    type === 'pointerenter' || type === 'pointerleave' ? 'pointermove' : type,
+                    handler
+                );
             }
         }
     }
@@ -662,7 +667,9 @@ class AppElement extends AsyncElement {
      */
     private _warnIfBooted(name: string) {
         if (this._optionsLocked) {
-            console.warn(`Attribute '${name}' on <pc-app> is only read when the application boots, so this change has no effect. Set it before the element is connected, or remove and re-insert the element to reboot with the new value.`);
+            console.warn(
+                `Attribute '${name}' on <pc-app> is only read when the application boots, so this change has no effect. Set it before the element is connected, or remove and re-insert the element to reboot with the new value.`
+            );
         }
     }
 
@@ -847,6 +854,7 @@ class AppElement extends AsyncElement {
 customElements.define('pc-app', AppElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-app': AppElement;
     }

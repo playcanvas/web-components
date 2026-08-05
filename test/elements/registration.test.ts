@@ -11,13 +11,13 @@ import { COMPONENT_TAGS, READY_TAGS, TAGS } from '../helpers/tags';
  */
 describe('customElements registration', () => {
     it('defines every tag in the golden list', () => {
-        const missing = TAGS.filter(tag => !customElements.get(tag));
+        const missing = TAGS.filter((tag) => !customElements.get(tag));
         expect(missing).toEqual([]);
     });
 
     it('defines nothing outside the golden list', () => {
         // The library only ever defines pc-* tags, so this is the observable surface to police.
-        const defined = TAGS.filter(tag => customElements.get(tag));
+        const defined = TAGS.filter((tag) => customElements.get(tag));
         expect(defined.sort()).toEqual([...TAGS].sort());
     });
 

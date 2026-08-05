@@ -14,8 +14,11 @@ export function showQRCode(path) {
     if (!backdropHandlerAttached) {
         modal.addEventListener('click', (e) => {
             const rect = modal.getBoundingClientRect();
-            const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-                rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+            const isInDialog =
+                rect.top <= e.clientY &&
+                e.clientY <= rect.top + rect.height &&
+                rect.left <= e.clientX &&
+                e.clientX <= rect.left + rect.width;
             if (!isInDialog) {
                 modal.close();
             }

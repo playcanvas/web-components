@@ -3,9 +3,9 @@ import { FILLMODE_KEEP_ASPECT, FILLMODE_FILL_WINDOW, RESOLUTION_AUTO, RESOLUTION
 
 /** @enum {number} */
 const Resolution = {
-    SD: 0,      // 480p
-    HD: 1,      // 720p
-    FULLHD: 2   // 1080p
+    SD: 0, // 480p
+    HD: 1, // 720p
+    FULLHD: 2 // 1080p
 };
 
 /** @enum {number} */
@@ -103,7 +103,7 @@ export class VideoRecorder extends Script {
 
     captureFrame() {
         const frame = new VideoFrame(this.app.graphicsDevice.canvas, {
-            timestamp: this.totalFrames * 1e6 / this.frameRate,
+            timestamp: (this.totalFrames * 1e6) / this.frameRate,
             duration: 1e6 / this.frameRate
         });
         this.encoder.encode(frame);
@@ -147,10 +147,14 @@ export class VideoRecorder extends Script {
                 const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
                 await videoSource.add(encodedPacket, meta);
                 if (!this.recording) {
-                    this.app.fire('encode:progress', (this.framesEncoded - this.framesEncodedAtFlush) / (this.totalFrames - this.framesEncodedAtFlush));
+                    this.app.fire(
+                        'encode:progress',
+                        (this.framesEncoded - this.framesEncodedAtFlush) /
+                            (this.totalFrames - this.framesEncodedAtFlush)
+                    );
                 }
             },
-            error: e => console.error(e)
+            error: (e) => console.error(e)
         });
 
         // Configure encoder with video settings

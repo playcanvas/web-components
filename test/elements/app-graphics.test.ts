@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { useGuard } from '../helpers/guard';
 
-
 /**
  * The graphics options on an unconnected <pc-app>. No engine boots in this tier, so these cover
  * attributeChangedCallback and the accessors only - what the options do to a real graphics device
@@ -50,7 +49,9 @@ describe('<pc-app> graphics attributes', () => {
 
         element.setAttribute('max-pixel-ratio', 'high');
         expect(element.maxPixelRatio).toBe(Infinity);
-        warnings.expect('Invalid value \'high\' for attribute \'max-pixel-ratio\'. Expected a finite number. Using \'Infinity\'.');
+        warnings.expect(
+            "Invalid value 'high' for attribute 'max-pixel-ratio'. Expected a finite number. Using 'Infinity'."
+        );
     });
 
     it('does not warn about the boot-only options before the element connects', () => {

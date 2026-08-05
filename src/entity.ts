@@ -1,4 +1,4 @@
-import type { AppBase} from 'playcanvas';
+import type { AppBase } from 'playcanvas';
 import { Entity, Vec3 } from 'playcanvas';
 
 import type { AppElement } from './app';
@@ -393,7 +393,7 @@ class EntityElement extends AsyncElement {
 
     removeEventListener(type: string, listener: EventListener, options?: boolean | EventListenerOptions) {
         if (this._listeners[type]) {
-            this._listeners[type] = this._listeners[type].filter(l => l !== listener);
+            this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
         }
         super.removeEventListener(type, listener, options);
         if (type.startsWith('pointer')) {
@@ -409,6 +409,7 @@ class EntityElement extends AsyncElement {
 customElements.define('pc-entity', EntityElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-entity': EntityElement;
     }

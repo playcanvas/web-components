@@ -1,10 +1,9 @@
-import type { RigidBodyComponent} from 'playcanvas';
+import type { RigidBodyComponent } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
-import { parseVec3 } from '../utils';
+import { parseEnum, parseNumber, parseVec3 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseEnum, parseNumber, parseVec3 } from '../parse';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
@@ -187,7 +186,18 @@ class RigidBodyComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'angular-damping', 'angular-factor', 'friction', 'linear-damping', 'linear-factor', 'mass', 'restitution', 'rolling-friction', 'type'];
+        return [
+            ...super.observedAttributes,
+            'angular-damping',
+            'angular-factor',
+            'friction',
+            'linear-damping',
+            'linear-factor',
+            'mass',
+            'restitution',
+            'rolling-friction',
+            'type'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -228,6 +238,7 @@ class RigidBodyComponentElement extends ComponentElement {
 customElements.define('pc-rigidbody', RigidBodyComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-rigidbody': RigidBodyComponentElement;
     }

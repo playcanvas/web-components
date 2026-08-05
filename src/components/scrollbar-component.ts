@@ -1,7 +1,9 @@
-import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, ScrollbarComponent } from 'playcanvas';
+import type { ScrollbarComponent } from 'playcanvas';
+import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from 'playcanvas';
+
+import { getEntity, parseEnum, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';
-import { getEntity, parseEnum, parseNumber } from '../parse';
 
 const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],
@@ -133,13 +135,7 @@ class ScrollbarComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'orientation',
-            'value',
-            'handle-size',
-            'handle'
-        ];
+        return [...super.observedAttributes, 'orientation', 'value', 'handle-size', 'handle'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -165,6 +161,7 @@ class ScrollbarComponentElement extends ComponentElement {
 customElements.define('pc-scrollbar', ScrollbarComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-scrollbar': ScrollbarComponentElement;
     }

@@ -59,14 +59,14 @@ class LoadingBar {
         // aria-valuenow is set, which is what marks a progressbar indeterminate. jsdom has no Web
         // Animations API, so the guard degrades to a static bar there rather than crashing boot.
         if (typeof this._fill.animate === 'function') {
-            this._sweep = this._fill.animate([
-                { transform: 'scaleX(0.25) translateX(-100%)' },
-                { transform: 'scaleX(0.25) translateX(500%)' }
-            ], {
-                duration: 1000,
-                iterations: Infinity,
-                easing: 'ease-in-out'
-            });
+            this._sweep = this._fill.animate(
+                [{ transform: 'scaleX(0.25) translateX(-100%)' }, { transform: 'scaleX(0.25) translateX(500%)' }],
+                {
+                    duration: 1000,
+                    iterations: Infinity,
+                    easing: 'ease-in-out'
+                }
+            );
         }
     }
 

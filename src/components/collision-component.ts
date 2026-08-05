@@ -1,10 +1,9 @@
-import type { CollisionComponent} from 'playcanvas';
+import type { CollisionComponent } from 'playcanvas';
 import { Quat, Vec3 } from 'playcanvas';
 
-import { parseQuat, parseVec3 } from '../utils';
+import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseNumber, parseQuat, parseVec3 } from '../parse';
 
 /**
  * The CollisionComponentElement interface provides properties and methods for manipulating
@@ -146,7 +145,17 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'angular-offset', 'axis', 'convex-hull', 'half-extents', 'height', 'linear-offset', 'radius', 'type'];
+        return [
+            ...super.observedAttributes,
+            'angular-offset',
+            'axis',
+            'convex-hull',
+            'half-extents',
+            'height',
+            'linear-offset',
+            'radius',
+            'type'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -175,7 +184,12 @@ class CollisionComponentElement extends ComponentElement {
                 this.radius = parseNumber(newValue, 0.5, name);
                 break;
             case 'type':
-                this.type = parseEnum(newValue, ['box', 'capsule', 'compound', 'cone', 'cylinder', 'mesh', 'sphere'], 'box', name);
+                this.type = parseEnum(
+                    newValue,
+                    ['box', 'capsule', 'compound', 'cone', 'cylinder', 'mesh', 'sphere'],
+                    'box',
+                    name
+                );
                 break;
         }
     }
@@ -184,6 +198,7 @@ class CollisionComponentElement extends ComponentElement {
 customElements.define('pc-collision', CollisionComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-collision': CollisionComponentElement;
     }

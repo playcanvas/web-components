@@ -119,14 +119,13 @@ export class HandGestureController extends Script {
             this.recognizer = null;
         });
 
-        const wasmFileset = await FilesetResolver.forVisionTasks(
-            '../node_modules/@mediapipe/tasks-vision/wasm'
-        );
+        const wasmFileset = await FilesetResolver.forVisionTasks('../node_modules/@mediapipe/tasks-vision/wasm');
         if (this._destroyed) return;
 
         const recognizer = await GestureRecognizer.createFromOptions(wasmFileset, {
             baseOptions: {
-                modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task',
+                modelAssetPath:
+                    'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task',
                 delegate: 'GPU'
             },
             numHands: this.maxNumHands,
@@ -298,7 +297,7 @@ export class HandGestureController extends Script {
         for (let d = 0; d < detections.length; d++) {
             if (detectionSlot[d] !== -1) continue;
             let free = slots.findIndex((slot, s) => !slot.active && !slotTaken[s]);
-            if (free === -1) free = slotTaken.findIndex(taken => !taken);
+            if (free === -1) free = slotTaken.findIndex((taken) => !taken);
             if (free === -1) continue;
             slotTaken[free] = true;
             detectionSlot[d] = free;
@@ -368,7 +367,7 @@ export class HandGestureController extends Script {
 
         // Report a gesture change only once it has been stable for stableFrames inferences
         const top = results.gestures[d]?.[0];
-        const name = (top && top.score >= this.minScore) ? top.categoryName : 'None';
+        const name = top && top.score >= this.minScore ? top.categoryName : 'None';
         const score = name === 'None' ? 0 : top.score;
 
         if (name === slot.gesture.name) {

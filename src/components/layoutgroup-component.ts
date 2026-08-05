@@ -1,7 +1,18 @@
-import { FITTING_NONE, FITTING_STRETCH, FITTING_SHRINK, FITTING_BOTH, LayoutGroupComponent, ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL, Vec2, Vec4 } from 'playcanvas';
+import type { LayoutGroupComponent } from 'playcanvas';
+import {
+    FITTING_NONE,
+    FITTING_STRETCH,
+    FITTING_SHRINK,
+    FITTING_BOTH,
+    ORIENTATION_HORIZONTAL,
+    ORIENTATION_VERTICAL,
+    Vec2,
+    Vec4
+} from 'playcanvas';
+
+import { parseBool, parseEnum, parseVec2, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
-import { parseBool, parseEnum, parseVec2, parseVec4 } from '../parse';
 
 const orientations = new Map<'horizontal' | 'vertical', number>([
     ['horizontal', ORIENTATION_HORIZONTAL],
@@ -296,6 +307,7 @@ class LayoutGroupComponentElement extends ComponentElement {
 customElements.define('pc-layoutgroup', LayoutGroupComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-layoutgroup': LayoutGroupComponentElement;
     }

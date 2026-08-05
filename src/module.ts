@@ -51,6 +51,7 @@ class ModuleElement extends HTMLElement {
 customElements.define('pc-module', ModuleElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-module': ModuleElement;
     }

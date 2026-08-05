@@ -15,9 +15,10 @@ buttonContainer.classList.add('example-button-container', 'top-right');
 // create a button for each variant
 variants.forEach((variant) => {
     const button = document.createElement('button');
-    button.textContent = variant.split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    button.textContent = variant
+        .split('-')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 
     button.classList.add('example-button');
 

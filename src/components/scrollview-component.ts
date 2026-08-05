@@ -1,7 +1,16 @@
-import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED, ScrollViewComponent, Vec2 } from 'playcanvas';
+import type { ScrollViewComponent } from 'playcanvas';
+import {
+    SCROLL_MODE_BOUNCE,
+    SCROLL_MODE_CLAMP,
+    SCROLL_MODE_INFINITE,
+    SCROLLBAR_VISIBILITY_SHOW_ALWAYS,
+    SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED,
+    Vec2
+} from 'playcanvas';
+
+import { getEntity, parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
 
 import { ComponentElement } from './component';
-import { getEntity, parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
 
 const scrollModes = new Map<'clamp' | 'bounce' | 'infinite', number>([
     ['clamp', SCROLL_MODE_CLAMP],
@@ -244,7 +253,8 @@ class ScrollViewComponentElement extends ComponentElement {
     set horizontalScrollbarVisibility(value: 'always' | 'when-required') {
         this._horizontalScrollbarVisibility = value;
         if (this.component) {
-            this.component.horizontalScrollbarVisibility = visibilities.get(value) ?? SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED;
+            this.component.horizontalScrollbarVisibility =
+                visibilities.get(value) ?? SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED;
         }
     }
 
@@ -264,7 +274,8 @@ class ScrollViewComponentElement extends ComponentElement {
     set verticalScrollbarVisibility(value: 'always' | 'when-required') {
         this._verticalScrollbarVisibility = value;
         if (this.component) {
-            this.component.verticalScrollbarVisibility = visibilities.get(value) ?? SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED;
+            this.component.verticalScrollbarVisibility =
+                visibilities.get(value) ?? SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED;
         }
     }
 
@@ -429,6 +440,7 @@ class ScrollViewComponentElement extends ComponentElement {
 customElements.define('pc-scrollview', ScrollViewComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-scrollview': ScrollViewComponentElement;
     }

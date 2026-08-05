@@ -21,17 +21,26 @@ import {
     SPECOCC_GLOSSDEPENDENT,
     SPECOCC_NONE,
     StandardMaterial,
-    Vec2,
-    type EventHandle,
-    type Texture
+    Vec2
 } from 'playcanvas';
+import type { EventHandle, Texture } from 'playcanvas';
 
-import { AppElement } from './app';
+import type { AppElement } from './app';
 import { AssetElement } from './asset';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2 } from './parse';
 
-type BlendType = 'none' | 'normal' | 'additive' | 'additive-alpha' | 'premultiplied' |
-    'multiplicative' | 'multiplicative-2x' | 'screen' | 'min' | 'max' | 'subtractive';
+type BlendType =
+    | 'none'
+    | 'normal'
+    | 'additive'
+    | 'additive-alpha'
+    | 'premultiplied'
+    | 'multiplicative'
+    | 'multiplicative-2x'
+    | 'screen'
+    | 'min'
+    | 'max'
+    | 'subtractive';
 
 const blendTypes = new Map<BlendType, number>([
     ['none', BLEND_NONE],
@@ -100,8 +109,8 @@ const roughnessAliases = ['roughness', 'roughness-map'];
  * The texture slots a `pc-material` can populate. Each is backed by a `pc-asset` id rather than a
  * `Texture`, so the element can be authored before the asset has loaded.
  */
-type TextureSlot = 'aoMap' | 'diffuseMap' | 'emissiveMap' | 'glossMap' | 'heightMap' |
-    'metalnessMap' | 'normalMap' | 'opacityMap';
+type TextureSlot =
+    'aoMap' | 'diffuseMap' | 'emissiveMap' | 'glossMap' | 'heightMap' | 'metalnessMap' | 'normalMap' | 'opacityMap';
 
 /**
  * The MaterialElement interface provides properties and methods for manipulating
@@ -309,7 +318,7 @@ class MaterialElement extends HTMLElement {
     material: StandardMaterial | null = null;
 
     async connectedCallback() {
-        const appElement = this.parentElement?.closest('pc-app') as AppElement | null ?? null;
+        const appElement = (this.parentElement?.closest('pc-app') as AppElement | null) ?? null;
 
         // Materials must be direct children of pc-app (matches the boot query ':scope > pc-material')
         if (!appElement || this.parentElement !== appElement) {
@@ -464,10 +473,10 @@ class MaterialElement extends HTMLElement {
      * warning latches and reports once per episode, clearing when the clash is resolved.
      */
     private _warnGlossConflict() {
-        const quote = (names: string[]) => `'${names.join('\', \'')}'`;
+        const quote = (names: string[]) => `'${names.join("', '")}'`;
 
-        const roughness = roughnessAliases.filter(name => this.hasAttribute(name));
-        const gloss = glossConflicts.filter(name => this.hasAttribute(name));
+        const roughness = roughnessAliases.filter((name) => this.hasAttribute(name));
+        const gloss = glossConflicts.filter((name) => this.hasAttribute(name));
 
         if (roughness.length === 0 || gloss.length === 0) {
             this._glossConflictWarned = false;
@@ -477,8 +486,10 @@ class MaterialElement extends HTMLElement {
         if (this._glossConflictWarned) return;
         this._glossConflictWarned = true;
 
-        console.warn(`pc-material '${this.id}' sets both ${quote(roughness)} and ${quote(gloss)} - ` +
-            'the roughness-* attributes invert gloss, so the two families contradict each other. Use one or the other.');
+        console.warn(
+            `pc-material '${this.id}' sets both ${quote(roughness)} and ${quote(gloss)} - ` +
+                'the roughness-* attributes invert gloss, so the two families contradict each other. Use one or the other.'
+        );
     }
 
     /**
@@ -509,10 +520,13 @@ class MaterialElement extends HTMLElement {
             return;
         }
 
-        this._mapHandles.set(slot, asset.once('load', () => {
-            this._mapHandles.delete(slot);
-            this._applyMap(slot, asset.resource as Texture);
-        }));
+        this._mapHandles.set(
+            slot,
+            asset.once('load', () => {
+                this._mapHandles.delete(slot);
+                this._applyMap(slot, asset.resource as Texture);
+            })
+        );
     }
 
     /**
@@ -2509,6 +2523,7 @@ class MaterialElement extends HTMLElement {
 customElements.define('pc-material', MaterialElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-material': MaterialElement;
     }

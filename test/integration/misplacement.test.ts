@@ -8,7 +8,6 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
 
-
 /**
  * Misplaced elements are this library's entire negative-path surface, and none of them throws or
  * rejects: each logs a console.warn naming the parent it requires and then does nothing, leaving a
@@ -48,13 +47,13 @@ describe('misplaced elements', () => {
     it('includes the element id in the warning when one is set', async () => {
         const { get } = await bootUnsettled('<pc-camera id="main"></pc-camera>');
         await readyWithin(get<ComponentElement>('pc-camera'));
-        warnings.expect('pc-camera \'main\' must be a descendant of pc-entity - component not added');
+        warnings.expect("pc-camera 'main' must be a descendant of pc-entity - component not added");
     });
 
     it('warns and never becomes ready when pc-asset is not a direct child of pc-app', async () => {
         const { get } = await bootUnsettled('<div><pc-asset id="tex" src="/x.png"></pc-asset></div>');
 
-        warnings.expect('pc-asset \'tex\' must be a direct child of pc-app - asset not created');
+        warnings.expect("pc-asset 'tex' must be a direct child of pc-app - asset not created");
         await expectNeverReady(get<AsyncElement>('pc-asset'));
     });
 
@@ -63,7 +62,7 @@ describe('misplaced elements', () => {
 
         // pc-material extends HTMLElement rather than AsyncElement, so there is no readiness to
         // assert - only the warning.
-        warnings.expect('pc-material \'red\' must be a direct child of pc-app - material not created');
+        warnings.expect("pc-material 'red' must be a direct child of pc-app - material not created");
     });
 
     it('warns and never becomes ready when pc-script is not a direct child of pc-scripts', async () => {
@@ -75,7 +74,7 @@ describe('misplaced elements', () => {
             </pc-entity>
         `);
 
-        warnings.expect('pc-script \'rotate\' must be a direct child of pc-scripts - script not created');
+        warnings.expect("pc-script 'rotate' must be a direct child of pc-scripts - script not created");
         await expectNeverReady(get<AsyncElement>('pc-script'));
     });
 
@@ -96,7 +95,7 @@ describe('misplaced elements', () => {
         const handle = mount('<pc-entity name="stray"></pc-entity>');
         const entity = handle.get<AsyncElement>('pc-entity');
 
-        warnings.expect('pc-entity \'stray\' must be a descendant of pc-app - entity not created');
+        warnings.expect("pc-entity 'stray' must be a descendant of pc-app - entity not created");
         await expectNeverReady(entity);
     });
 

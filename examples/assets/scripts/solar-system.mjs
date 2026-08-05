@@ -256,7 +256,8 @@ export class PlanetTour extends Script {
             const normalize = child.script && child.script.normalizeScale;
             return {
                 position: bounds ? bounds.center.clone() : child.getPosition().clone(),
-                radius: (override && override.radius) ||
+                radius:
+                    (override && override.radius) ||
                     (normalize && normalize.radius) ||
                     (bounds ? boundsRadius(bounds) : 1)
             };
@@ -288,13 +289,9 @@ export class PlanetTour extends Script {
         const { width, height } = this.app.graphicsDevice;
         const aspect = width / Math.max(1, height);
         const fit = Math.min(1, aspect);
-        const distance = stop.radius * this.frame / fit;
+        const distance = (stop.radius * this.frame) / fit;
 
-        position.set(
-            stop.position.x,
-            stop.position.y + distance * this.lift,
-            stop.position.z + distance
-        );
+        position.set(stop.position.x, stop.position.y + distance * this.lift, stop.position.z + distance);
 
         // Bias the look target so the subject composes off-center: sideways on landscape
         // (alternating sides per stop) and upward on portrait, where the narrative sits

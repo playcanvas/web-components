@@ -1,6 +1,6 @@
 import { afterEach, expect } from 'vitest';
 
-export interface Mounted {
+export type Mounted = {
     /** The wrapper the markup was mounted into. */
     readonly container: HTMLElement;
     /** Queries within the mounted subtree, asserting exactly one match. */
@@ -10,7 +10,7 @@ export interface Mounted {
     all<T extends Element>(selector: string): T[];
     /** Removes the subtree from the document. Called automatically after each test. */
     unmount(): void;
-}
+};
 
 const mounted = new Set<Mounted>();
 
@@ -25,8 +25,9 @@ const LIBRARY_SELECTOR = 'pc-app, pc-asset, pc-entity, pc-material, pc-module, p
  * the test that caused it.
  */
 export const assertDocumentClean = () => {
-    const strays = Array.from(document.querySelectorAll(LIBRARY_SELECTOR))
-    .map(element => element.tagName.toLowerCase());
+    const strays = Array.from(document.querySelectorAll(LIBRARY_SELECTOR)).map((element) =>
+        element.tagName.toLowerCase()
+    );
     expect(strays, 'a previous test leaked library elements into the document').toEqual([]);
 };
 

@@ -6,14 +6,13 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { readyWithin } from '../helpers/ready';
 
-
-interface Tick {
+type Tick = {
     loaded: number;
     total: number;
     lengthComputable: boolean;
     /** `loadProgress` observed at dispatch time, proving the property never lags the event. */
     fraction: number;
-}
+};
 
 /**
  * The `progress` ProgressEvents and `loadProgress` property on <pc-app>. Listeners are attached
@@ -23,9 +22,10 @@ interface Tick {
 describe('<pc-app> loading progress', () => {
     const { errors, uncaught } = useGuard();
 
-    const settleTask = () => new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
+    const settleTask = () =>
+        new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
 
     const observe = (appElement: AppElement) => {
         const ticks: Tick[] = [];
@@ -104,9 +104,13 @@ describe('<pc-app> loading progress', () => {
         handle.container.addEventListener('progress', () => {
             bubbled += 1;
         });
-        handle.container.addEventListener('progress', () => {
-            captured += 1;
-        }, true);
+        handle.container.addEventListener(
+            'progress',
+            () => {
+                captured += 1;
+            },
+            true
+        );
 
         await readyWithin(handle.get<AppElement>('pc-app'));
 

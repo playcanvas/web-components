@@ -19,10 +19,6 @@ export class Orbit extends Script {
         const dx = -Math.sin(this.time);
         const dz = Math.cos(this.time);
 
-        this.entity.lookAt(
-            x - dx,
-            0,
-            z - dz
-        );
+        this.entity.lookAt(x - dx, 0, z - dz);
     }
 }

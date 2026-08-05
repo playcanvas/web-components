@@ -1,8 +1,9 @@
-import { GSplatComponent } from 'playcanvas';
+import type { GSplatComponent } from 'playcanvas';
 
-import { ComponentElement } from './component';
 import { AssetElement } from '../asset';
 import { parseBool, parseNumber } from '../parse';
+
+import { ComponentElement } from './component';
 
 /**
  * The GSplatComponentElement interface provides properties and methods for manipulating
@@ -217,6 +218,7 @@ class GSplatComponentElement extends ComponentElement {
 customElements.define('pc-gsplat', GSplatComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-gsplat': GSplatComponentElement;
     }

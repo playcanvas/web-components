@@ -68,7 +68,7 @@ describe('<pc-app> graphics options', () => {
         // signal that the write achieved nothing.
         expect(appElement.antialias).toBe(false);
         expect(app.graphicsDevice.isNull).toBe(true);
-        warnings.expect('Attribute \'antialias\' on <pc-app> is only read when the application boots');
+        warnings.expect("Attribute 'antialias' on <pc-app> is only read when the application boots");
     });
 
     it('warns once per late write, for every boot-only option', async () => {
@@ -83,7 +83,10 @@ describe('<pc-app> graphics options', () => {
         // too: the setter is where the check lives precisely so both reach it.
         appElement.antialias = false;
 
-        warnings.expect(/^Attribute '(alpha|antialias|backend|depth-buffer|stencil-buffer)' on <pc-app> is only read/, 5);
+        warnings.expect(
+            /^Attribute '(alpha|antialias|backend|depth-buffer|stencil-buffer)' on <pc-app> is only read/,
+            5
+        );
     });
 
     it('reboots from its current attributes when reconnected', async () => {

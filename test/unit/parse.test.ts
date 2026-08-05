@@ -42,9 +42,12 @@ describe('parse', () => {
             // Not trimmed either
             [' false ', true, true],
             ['no', false, true]
-        ] as [string | null, boolean, boolean][])('parses %o against default %o as %o', ([value, defaultValue, expected]) => {
-            expect(parseBool(value, defaultValue)).toBe(expected);
-        });
+        ] as [string | null, boolean, boolean][])(
+            'parses %o against default %o as %o',
+            ([value, defaultValue, expected]) => {
+                expect(parseBool(value, defaultValue)).toBe(expected);
+            }
+        );
 
         it('never warns, because every value is valid', () => {
             parseBool('nonsense', false);
@@ -149,12 +152,12 @@ describe('parse', () => {
 
         it('falls back for an empty string, which Number would otherwise coerce to 0', () => {
             expect(parseNumber('', 45, 'fov')).toBe(45);
-            warnings.expect('Invalid value \'\' for attribute \'fov\'. Expected a finite number. Using \'45\'.');
+            warnings.expect("Invalid value '' for attribute 'fov'. Expected a finite number. Using '45'.");
         });
 
         it('falls back for whitespace only', () => {
             expect(parseNumber('   ', 45, 'fov')).toBe(45);
-            warnings.expect('Invalid value \'   \' for attribute \'fov\'. Expected a finite number. Using \'45\'.');
+            warnings.expect("Invalid value '   ' for attribute 'fov'. Expected a finite number. Using '45'.");
         });
 
         it.for(['abc', 'Infinity', '-Infinity', 'NaN', '1,5'])('falls back and warns for %o', (value) => {
@@ -164,7 +167,7 @@ describe('parse', () => {
 
         it('renders a null default in the warning', () => {
             expect(parseNumber('abc', null, 'duration')).toBeNull();
-            warnings.expect('Invalid value \'abc\' for attribute \'duration\'. Expected a finite number. Using \'null\'.');
+            warnings.expect("Invalid value 'abc' for attribute 'duration'. Expected a finite number. Using 'null'.");
         });
     });
 
@@ -181,24 +184,36 @@ describe('parse', () => {
         });
 
         it('accepts a ReadonlyMap and validates against its keys', () => {
-            const tonemaps = new Map([['none', 0], ['filmic', 2], ['aces', 4]]);
+            const tonemaps = new Map([
+                ['none', 0],
+                ['filmic', 2],
+                ['aces', 4]
+            ]);
             expect(parseEnum('filmic', tonemaps, 'none', 'tonemap')).toBe('filmic');
         });
 
-        it('lists a map\'s keys in insertion order when the value is invalid', () => {
-            const tonemaps = new Map([['none', 0], ['filmic', 2], ['aces', 4]]);
+        it("lists a map's keys in insertion order when the value is invalid", () => {
+            const tonemaps = new Map([
+                ['none', 0],
+                ['filmic', 2],
+                ['aces', 4]
+            ]);
             expect(parseEnum('bogus', tonemaps, 'none', 'tonemap')).toBe('none');
-            warnings.expect('Invalid value \'bogus\' for attribute \'tonemap\'. Valid values: none, filmic, aces. Using \'none\'.');
+            warnings.expect(
+                "Invalid value 'bogus' for attribute 'tonemap'. Valid values: none, filmic, aces. Using 'none'."
+            );
         });
 
         it('warns for an empty string, which is not the same as an absent attribute', () => {
             expect(parseEnum('', projections, 'perspective', 'projection')).toBe('perspective');
-            warnings.expect('Invalid value \'\' for attribute \'projection\'. Valid values: perspective, orthographic. Using \'perspective\'.');
+            warnings.expect(
+                "Invalid value '' for attribute 'projection'. Valid values: perspective, orthographic. Using 'perspective'."
+            );
         });
 
         it('is case sensitive', () => {
             expect(parseEnum('Orthographic', projections, 'perspective', 'projection')).toBe('perspective');
-            warnings.expect('Invalid value \'Orthographic\' for attribute \'projection\'.');
+            warnings.expect("Invalid value 'Orthographic' for attribute 'projection'.");
         });
     });
 
@@ -243,8 +258,8 @@ describe('parse', () => {
             expect(parseColor(value, Color.WHITE, 'diffuse')).toEqual(Color.WHITE);
             warnings.expect(
                 `Invalid value '${value}' for attribute 'diffuse'. ` +
-                'Expected a CSS color name, a hex color or 3 or 4 space-separated numbers. ' +
-                'Using \'#ffffff\'.'
+                    'Expected a CSS color name, a hex color or 3 or 4 space-separated numbers. ' +
+                    "Using '#ffffff'."
             );
         });
 
@@ -252,7 +267,7 @@ describe('parse', () => {
             // pc-camera's real clear-color default. Math.round(0.75 * 255) is 191, i.e. 0xbf.
             const clearColor = new Color(0.75, 0.75, 0.75, 1);
             expect(parseColor('nope', clearColor, 'clear-color')).toEqual(clearColor);
-            warnings.expect('Using \'#bfbfbf\'.');
+            warnings.expect("Using '#bfbfbf'.");
         });
     });
 

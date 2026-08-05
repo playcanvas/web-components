@@ -52,7 +52,7 @@ class ParticleSystemComponentElement extends ComponentElement {
 
         // Set all the config properties on the component
         for (const key in resource) {
-            if (resource.hasOwnProperty(key)) {
+            if (Object.hasOwn(resource, key)) {
                 (this.component as any)[key] = resource[key];
             }
         }
@@ -134,10 +134,7 @@ class ParticleSystemComponentElement extends ComponentElement {
     }
 
     static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'asset'
-        ];
+        return [...super.observedAttributes, 'asset'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -154,6 +151,7 @@ class ParticleSystemComponentElement extends ComponentElement {
 customElements.define('pc-particles', ParticleSystemComponentElement);
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
     interface HTMLElementTagNameMap {
         'pc-particles': ParticleSystemComponentElement;
     }
