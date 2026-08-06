@@ -32,7 +32,7 @@ export class BakedAo extends Script {
      * The brightness of the baked occlusion. Negative values deepen the shadow.
      * @attribute
      */
-    brightness = -0.65;
+    brightness = -0.9;
 
     /**
      * How much of the sphere the ambient light is taken from. 0.4 is roughly an upper hemisphere,

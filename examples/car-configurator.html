@@ -21,7 +21,6 @@
             <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
-            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-navigation.mjs"></pc-asset>
@@ -32,7 +31,7 @@
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/models/porsche-911-carrera-4s.glb" id="car"></pc-asset>
             <!-- Materials (the ground's diffuse is tuned so its lit value matches the backdrop) -->
-            <pc-material id="ground" diffuse="0.81 0.81 0.81" metalness="0" gloss="0.1"></pc-material>
+            <pc-material id="ground" diffuse="0.84 0.84 0.84" metalness="0" gloss="0.1"></pc-material>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
@@ -40,7 +39,7 @@
                 <!-- Camera (with XR support) -->
                 <pc-entity name="camera root">
                     <pc-entity name="camera" position="0 1.75 5">
-                        <pc-camera fov="35"></pc-camera>
+                        <pc-camera fov="35" tonemap="neutral"></pc-camera>
                         <pc-scripts>
                             <pc-script name="cameraControls"
                                        enable-fly="false"
