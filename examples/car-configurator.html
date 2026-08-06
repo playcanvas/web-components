@@ -59,9 +59,10 @@
                     </pc-scripts>
                 </pc-entity>
                 <!-- Light (intensity 0: casts the shadow without touching the IBL studio look).
-                     The rotation matters: an unrotated directional light points along -Z, so it
-                     would graze the ground plane instead of casting onto it. -->
-                <pc-entity name="light" rotation="-60 -35 0">
+                     A directional light shines along its entity's -Y, so an unrotated one already
+                     points straight down; this tilts it to a 65 degree elevation for a subtly
+                     directional shadow, keeping it near-overhead to match the studio HDRI. -->
+                <pc-entity name="light" rotation="-25 -35 0">
                     <pc-light cast-shadows intensity="0" shadow-distance="24" shadow-intensity="0.65" shadow-resolution="2048" shadow-type="vsm-16f" vsm-blur-size="15"></pc-light>
                 </pc-entity>
                 <!-- Car -->
