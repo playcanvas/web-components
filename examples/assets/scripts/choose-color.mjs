@@ -77,7 +77,13 @@ const STYLES = `
     cursor: pointer;
     /* A soft highlight reads as paint under a studio light rather than a flat chip */
     background-image: radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.5), transparent 46%);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 2px 6px rgba(0, 0, 0, 0.35);
+    /* The middle layer is the selection ring, transparent until selected. Both states must carry
+       the same layers in the same order: box-shadow lists interpolate positionally, so a state
+       with fewer layers makes the drop shadow morph into the ring instead of the ring fading in. */
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+        0 0 0 2px transparent,
+        0 2px 6px rgba(0, 0, 0, 0.35);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -96,7 +102,10 @@ const STYLES = `
 }
 
 .cfg-swatch[aria-pressed="true"] {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 0 0 2px #fff, 0 2px 8px rgba(0, 0, 0, 0.45);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+        0 0 0 2px #fff,
+        0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 /* Keep clear of the example harness's own buttons in the bottom-right corner */
