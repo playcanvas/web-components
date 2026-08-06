@@ -1,5 +1,5 @@
 import type { AppElement } from './app';
-import type { EntityElement } from './entity';
+import type { EntityBaseElement } from './entity-base';
 
 /**
  * Base class for all PlayCanvas Web Components that initialize asynchronously.
@@ -33,12 +33,13 @@ class AsyncElement extends HTMLElement {
     }
 
     /**
-     * The nearest ancestor `<pc-entity>` element, or `null` if this element has no `<pc-entity>`
-     * ancestor. The search starts at the parent, so an element never resolves to itself.
-     * @returns The closest entity element, or `null`.
+     * The nearest ancestor element that fronts an entity — `<pc-entity>` or `<pc-node>` — or
+     * `null` if this element has no such ancestor. The search starts at the parent, so an element
+     * never resolves to itself.
+     * @returns The closest entity-fronting element, or `null`.
      */
-    get closestEntity(): EntityElement | null {
-        return (this.parentElement?.closest('pc-entity') as EntityElement | null) ?? null;
+    get closestEntity(): EntityBaseElement | null {
+        return (this.parentElement?.closest('pc-entity, pc-node') as EntityBaseElement | null) ?? null;
     }
 
     /**

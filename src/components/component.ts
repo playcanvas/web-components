@@ -2,6 +2,7 @@ import type { Component } from 'playcanvas';
 
 import type { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
+import type { EntityBaseElement } from '../entity-base';
 import { parseBool } from '../parse';
 
 /**
@@ -17,6 +18,18 @@ class ComponentElement extends AsyncElement {
     private _component: Component | null = null;
 
     private _appElement: AppElement | null = null;
+
+    /**
+     * The element hosting this component, held so the host's readiness cycles can be observed
+     * even after `closestEntity` would no longer resolve (during teardown).
+     */
+    private _hostElement: EntityBaseElement | null = null;
+
+    /**
+     * The listener re-applying this component when the host's readiness cycles. Held for
+     * removal on disconnect.
+     */
+    private _hostReadyListener: EventListener | null = null;
 
     /**
      * Incremented on every connect and disconnect. connectedCallback captures the value on entry
@@ -49,6 +62,42 @@ class ComponentElement extends AsyncElement {
         return {};
     }
 
+    /**
+     * Creates the component on the host's current entity, removing it first from a previous
+     * entity that is still alive (a retargeted `<pc-node>` moves its decorations with it). When
+     * the entity already has a component of this type — a glTF node arriving with its authored
+     * `render` component, say — warns and leaves `component` null. The element-level warning is
+     * load-bearing: the engine's own duplicate-addComponent warning is Debug-stripped from
+     * production builds, which would otherwise leave a silent null.
+     */
+    private _applyComponent() {
+        const entity = this._hostElement?.entity;
+        if (!entity) {
+            return;
+        }
+        if (this._component && this._component.entity === entity) {
+            return;
+        }
+
+        // A retarget leaves the previous component on a still-live entity - remove it so the
+        // decoration follows the element. A destroyed entity took its components with it.
+        const previous = this._component;
+        if (previous?.entity && previous.entity.c[this._componentName] === previous) {
+            previous.entity.removeComponent(this._componentName);
+        }
+        this._component = null;
+
+        if (entity.c[this._componentName]) {
+            const label = this.id ? ` '${this.id}'` : '';
+            console.warn(
+                `${this.tagName.toLowerCase()}${label} - '${entity.name}' already has a '${this._componentName}' component - component not added`
+            );
+            return;
+        }
+
+        this._component = entity.addComponent(this._componentName, this.getInitialComponentData());
+    }
+
     private async _addComponent() {
         const generation = this._connectionGeneration;
 
@@ -71,9 +120,27 @@ class ComponentElement extends AsyncElement {
             return;
         }
 
-        // Add the component to the entity
-        const data = this.getInitialComponentData();
-        this._component = entityElement.entity!.addComponent(this._componentName, data);
+        this._hostElement = entityElement;
+        this._applyComponent();
+
+        // Re-apply when the host's readiness cycles without this element disconnecting: a
+        // `<pc-node>` rebinding after its model reloads or retargets, or a re-created entity.
+        // The 'ready' event bubbles, so events from descendants pass through this host - only
+        // the host's own cycles count. Readiness is cycled here too, so decorations one level
+        // down re-apply the same way.
+        this._hostReadyListener = (event: Event) => {
+            if (event.target !== this._hostElement) {
+                return;
+            }
+            if (generation !== this._connectionGeneration) {
+                return;
+            }
+            this._resetReady();
+            this._applyComponent();
+            this.initComponent();
+            this._onReady();
+        };
+        entityElement.addEventListener('ready', this._hostReadyListener);
     }
 
     /**
@@ -110,6 +177,12 @@ class ComponentElement extends AsyncElement {
     disconnectedCallback() {
         // Invalidate any connectedCallback still suspended on an await
         this._connectionGeneration++;
+
+        if (this._hostElement && this._hostReadyListener) {
+            this._hostElement.removeEventListener('ready', this._hostReadyListener);
+        }
+        this._hostElement = null;
+        this._hostReadyListener = null;
 
         // Remove the component when the element is disconnected. Skip this when the owning
         // application has already been destroyed — removing a <pc-app> disconnects it before

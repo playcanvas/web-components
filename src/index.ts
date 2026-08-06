@@ -35,8 +35,10 @@ import { ScriptElement } from './components/script';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
 import { GSplatComponentElement } from './components/gsplat-component';
+import { EntityBaseElement } from './entity-base';
 import { MaterialElement } from './material';
 import { ModelElement } from './model';
+import { NodeElement } from './node';
 import { SceneElement } from './scene';
 import { SkyElement } from './sky';
 
@@ -69,6 +71,7 @@ declare global {
         'pc-material': MaterialElement;
         'pc-model': ModelElement;
         'pc-module': ModuleElement;
+        'pc-node': NodeElement;
         'pc-particles': ParticleSystemComponentElement;
         'pc-render': RenderComponentElement;
         'pc-rigidbody': RigidBodyComponentElement;
@@ -110,8 +113,10 @@ export {
     SoundComponentElement,
     SoundSlotElement,
     GSplatComponentElement,
+    EntityBaseElement,
     MaterialElement,
     ModelElement,
+    NodeElement,
     SceneElement,
     SkyElement,
     whenReady
