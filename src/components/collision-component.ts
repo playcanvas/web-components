@@ -11,6 +11,12 @@ import { ComponentElement } from './component';
  * The CollisionComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * For `type="mesh"`, the collision geometry defaults to the host entity's own render component
+ * (its render asset) — a collider matching the visible mesh, which is what a mesh collider on a
+ * glTF node means. The default resolves each time the component applies, so a `pc-node` that
+ * retargets or rebinds picks up the new node's geometry. An entity with no asset-backed render
+ * component warns, and the collider has no shape.
+ *
  * @category Components
  */
 class CollisionComponentElement extends ComponentElement {
@@ -46,6 +52,25 @@ class CollisionComponentElement extends ComponentElement {
             radius: this._radius,
             type: this._type
         };
+    }
+
+    protected initComponent() {
+        const component = this.component;
+        if (!component || this._type !== 'mesh' || component.renderAsset !== null) {
+            return;
+        }
+
+        // The engine's mesh collider only works with explicitly supplied geometry, and the
+        // element has no attribute to supply it - so default to the host entity's own visible
+        // geometry, the meaning a mesh collider on a glTF node carries.
+        const asset = component.entity.render?.asset ?? null;
+        if (asset === null) {
+            console.warn(
+                `pc-collision type="mesh" on '${component.entity.name}' found no asset-backed render component to take geometry from - collider has no shape`
+            );
+            return;
+        }
+        component.renderAsset = asset;
     }
 
     /**
