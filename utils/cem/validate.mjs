@@ -306,6 +306,7 @@ if (manifest) {
         ['pc-material', ['get', 'material', 'roughness', 'roughnessMap']],
         ['pc-model', ['entity', ...ASYNC_MEMBERS]],
         ['pc-module', []],
+        ['pc-node', ['addEventListener', 'entity', 'path', 'removeEventListener', 'state', ...ASYNC_MEMBERS]],
         ['pc-particles', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
         ['pc-scene', ['scene', ...ASYNC_MEMBERS]],
         ['pc-script', ['script', ...ASYNC_MEMBERS]],

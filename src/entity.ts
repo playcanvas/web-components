@@ -1,8 +1,7 @@
 import type { AppBase } from 'playcanvas';
 import { Entity, Vec3 } from 'playcanvas';
 
-import type { AppElement } from './app';
-import { AsyncElement } from './async-element';
+import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
 /**
@@ -29,7 +28,7 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the entity.
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the entity.
  */
-class EntityElement extends AsyncElement {
+class EntityElement extends EntityBaseElement {
     /**
      * Whether the entity is enabled.
      */
@@ -61,37 +60,9 @@ class EntityElement extends AsyncElement {
     private _tags: string[] = [];
 
     /**
-     * The pointer event listeners for the entity.
-     */
-    private _listeners: Record<string, EventListener[]> = {};
-
-    /**
-     * The event types for which an inline `onpointer*` attribute is currently present.
-     */
-    private _inlineHandlerTypes = new Set<string>();
-
-    /**
      * Whether the hierarchy has been built for this entity.
      */
     private _built = false;
-
-    private _entity: Entity | null = null;
-
-    /**
-     * The application element this entity is registered with, cached at creation time so the
-     * entity can be unregistered even once this element has left the DOM.
-     */
-    private _appElement: AppElement | null = null;
-
-    /**
-     * The PlayCanvas entity instance. `null` until the element is ready, and again once it has
-     * been removed from the document — await {@link whenReady} or the element's `ready()`
-     * promise before accessing it.
-     * @returns The entity instance, or `null`.
-     */
-    get entity(): Entity | null {
-        return this._entity;
-    }
 
     /**
      * Creates the backing entity. Called by the containing `<pc-app>` element during its boot
@@ -124,13 +95,11 @@ class EntityElement extends AsyncElement {
             entity.tags.add(this._tags);
         }
 
-        // Register with the owning application, which joins engine nodes back to elements by
-        // identity (never by name), and hook the entity's destruction. The engine fires 'destroy'
-        // for every entity in a destroyed subtree, so the element learns of its entity's death no
-        // matter who causes it: this element, an ancestor, the whole application, or a user
-        // script calling entity.destroy().
-        this._appElement = this.closestApp;
-        this._appElement?._registerEntityElement(entity, this);
+        // Register with the owning application and hook the entity's destruction. The engine
+        // fires 'destroy' for every entity in a destroyed subtree, so the element learns of its
+        // entity's death no matter who causes it: this element, an ancestor, the whole
+        // application, or a user script calling entity.destroy().
+        this._registerEntity(entity);
         entity.once('destroy', this._onEntityDestroy, this);
     }
 
@@ -144,27 +113,35 @@ class EntityElement extends AsyncElement {
      * @param entity - The entity that was destroyed.
      */
     private _onEntityDestroy(entity: Entity) {
-        this._appElement?._unregisterEntityElement(entity);
-        this._appElement = null;
+        this._unregisterEntity(entity);
         this._entity = null;
         this._built = false;
         this._resetReady();
     }
 
     /**
-     * Parents the backing entity: under the entity of the nearest ancestor `<pc-entity>` when
-     * there is one, and under the application root otherwise. Called by the containing `<pc-app>`
-     * element once a sweep has created every entity, so a parent's existence never depends on
-     * document order.
+     * Parents the backing entity: under the entity of the nearest ancestor `<pc-entity>` or
+     * `<pc-node>` when there is one, and under the application root otherwise. Called by the
+     * containing `<pc-app>` element once a sweep has created every entity, so a parent's
+     * existence never depends on document order.
      *
      * @param app - The application whose root adopts parentless entities.
      * @internal
      */
     _buildHierarchy(app: AppBase) {
         if (!this.entity || this._built) return;
-        this._built = true;
 
         const closestEntity = this.closestEntity;
+
+        // A host element without an entity is an unresolved `<pc-node>`: building now would
+        // mis-anchor this entity to the application root while the host is still resolving.
+        // Stay unbuilt - the host drives this subtree itself once it binds.
+        if (closestEntity && !closestEntity.entity) {
+            return;
+        }
+
+        this._built = true;
+
         if (closestEntity?.entity) {
             closestEntity.entity.addChild(this.entity);
         } else {
@@ -328,45 +305,8 @@ class EntityElement extends AsyncElement {
         return this._tags;
     }
 
-    /**
-     * Tracks whether an inline `onpointer*` attribute is present. The browser itself compiles and
-     * runs these attributes — they are standard `GlobalEventHandlers`, so setting one replaces
-     * the previous handler and removing it removes the handler, exactly like `onclick` on any
-     * HTML element. But because they bypass {@link addEventListener}, the connect/disconnect
-     * bookkeeping that lets the application lazily attach its canvas pointer handlers must be
-     * kept in sync here.
-     *
-     * @param name - The attribute name (e.g. 'onpointerdown').
-     * @param value - The attribute value, or `null` when the attribute has been removed.
-     */
-    private _updateInlineHandler(name: string, value: string | null) {
-        const type = name.substring(2);
-        const had = this._inlineHandlerTypes.has(type);
-        const has = value !== null;
-
-        if (has && !had) {
-            this._inlineHandlerTypes.add(type);
-            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
-        } else if (!has && had) {
-            this._inlineHandlerTypes.delete(type);
-            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
-        }
-    }
-
     static get observedAttributes() {
-        return [
-            'enabled',
-            'name',
-            'position',
-            'rotation',
-            'scale',
-            'tags',
-            'onpointerenter',
-            'onpointerleave',
-            'onpointerdown',
-            'onpointerup',
-            'onpointermove'
-        ];
+        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...POINTER_ATTRIBUTES];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -397,40 +337,6 @@ class EntityElement extends AsyncElement {
                 this._updateInlineHandler(name, newValue);
                 break;
         }
-    }
-
-    addEventListener(type: string, listener: EventListener, options?: boolean | AddEventListenerOptions) {
-        if (!this._listeners[type]) {
-            this._listeners[type] = [];
-        }
-        this._listeners[type].push(listener);
-        super.addEventListener(type, listener, options);
-        if (type.startsWith('pointer')) {
-            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
-        }
-    }
-
-    removeEventListener(type: string, listener: EventListener, options?: boolean | EventListenerOptions) {
-        if (this._listeners[type]) {
-            this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
-        }
-        super.removeEventListener(type, listener, options);
-        if (type.startsWith('pointer')) {
-            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
-        }
-    }
-
-    /**
-     * Whether the element has a listener for an event type, registered either with
-     * {@link addEventListener} or with the matching inline `onpointer*` attribute. Read by the
-     * containing `<pc-app>` element to gate pointer event synthesis.
-     *
-     * @param type - The event type.
-     * @returns Whether a listener is registered.
-     * @internal
-     */
-    _hasListeners(type: string): boolean {
-        return Boolean(this._listeners[type]?.length) || this._inlineHandlerTypes.has(type);
     }
 }
 

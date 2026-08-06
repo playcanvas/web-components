@@ -67,6 +67,7 @@ import {
 import type { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
 import type { EntityElement } from './entity';
+import type { EntityBaseElement } from './entity-base';
 import { LoadingBar } from './loading-bar';
 import type { MaterialElement } from './material';
 import type { ModuleElement } from './module';
@@ -133,10 +134,11 @@ class AppElement extends AsyncElement {
 
     /**
      * The elements backing this application's entities, keyed by the entity itself. Registered
-     * by EntityElement at creation and removed when an entity is destroyed, this joins engine
-     * scene nodes back to their owning elements by identity - never by name.
+     * by EntityElement at creation (and NodeElement at binding) and removed when an entity is
+     * destroyed or unbound, this joins engine scene nodes back to their owning elements by
+     * identity - never by name.
      */
-    private _entityElements = new Map<GraphNode, EntityElement>();
+    private _entityElements = new Map<GraphNode, EntityBaseElement>();
 
     private _picker: Picker | null = null;
 
@@ -148,7 +150,7 @@ class AppElement extends AsyncElement {
         pointermove: false
     };
 
-    private _hoveredEntity: EntityElement | null = null;
+    private _hoveredEntity: EntityBaseElement | null = null;
 
     // Identifies the newest in-flight hover pick, so out-of-order results can be discarded
     private _pickToken = 0;
@@ -493,9 +495,9 @@ class AppElement extends AsyncElement {
         // created from onpointer* attributes when their elements were first upgraded, or
         // listeners carried over from before a re-boot)
         pointerEventTypes.forEach((type) => {
-            const anyListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity')).some((entity) =>
-                entity._hasListeners(type)
-            );
+            const anyListeners = Array.from(
+                this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')
+            ).some((entity) => entity._hasListeners(type));
             if (anyListeners) {
                 this._onPointerListenerAdded(type);
             }
@@ -528,14 +530,14 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Registers the element that created an entity. Called by EntityElement when it creates its
-     * entity.
+     * Registers the element that fronts an entity. Called by EntityElement when it creates its
+     * entity, and by NodeElement when it binds one.
      *
      * @param entity - The entity.
-     * @param element - The element that created it.
+     * @param element - The element that fronts it.
      * @internal
      */
-    _registerEntityElement(entity: Entity, element: EntityElement) {
+    _registerEntityElement(entity: Entity, element: EntityBaseElement) {
         this._entityElements.set(entity, element);
     }
 
@@ -550,27 +552,28 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Returns the `<pc-entity>` element whose backing entity is `entity`, or `null` if the
-     * entity was not created by an element of this application - for example, a node inside a
-     * model's instantiated hierarchy, or an entity created through the engine API.
+     * Returns the `<pc-entity>` or `<pc-node>` element whose backing entity is `entity`, or
+     * `null` if the entity is not fronted by an element of this application - for example, an
+     * unbound node inside a model's instantiated hierarchy, or an entity created through the
+     * engine API.
      *
      * @param entity - The entity to look up.
-     * @returns The element backing the entity, or `null`.
+     * @returns The element fronting the entity, or `null`.
      */
-    elementFromEntity(entity: Entity): EntityElement | null {
+    elementFromEntity(entity: Entity): EntityBaseElement | null {
         return this._entityElements.get(entity) ?? null;
     }
 
     /**
      * Resolves the element that owns a picked node: the nearest node up the parent chain -
-     * starting with the node itself - that was created by a `<pc-entity>` of this application.
-     * A hit inside a model's instantiated hierarchy therefore resolves to the element hosting
-     * the model.
+     * starting with the node itself - that is fronted by a `<pc-entity>` or `<pc-node>` of this
+     * application. A hit inside a model's instantiated hierarchy therefore resolves to the
+     * nearest bound `<pc-node>`, or failing that the element hosting the model.
      *
      * @param node - The picked node, or `null`.
      * @returns The owning element, or `null`.
      */
-    private _elementFromNode(node: GraphNode | null): EntityElement | null {
+    private _elementFromNode(node: GraphNode | null): EntityBaseElement | null {
         while (node !== null) {
             const element = this._entityElements.get(node);
             if (element) {
@@ -589,7 +592,7 @@ class AppElement extends AsyncElement {
      * @param type - The pointer event type a listener is required for.
      * @returns The nearest listening element, or `null`.
      */
-    private _elementWithListener(node: GraphNode | null, type: string): EntityElement | null {
+    private _elementWithListener(node: GraphNode | null, type: string): EntityBaseElement | null {
         while (node !== null) {
             const element = this._entityElements.get(node);
             if (element?._hasListeners(type)) {
@@ -715,9 +718,9 @@ class AppElement extends AsyncElement {
     }
 
     private _onPointerListenerRemoved(type: string) {
-        const hasListeners = Array.from(this.querySelectorAll<EntityElement>('pc-entity')).some((entity) =>
-            entity._hasListeners(type)
-        );
+        const hasListeners = Array.from(
+            this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')
+        ).some((entity) => entity._hasListeners(type));
 
         if (!hasListeners && this._canvas) {
             this._hasPointerListeners[type] = false;
