@@ -91,7 +91,7 @@
     "jsdom": "30.0.1",
     "mediabunny": "1.52.3",
     "opentype.js": "2.0.0",
-    "playcanvas": "2.21.3",
+    "playcanvas": "2.22.0-beta.10",
     "prettier": "3.9.6",
     "publint": "0.3.23",
     "rollup": "4.62.4",
