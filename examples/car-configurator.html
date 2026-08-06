@@ -22,15 +22,17 @@
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
-            <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-navigation.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-session.mjs"></pc-asset>
             <pc-asset src="assets/fonts/arial.json" type="font" id="arial-font"></pc-asset>
+            <pc-asset src="assets/scripts/baked-ao.mjs"></pc-asset>
             <pc-asset src="assets/scripts/choose-color.mjs"></pc-asset>
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/models/porsche-911-carrera-4s.glb" id="car"></pc-asset>
+            <!-- Materials (the ground's diffuse is tuned so its lit value matches the backdrop) -->
+            <pc-material id="ground" diffuse="0.81 0.81 0.81" metalness="0" gloss="0.1"></pc-material>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky -->
@@ -58,25 +60,22 @@
                         <pc-script name="xrSession"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- Light (shadow only) -->
-                <pc-entity name="light" rotation="-25 -35 0">
-                    <pc-light cast-shadows intensity="0" shadow-distance="24" shadow-intensity="0.65" shadow-resolution="2048" shadow-type="vsm-16f" vsm-blur-size="15"></pc-light>
-                </pc-entity>
                 <!-- Car -->
                 <pc-entity name="car" position="0 0.625 0" rotation="0 -90 0">
                     <pc-model asset="car">
                         <!-- The GLB bakes caption text (and a shadow) into its ground plane - hide
-                             it and let the shadow catcher below provide a real one instead -->
+                             it and let the baked AO ground below provide a real one instead -->
                         <pc-node name="Plane" enabled="false"></pc-node>
                     </pc-model>
                     <pc-scripts>
                         <pc-script name="chooseColor"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- Shadow Catcher -->
-                <pc-entity name="shadow catcher">
+                <!-- Ground (ambient occlusion baked into it, for a contact shadow) -->
+                <pc-entity name="ground" scale="20 1 20">
+                    <pc-render type="plane" cast-shadows="false" material="ground"></pc-render>
                     <pc-scripts>
-                        <pc-script name="shadowCatcher" scale="24 24 24"></pc-script>
+                        <pc-script name="bakedAo"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- XR -->
