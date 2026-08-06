@@ -22,6 +22,7 @@
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-navigation.mjs"></pc-asset>
@@ -57,11 +58,25 @@
                         <pc-script name="xrSession"></pc-script>
                     </pc-scripts>
                 </pc-entity>
+                <!-- Light (shadow only) -->
+                <pc-entity name="light" rotation="-25 -35 0">
+                    <pc-light cast-shadows intensity="0" shadow-distance="24" shadow-intensity="0.65" shadow-resolution="2048" shadow-type="vsm-16f" vsm-blur-size="15"></pc-light>
+                </pc-entity>
                 <!-- Car -->
                 <pc-entity name="car" position="0 0.625 0" rotation="0 -90 0">
-                    <pc-model asset="car"></pc-model>
+                    <pc-model asset="car">
+                        <!-- The GLB bakes caption text (and a shadow) into its ground plane - hide
+                             it and let the shadow catcher below provide a real one instead -->
+                        <pc-node name="Plane" enabled="false"></pc-node>
+                    </pc-model>
                     <pc-scripts>
                         <pc-script name="chooseColor"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Shadow Catcher -->
+                <pc-entity name="shadow catcher">
+                    <pc-scripts>
+                        <pc-script name="shadowCatcher" scale="24 24 24"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- XR -->
