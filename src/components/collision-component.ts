@@ -55,14 +55,23 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     protected initComponent() {
+        this._applyMeshGeometryDefault();
+    }
+
+    /**
+     * Defaults a mesh collider's geometry to the host entity's own render component. The
+     * engine's mesh collider only works with explicitly supplied geometry, and the element has
+     * no attribute to supply it - so the host's visible geometry, the meaning a mesh collider
+     * on a glTF node carries, fills the gap. Runs on every application (so a rebound `pc-node`
+     * recomputes it) and on a runtime switch to `type="mesh"`; an explicitly assigned
+     * `renderAsset` is never overwritten.
+     */
+    private _applyMeshGeometryDefault() {
         const component = this.component;
         if (!component || this._type !== 'mesh' || component.renderAsset !== null) {
             return;
         }
 
-        // The engine's mesh collider only works with explicitly supplied geometry, and the
-        // element has no attribute to supply it - so default to the host entity's own visible
-        // geometry, the meaning a mesh collider on a glTF node carries.
         const asset = component.entity.render?.asset ?? null;
         if (asset === null) {
             console.warn(
@@ -162,6 +171,7 @@ class CollisionComponentElement extends ComponentElement {
         this._type = value;
         if (this.component) {
             this.component.type = value;
+            this._applyMeshGeometryDefault();
         }
     }
 

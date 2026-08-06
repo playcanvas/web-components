@@ -83,6 +83,28 @@ describe('<pc-collision> mesh geometry default', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
+    it('applies the default when type changes to mesh at runtime', async () => {
+        const { get } = await bootApp(
+            `${MESH_ASSET}<pc-model asset="m">
+                <pc-node name="Body"><pc-collision></pc-collision></pc-node>
+            </pc-model>`
+        );
+        const node = get<NodeElement>('pc-node');
+        const collision = get<CollisionComponentElement>('pc-collision');
+        await readyWithin(collision);
+
+        expect(collision.component!.type, 'starts as the default box').toBe('box');
+        expect(collision.component!.renderAsset, 'no geometry default for a box').toBeNull();
+
+        collision.setAttribute('type', 'mesh');
+
+        expect(collision.component!.type).toBe('mesh');
+        expect(collision.component!.renderAsset, 'the runtime transition picked up the host geometry').toBe(
+            node.entity!.render!.asset
+        );
+        expect(uncaught.seen).toEqual([]);
+    });
+
     it('warns and leaves the collider shapeless when there is no render component', async () => {
         const { get } = await bootApp('<pc-entity name="empty"><pc-collision type="mesh"></pc-collision></pc-entity>');
         const collision = get<CollisionComponentElement>('pc-collision');
