@@ -58,9 +58,11 @@
                         <pc-script name="xrSession"></pc-script>
                     </pc-scripts>
                 </pc-entity>
-                <!-- Light (intensity 0: casts the shadow without touching the IBL studio look) -->
-                <pc-entity name="light">
-                    <pc-light cast-shadows intensity="0" shadow-distance="30" shadow-intensity="0.6" shadow-resolution="1024" shadow-type="vsm-16f"></pc-light>
+                <!-- Light (intensity 0: casts the shadow without touching the IBL studio look).
+                     The rotation matters: an unrotated directional light points along -Z, so it
+                     would graze the ground plane instead of casting onto it. -->
+                <pc-entity name="light" rotation="-60 -35 0">
+                    <pc-light cast-shadows intensity="0" shadow-distance="24" shadow-intensity="0.65" shadow-resolution="2048" shadow-type="vsm-16f" vsm-blur-size="15"></pc-light>
                 </pc-entity>
                 <!-- Car -->
                 <pc-entity name="car" position="0 0.625 0" rotation="0 -90 0">
@@ -76,7 +78,7 @@
                 <!-- Shadow Catcher -->
                 <pc-entity name="shadow catcher">
                     <pc-scripts>
-                        <pc-script name="shadowCatcher" scale="10 10 10"></pc-script>
+                        <pc-script name="shadowCatcher" scale="24 24 24"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- XR -->
