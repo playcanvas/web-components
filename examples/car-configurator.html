@@ -59,7 +59,10 @@
                 </pc-entity>
                 <!-- Car -->
                 <pc-entity name="car" position="0 0.625 0" rotation="0 -90 0">
-                    <pc-model asset="car"></pc-model>
+                    <pc-model asset="car">
+                        <!-- The GLB bakes caption text into its ground plane - hide it -->
+                        <pc-node name="Plane" enabled="false"></pc-node>
+                    </pc-model>
                     <pc-scripts>
                         <pc-script name="chooseColor"></pc-script>
                     </pc-scripts>
