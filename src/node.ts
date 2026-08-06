@@ -1,6 +1,7 @@
 import type { Entity, EventHandle, GraphNode, Quat } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
+import { ComponentElement } from './components/component';
 import type { EntityElement } from './entity';
 import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
 import { ModelElement } from './model';
@@ -65,8 +66,9 @@ const levenshtein = (a: string, b: string): number => {
  * named matches. When `name` matches more than one node and no `index` is given, the element
  * warns and binds nothing.
  *
- * The element becomes ready once bound. It never becomes ready while unresolved — a missing or
- * ambiguous name warns and leaves the element pending, and descendants wait with it.
+ * The element becomes ready once bound, and never while unresolved — a missing or ambiguous
+ * name warns and records the failure in `state`, readiness stays unresolved, and descendants
+ * wait with it.
  *
  * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
  * intersects the bound node's geometry, exactly as for `<pc-entity>`.
@@ -304,8 +306,10 @@ class NodeElement extends EntityBaseElement {
 
     /**
      * Dissolves the current binding, restoring every authored value this element's overrides
-     * displaced and destroying the entities its child `pc-entity` elements created (they are
-     * re-created against the next binding). Safe to call in any state.
+     * displaced and removing the decorations this binding hosts: attachment entities are
+     * destroyed (re-created against the next binding) and component decorations are removed
+     * from the abandoned node. Both sweeps are scoped by `closestEntity`, so a still-bound
+     * nested `pc-node` keeps its own decorations. Safe to call in any state.
      */
     private _unbind() {
         const entity = this._entity;
@@ -318,7 +322,9 @@ class NodeElement extends EntityBaseElement {
         // Attachment points anchor to the bound node, so they cannot outlive the binding. Each
         // destroyed entity resets its element, which the next _buildChildren re-creates.
         this.querySelectorAll<EntityElement>('pc-entity').forEach((child) => {
-            child.entity?.destroy();
+            if (child.closestEntity === this) {
+                child.entity?.destroy();
+            }
         });
 
         this._destroyHandle?.off();
@@ -327,6 +333,16 @@ class NodeElement extends EntityBaseElement {
         this._entity = null;
         this._path = null;
         this._authored = {};
+
+        // Component decorations come off through the same hook the host-ready cycle uses. A
+        // dissolve that never rebinds fires no ready event, so the sweep is explicit - after
+        // `_entity` is cleared, so the hook sees a host without an entity.
+        this.querySelectorAll('*').forEach((child) => {
+            if (child instanceof ComponentElement && child.closestEntity === this) {
+                child._hostCycled();
+            }
+        });
+
         this._resetReady();
     }
 

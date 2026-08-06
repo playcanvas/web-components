@@ -71,21 +71,23 @@ class ComponentElement extends AsyncElement {
      * production builds, which would otherwise leave a silent null.
      */
     private _applyComponent() {
-        const entity = this._hostElement?.entity;
-        if (!entity) {
-            return;
-        }
+        const entity = this._hostElement?.entity ?? null;
         if (this._component && this._component.entity === entity) {
             return;
         }
 
         // A retarget leaves the previous component on a still-live entity - remove it so the
-        // decoration follows the element. A destroyed entity took its components with it.
+        // decoration follows the element, or vanishes with a dissolved binding. A destroyed
+        // entity took its components with it.
         const previous = this._component;
         if (previous?.entity && previous.entity.c[this._componentName] === previous) {
             previous.entity.removeComponent(this._componentName);
         }
         this._component = null;
+
+        if (!entity) {
+            return;
+        }
 
         if (entity.c[this._componentName]) {
             const label = this.id ? ` '${this.id}'` : '';
@@ -135,12 +137,27 @@ class ComponentElement extends AsyncElement {
             if (generation !== this._connectionGeneration) {
                 return;
             }
-            this._resetReady();
-            this._applyComponent();
-            this.initComponent();
-            this._onReady();
+            this._hostCycled();
         };
         entityElement.addEventListener('ready', this._hostReadyListener);
+    }
+
+    /**
+     * Re-evaluates this component against the host's current entity: applied to a new entity,
+     * moved from a still-live old one, or removed when the host no longer fronts an entity at
+     * all. Readiness follows - it cycles with a re-application and stays unresolved while the
+     * host is unbound. Called by the host-ready listener, and directly by a `<pc-node>`
+     * dissolving its binding: the one transition that fires no ready event to ride.
+     *
+     * @internal
+     */
+    _hostCycled() {
+        this._resetReady();
+        this._applyComponent();
+        if (this._hostElement?.entity) {
+            this.initComponent();
+            this._onReady();
+        }
     }
 
     /**

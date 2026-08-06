@@ -295,6 +295,52 @@ describe('<pc-node>', () => {
             expect(uncaught.seen).toEqual([]);
         });
 
+        it('removes component decorations when the binding dissolves without a rebind', async () => {
+            const { get } = await bootCar('<pc-node name="Head"><pc-camera></pc-camera></pc-node>');
+            const node = get<NodeElement>('pc-node');
+            const head = node.entity!;
+            expect(head.camera).toBeDefined();
+
+            node.setAttribute('name', 'Nonexistent');
+
+            warnings.expect("pc-node 'Nonexistent' not found in model 'car'");
+            expect(node.state).toBe('missing');
+            expect(head.camera, 'the decoration left the abandoned node').toBeUndefined();
+
+            // Recovery: resolving again re-applies the decoration through the ready cycle
+            node.setAttribute('name', 'Head');
+            expect(node.state).toBe('bound');
+            expect(node.entity!.camera, 'the component re-applied on rebind').toBeDefined();
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it("leaves a still-bound nested pc-node's decorations alone when the ancestor unbinds", async () => {
+            const { get } = await bootApp(
+                `${AXLES_ASSET}<pc-model asset="axles">
+                    <pc-node name="RearAxle">
+                        <pc-node name="Wheel">
+                            <pc-camera></pc-camera>
+                            <pc-entity name="hub"></pc-entity>
+                        </pc-node>
+                    </pc-node>
+                </pc-model>`
+            );
+            const axle = get<NodeElement>('pc-node[name="RearAxle"]');
+            const wheel = get<NodeElement>('pc-node[name="Wheel"]');
+            const wheelEntity = wheel.entity!;
+            const hub = get<EntityElement>('pc-entity[name="hub"]');
+            expect(wheelEntity.camera).toBeDefined();
+
+            axle.setAttribute('name', 'Nope');
+
+            warnings.expect("pc-node 'Nope' not found in model 'axles'");
+            expect(axle.state).toBe('missing');
+            expect(wheel.state, 'the nested binding itself is untouched').toBe('bound');
+            expect(wheelEntity.camera, "the nested binding's component survives").toBeDefined();
+            expect(hub.entity?.parent, "the nested binding's attachment survives").toBe(wheelEntity);
+            expect(uncaught.seen).toEqual([]);
+        });
+
         it('retains the binding when re-resolution yields the same node', async () => {
             const { get } = await bootCar('<pc-node name="Head" enabled="false"></pc-node>');
             const node = get<NodeElement>('pc-node');
