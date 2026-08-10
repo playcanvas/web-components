@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Head Tracked Window</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@mediapipe/tasks-vision": "../node_modules/@mediapipe/tasks-vision/vision_bundle.mjs",
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            :root {
+                --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+                --hud-bg: rgba(10, 12, 14, 0.55);
+                --hud-border: rgba(255, 255, 255, 0.16);
+                --hud-ink: #f2f5f7;
+                --accent: #d4564f;
+            }
+
+            /* Status banner */
+            #status {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 18px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 999px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 14px;
+                letter-spacing: 0.02em;
+                white-space: nowrap;
+                transition: opacity 0.35s ease, transform 0.35s ease;
+            }
+            #status.hidden {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-8px);
+            }
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--accent);
+                animation: pulse 1.2s ease-in-out infinite;
+            }
+            #status.error .status-dot {
+                background: #ffb02e;
+                animation: none;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+
+            /* Calibration panel. The physical size of the display and the position of its
+               webcam cannot be read from the browser, so they have to be dialled in */
+            #calibrate {
+                position: fixed;
+                bottom: max(16px, env(safe-area-inset-bottom));
+                left: max(16px, env(safe-area-inset-left));
+                z-index: 10;
+                width: 232px;
+                padding: 14px 16px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 12px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 12px;
+            }
+            #calibrate summary {
+                cursor: pointer;
+                font-weight: 600;
+                letter-spacing: 0.08em;
+                font-size: 11px;
+                text-transform: uppercase;
+                opacity: 0.85;
+            }
+            #calibrate label {
+                display: block;
+                margin-top: 12px;
+            }
+            #calibrate .row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 4px;
+                opacity: 0.85;
+            }
+            #calibrate input[type="range"] {
+                width: 100%;
+                margin: 0;
+                accent-color: var(--accent);
+            }
+            #calibrate .hint {
+                margin-top: 14px;
+                line-height: 1.45;
+                opacity: 0.6;
+            }
+
+            /* Badge shown when running the synthetic ?sim preview */
+            #sim-badge {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 18px;
+                z-index: 10;
+                display: none;
+                padding: 6px 12px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 8px;
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.14em;
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app antialias="false" stencil-buffer="false">
+            <!-- Assets -->
+            <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/face-tracking.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/window-tracking.mjs"></pc-asset>
+            <pc-asset src="assets/splats/resident-evil.sog" id="figure"></pc-asset>
+            <!-- Scene. Authored in a screen-space frame measured in meters: the window is
+                 the canvas rectangle, centered on the origin in the plane z = 0, with +z
+                 out of the display toward the viewer. Anything at negative z sits behind
+                 the glass; anything between the glass and the eye pops out of it. The
+                 display's own bezel is the window frame, so the scene holds nothing but
+                 her - and the splat carries its own baked lighting, so there are no lights
+                 either -->
+            <pc-scene>
+                <pc-entity name="window">
+                    <!-- The camera translates with the viewer's eye and never rotates; the
+                         window tracking script replaces its projection with an off-axis
+                         frustum, which makes fov and aspect ratio inert -->
+                    <pc-entity name="camera" position="0 0 0.55">
+                        <pc-camera clear-color="0.015 0.014 0.018 1" tonemap="aces"></pc-camera>
+                        <pc-scripts>
+                            <pc-script name="cameraFeed"></pc-script>
+                            <pc-script name="windowTracking"
+                                       screen-width="0.31"
+                                       camera-height="0.11"
+                                       pop-out="0.15"
+                                       parallax-scale="0.75"></pc-script>
+                        </pc-scripts>
+                    </pc-entity>
+                    <!-- She is scaled to 1.72 m and placed so that the muzzle lands 12 cm in
+                         front of the glass, at the height of the window center. The capture is
+                         Y-down, so the inner entity flips it upright and the outer one yaws
+                         the barrel onto +z, straight out of the display at the viewer.
+                         Because her head and the muzzle sit at very different depths, a
+                         lateral shift moves them across the screen by different amounts and
+                         they cannot both be centered; x balances them either side of center -->
+                    <pc-entity name="figure" position="-0.148 -1.413 -0.719" rotation="0 113 0" scale="0.077 0.077 0.077">
+                        <pc-entity name="figure-flip" rotation="180 0 0">
+                            <pc-gsplat asset="figure"></pc-gsplat>
+                        </pc-entity>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+
+        <script>
+            // In ?sim mode a synthetic head motion replaces the webcam entirely - remove
+            // the camera feed script before the app boots (this classic script runs at
+            // parse time, ahead of the deferred module scripts) so no camera permission
+            // is ever requested
+            if (new URLSearchParams(window.location.search).has('sim')) {
+                document.querySelector('pc-script[name="cameraFeed"]')?.remove();
+            }
+        </script>
+
+        <!-- HUD -->
+        <div id="status"><span class="status-dot"></span><span id="status-text">Loading face tracker…</span></div>
+        <details id="calibrate">
+            <summary>Calibration</summary>
+            <label>
+                <span class="row"><span>Screen width</span><span id="screen-width-value">31 cm</span></span>
+                <input id="screen-width" type="range" min="15" max="80" step="1" value="31">
+            </label>
+            <label>
+                <span class="row"><span>Camera above center</span><span id="camera-height-value">11 cm</span></span>
+                <input id="camera-height" type="range" min="-20" max="25" step="1" value="11">
+            </label>
+            <label>
+                <span class="row"><span>Tracking scale</span><span id="tracking-scale-value">1.00</span></span>
+                <input id="tracking-scale" type="range" min="0.5" max="1.8" step="0.01" value="1">
+            </label>
+            <label>
+                <span class="row"><span>Pop-out</span><span id="pop-out-value">15 cm</span></span>
+                <input id="pop-out" type="range" min="0" max="25" step="1" value="15">
+            </label>
+            <label>
+                <span class="row"><span>Parallax</span><span id="parallax-scale-value">0.75</span></span>
+                <input id="parallax-scale" type="range" min="0" max="1" step="0.01" value="0.75">
+            </label>
+            <p class="hint">Measure the width of the canvas on your display and how far its
+            webcam sits above the middle. Parallax 1 is a true window, which reframes a close
+            subject sharply; lower holds her still. Closing one eye makes the illusion snap.</p>
+        </details>
+        <div id="sim-badge">SIM</div>
+
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            // Re-evaluate the splat's view-dependent color every frame the camera moves.
+            // The engine defaults to re-evaluating only once the viewing angle to a node has
+            // changed by 10 degrees, which is a sound trade for a camera that flies around a
+            // scene. Head-coupled viewing never gets near it: the eye travels a couple of
+            // centimeters at arm's length, sweeping about 3 degrees in total, so the
+            // specular response would stay frozen for the whole range of movement.
+            app.scene.gsplat.colorUpdateAngle = 0;
+
+            const sim = new URLSearchParams(window.location.search).has('sim');
+            if (sim) document.getElementById('sim-badge').style.display = 'block';
+
+            // Status banner
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const setStatus = (text, cls = '') => {
+                statusText.textContent = text;
+                status.className = cls;
+            };
+
+            let cameraError = false;
+
+            app.on('camera:error', () => {
+                if (sim) return;
+                cameraError = true;
+                setStatus('Camera unavailable — previewing the effect without tracking', 'error');
+            });
+
+            app.on('face:ready', () => {
+                if (cameraError) return;
+                setStatus(sim ? 'Simulated head motion' : 'Look around the window');
+            });
+
+            app.on('face:found', () => {
+                if (cameraError) return;
+                status.classList.add('hidden');
+            });
+
+            app.on('face:lost', () => {
+                if (cameraError) return;
+                setStatus('Face lost — move back into view');
+                status.classList.remove('hidden');
+            });
+
+            // Calibration. The script derives the window rectangle from these, so writing
+            // them through rebuilds the frustum on the next frame
+            const tracking = (await whenReady('pc-script[name="windowTracking"]')).script;
+
+            const bindSlider = (id, format, apply) => {
+                const input = document.getElementById(id);
+                const readout = document.getElementById(`${id}-value`);
+                const update = () => {
+                    const value = parseFloat(input.value);
+                    readout.textContent = format(value);
+                    apply(value);
+                };
+                input.addEventListener('input', update);
+                update();
+            };
+
+            const cm = value => `${value.toFixed(0)} cm`;
+
+            bindSlider('screen-width', cm, value => {
+                tracking.screenWidth = value * 0.01;
+            });
+            bindSlider('camera-height', cm, value => {
+                tracking.cameraHeight = value * 0.01;
+            });
+            bindSlider('tracking-scale', value => value.toFixed(2), value => {
+                tracking.trackingScale = value;
+            });
+            bindSlider('pop-out', cm, value => {
+                tracking.popOut = value * 0.01;
+            });
+            bindSlider('parallax-scale', value => value.toFixed(2), value => {
+                tracking.parallaxScale = value;
+            });
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

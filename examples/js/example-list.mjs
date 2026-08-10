@@ -9,6 +9,7 @@ export const examples = [
     { name: 'Basic Splat', path: 'splat-simple.html', category: 'Gaussian Splatting' },
     { name: 'Splat Annotations', path: 'splat-annotations.html', category: 'Gaussian Splatting' },
     { name: 'Splat Flipbook', path: 'splat-flipbook.html', category: 'Gaussian Splatting' },
+    { name: 'Head Tracked Window', path: 'window-tracking.html', category: 'Gaussian Splatting' },
     // XR
     { name: 'AR Avatar', path: 'ar-avatar.html', category: 'XR' },
     { name: 'AR Hand Gestures', path: 'ar-hand-gestures.html', category: 'XR' },
