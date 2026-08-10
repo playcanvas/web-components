@@ -245,13 +245,13 @@ if (manifest) {
     // they exercise the analyzer's non-CustomEvent detection - and must not leak onto other tags
     // through the inheritance step
     check(events('pc-app').includes('progress'), "pc-app is missing the 'progress' event");
+    check(events('pc-app').includes('error'), "pc-app is missing the 'error' event");
     for (const name of ['load', 'error']) {
         check(events('pc-asset').includes(name), `pc-asset is missing the '${name}' event`);
     }
     check(!events('pc-entity').includes('progress'), 'pc-entity should not have a progress event');
-    const strayAssetEvents = ['load', 'error'].filter(name => events('pc-app').includes(name));
-    check(strayAssetEvents.length === 0,
-        `pc-app should not declare asset events: ${strayAssetEvents.join(', ')}`);
+    // pc-app declares its own 'error' event, so 'load' is what remains of the leak canary
+    check(!events('pc-app').includes('load'), "pc-app should not declare pc-asset's 'load' event");
 
     // ---- Members: the manifest's public API surface ----
     //

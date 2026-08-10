@@ -96,7 +96,8 @@ type AsyncElementTagName = {
 /**
  * Waits for the first element matching the given tag name to be fully initialized. Note that the
  * promise never settles if the element cannot finish initializing (for example, a `<pc-script>`
- * that is not a direct child of `<pc-scripts>`). A component element outside a `<pc-entity>` is
+ * that is not a direct child of `<pc-scripts>`, or a `<pc-app>` that could not create a graphics
+ * device — listen for its `error` event instead). A component element outside a `<pc-entity>` is
  * the exception: it still becomes ready, but its `component` is `null`. Either way, a misplaced
  * element logs a warning naming the parent it requires.
  * @param target - The tag name of the element to wait for (e.g. `'pc-app'`).
@@ -120,7 +121,8 @@ function whenReady<T extends AsyncElement>(target: T): Promise<T>;
 /**
  * Waits for the first element matching the given CSS selector to be fully initialized. Note that
  * the promise never settles if the element cannot finish initializing (for example, a `<pc-script>`
- * that is not a direct child of `<pc-scripts>`). A component element outside a `<pc-entity>` is
+ * that is not a direct child of `<pc-scripts>`, or a `<pc-app>` that could not create a graphics
+ * device — listen for its `error` event instead). A component element outside a `<pc-entity>` is
  * the exception: it still becomes ready, but its `component` is `null`. Either way, a misplaced
  * element logs a warning naming the parent it requires.
  * @param target - A CSS selector matching the element to wait for (e.g. `'#my-app'`).
