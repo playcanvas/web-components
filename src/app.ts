@@ -1,4 +1,4 @@
-import type { CameraComponent, GraphNode, GSplatComponent, Entity } from 'playcanvas';
+import type { CameraComponent, GraphicsDevice, GraphNode, GSplatComponent, Entity } from 'playcanvas';
 import {
     AppBase,
     AppOptions,
@@ -86,6 +86,12 @@ const pointerEventTypes = ['pointermove', 'pointerdown', 'pointerup', 'pointeren
  * `total` are asset counts, not bytes, and an asset that fails to load still counts as loaded.
  * Fired at least once per boot, and the final event always has `loaded` equal to `total`. Does
  * not bubble.
+ *
+ * @fires {ErrorEvent} error - Fired when the application cannot boot because no graphics device
+ * could be created (for example, a browser with WebGL disabled). `message` names the requested
+ * backends and `error` holds the underlying failure. The element never becomes ready
+ * and `app` stays `null` — listen for this event to show a fallback UI. Removing the element and
+ * re-inserting it retries the boot with its current attributes. Does not bubble.
  */
 class AppElement extends AsyncElement {
     /**
@@ -241,14 +247,46 @@ class AppElement extends AsyncElement {
 
         this._optionsLocked = true;
 
-        const device = await createGraphicsDevice(this._canvas, {
-            // @ts-ignore - alpha needs to be documented
-            alpha: this._alpha,
-            antialias: this._antialias,
-            depth: this._depthBuffer,
-            deviceTypes: deviceTypes,
-            stencil: this._stencilBuffer
-        });
+        // createGraphicsDevice appends its final null-device fallback to the array in place, so
+        // the requested list is captured now for the failure message.
+        const requested = deviceTypes.join(', ');
+
+        let device: GraphicsDevice;
+        try {
+            device = await createGraphicsDevice(this._canvas, {
+                // @ts-ignore - alpha needs to be documented
+                alpha: this._alpha,
+                antialias: this._antialias,
+                depth: this._depthBuffer,
+                deviceTypes: deviceTypes,
+                stencil: this._stencilBuffer
+            });
+        } catch (error) {
+            // The element may have been removed while device creation was failing. The teardown
+            // has already cleaned up, and the failure belongs to a boot that no longer owns the
+            // element.
+            if (generation !== this._bootGeneration) {
+                return;
+            }
+
+            // Return the element to its pre-boot state - no dead canvas, no loading bar stuck at
+            // zero - before announcing the failure. Readiness deliberately stays pending: nothing
+            // it would announce (the app, the entity hierarchy) exists, so a device-less element
+            // joins the documented never-ready cases and the failure surfaces through the error
+            // event instead.
+            if (this._canvas && this.contains(this._canvas)) {
+                this.removeChild(this._canvas);
+            }
+            this._canvas = null;
+            this._bar?.destroy();
+            this._bar = null;
+
+            const reason = error instanceof Error ? error.message : String(error);
+            const message = `pc-app failed to create a graphics device (${requested}) - ${reason}`;
+            console.error(message, error);
+            this.dispatchEvent(new ErrorEvent('error', { message, error }));
+            return;
+        }
 
         // The element may have been removed while the device was created. disconnectedCallback
         // has already cleaned up the canvas; the device was created inside the await, so it is
@@ -495,9 +533,9 @@ class AppElement extends AsyncElement {
         // created from onpointer* attributes when their elements were first upgraded, or
         // listeners carried over from before a re-boot)
         pointerEventTypes.forEach((type) => {
-            const anyListeners = Array.from(
-                this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')
-            ).some((entity) => entity._hasListeners(type));
+            const anyListeners = Array.from(this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')).some(
+                (entity) => entity._hasListeners(type)
+            );
             if (anyListeners) {
                 this._onPointerListenerAdded(type);
             }
@@ -718,9 +756,9 @@ class AppElement extends AsyncElement {
     }
 
     private _onPointerListenerRemoved(type: string) {
-        const hasListeners = Array.from(
-            this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')
-        ).some((entity) => entity._hasListeners(type));
+        const hasListeners = Array.from(this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')).some((entity) =>
+            entity._hasListeners(type)
+        );
 
         if (!hasListeners && this._canvas) {
             this._hasPointerListeners[type] = false;
