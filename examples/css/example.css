@@ -16,9 +16,11 @@ canvas {
 }
 
 /* pc-app is sized like a video element - a block box the page's CSS controls. The examples are
-   all full-viewport experiences, so size it to the visible viewport. */
+   all full-viewport experiences, so size it to the visible viewport (100vh is the fallback for
+   browsers without dynamic viewport units). */
 pc-app {
     width: 100%;
+    height: 100vh;
     height: 100dvh;
 }
 
