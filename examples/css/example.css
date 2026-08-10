@@ -1,6 +1,14 @@
+/* Shared literals kept in sync with css/browser.css :root (example pages do not load that
+   file): page base #121212, accent #f60, bright accent #ff8533. Update both files together. */
+
+:root {
+    color-scheme: dark;
+}
+
 body {
-    margin: 0; 
-    overflow: hidden; 
+    margin: 0;
+    overflow: hidden;
+    background-color: #121212; /* pre-scene paint matches the shell, so example swaps never flash */
     touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -45,40 +53,98 @@ pc-app {
     top: max(16px, env(safe-area-inset-top));
 }
 
+/* Dark glass, matching the shell's chrome: translucent #121212 over the scene, hairline light
+   border to carry the edge on dark scenes */
 .example-button {
     display: flex;
     position: relative;
     height: 40px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ddd;
+    background-color: rgba(18, 18, 18, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     cursor: pointer;
     align-items: center;
     justify-content: center;
     padding: 0 16px;
     margin: 0;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background-color 0.2s;
-    color: #2c3e50;
-    font-weight: bold;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+}
+
+@supports not (backdrop-filter: blur(12px)) {
+    .example-button {
+        background-color: rgba(18, 18, 18, 0.88);
+    }
+}
+
+.example-button:hover {
+    background-color: rgba(18, 18, 18, 0.82);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #fff;
+}
+
+.example-button:focus-visible {
+    outline: 2px solid #ff8533;
+    outline-offset: 2px;
 }
 
 .example-button.icon {
     width: 40px;
     padding: 0;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: 24px 24px;
 }
 
-.example-button.icon.icon-ar { background-image: url("../img/ar.svg"); }
-.example-button.icon.icon-vr { background-image: url("../img/vr.svg"); }
-.example-button.icon.icon-fs-enter { background-image: url("../img/fullscreen-enter.svg"); }
-.example-button.icon.icon-fs-exit { background-image: url("../img/fullscreen-exit.svg"); }
-.example-button.icon.icon-source { background-image: url("../img/code.svg"); }
-.example-button.icon.icon-stackblitz { background-image: url("../img/stackblitz.svg"); }
+/* Icons are masks rather than background images, so they tint via currentColor - the mixed
+   source fills and viewBoxes are irrelevant because only the SVG's alpha channel is used */
+.example-button.icon::before {
+    content: "";
+    width: 24px;
+    height: 24px;
+    background-color: currentColor;
+    -webkit-mask: center / 24px 24px no-repeat;
+    mask: center / 24px 24px no-repeat;
+}
 
-.example-button:hover {
-    background-color: rgba(255, 255, 255, 1);
+.example-button.icon.icon-ar::before {
+    -webkit-mask-image: url("../img/ar.svg");
+    mask-image: url("../img/ar.svg");
+}
+
+.example-button.icon.icon-vr::before {
+    -webkit-mask-image: url("../img/vr.svg");
+    mask-image: url("../img/vr.svg");
+}
+
+.example-button.icon.icon-fs-enter::before {
+    -webkit-mask-image: url("../img/fullscreen-enter.svg");
+    mask-image: url("../img/fullscreen-enter.svg");
+}
+
+.example-button.icon.icon-fs-exit::before {
+    -webkit-mask-image: url("../img/fullscreen-exit.svg");
+    mask-image: url("../img/fullscreen-exit.svg");
+}
+
+.example-button.icon.icon-source::before {
+    -webkit-mask-image: url("../img/code.svg");
+    mask-image: url("../img/code.svg");
+}
+
+.example-button.icon.icon-stackblitz::before {
+    -webkit-mask-image: url("../img/stackblitz.svg");
+    mask-image: url("../img/stackblitz.svg");
+}
+
+/* Placed last so the override ordering is explicit */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

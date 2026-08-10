@@ -7,15 +7,36 @@
 :root {
     color-scheme: dark;
 
-    --color-bg: #121212;                          /* page base / behind iframe */
-    --color-surface: #1a1a1a;                     /* sidebar */
-    --color-surface-raised: #242424;              /* search input, QR modal, hamburger */
+    /* Sync points (values duplicated by necessity - there is no build step):
+       - index.html <meta name="theme-color">  = --color-surface (#1a1a1a)
+       - manifest.json theme_color             = --color-surface (#1a1a1a)
+       - manifest.json background_color        = --color-bg (#121212)
+       - css/example.css                       = example pages do not load this file; they carry
+         their own copies of the shared literals. Update both files together. */
+
+    --color-bg: #121212;                             /* page base / behind iframe */
+    --color-surface: #1a1a1a;                        /* sidebar, title bar */
+    --color-surface-raised: #242424;                 /* search input, QR modal */
     --color-border: #333;
+    --color-border-strong: #4a4a4a;
+
     --color-text: #e0e0e0;
     --color-text-dim: #999;
-    --color-accent: #f60;                         /* PlayCanvas orange */
-    --color-accent-soft: rgba(255, 102, 0, 0.15);
-    --color-focus: #ff8533;
+
+    --color-accent: #f60;                            /* PlayCanvas orange */
+    --color-accent-bright: #ff8533;                  /* active text, focus rings */
+    --color-focus: var(--color-accent-bright);
+    --color-accent-soft: rgba(255, 102, 0, 0.12);    /* active-row tint */
+
+    --color-hover: rgba(255, 255, 255, 0.07);        /* neutral hover fill */
+    --color-hover-strong: rgba(255, 255, 255, 0.12); /* pressed state */
+
+    --radius-s: 4px;
+    --radius-m: 6px;
+    --radius-l: 8px;
+    --radius-xl: 12px;
+
+    --titlebar-height: 48px;
 }
 
 /* Base layout */
@@ -32,12 +53,6 @@ body {
     outline-offset: -2px;
 }
 
-/* Hide menu toggle by default */
-.menu-toggle {
-    display: none;
-    color: var(--color-text);
-}
-
 /* Sidebar */
 .sidebar {
     display: flex;
@@ -52,36 +67,47 @@ body {
 .header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 20px 16px 16px;
-    padding-top: max(20px, env(safe-area-inset-top));
+    gap: 10px;
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top));
 }
 
 .logo {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-m);
 }
 
 .header h2 {
-    font-size: 16px;
-    line-height: 1.25;
+    font-size: 14px;
     font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
     color: var(--color-text);
+}
+
+.header h2 span {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-dim);
 }
 
 .github-link {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
     margin-left: auto;
-    padding: 6px;
-    border-radius: 6px;
+    border-radius: var(--radius-m);
     color: var(--color-text-dim);
-    transition: color 0.2s;
+    transition: background-color 0.15s, color 0.15s;
 }
 
 .github-link:hover {
+    background: var(--color-hover);
     color: var(--color-text);
 }
 
@@ -102,13 +128,13 @@ body {
 
 #search-input {
     width: 100%;
-    padding: 8px 12px 8px 34px;
+    padding: 8px 60px 8px 34px;
     font-size: 13px;
     font-family: inherit;
     color: var(--color-text);
     background: var(--color-surface-raised);
     border: 1px solid var(--color-border);
-    border-radius: 6px;
+    border-radius: var(--radius-m);
     outline: none;
     transition: border-color 0.2s;
 }
@@ -119,6 +145,76 @@ body {
 
 #search-input:focus {
     border-color: var(--color-accent);
+}
+
+/* The custom clear button replaces the native one */
+#search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search-kbd {
+    position: absolute;
+    right: 8px;
+    padding: 3px 6px;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--color-text-dim);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-s);
+    pointer-events: none;
+}
+
+.search:focus-within .search-kbd,
+#search-input:not(:placeholder-shown) ~ .search-kbd {
+    display: none;
+}
+
+@media (hover: none) {
+    .search-kbd {
+        display: none;
+    }
+}
+
+.search-count {
+    display: none;
+    position: absolute;
+    right: 32px;
+    font-size: 11px;
+    color: var(--color-text-dim);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+#search-input:not(:placeholder-shown) ~ .search-count {
+    display: block;
+}
+
+.search-clear {
+    display: none;
+    position: absolute;
+    right: 6px;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: var(--radius-s);
+    background: none;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+#search-input:not(:placeholder-shown) ~ .search-clear {
+    display: flex;
+}
+
+.search-clear:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
 }
 
 /* Example list styles */
@@ -141,11 +237,11 @@ body {
 
 #example-list::-webkit-scrollbar-thumb {
     background: var(--color-border);
-    border-radius: 4px;
+    border-radius: var(--radius-s);
 }
 
 #example-list::-webkit-scrollbar-thumb:hover {
-    background: #4a4a4a;
+    background: var(--color-border-strong);
 }
 
 .category-title {
@@ -161,6 +257,10 @@ body {
     margin-top: 4px;
 }
 
+.category-list {
+    list-style: none;
+}
+
 .hidden {
     display: none !important;
 }
@@ -171,73 +271,255 @@ body {
     color: var(--color-text-dim);
 }
 
-.example-link {
+.example-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
     gap: 8px;
     padding: 7px 8px 7px 12px;
     margin: 1px 0;
-    border-radius: 6px;
-    color: var(--color-text);
-    font-size: 14px;
-    text-decoration: none;
+    border-radius: var(--radius-m);
     transition: background-color 0.15s;
 }
 
-.example-link:hover {
+.example-row:hover {
+    background-color: var(--color-hover);
+}
+
+.example-row.active {
     background-color: var(--color-accent-soft);
 }
 
-.example-link.active {
-    background-color: var(--color-accent);
-    color: white;
+.example-row.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--color-accent);
 }
 
-.link-buttons {
+.example-link {
+    color: var(--color-text);
+    font-size: 14px;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Stretched link: the whole row activates the example */
+.example-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.example-row.active .example-link {
+    color: var(--color-accent-bright);
+    font-weight: 500;
+}
+
+.row-actions {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    opacity: 0.5;
 }
 
-.qr-button,
-.open-in-new {
+/* Reveal on demand where a pointer can hover; touch keeps the always-visible fallback above.
+   opacity (not visibility/display) so the buttons stay in the tab order and :focus-within can
+   reach them; pointer-events blocks clicks on the invisible targets. */
+@media (hover: hover) {
+    .row-actions {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.12s ease;
+    }
+
+    .example-row:hover .row-actions,
+    .example-row:focus-within .row-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+.row-action {
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.5;
-    padding: 4px;
-    border-radius: 4px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: currentColor;
     width: 24px;
     height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-s);
+    background: none;
+    cursor: pointer;
+    color: var(--color-text-dim);
+    transition: background-color 0.15s, color 0.15s;
 }
 
-.qr-button:hover,
-.open-in-new:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.1);
+.row-action:hover {
+    background: var(--color-hover-strong);
+    color: var(--color-text);
 }
 
-.qr-button svg,
-.open-in-new svg {
-    stroke-width: 2;
+.example-row.active .row-action {
+    color: var(--color-accent-bright);
 }
 
 /* Main content */
 .main {
+    display: flex;
+    flex-direction: column;
+    position: relative;
     height: 100dvh;
     overflow: hidden;
 }
 
+/* Title bar */
+.title-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    height: var(--titlebar-height);
+    padding: 0 max(12px, env(safe-area-inset-right)) 0 12px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.example-title {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    font-weight: 400;
+}
+
+.example-category {
+    font-size: 13px;
+    color: var(--color-text-dim);
+    white-space: nowrap;
+}
+
+.example-separator {
+    font-size: 13px;
+    color: var(--color-text-dim);
+    opacity: 0.5;
+}
+
+.example-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.title-bar-nav,
+.title-bar-actions {
+    display: flex;
+    gap: 4px;
+    flex: none;
+}
+
+.title-bar-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-m);
+    background: transparent;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.title-bar-button:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+.title-bar-button:active {
+    background: var(--color-hover-strong);
+}
+
+.title-bar-button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.title-bar-button:disabled:hover {
+    background: transparent;
+    color: var(--color-text-dim);
+}
+
+.title-bar-divider {
+    width: 1px;
+    height: 16px;
+    background: var(--color-border);
+    margin: 0 6px;
+    flex: none;
+}
+
+/* Hide menu toggle on desktop - it lives in the title bar on mobile */
+.menu-toggle {
+    display: none;
+}
+
+/* Iframe and loading treatment */
 #example-frame {
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    height: 100%;
     border: none;
     background: var(--color-bg);
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
+.main.loading #example-frame {
+    opacity: 0;
+    transition-duration: 0.1s;
+}
+
+/* Spinner: the transition delay means fast loads never flash it */
+.main::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: calc(50% + var(--titlebar-height) / 2);
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.main.loading::after {
+    opacity: 1;
+    animation: spin 0.8s linear infinite;
+    transition: opacity 0.15s ease 0.25s;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Sidebar overlay (mobile) */
@@ -255,20 +537,8 @@ body {
 
     .menu-toggle {
         display: flex;
-        position: fixed;
-        top: max(16px, env(safe-area-inset-top));
-        left: max(16px, env(safe-area-inset-left));
-        width: 40px;
-        height: 40px;
-        background: rgba(26, 26, 26, 0.9);
-        border: 1px solid var(--color-border);
-        border-radius: 8px;
-        z-index: 999;
-        cursor: pointer;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        width: 36px;
+        height: 36px;
     }
 
     .sidebar {
@@ -301,6 +571,20 @@ body {
         width: 100%;
         height: 100%;
     }
+
+    /* The bar owns the notch region; its surface matches the theme-color meta */
+    .title-bar {
+        height: calc(var(--titlebar-height) + env(safe-area-inset-top));
+        padding-top: env(safe-area-inset-top);
+        padding-left: max(12px, env(safe-area-inset-left));
+    }
+}
+
+@media (max-width: 420px) {
+    .example-category,
+    .example-separator {
+        display: none;
+    }
 }
 
 /* QR Code Modal styles */
@@ -311,34 +595,97 @@ body {
     transform: translate(-50%, -50%);
     padding: 0;
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     background: var(--color-surface-raised);
     color: var(--color-text);
     margin: 0;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+#qr-modal[open] {
+    animation: modal-in 0.18s ease;
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.96);
+    }
 }
 
 #qr-modal::backdrop {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 .qr-modal-content {
-    padding: 24px;
+    position: relative;
+    padding: 20px 24px 24px;
     text-align: center;
 }
 
-.qr-modal-content p {
-    margin-top: 16px;
-    font-size: 14px;
+.qr-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-m);
+    background: transparent;
     color: var(--color-text-dim);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.qr-modal-close:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+}
+
+#qr-modal-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0 20px 14px;
 }
 
 #qr-code {
-    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 164px;
+    min-height: 164px;
+    background: #fff; /* the QR quiet zone is functional - deliberately light */
     padding: 12px;
-    border-radius: 8px;
+    border-radius: var(--radius-l);
+    color: #333;
+    font-size: 13px;
 }
 
 #qr-code img {
     display: block;
     margin: 0 auto;
+}
+
+.qr-modal-caption {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--color-text-dim);
+}
+
+/* Placed last so the override ordering is explicit */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
