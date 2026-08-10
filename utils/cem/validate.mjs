@@ -305,7 +305,7 @@ if (manifest) {
         // gloss fields, so no attribute claims them as its backing member
         ['pc-material', ['get', 'material', 'roughness', 'roughnessMap']],
         ['pc-model', ['entity', ...ASYNC_MEMBERS]],
-        ['pc-module', []],
+        ['pc-module', [...ASYNC_MEMBERS]],
         ['pc-node', ['addEventListener', 'entity', 'path', 'removeEventListener', 'state', ...ASYNC_MEMBERS]],
         ['pc-particles', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
         ['pc-scene', ['scene', ...ASYNC_MEMBERS]],
