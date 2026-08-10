@@ -2,6 +2,8 @@ import { MiniStats, XRTYPE_AR, XRTYPE_VR } from 'playcanvas';
 
 import { whenReady } from '@playcanvas/web-components';
 
+import { openInStackBlitz } from './stackblitz.mjs';
+
 const { app } = await whenReady('pc-app');
 
 // Add MiniStats if the query parameter is present
@@ -71,6 +73,15 @@ if (document.documentElement.requestFullscreen && document.exitFullscreen) {
 
     container.appendChild(fullscreenButton);
 }
+
+// Add a button that opens the example as an editable npm-based StackBlitz project
+container.appendChild(
+    createButton({
+        iconClass: 'icon-stackblitz',
+        title: 'Edit on StackBlitz',
+        onClick: () => openInStackBlitz()
+    })
+);
 
 // Add view-source button linking to this page's source on GitHub
 const filename = window.location.pathname.split('/').pop();

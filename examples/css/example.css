@@ -68,6 +68,7 @@ canvas {
 .example-button.icon.icon-fs-enter { background-image: url("../img/fullscreen-enter.svg"); }
 .example-button.icon.icon-fs-exit { background-image: url("../img/fullscreen-exit.svg"); }
 .example-button.icon.icon-source { background-image: url("../img/code.svg"); }
+.example-button.icon.icon-stackblitz { background-image: url("../img/stackblitz.svg"); }
 
 .example-button:hover {
     background-color: rgba(255, 255, 255, 1);
