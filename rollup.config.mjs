@@ -24,14 +24,14 @@ export default {
         },
         {
             file: 'dist/pwc.js',
-            name: 'pd',
+            name: 'pwc',
             format: 'umd',
             sourcemap: true,
             globals: { playcanvas: 'pc' }
         },
         {
             file: 'dist/pwc.min.js',
-            name: 'pd',
+            name: 'pwc',
             format: 'umd',
             sourcemap: true,
             plugins: [terser()],

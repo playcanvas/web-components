@@ -32,14 +32,23 @@
   "web-types": "dist/web-types.json",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/pwc.mjs",
-      "require": "./dist/pwc.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/pwc.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/pwc.cjs"
+      }
     },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
   "type": "module",
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18.3.0"
+  },
   "files": [
     "dist",
     "src"
@@ -47,7 +56,7 @@
   "scripts": {
     "prebuild": "node -e \"fs.rmSync('dist', { recursive: true, force: true })\"",
     "build": "rollup -c",
-    "postbuild": "npm run cem",
+    "postbuild": "node utils/fix-declarations.mjs && npm run cem",
     "cem": "cem analyze && node utils/cem/validate.mjs",
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",
     "docs": "typedoc",
