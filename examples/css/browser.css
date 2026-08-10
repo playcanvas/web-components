@@ -61,7 +61,6 @@ body {
     border-right: 1px solid var(--color-border);
     height: 100dvh;
     padding-left: env(safe-area-inset-left);
-    outline: none;
 }
 
 /* Header styles */
@@ -402,7 +401,6 @@ body {
     flex: 1;
     min-width: 0;
     font-weight: 400;
-    outline: none;
 }
 
 .example-category {

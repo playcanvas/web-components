@@ -68,7 +68,9 @@ export async function showQRCode(path, name) {
         if (!modal.open) {
             return; // closed while the library was loading
         }
-        const url = `${window.location.origin}${window.location.pathname}${path}`;
+        // Resolved against the page URL rather than concatenated: the shell is also reachable
+        // as .../index.html (the PWA's start_url), where concatenation would corrupt the URL
+        const url = new URL(path, window.location.href).href;
         const qr = qrcode(0, 'L');
         qr.addData(url);
         qr.make();
