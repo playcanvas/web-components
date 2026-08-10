@@ -1,6 +1,12 @@
 import { examples } from './example-list.mjs';
 
-export function setupNavigation(loadExample) {
+/**
+ * Owns the URL and history: hash updates on navigation, and back/forward (popstate) validation.
+ * All UI syncing is delegated to the callback, which is the single active-state codepath.
+ * @param {(path: string) => void} onNavigate - Called with a valid example path to activate.
+ * @returns {{ updateURL: (path: string, replace?: boolean) => void }} The URL updater.
+ */
+export function setupNavigation(onNavigate) {
     function updateURL(path, replace = false) {
         if (replace) {
             history.replaceState(null, '', `#${path}`);
@@ -12,23 +18,7 @@ export function setupNavigation(loadExample) {
     window.addEventListener('popstate', () => {
         const hash = window.location.hash.slice(1);
         if (hash && examples.some((ex) => ex.path === hash)) {
-            loadExample(hash);
-            document.querySelectorAll('.example-link').forEach((link) => {
-                link.classList.toggle('active', link.getAttribute('href') === `#${hash}`);
-            });
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            const links = Array.from(document.querySelectorAll('.example-link:not(.hidden)'));
-            if (links.length === 0) return;
-            const currentIndex = links.findIndex((link) => link.classList.contains('active'));
-            const nextIndex =
-                e.key === 'ArrowUp' ? Math.max(0, currentIndex - 1) : Math.min(links.length - 1, currentIndex + 1);
-
-            links[nextIndex].click();
+            onNavigate(hash);
         }
     });
 
