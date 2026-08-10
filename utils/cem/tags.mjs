@@ -24,5 +24,5 @@ export const COMPONENT_TAGS = [
     'pc-screen', 'pc-scripts', 'pc-scrollbar', 'pc-scrollview', 'pc-sounds'
 ];
 
-/** `pc-material` and `pc-module` extend `HTMLElement`, so they never become ready. */
-export const READY_TAGS = TAGS.filter(tag => tag !== 'pc-material' && tag !== 'pc-module');
+/** `pc-material` extends `HTMLElement`, so it never becomes ready. */
+export const READY_TAGS = TAGS.filter(tag => tag !== 'pc-material');

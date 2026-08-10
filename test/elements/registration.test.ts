@@ -25,8 +25,8 @@ describe('customElements registration', () => {
         expect(document.createElement(tag)).toBeInstanceOf(AsyncElement);
     });
 
-    it.for(['pc-material', 'pc-module'])('%s extends HTMLElement directly, so it never becomes ready', (tag) => {
-        const element = document.createElement(tag);
+    it('pc-material extends HTMLElement directly, so it never becomes ready', () => {
+        const element = document.createElement('pc-material');
         expect(element).toBeInstanceOf(HTMLElement);
         expect(element).not.toBeInstanceOf(AsyncElement);
     });
