@@ -88,8 +88,8 @@ const pointerEventTypes = ['pointermove', 'pointerdown', 'pointerup', 'pointeren
  * not bubble.
  *
  * @fires {ErrorEvent} error - Fired when the application cannot boot because no graphics device
- * could be created (for example, a browser with WebGL disabled). `message` names the backends
- * that were attempted and `error` holds the underlying failure. The element never becomes ready
+ * could be created (for example, a browser with WebGL disabled). `message` names the requested
+ * backends and `error` holds the underlying failure. The element never becomes ready
  * and `app` stays `null` — listen for this event to show a fallback UI. Removing the element and
  * re-inserting it retries the boot with its current attributes. Does not bubble.
  */
@@ -283,7 +283,7 @@ class AppElement extends AsyncElement {
 
             const reason = error instanceof Error ? error.message : String(error);
             const message = `pc-app failed to create a graphics device (${requested}) - ${reason}`;
-            console.error(message);
+            console.error(message, error);
             this.dispatchEvent(new ErrorEvent('error', { message, error }));
             return;
         }
