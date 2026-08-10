@@ -28,9 +28,9 @@ class LoadingBar {
         this._track.setAttribute('aria-label', 'Loading');
         this._track.setAttribute('aria-valuemin', '0');
         this._track.setAttribute('aria-valuemax', '100');
-        // Fixed positioning matches the canvas, which always fills the window (FILLMODE_FILL_WINDOW)
+        // Anchored to the pc-app element, which the library's base styles make a positioned box
         this._track.style.cssText = [
-            'position: fixed',
+            'position: absolute',
             'top: 0',
             'left: 0',
             'width: 100%',

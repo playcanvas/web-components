@@ -4,7 +4,7 @@ import {
     AppOptions,
     createGraphicsDevice,
     ElementInput,
-    FILLMODE_FILL_WINDOW,
+    FILLMODE_NONE,
     Keyboard,
     Mouse,
     Picker,
@@ -77,10 +77,33 @@ import { parseBool, parseEnum, parseNumber } from './parse';
 const pointerEventTypes = ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'] as const;
 
 /**
+ * Gives `pc-app` the sizing contract of a replaced element (`<video>`, `<img>`): a block-level
+ * box that the page's CSS sizes, defaulting to the canvas's own 300x150 intrinsic size, with the
+ * canvas and loading bar anchored to it. `:where()` keeps every declaration at zero specificity,
+ * so any page rule - however plain - overrides these defaults.
+ */
+const ensureBaseStyles = () => {
+    const id = 'pc-app-styles';
+    if (document.getElementById(id)) {
+        return;
+    }
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = ':where(pc-app) { display: block; position: relative; width: 300px; height: 150px; }';
+    document.head.appendChild(style);
+};
+
+/**
  * The AppElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-app/ | `<pc-app>`} elements.
  * The AppElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * The element is sized like a replaced element such as `<video>`: a block-level box that the
+ * page's CSS controls, 300x150 by default. The application's canvas always fills the element,
+ * and the drawing buffer resolution follows the element's size (capped by `max-pixel-ratio`),
+ * tracked live via a ResizeObserver — so the element can be embedded at any size, resized by
+ * its container, or made fullscreen with ordinary CSS such as `width: 100vw; height: 100dvh`.
  *
  * @fires {ProgressEvent} progress - Fired while the application preloads its assets. `loaded` and
  * `total` are asset counts, not bytes, and an asset that fails to load still counts as loaded.
@@ -172,6 +195,13 @@ class AppElement extends AsyncElement {
     private _loadProgress = 0;
 
     /**
+     * Tracks the element's box so the drawing buffer and picker follow it. Created per boot once
+     * the application exists, and disconnected on teardown. `null` where ResizeObserver is
+     * unavailable (jsdom), where the boot-time resolution set is the only sizing that happens.
+     */
+    private _resizeObserver: ResizeObserver | null = null;
+
+    /**
      * The PlayCanvas application instance. `null` until the element is ready, and again once it
      * has been removed from the document — await {@link whenReady} or the element's `ready()`
      * promise before accessing it.
@@ -200,9 +230,6 @@ class AppElement extends AsyncElement {
     constructor() {
         super();
 
-        // Bind methods to maintain 'this' context
-        this._onWindowResize = this._onWindowResize.bind(this);
-
         // Track pointer listeners being added to and removed from descendant entities.
         // Registered once here rather than on every boot - the handlers no-op while there is no
         // canvas, and a re-booted element must not stack a second set.
@@ -214,6 +241,10 @@ class AppElement extends AsyncElement {
 
     async connectedCallback() {
         const generation = ++this._bootGeneration;
+
+        // Installed before the loading bar is created: the bar anchors to this element, which
+        // these styles make a positioned block box
+        ensureBaseStyles();
 
         // Created before the first await, so the bar is visible while modules and the graphics
         // device are created, and exists before any disconnect could need to clean it up
@@ -233,8 +264,11 @@ class AppElement extends AsyncElement {
             return;
         }
 
-        // Create and append the canvas to the element
+        // Create and append the canvas, filling the element's content box - the page sizes the
+        // element, and everything else follows. touch-action: none keeps touch drags driving the
+        // engine's input handlers instead of scrolling the page.
         this._canvas = document.createElement('canvas');
+        this._canvas.style.cssText = 'display: block; width: 100%; height: 100%; touch-action: none;';
         this.appendChild(this._canvas);
 
         // Configure device types based on backend selection
@@ -370,10 +404,21 @@ class AppElement extends AsyncElement {
         this._app = app;
         app.init(createOptions);
 
-        app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
+        // FILLMODE_NONE leaves the canvas's CSS sizing alone (the engine's other fill modes
+        // stamp window-derived pixel sizes onto it); RESOLUTION_AUTO sizes the drawing buffer
+        // from the canvas's client size
+        app.setCanvasFillMode(FILLMODE_NONE);
         app.setCanvasResolution(RESOLUTION_AUTO);
 
         this._pickerCreate();
+
+        // Track the element's box rather than the window: containers resize without any window
+        // event (splitter drags, flex reflow, animations). Guarded because jsdom has no
+        // ResizeObserver - there, the resolution set above is the only sizing that happens.
+        if (typeof ResizeObserver !== 'undefined') {
+            this._resizeObserver = new ResizeObserver(() => this._syncCanvasSize());
+            this._resizeObserver.observe(this);
+        }
 
         // Get all pc-asset elements that are direct children of the pc-app element
         const assetElements = this.querySelectorAll<AssetElement>(':scope > pc-asset');
@@ -464,9 +509,6 @@ class AppElement extends AsyncElement {
             // first rAF tick
             app.once('frameend', () => this._bar?.complete());
 
-            // Handle window resize to keep the canvas responsive
-            window.addEventListener('resize', this._onWindowResize);
-
             this._onReady();
         });
     }
@@ -496,8 +538,9 @@ class AppElement extends AsyncElement {
         this._hierarchyReady = false;
         this._resetReady();
 
-        // Remove event listeners
-        window.removeEventListener('resize', this._onWindowResize);
+        // Stop tracking the element's size
+        this._resizeObserver?.disconnect();
+        this._resizeObserver = null;
 
         // Remove the canvas
         if (this._canvas && this.contains(this._canvas)) {
@@ -506,10 +549,18 @@ class AppElement extends AsyncElement {
         }
     }
 
-    private _onWindowResize() {
-        if (this.app) {
-            this.app.resizeCanvas();
+    /**
+     * Syncs the drawing buffer and the picker to the canvas's current CSS size. The picker must
+     * track the buffer, or picks would land at stale coordinates after a resize. Skipped while
+     * an XR session presents - the session owns the buffer size.
+     */
+    private _syncCanvasSize() {
+        if (!this.app || this.app.xr?.active) {
+            return;
         }
+        this.app.updateCanvasSize();
+        const { width, height } = this.app.graphicsDevice;
+        this._picker?.resize(width, height);
     }
 
     private _pickerCreate() {
@@ -900,7 +951,7 @@ class AppElement extends AsyncElement {
         this._maxPixelRatio = value;
         if (this.app) {
             this.app.graphicsDevice.maxPixelRatio = value;
-            this.app.resizeCanvas();
+            this._syncCanvasSize();
         }
     }
 
