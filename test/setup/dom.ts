@@ -38,9 +38,9 @@ import '../../src/index';
  * inside connectedCallback, so no test can get a handle on it before the read happens. Hence the
  * prototype.
  *
- * Note that canvas.style.width IS set correctly by FILLMODE_FILL_WINDOW (jsdom's window is
- * 1024x768) - it is only the layout read-back that is dead, so the stubs go on the layout
- * accessors and not on style.
+ * Note that the canvas's style.width IS set (AppElement styles it to fill the element) - it is
+ * only the layout read-back that is dead, so the stubs go on the layout accessors and not on
+ * style.
  */
 type Viewport = {
     width: number;
@@ -102,8 +102,11 @@ Object.defineProperty(window, 'devicePixelRatio', {
 
 // Deliberately NOT polyfilled:
 //
-// - ResizeObserver: zero occurrences in the engine source and zero in src/. @playcanvas/react
-//   mocks it because its own Application component uses it; nothing here does.
+// - ResizeObserver: absent in jsdom, and AppElement guards its use - without it, the boot-time
+//   setCanvasResolution(RESOLUTION_AUTO) call (which reads the stubbed accessors above) is the
+//   only sizing that happens. That is exactly what these tests need: deterministic dimensions
+//   with no observer callbacks firing between assertions. Resize-driven syncing is exercised
+//   through the max-pixel-ratio setter, which shares the same code path.
 // - navigator.xr: absent means XrManager reports supported === false, which is the correct
 //   headless answer. A truthy stub would push it down paths jsdom cannot honour.
 // - AudioContext: absent means SoundManager's lazy context getter returns null. Verified that
