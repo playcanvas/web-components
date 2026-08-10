@@ -121,10 +121,16 @@
                     rgba(255, 110, 40, 0) 79%);
             }
 
+            /* Explicit dimensions, not inset-stretching: the library's base styles give pc-app
+               an intrinsic 300x150 size (like a video element), and explicit width/height beat
+               inset in CSS box resolution. Percentages on a fixed element resolve against the
+               viewport. */
             pc-app {
                 display: block;
                 position: fixed;
                 inset: 0;
+                width: 100%;
+                height: 100%;
                 z-index: 1;
                 pointer-events: none;
             }
