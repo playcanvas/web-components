@@ -461,6 +461,30 @@ describe('pc-app pointer picking', () => {
             expect(calls.cameras).toEqual([cameraB, cameraA]);
         });
 
+        it('resolves a shared viewport edge to the viewport whose first pixel it is', async () => {
+            // Viewports rasterize half-open pixel ranges: on an 800-wide canvas split at 400,
+            // buffer column 400 is the right viewport's first pixel and holds nothing in the
+            // left camera's pick buffer. The right camera is declared first so the left camera
+            // is walked first - an inclusive bound would let it claim the edge, miss, and end
+            // the search at its opaque background.
+            const { appElement, cameraA, target, canvas } = await bootCameraPair(
+                'rect="0.5 0 0.5 1"',
+                'rect="0 0 0.5 1"'
+            );
+            giveCanvasBox(canvas);
+            const calls = stubPicker(appElement, [[hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 300)); // exactly on the split
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraA]);
+
+            canvas.dispatchEvent(move(800, 300)); // on the canvas's outer edge: pixel 800 does not exist
+            await flush();
+
+            expect(calls.cameras, 'no viewport owns a coordinate at the canvas edge').toEqual([cameraA]);
+        });
+
         it('skips a camera that renders to a texture', async () => {
             const { appElement, cameraA, cameraB, target, enter, canvas } = await bootCameraPair(
                 'priority="0"',

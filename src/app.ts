@@ -723,8 +723,11 @@ class AppElement extends AsyncElement {
     /**
      * Whether a camera's viewport contains the point. A camera renders into its normalized
      * `rect`, whose origin is the bottom-left of the canvas while buffer coordinates run from
-     * the top-left - the same flipped containment test the engine's ElementInput applies to
-     * UI input.
+     * the top-left - so the vertical test flips, as the engine's ElementInput flips it for UI
+     * input. The right and bottom edges are exclusive: a viewport rasterizes the half-open
+     * pixel range [left, right) x [top, bottom), so a coordinate on a shared edge belongs to
+     * the viewport whose first pixel it is - never to the one it just left, whose pick buffer
+     * holds nothing there.
      *
      * @param camera - The camera to test.
      * @param x - The x coordinate, in buffer space.
@@ -737,7 +740,7 @@ class AppElement extends AsyncElement {
         const left = rect.x * canvas.width;
         const bottom = (1 - rect.y) * canvas.height;
         const top = bottom - rect.w * canvas.height;
-        return x >= left && x <= left + rect.z * canvas.width && y >= top && y <= bottom;
+        return x >= left && x < left + rect.z * canvas.width && y >= top && y < bottom;
     }
 
     /**
