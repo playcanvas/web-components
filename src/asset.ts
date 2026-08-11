@@ -778,13 +778,11 @@ customElements.define('pc-asset', AssetElement);
  * consumer having to remember the load. The load is asynchronous - callers observe the asset's
  * `load` event for the resource.
  *
- * Exported for the element implementations, not from the package entry point - internal API,
- * like the parse helpers.
- *
  * @param id - The `id` of the `<pc-asset>` element.
  * @returns The asset, or `undefined`.
+ * @internal
  */
-const useAsset = (id: string) => {
+export const useAsset = (id: string) => {
     const asset = AssetElement.get(id);
     // load() ignores an asset that is already loaded or loading, so repeated resolution
     // costs nothing.
@@ -794,4 +792,4 @@ const useAsset = (id: string) => {
     return asset;
 };
 
-export { AssetElement, useAsset };
+export { AssetElement };
