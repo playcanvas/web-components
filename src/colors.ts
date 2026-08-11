@@ -1,3 +1,8 @@
+/**
+ * The CSS color keywords, lowercase name to hex value. Read by `parseColor` to accept color
+ * names as attribute values.
+ * @internal
+ */
 export const CSS_COLORS: Record<string, string> = {
     aliceblue: '#f0f8ff',
     antiquewhite: '#faebd7',

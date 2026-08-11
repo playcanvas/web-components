@@ -8,8 +8,9 @@ const REMOVAL_DELAY_MS = 250;
  * All styling is inline, so the library injects no stylesheet. The colors and height resolve CSS
  * custom properties — `--pc-loading-bar-color`, `--pc-loading-bar-background` and
  * `--pc-loading-bar-height` — so a page can theme the bar from `pc-app` or `:root`.
+ * @internal
  */
-class LoadingBar {
+export class LoadingBar {
     private _track: HTMLDivElement;
 
     private _fill: HTMLDivElement;
@@ -118,5 +119,3 @@ class LoadingBar {
         this._track.remove();
     }
 }
-
-export { LoadingBar };
