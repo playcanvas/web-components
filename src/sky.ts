@@ -2,7 +2,7 @@ import type { Asset, EventHandle, Scene, Texture } from 'playcanvas';
 import { EnvLighting, LAYERID_SKYBOX, Quat, Vec3 } from 'playcanvas';
 
 import type { AppElement } from './app';
-import { AssetElement } from './asset';
+import { useAsset } from './asset';
 import { AsyncElement } from './async-element';
 import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
 
@@ -117,7 +117,7 @@ class SkyElement extends AsyncElement {
         this._appElement = appElement;
 
         // Resolving the asset also starts its load when it is lazy and not yet loading
-        const asset = AssetElement._use(this._asset);
+        const asset = useAsset(this._asset);
         if (!asset) {
             return;
         }

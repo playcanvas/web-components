@@ -26,7 +26,7 @@ import {
 import type { EventHandle, Texture } from 'playcanvas';
 
 import type { AppElement } from './app';
-import { AssetElement } from './asset';
+import { useAsset } from './asset';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2 } from './parse';
 
 type BlendType =
@@ -523,7 +523,7 @@ class MaterialElement extends HTMLElement {
             return;
         }
 
-        const asset = AssetElement._use(id);
+        const asset = useAsset(id);
         if (!asset) return;
 
         if (asset.loaded) {

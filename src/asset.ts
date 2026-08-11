@@ -691,27 +691,6 @@ class AssetElement extends AsyncElement {
         return assetElement?.asset;
     }
 
-    /**
-     * Resolves an asset reference for use: {@link get}, plus starting the load of a registered
-     * asset that has not begun one - a `lazy` asset. Every element that consumes assets
-     * resolves its references here rather than through the passive {@link get}, which is what
-     * makes `lazy` mean load on first use without any consumer having to remember the load.
-     * The load is asynchronous - callers observe the asset's `load` event for the resource.
-     *
-     * @param id - The `id` of the `<pc-asset>` element.
-     * @returns The asset, or `undefined`.
-     * @internal
-     */
-    static _use(id: string) {
-        const asset = AssetElement.get(id);
-        // load() ignores an asset that is already loaded or loading, so repeated resolution
-        // costs nothing.
-        if (asset) {
-            asset.registry?.load(asset);
-        }
-        return asset;
-    }
-
     static get observedAttributes() {
         return [
             'address-u',
@@ -797,4 +776,27 @@ class AssetElement extends AsyncElement {
 
 customElements.define('pc-asset', AssetElement);
 
-export { AssetElement };
+/**
+ * Resolves an asset reference for use: {@link AssetElement.get}, plus starting the load of a
+ * registered asset that has not begun one - a `lazy` asset. Every element that consumes assets
+ * resolves its references here rather than through the passive `get`, which is what makes
+ * `lazy` mean load on first use without any consumer having to remember the load. The load is
+ * asynchronous - callers observe the asset's `load` event for the resource.
+ *
+ * Exported for the element implementations, not from the package entry point - internal API,
+ * like the parse helpers.
+ *
+ * @param id - The `id` of the `<pc-asset>` element.
+ * @returns The asset, or `undefined`.
+ */
+const useAsset = (id: string) => {
+    const asset = AssetElement.get(id);
+    // load() ignores an asset that is already loaded or loading, so repeated resolution
+    // costs nothing.
+    if (asset) {
+        asset.registry?.load(asset);
+    }
+    return asset;
+};
+
+export { AssetElement, useAsset };

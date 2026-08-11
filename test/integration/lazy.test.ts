@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AssetElement } from '../../src/asset';
+import { AssetElement, useAsset } from '../../src/asset';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
@@ -31,8 +31,8 @@ describe('pc-asset lazy loading', () => {
 
     it('keeps AssetElement.get a passive lookup', async () => {
         // get() is public API: looking an asset up must not have the side effect of loading
-        // it. The load-on-first-use trigger lives in the internal _use(), which is what the
-        // elements themselves resolve through.
+        // it. The load-on-first-use trigger lives in the internal useAsset(), which is what
+        // the elements themselves resolve through.
         const { get } = await bootApp(LAZY_TEXT);
         const element = get<AssetElement>('pc-asset');
 
@@ -45,13 +45,13 @@ describe('pc-asset lazy loading', () => {
 
     it('starts the load when an element resolves it for use', async () => {
         // Load on first use is the whole lazy contract: every element resolves its asset
-        // references through _use(), so resolution is where the load belongs - a consumer
+        // references through useAsset(), so resolution is where the load belongs - a consumer
         // cannot forget to trigger it.
         const { get } = await bootApp(LAZY_TEXT);
         const element = get<AssetElement>('pc-asset');
         const loaded = loadOf(element);
 
-        const asset = AssetElement._use('cfg');
+        const asset = useAsset('cfg');
 
         expect(asset).toBe(element.asset);
         await loaded;
@@ -68,10 +68,10 @@ describe('pc-asset lazy loading', () => {
         });
         const loaded = loadOf(element);
 
-        AssetElement._use('cfg');
-        AssetElement._use('cfg');
+        useAsset('cfg');
+        useAsset('cfg');
         await loaded;
-        AssetElement._use('cfg');
+        useAsset('cfg');
 
         expect(loads, 'repeated resolution must not reload').toBe(1);
     });

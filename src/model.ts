@@ -1,6 +1,6 @@
 import type { ContainerResource, Entity, EventHandle } from 'playcanvas';
 
-import { AssetElement } from './asset';
+import { useAsset } from './asset';
 import { AsyncElement } from './async-element';
 
 /**
@@ -155,7 +155,7 @@ class ModelElement extends AsyncElement {
         }
 
         // Resolving the asset also starts its load when it is lazy and not yet loading
-        const asset = AssetElement._use(this._asset);
+        const asset = useAsset(this._asset);
         if (!asset) {
             // An empty id is a legitimate transient (the asset may be assigned later); a
             // non-empty one that resolves to nothing is a dead end - say so rather than staying

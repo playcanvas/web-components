@@ -1,6 +1,6 @@
 import type { ParticleSystemComponent } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import { useAsset } from '../asset';
 
 import { ComponentElement } from './component';
 
@@ -21,7 +21,7 @@ class ParticleSystemComponentElement extends ComponentElement {
     }
 
     protected getInitialComponentData() {
-        const asset = AssetElement._use(this._asset);
+        const asset = useAsset(this._asset);
         // A lazy config has no resource yet - _loadAsset applies it once the load completes
         if (!asset || !asset.resource) {
             return {};
@@ -29,7 +29,7 @@ class ParticleSystemComponentElement extends ComponentElement {
 
         if ((asset.resource as any).colorMapAsset) {
             const id = (asset.resource as any).colorMapAsset;
-            const colorMapAsset = AssetElement._use(id)?.id;
+            const colorMapAsset = useAsset(id)?.id;
             if (colorMapAsset) {
                 (asset.resource as any).colorMapAsset = colorMapAsset;
             }
@@ -63,7 +63,7 @@ class ParticleSystemComponentElement extends ComponentElement {
         await this.closestApp?.ready();
 
         // Resolving the asset also starts its load when it is lazy and not yet loading
-        const asset = AssetElement._use(this._asset);
+        const asset = useAsset(this._asset);
         if (!asset) {
             return;
         }
