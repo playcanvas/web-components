@@ -123,3 +123,4 @@ export {
 };
 
 export type { AsyncElementTagName } from './async-element';
+export type { HierarchyNode } from './model';

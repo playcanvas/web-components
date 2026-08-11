@@ -4,6 +4,76 @@ import { useAsset } from './asset';
 import { AsyncElement } from './async-element';
 
 /**
+ * One node of the tree returned by {@link ModelElement.hierarchy}. A plain-data snapshot —
+ * `JSON.stringify` serializes it — whose `toString()` renders the node's subtree as a printable
+ * tree.
+ */
+type HierarchyNode = {
+    /**
+     * The node's name as instantiated, which is the name `pc-node` binding resolves: the engine
+     * parser synthesizes `node_<index>` names for unnamed nodes and renames identically named
+     * siblings apart (`Wheel`, `Wheel1`, ...), so it can differ from the name authored in the
+     * source asset.
+     */
+    name: string;
+    /**
+     * The node's `/`-separated path below the model root — the path a `pc-node` bound to this
+     * node reports. The root's path is its own name.
+     */
+    path: string;
+    /**
+     * The node's position among identically named nodes in the model, counted in depth-first
+     * order over the whole tree: the match a `pc-node`'s `index` attribute selects when `name`
+     * alone is ambiguous.
+     */
+    index: number;
+    /** The types of the components attached to the node (e.g. 'render'), sorted. */
+    components: string[];
+    /** The node's children. */
+    children: HierarchyNode[];
+    /**
+     * Renders the subtree rooted at this node as a printable tree, one line per node: the name,
+     * `[index]` after a name that several nodes in the model share, and the component types in
+     * parentheses.
+     */
+    toString(): string;
+};
+
+/**
+ * Formats one line of the printable hierarchy: the node's name, an `[index]` marker when the
+ * name is shared by several nodes in the model, and the attached component types.
+ *
+ * @param node - The node to format.
+ * @param counts - The number of nodes bearing each name.
+ * @returns The formatted line.
+ */
+const formatNode = (node: HierarchyNode, counts: ReadonlyMap<string, number>): string => {
+    const index = (counts.get(node.name) ?? 0) > 1 ? ` [${node.index}]` : '';
+    const components = node.components.length > 0 ? ` (${node.components.join(', ')})` : '';
+    return `${node.name}${index}${components}`;
+};
+
+/**
+ * Formats the printable form of a hierarchy subtree.
+ *
+ * @param root - The subtree root.
+ * @param counts - The number of nodes bearing each name.
+ * @returns The tree, one line per node.
+ */
+const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number>): string => {
+    const lines = [formatNode(root, counts)];
+    const walk = (node: HierarchyNode, prefix: string) => {
+        node.children.forEach((child, i) => {
+            const last = i === node.children.length - 1;
+            lines.push(`${prefix}${last ? '└─ ' : '├─ '}${formatNode(child, counts)}`);
+            walk(child, `${prefix}${last ? '   ' : '│  '}`);
+        });
+    };
+    walk(root, '');
+    return lines.join('\n');
+};
+
+/**
  * The ModelElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-model/ | `<pc-model>`} elements.
  * The ModelElement interface also inherits the properties and methods of the
@@ -53,6 +123,60 @@ class ModelElement extends AsyncElement {
      */
     get entity(): Entity | null {
         return this._entity;
+    }
+
+    /**
+     * Returns a snapshot of the instantiated node tree, or `null` while there is none (the
+     * container asset has not loaded, or the element has left the document). One call grounds a
+     * session — a browser console, a test, an agent — in the vocabulary `pc-node` binding
+     * resolves against: the instantiated names ({@link HierarchyNode.name}), paths, match
+     * indices and attached component types. `String(...)` of the result, or of any node in it,
+     * is the printable form.
+     *
+     * The snapshot is plain data, computed afresh each call: it does not follow later changes
+     * to the hierarchy, and mutating it changes nothing.
+     *
+     * @returns The root of the instantiated node tree, or `null`.
+     */
+    hierarchy(): HierarchyNode | null {
+        const root = this._entity;
+        if (!root) {
+            return null;
+        }
+
+        // Ordinals are assigned in the traversal resolution searches — pre-order depth-first
+        // from the model root, the root itself included — so each node's index is exactly what
+        // a pc-node's index attribute selects. Once the walk completes, the map holds the total
+        // count per name, which is what the printable form reads to annotate only shared names.
+        const ordinals = new Map<string, number>();
+
+        const describe = (entity: Entity, pathBelowRoot: string): HierarchyNode => {
+            const index = ordinals.get(entity.name) ?? 0;
+            ordinals.set(entity.name, index + 1);
+
+            const node: HierarchyNode = {
+                name: entity.name,
+                // The root has no path below itself; its own name stands in, as it does for
+                // the path a pc-node bound to the root reports.
+                path: pathBelowRoot || entity.name,
+                index,
+                // A plain GraphNode grafted into the hierarchy has no component storage
+                components: Object.keys(entity.c ?? {}).sort(),
+                children: entity.children.map((child) =>
+                    describe(child as Entity, pathBelowRoot ? `${pathBelowRoot}/${child.name}` : child.name)
+                )
+            };
+
+            // Non-enumerable, keeping the snapshot plain data under JSON.stringify, spreads and
+            // key enumeration. Deferred to call time, by which the ordinal map holds its totals.
+            Object.defineProperty(node, 'toString', {
+                value: () => formatHierarchy(node, ordinals)
+            });
+
+            return node;
+        };
+
+        return describe(root, '');
     }
 
     connectedCallback() {
@@ -235,3 +359,4 @@ class ModelElement extends AsyncElement {
 customElements.define('pc-model', ModelElement);
 
 export { ModelElement };
+export type { HierarchyNode };
