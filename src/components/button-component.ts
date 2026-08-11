@@ -74,17 +74,17 @@ class ButtonComponentElement extends ComponentElement {
             data.imageEntity = imageEntity;
         }
 
-        const hoverSpriteAsset = AssetElement.get(this._hoverSpriteAsset);
+        const hoverSpriteAsset = AssetElement._use(this._hoverSpriteAsset);
         if (hoverSpriteAsset) {
             data.hoverSpriteAsset = hoverSpriteAsset.id;
         }
 
-        const pressedSpriteAsset = AssetElement.get(this._pressedSpriteAsset);
+        const pressedSpriteAsset = AssetElement._use(this._pressedSpriteAsset);
         if (pressedSpriteAsset) {
             data.pressedSpriteAsset = pressedSpriteAsset.id;
         }
 
-        const inactiveSpriteAsset = AssetElement.get(this._inactiveSpriteAsset);
+        const inactiveSpriteAsset = AssetElement._use(this._inactiveSpriteAsset);
         if (inactiveSpriteAsset) {
             data.inactiveSpriteAsset = inactiveSpriteAsset.id;
         }
@@ -265,7 +265,7 @@ class ButtonComponentElement extends ComponentElement {
      */
     set hoverSpriteAsset(value: string) {
         this._hoverSpriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = AssetElement._use(value);
         if (this.component && asset) {
             this.component.hoverSpriteAsset = asset.id as any;
         }
@@ -305,7 +305,7 @@ class ButtonComponentElement extends ComponentElement {
      */
     set pressedSpriteAsset(value: string) {
         this._pressedSpriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = AssetElement._use(value);
         if (this.component && asset) {
             this.component.pressedSpriteAsset = asset.id as any;
         }
@@ -345,7 +345,7 @@ class ButtonComponentElement extends ComponentElement {
      */
     set inactiveSpriteAsset(value: string) {
         this._inactiveSpriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = AssetElement._use(value);
         if (this.component && asset) {
             this.component.inactiveSpriteAsset = asset.id as any;
         }

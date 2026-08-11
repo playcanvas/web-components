@@ -155,7 +155,7 @@ class ModelElement extends AsyncElement {
         }
 
         // Resolving the asset also starts its load when it is lazy and not yet loading
-        const asset = AssetElement.get(this._asset);
+        const asset = AssetElement._use(this._asset);
         if (!asset) {
             // An empty id is a legitimate transient (the asset may be assigned later); a
             // non-empty one that resolves to nothing is a dead end - say so rather than staying

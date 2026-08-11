@@ -120,7 +120,7 @@ class SoundSlotElement extends AsyncElement {
     set asset(value: string) {
         this._asset = value;
         if (this.soundSlot) {
-            const id = AssetElement.get(value)?.id;
+            const id = AssetElement._use(value)?.id;
             if (id) {
                 this.soundSlot.asset = id;
             }

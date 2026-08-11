@@ -523,7 +523,7 @@ class MaterialElement extends HTMLElement {
             return;
         }
 
-        const asset = AssetElement.get(id);
+        const asset = AssetElement._use(id);
         if (!asset) return;
 
         if (asset.loaded) {

@@ -33,7 +33,7 @@ class GSplatComponentElement extends ComponentElement {
 
     protected getInitialComponentData() {
         return {
-            asset: AssetElement.get(this._asset),
+            asset: AssetElement._use(this._asset),
             castShadows: this._castShadows,
             lodBaseDistance: this._lodBaseDistance,
             lodMultiplier: this._lodMultiplier,
@@ -56,7 +56,7 @@ class GSplatComponentElement extends ComponentElement {
      */
     set asset(value: string) {
         this._asset = value;
-        const asset = AssetElement.get(value);
+        const asset = AssetElement._use(value);
         if (this.component && asset) {
             this.component.asset = asset;
         }

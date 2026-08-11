@@ -29,15 +29,29 @@ describe('pc-asset lazy loading', () => {
         expect(asset!.loading).toBe(false);
     });
 
-    it('starts the load when resolved through AssetElement.get', async () => {
+    it('keeps AssetElement.get a passive lookup', async () => {
+        // get() is public API: looking an asset up must not have the side effect of loading
+        // it. The load-on-first-use trigger lives in the internal _use(), which is what the
+        // elements themselves resolve through.
+        const { get } = await bootApp(LAZY_TEXT);
+        const element = get<AssetElement>('pc-asset');
+
+        const asset = AssetElement.get('cfg');
+
+        expect(asset).toBe(element.asset);
+        expect(asset!.loading, 'get() must not start a load').toBe(false);
+        expect(asset!.loaded).toBe(false);
+    });
+
+    it('starts the load when an element resolves it for use', async () => {
         // Load on first use is the whole lazy contract: every element resolves its asset
-        // references through get(), so resolution is where the load belongs - a consumer
+        // references through _use(), so resolution is where the load belongs - a consumer
         // cannot forget to trigger it.
         const { get } = await bootApp(LAZY_TEXT);
         const element = get<AssetElement>('pc-asset');
         const loaded = loadOf(element);
 
-        const asset = AssetElement.get('cfg');
+        const asset = AssetElement._use('cfg');
 
         expect(asset).toBe(element.asset);
         await loaded;
@@ -54,10 +68,10 @@ describe('pc-asset lazy loading', () => {
         });
         const loaded = loadOf(element);
 
-        AssetElement.get('cfg');
-        AssetElement.get('cfg');
+        AssetElement._use('cfg');
+        AssetElement._use('cfg');
         await loaded;
-        AssetElement.get('cfg');
+        AssetElement._use('cfg');
 
         expect(loads, 'repeated resolution must not reload').toBe(1);
     });

@@ -389,12 +389,12 @@ class AssetElement extends AsyncElement {
             data = data ?? {};
 
             // Resolve the referenced texture atlas to its (numeric) asset id. The atlas must be
-            // declared before the sprite so its asset already exists in the registry. Resolved
-            // without triggering a load - this wiring happens at creation time, not at a use,
-            // and the engine's sprite handler loads the atlas when the sprite itself loads.
+            // declared before the sprite so its asset already exists in the registry. The
+            // passive lookup is deliberate: creation-time wiring is not a use, and the engine's
+            // sprite handler loads the atlas when the sprite itself loads.
             const atlas = this.getAttribute('atlas') ?? data.textureAtlasAsset;
             if (typeof atlas === 'string') {
-                const atlasAsset = AssetElement._find(atlas);
+                const atlasAsset = AssetElement.get(atlas);
                 if (atlasAsset) {
                     data.textureAtlasAsset = atlasAsset.id;
                 } else {
@@ -676,33 +676,34 @@ class AssetElement extends AsyncElement {
     }
 
     /**
-     * Returns the asset created by the `<pc-asset>` element with the given `id`, without
-     * starting a load. This is the lookup half of {@link get}, for wiring references while
-     * assets are still being created - before anything can be said to be using them.
-     *
-     * @param id - The `id` of the `<pc-asset>` element.
-     * @returns The asset, or `undefined`.
-     */
-    private static _find(id: string) {
-        const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
-        return assetElement?.asset;
-    }
-
-    /**
      * Returns the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
      * `undefined` if there is no such element or its asset has not been created yet.
      *
-     * Resolving an asset counts as using it: a registered asset that has not started to load -
-     * a `lazy` one - starts loading here, which is what makes `lazy` mean load on first use,
-     * uniformly for every element that references assets. The load is asynchronous - listen for
-     * the `<pc-asset>` element's `load` event (or the asset's own) to observe the resource
-     * arriving.
+     * The lookup is passive - it never starts a load. A `lazy` asset loads when an element that
+     * references it uses it, or when its `lazy` attribute is removed; to load one imperatively,
+     * pass it to the registry's own `app.assets.load()`.
      *
      * @param id - The `id` of the `<pc-asset>` element.
      * @returns The asset, or `undefined`.
      */
     static get(id: string) {
-        const asset = AssetElement._find(id);
+        const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
+        return assetElement?.asset;
+    }
+
+    /**
+     * Resolves an asset reference for use: {@link get}, plus starting the load of a registered
+     * asset that has not begun one - a `lazy` asset. Every element that consumes assets
+     * resolves its references here rather than through the passive {@link get}, which is what
+     * makes `lazy` mean load on first use without any consumer having to remember the load.
+     * The load is asynchronous - callers observe the asset's `load` event for the resource.
+     *
+     * @param id - The `id` of the `<pc-asset>` element.
+     * @returns The asset, or `undefined`.
+     * @internal
+     */
+    static _use(id: string) {
+        const asset = AssetElement.get(id);
         // load() ignores an asset that is already loaded or loading, so repeated resolution
         // costs nothing.
         if (asset) {

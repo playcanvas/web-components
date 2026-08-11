@@ -21,14 +21,15 @@ class ParticleSystemComponentElement extends ComponentElement {
     }
 
     protected getInitialComponentData() {
-        const asset = AssetElement.get(this._asset);
-        if (!asset) {
+        const asset = AssetElement._use(this._asset);
+        // A lazy config has no resource yet - _loadAsset applies it once the load completes
+        if (!asset || !asset.resource) {
             return {};
         }
 
         if ((asset.resource as any).colorMapAsset) {
             const id = (asset.resource as any).colorMapAsset;
-            const colorMapAsset = AssetElement.get(id)?.id;
+            const colorMapAsset = AssetElement._use(id)?.id;
             if (colorMapAsset) {
                 (asset.resource as any).colorMapAsset = colorMapAsset;
             }
@@ -62,7 +63,7 @@ class ParticleSystemComponentElement extends ComponentElement {
         await this.closestApp?.ready();
 
         // Resolving the asset also starts its load when it is lazy and not yet loading
-        const asset = AssetElement.get(this._asset);
+        const asset = AssetElement._use(this._asset);
         if (!asset) {
             return;
         }

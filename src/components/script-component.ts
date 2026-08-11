@@ -119,7 +119,7 @@ type Conversion = (rest: string, raw: string) => any;
  * @returns The asset, or `raw`.
  */
 const assetConversion: Conversion = (rest, raw) => {
-    const asset = AssetElement.get(rest);
+    const asset = AssetElement._use(rest);
     if (asset) {
         return asset;
     }
