@@ -1,6 +1,6 @@
 import type { SoundSlot } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import { useAsset } from '../asset';
 import { AsyncElement } from '../async-element';
 import { parseBool, parseNumber } from '../parse';
 
@@ -120,7 +120,7 @@ class SoundSlotElement extends AsyncElement {
     set asset(value: string) {
         this._asset = value;
         if (this.soundSlot) {
-            const id = AssetElement.get(value)?.id;
+            const id = useAsset(value)?.id;
             if (id) {
                 this.soundSlot.asset = id;
             }

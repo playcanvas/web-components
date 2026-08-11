@@ -1,7 +1,7 @@
 import type { ScriptComponent, Script } from 'playcanvas';
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import { useAsset } from '../asset';
 import {
     getEntity,
     parseBool,
@@ -119,7 +119,7 @@ type Conversion = (rest: string, raw: string) => any;
  * @returns The asset, or `raw`.
  */
 const assetConversion: Conversion = (rest, raw) => {
-    const asset = AssetElement.get(rest);
+    const asset = useAsset(rest);
     if (asset) {
         return asset;
     }

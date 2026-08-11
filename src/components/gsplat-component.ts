@@ -1,6 +1,6 @@
 import type { GSplatComponent } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import { useAsset } from '../asset';
 import { parseBool, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';
@@ -33,7 +33,7 @@ class GSplatComponentElement extends ComponentElement {
 
     protected getInitialComponentData() {
         return {
-            asset: AssetElement.get(this._asset),
+            asset: useAsset(this._asset),
             castShadows: this._castShadows,
             lodBaseDistance: this._lodBaseDistance,
             lodMultiplier: this._lodMultiplier,
@@ -56,7 +56,7 @@ class GSplatComponentElement extends ComponentElement {
      */
     set asset(value: string) {
         this._asset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.asset = asset;
         }

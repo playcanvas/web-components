@@ -1,7 +1,7 @@
 import type { ElementComponent } from 'playcanvas';
 import { Color, Vec2, Vec4 } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import { useAsset } from '../asset';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
@@ -118,17 +118,17 @@ class ElementComponentElement extends ComponentElement {
 
         // Asset references are resolved from `<pc-asset>` element ids to engine asset ids. They are
         // only included when they resolve, so image/group elements (with no font) don't error.
-        const fontAsset = AssetElement.get(this._fontAsset);
+        const fontAsset = useAsset(this._fontAsset);
         if (fontAsset) {
             data.fontAsset = fontAsset.id;
         }
 
-        const spriteAsset = AssetElement.get(this._spriteAsset);
+        const spriteAsset = useAsset(this._spriteAsset);
         if (spriteAsset) {
             data.spriteAsset = spriteAsset.id;
         }
 
-        const textureAsset = AssetElement.get(this._textureAsset);
+        const textureAsset = useAsset(this._textureAsset);
         if (textureAsset) {
             data.textureAsset = textureAsset.id;
         }
@@ -257,7 +257,7 @@ class ElementComponentElement extends ComponentElement {
      */
     set fontAsset(value: string) {
         this._fontAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.fontAsset = asset.id;
         }
@@ -430,7 +430,7 @@ class ElementComponentElement extends ComponentElement {
      */
     set spriteAsset(value: string) {
         this._spriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.spriteAsset = asset.id;
         }
@@ -488,7 +488,7 @@ class ElementComponentElement extends ComponentElement {
      */
     set textureAsset(value: string) {
         this._textureAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.textureAsset = asset.id;
         }

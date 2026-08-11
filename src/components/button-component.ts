@@ -1,7 +1,7 @@
 import type { ButtonComponent } from 'playcanvas';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Color, Vec4 } from 'playcanvas';
 
-import { AssetElement } from '../asset';
+import { useAsset } from '../asset';
 import { getEntity, parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
@@ -74,17 +74,17 @@ class ButtonComponentElement extends ComponentElement {
             data.imageEntity = imageEntity;
         }
 
-        const hoverSpriteAsset = AssetElement.get(this._hoverSpriteAsset);
+        const hoverSpriteAsset = useAsset(this._hoverSpriteAsset);
         if (hoverSpriteAsset) {
             data.hoverSpriteAsset = hoverSpriteAsset.id;
         }
 
-        const pressedSpriteAsset = AssetElement.get(this._pressedSpriteAsset);
+        const pressedSpriteAsset = useAsset(this._pressedSpriteAsset);
         if (pressedSpriteAsset) {
             data.pressedSpriteAsset = pressedSpriteAsset.id;
         }
 
-        const inactiveSpriteAsset = AssetElement.get(this._inactiveSpriteAsset);
+        const inactiveSpriteAsset = useAsset(this._inactiveSpriteAsset);
         if (inactiveSpriteAsset) {
             data.inactiveSpriteAsset = inactiveSpriteAsset.id;
         }
@@ -265,7 +265,7 @@ class ButtonComponentElement extends ComponentElement {
      */
     set hoverSpriteAsset(value: string) {
         this._hoverSpriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.hoverSpriteAsset = asset.id as any;
         }
@@ -305,7 +305,7 @@ class ButtonComponentElement extends ComponentElement {
      */
     set pressedSpriteAsset(value: string) {
         this._pressedSpriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.pressedSpriteAsset = asset.id as any;
         }
@@ -345,7 +345,7 @@ class ButtonComponentElement extends ComponentElement {
      */
     set inactiveSpriteAsset(value: string) {
         this._inactiveSpriteAsset = value;
-        const asset = AssetElement.get(value);
+        const asset = useAsset(value);
         if (this.component && asset) {
             this.component.inactiveSpriteAsset = asset.id as any;
         }
