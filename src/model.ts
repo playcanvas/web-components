@@ -170,6 +170,7 @@ class ModelElement extends AsyncElement {
             // Non-enumerable, keeping the snapshot plain data under JSON.stringify, spreads and
             // key enumeration. Deferred to call time, by which the ordinal map holds its totals.
             Object.defineProperty(node, 'toString', {
+                enumerable: false,
                 value: () => formatHierarchy(node, ordinals)
             });
 

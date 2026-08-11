@@ -116,6 +116,16 @@ describe('<pc-model> hierarchy()', () => {
                 { name: 'Wing1', path: 'Wing1', index: 0, components: [], children: [] }
             ]
         });
+
+        // The round trip alone cannot see toString - JSON.stringify skips functions whether or
+        // not they are enumerable - so the data-only key set is pinned directly.
+        expect(Object.keys(model.hierarchy()!), 'toString stays non-enumerable').toEqual([
+            'name',
+            'path',
+            'index',
+            'components',
+            'children'
+        ]);
         expect(uncaught.seen).toEqual([]);
     });
 
