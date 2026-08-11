@@ -692,21 +692,67 @@ class AppElement extends AsyncElement {
         return null;
     }
 
-    // New helper to convert CSS coordinates to canvas (picker) coordinates
-    private _getPickerCoordinates(event: PointerEvent): { x: number; y: number } {
-        // Get the canvas' bounding rectangle in CSS pixels.
-        const canvasRect = this._canvas!.getBoundingClientRect();
-        // Compute scale factors based on canvas actual resolution vs. its CSS display size.
-        const scaleX = this._canvas!.width / canvasRect.width;
-        const scaleY = this._canvas!.height / canvasRect.height;
-        // Convert the client coordinates accordingly.
-        const x = (event.clientX - canvasRect.left) * scaleX;
-        const y = (event.clientY - canvasRect.top) * scaleY;
-        return { x, y };
+    /**
+     * Converts a pointer event's client coordinates into drawing-buffer coordinates - the space
+     * the pick buffer and the camera viewports are laid out in. When the canvas has no CSS box
+     * to map through (jsdom; a hidden canvas receives no pointer events in a browser), the
+     * client coordinates are passed through unmapped and `mapped` is false, so callers know the
+     * coordinates correspond to no real geometry.
+     *
+     * @param event - The pointer event to convert.
+     * @param canvas - The canvas the event was dispatched on.
+     * @returns The buffer-space coordinates, and whether they were actually mapped.
+     */
+    private _getPickerCoordinates(
+        event: PointerEvent,
+        canvas: HTMLCanvasElement
+    ): { x: number; y: number; mapped: boolean } {
+        const canvasRect = canvas.getBoundingClientRect();
+        if (canvasRect.width === 0 || canvasRect.height === 0) {
+            return { x: event.clientX, y: event.clientY, mapped: false };
+        }
+        const scaleX = canvas.width / canvasRect.width;
+        const scaleY = canvas.height / canvasRect.height;
+        return {
+            x: (event.clientX - canvasRect.left) * scaleX,
+            y: (event.clientY - canvasRect.top) * scaleY,
+            mapped: true
+        };
+    }
+
+    /**
+     * Whether a camera's viewport contains the point. A camera renders into its normalized
+     * `rect`, whose origin is the bottom-left of the canvas while buffer coordinates run from
+     * the top-left - so the vertical test flips, as the engine's ElementInput flips it for UI
+     * input. The right and bottom edges are exclusive: a viewport rasterizes the half-open
+     * pixel range [left, right) x [top, bottom), so a coordinate on a shared edge belongs to
+     * the viewport whose first pixel it is - never to the one it just left, whose pick buffer
+     * holds nothing there.
+     *
+     * @param camera - The camera to test.
+     * @param x - The x coordinate, in buffer space.
+     * @param y - The y coordinate, in buffer space.
+     * @param canvas - The canvas the coordinates are relative to.
+     * @returns Whether the camera's viewport contains the point.
+     */
+    private _cameraContains(camera: CameraComponent, x: number, y: number, canvas: HTMLCanvasElement): boolean {
+        const rect = camera.rect;
+        const left = rect.x * canvas.width;
+        const bottom = (1 - rect.y) * canvas.height;
+        const top = bottom - rect.w * canvas.height;
+        return x >= left && x < left + rect.z * canvas.width && y >= top && y < bottom;
     }
 
     /**
      * Picks the scene under the pointer and returns the graph node that was hit, or `null`.
+     *
+     * The camera is resolved the way the engine's ElementInput resolves it for UI input:
+     * enabled cameras are tried topmost-first (they render in ascending `priority` order),
+     * skipping cameras that render to a texture and cameras whose viewport `rect` does not
+     * contain the pointer. A camera that picks nothing ends the search if it clears the color
+     * buffer - its background visually owns the pixel - and otherwise cedes to the cameras
+     * beneath it, so an overlay camera only intercepts picks where it actually drew something.
+     * The pick buffer is prepared per camera, so each camera picks from its own layers.
      *
      * The read back is asynchronous because the synchronous {@link Picker.getSelection} is not
      * supported on WebGPU, where it returns an empty selection rather than failing - which
@@ -717,17 +763,44 @@ class AppElement extends AsyncElement {
      * @returns The graph node under the pointer, or `null` if nothing was hit.
      */
     private async _pickNode(event: PointerEvent): Promise<GraphNode | null> {
-        const camera = this.app!.root.findComponent('camera') as CameraComponent;
-        if (!camera) return null;
+        const app = this.app;
+        const picker = this._picker;
+        const canvas = this._canvas;
+        if (!app || !picker || !canvas) return null;
 
-        const { x, y } = this._getPickerCoordinates(event);
+        const { x, y, mapped } = this._getPickerCoordinates(event, canvas);
 
-        this._picker!.prepare(camera, this.app!.scene);
-        const selection = await this._picker!.getSelectionAsync(x, y);
-        if (selection.length === 0) return null;
+        // Walked from the end: the array is sorted by ascending priority, so the last camera
+        // renders last and sits on top. Read through .at() because a pick handler may remove
+        // cameras while an earlier iteration's read back is in flight.
+        const cameras = app.systems.camera?.cameras ?? [];
+        for (let i = cameras.length - 1; i >= 0; i--) {
+            const camera = cameras.at(i);
 
-        const item = selection[0];
-        return item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
+            // A camera rendering to a texture is not on the canvas.
+            if (!camera || camera.renderTarget) continue;
+
+            // Coordinates that could not be mapped cannot be tested for containment.
+            if (mapped && !this._cameraContains(camera, x, y, canvas)) continue;
+
+            picker.prepare(camera, app.scene);
+            const selection = await picker.getSelectionAsync(x, y);
+
+            // The element may have disconnected while the read back was in flight.
+            if (!this._picker || !this.app) return null;
+
+            if (selection.length > 0) {
+                const item = selection[0];
+                return item instanceof MeshInstance ? item.node : (item as GSplatComponent).entity;
+            }
+
+            // Nothing hit. A camera that clears the color buffer paints its background over
+            // everything beneath it, so the miss is final; one that does not is an overlay
+            // that the cameras beneath show through, so they get their turn.
+            if (camera.clearColorBuffer) return null;
+        }
+
+        return null;
     }
 
     private async _onPointerMove(event: PointerEvent) {
