@@ -389,8 +389,8 @@ class AssetElement extends AsyncElement {
             data = data ?? {};
 
             // Resolve the referenced texture atlas to its (numeric) asset id. The atlas must be
-            // declared before the sprite so its asset already exists in the registry. The
-            // passive lookup is deliberate: creation-time wiring is not a use, and the engine's
+            // declared before the sprite so its asset already exists in the registry. Resolved
+            // with get, not useAsset: creation-time wiring is not a use, and the engine's
             // sprite handler loads the atlas when the sprite itself loads.
             const atlas = this.getAttribute('atlas') ?? data.textureAtlasAsset;
             if (typeof atlas === 'string') {
@@ -579,7 +579,6 @@ class AssetElement extends AsyncElement {
         this._lazy = value;
         if (this.asset) {
             this.asset.preload = !value;
-            // Clearing lazy on a registered asset is the declarative way to start its load
             if (!value) {
                 this.asset.registry?.load(this.asset);
             }
@@ -679,10 +678,6 @@ class AssetElement extends AsyncElement {
      * Returns the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
      * `undefined` if there is no such element or its asset has not been created yet.
      *
-     * The lookup is passive - it never starts a load. A `lazy` asset loads when an element that
-     * references it uses it, or when its `lazy` attribute is removed; to load one imperatively,
-     * pass it to the registry's own `app.assets.load()`.
-     *
      * @param id - The `id` of the `<pc-asset>` element.
      * @returns The asset, or `undefined`.
      */
@@ -779,9 +774,9 @@ customElements.define('pc-asset', AssetElement);
 /**
  * Resolves an asset reference for use: {@link AssetElement.get}, plus starting the load of a
  * registered asset that has not begun one - a `lazy` asset. Every element that consumes assets
- * resolves its references here rather than through the passive `get`, which is what makes
- * `lazy` mean load on first use without any consumer having to remember the load. The load is
- * asynchronous - callers observe the asset's `load` event for the resource.
+ * resolves its references here, which is what makes `lazy` mean load on first use without any
+ * consumer having to remember the load. The load is asynchronous - callers observe the asset's
+ * `load` event for the resource.
  *
  * Exported for the element implementations, not from the package entry point - internal API,
  * like the parse helpers.

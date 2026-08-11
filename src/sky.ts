@@ -116,7 +116,6 @@ class SkyElement extends AsyncElement {
 
         this._appElement = appElement;
 
-        // Resolving the asset also starts its load when it is lazy and not yet loading
         const asset = useAsset(this._asset);
         if (!asset) {
             return;

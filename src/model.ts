@@ -154,7 +154,6 @@ class ModelElement extends AsyncElement {
             return;
         }
 
-        // Resolving the asset also starts its load when it is lazy and not yet loading
         const asset = useAsset(this._asset);
         if (!asset) {
             // An empty id is a legitimate transient (the asset may be assigned later); a
