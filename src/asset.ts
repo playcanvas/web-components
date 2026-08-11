@@ -153,6 +153,10 @@ const processBufferView = (
  * immediately unless `lazy`. A `pc-asset` must be a direct child of `pc-app` — elements placed
  * elsewhere, or with an unsupported asset type, never become ready.
  *
+ * A `lazy` asset loads on first use: the first time any element resolves it by `id` — a model,
+ * a material map, a sky, a script `asset:` reference — or when the `lazy` attribute is removed,
+ * whichever comes first. Until then it stays registered and unloaded.
+ *
  * For `texture` and `textureatlas` assets, the texture options (`address-u`, `address-v`,
  * `min-filter`, `mag-filter`, `anisotropy`, `mipmaps`, `srgb`, `flip-y`) apply when the texture is
  * created and — like `lazy` — are observed: changing one updates a texture that has already
@@ -385,10 +389,12 @@ class AssetElement extends AsyncElement {
             data = data ?? {};
 
             // Resolve the referenced texture atlas to its (numeric) asset id. The atlas must be
-            // declared before the sprite so its asset already exists in the registry.
+            // declared before the sprite so its asset already exists in the registry. Resolved
+            // without triggering a load - this wiring happens at creation time, not at a use,
+            // and the engine's sprite handler loads the atlas when the sprite itself loads.
             const atlas = this.getAttribute('atlas') ?? data.textureAtlasAsset;
             if (typeof atlas === 'string') {
-                const atlasAsset = AssetElement.get(atlas);
+                const atlasAsset = AssetElement._find(atlas);
                 if (atlasAsset) {
                     data.textureAtlasAsset = atlasAsset.id;
                 } else {
@@ -564,13 +570,19 @@ class AssetElement extends AsyncElement {
     }
 
     /**
-     * Sets whether the asset should be loaded lazily.
+     * Sets whether the asset should be loaded lazily. A lazy asset is registered without being
+     * loaded; it loads on first use - the first time any element resolves it by `id` - or when
+     * this flag is cleared on a registered asset, whichever comes first.
      * @param value - The lazy loading flag.
      */
     set lazy(value: boolean) {
         this._lazy = value;
         if (this.asset) {
             this.asset.preload = !value;
+            // Clearing lazy on a registered asset is the declarative way to start its load
+            if (!value) {
+                this.asset.registry?.load(this.asset);
+            }
         }
     }
 
@@ -664,15 +676,39 @@ class AssetElement extends AsyncElement {
     }
 
     /**
+     * Returns the asset created by the `<pc-asset>` element with the given `id`, without
+     * starting a load. This is the lookup half of {@link get}, for wiring references while
+     * assets are still being created - before anything can be said to be using them.
+     *
+     * @param id - The `id` of the `<pc-asset>` element.
+     * @returns The asset, or `undefined`.
+     */
+    private static _find(id: string) {
+        const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
+        return assetElement?.asset;
+    }
+
+    /**
      * Returns the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
      * `undefined` if there is no such element or its asset has not been created yet.
+     *
+     * Resolving an asset counts as using it: a registered asset that has not started to load -
+     * a `lazy` one - starts loading here, which is what makes `lazy` mean load on first use,
+     * uniformly for every element that references assets. The load is asynchronous - listen for
+     * the `<pc-asset>` element's `load` event (or the asset's own) to observe the resource
+     * arriving.
      *
      * @param id - The `id` of the `<pc-asset>` element.
      * @returns The asset, or `undefined`.
      */
     static get(id: string) {
-        const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
-        return assetElement?.asset;
+        const asset = AssetElement._find(id);
+        // load() ignores an asset that is already loaded or loading, so repeated resolution
+        // costs nothing.
+        if (asset) {
+            asset.registry?.load(asset);
+        }
+        return asset;
     }
 
     static get observedAttributes() {

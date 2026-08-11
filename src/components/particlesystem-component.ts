@@ -59,9 +59,9 @@ class ParticleSystemComponentElement extends ComponentElement {
     }
 
     private async _loadAsset() {
-        const appElement = await this.closestApp?.ready();
-        const app = appElement?.app;
+        await this.closestApp?.ready();
 
+        // Resolving the asset also starts its load when it is lazy and not yet loading
         const asset = AssetElement.get(this._asset);
         if (!asset) {
             return;
@@ -73,7 +73,6 @@ class ParticleSystemComponentElement extends ComponentElement {
             asset.once('load', () => {
                 this.applyConfig(asset.resource);
             });
-            app!.assets.load(asset);
         }
     }
 

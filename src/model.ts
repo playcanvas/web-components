@@ -154,8 +154,7 @@ class ModelElement extends AsyncElement {
             return;
         }
 
-        const app = appElement.app;
-
+        // Resolving the asset also starts its load when it is lazy and not yet loading
         const asset = AssetElement.get(this._asset);
         if (!asset) {
             // An empty id is a legitimate transient (the asset may be assigned later); a
@@ -194,7 +193,6 @@ class ModelElement extends AsyncElement {
                 );
                 this._onReady();
             });
-            app!.assets.load(asset);
         }
     }
 
