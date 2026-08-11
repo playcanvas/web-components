@@ -1,7 +1,8 @@
-import type { Entity } from 'playcanvas';
+import type { Entity, RenderTarget } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AppElement } from '../../src/app';
+import type { CameraComponentElement } from '../../src/components/camera-component';
 import type { EntityElement } from '../../src/entity';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
@@ -39,24 +40,26 @@ const deferred = <T>() => {
 
 /**
  * Swaps in a picker whose read back this test controls, and records which of the two read-back
- * APIs the element reached for.
+ * APIs the element reached for - and which camera each pick was prepared with.
  *
  * The null device renders nothing, so a real Picker can only ever return an empty selection. The
- * substitution keeps the assertions on the element's own logic - the element resolution, the
- * enter/leave bookkeeping and the ordering guard - rather than on the GPU.
+ * substitution keeps the assertions on the element's own logic - the camera resolution, the
+ * element resolution, the enter/leave bookkeeping and the ordering guard - rather than on the GPU.
  *
  * @param appElement - The booted pc-app.
  * @param queue - Selections to hand out, one per call. A deferred entry is resolved by the test.
- * @returns The per-API call counts.
+ * @returns The per-API call counts and the cameras passed to prepare, in call order.
  */
 const stubPicker = (
     appElement: AppElement,
     queue: (ReturnType<typeof hit>[] | Promise<ReturnType<typeof hit>[]>)[]
 ) => {
-    const calls = { sync: 0, async: 0 };
+    const calls = { sync: 0, async: 0, cameras: [] as unknown[] };
 
     (appElement as unknown as { _picker: unknown })._picker = {
-        prepare: () => undefined,
+        prepare: (camera: unknown) => {
+            calls.cameras.push(camera);
+        },
         getSelection: () => {
             calls.sync++;
             return [];
@@ -316,5 +319,161 @@ describe('pc-app pointer picking', () => {
         await flush();
 
         expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    describe('multi-camera', () => {
+        /**
+         * Boots two cameras and a listening target. jsdom gives the canvas no CSS box, so unless
+         * a test installs geometry via {@link giveCanvasBox}, viewport containment is bypassed
+         * and camera resolution is driven purely by priority order and fall-through.
+         *
+         * @param a - Attributes for the first camera, in document order.
+         * @param b - Attributes for the second camera.
+         * @returns The booted handle plus both camera components, the target's spy and the canvas.
+         */
+        const bootCameraPair = async (a: string, b: string) => {
+            const handle = await bootApp(`
+                <pc-entity name="camA"><pc-camera ${a}></pc-camera></pc-entity>
+                <pc-entity name="camB"><pc-camera ${b}></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `);
+            const cameraA = handle.get<CameraComponentElement>('pc-entity[name="camA"] pc-camera').component;
+            const cameraB = handle.get<CameraComponentElement>('pc-entity[name="camB"] pc-camera').component;
+            const target = handle.get<EntityElement>('pc-entity[name="target"]');
+            const enter = vi.fn();
+            target.addEventListener('pointerenter', enter);
+
+            const canvas = handle.appElement.querySelector('canvas');
+            if (!canvas) throw new Error('bootCameraPair: pc-app created no canvas');
+
+            return { ...handle, cameraA, cameraB, target, enter, canvas };
+        };
+
+        /**
+         * Gives the canvas the CSS box and drawing-buffer size jsdom never lays out, so
+         * client coordinates map 1:1 into an 800x600 buffer and viewport containment applies.
+         *
+         * @param canvas - The canvas to size.
+         */
+        const giveCanvasBox = (canvas: HTMLCanvasElement) => {
+            canvas.width = 800;
+            canvas.height = 600;
+            vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+                left: 0,
+                top: 0,
+                right: 800,
+                bottom: 600,
+                width: 800,
+                height: 600,
+                x: 0,
+                y: 0,
+                toJSON: () => ({})
+            } as DOMRect);
+        };
+
+        it('picks with the highest-priority camera, not the first in the document', async () => {
+            // The old resolution was findComponent('camera') - whichever camera a depth-first
+            // walk of the scene found first, regardless of what renders on top.
+            const { appElement, cameraB, target, enter, canvas } = await bootCameraPair('priority="0"', 'priority="1"');
+            const calls = stubPicker(appElement, [[hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 300));
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraB]);
+            expect(enter).toHaveBeenCalledTimes(1);
+        });
+
+        it('orders cameras by priority, not by how recently they enabled', async () => {
+            const { appElement, cameraA, target, enter, canvas } = await bootCameraPair('priority="1"', 'priority="0"');
+            const calls = stubPicker(appElement, [[hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 300));
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraA]);
+            expect(enter).toHaveBeenCalledTimes(1);
+        });
+
+        it('falls through an overlay camera that picked nothing', async () => {
+            // An overlay camera leaves the color buffer alone, so wherever it drew nothing the
+            // cameras beneath show through - and should receive the pick.
+            const { appElement, cameraA, cameraB, target, enter, canvas } = await bootCameraPair(
+                'priority="0"',
+                'priority="1" clear-color-buffer="false"'
+            );
+            const calls = stubPicker(appElement, [[], [hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 300));
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraB, cameraA]);
+            expect(enter).toHaveBeenCalledTimes(1);
+        });
+
+        it('ends the search at an opaque camera that picked nothing', async () => {
+            // A camera that clears the color buffer paints its background over everything
+            // beneath it, so entities under an opaque viewport are not visible - and must not
+            // receive events.
+            const { appElement, cameraB, target, enter, canvas } = await bootCameraPair('priority="0"', 'priority="1"');
+            const calls = stubPicker(appElement, [[], [hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 300));
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraB]);
+            expect(enter).not.toHaveBeenCalled();
+        });
+
+        it('routes the pick to the camera whose viewport contains the pointer', async () => {
+            // Split screen: two same-priority cameras side by side. The pointer's position, not
+            // camera order, decides which viewport owns the pick.
+            const { appElement, cameraA, cameraB, target, canvas } = await bootCameraPair(
+                'rect="0 0 0.5 1"',
+                'rect="0.5 0 0.5 1"'
+            );
+            giveCanvasBox(canvas);
+            const calls = stubPicker(appElement, [[hit(target.entity!)], [hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(600, 300)); // right half
+            await flush();
+            canvas.dispatchEvent(move(200, 300)); // left half
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraB, cameraA]);
+        });
+
+        it("flips the viewport test to match rect's bottom-left origin", async () => {
+            // rect="0 0.5 1 0.5" starts halfway up from the BOTTOM of the canvas, so it is the
+            // top half of the screen - the y axis of client coordinates runs the other way.
+            const { appElement, cameraA, cameraB, target, canvas } = await bootCameraPair(
+                'priority="0"',
+                'priority="1" rect="0 0.5 1 0.5"'
+            );
+            giveCanvasBox(canvas);
+            const calls = stubPicker(appElement, [[hit(target.entity!)], [hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 150)); // top half: inside camB's viewport
+            await flush();
+            canvas.dispatchEvent(move(400, 450)); // bottom half: outside it
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraB, cameraA]);
+        });
+
+        it('skips a camera that renders to a texture', async () => {
+            const { appElement, cameraA, cameraB, target, enter, canvas } = await bootCameraPair(
+                'priority="0"',
+                'priority="1"'
+            );
+            cameraB.renderTarget = {} as RenderTarget;
+            const calls = stubPicker(appElement, [[hit(target.entity!)]]);
+
+            canvas.dispatchEvent(move(400, 300));
+            await flush();
+
+            expect(calls.cameras).toEqual([cameraA]);
+            expect(enter).toHaveBeenCalledTimes(1);
+        });
     });
 });
