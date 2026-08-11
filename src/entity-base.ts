@@ -6,9 +6,9 @@ import { AsyncElement } from './async-element';
 /**
  * The attribute names of the inline `onpointer*` event handlers, shared by every element that
  * fronts an engine entity. Spread into `observedAttributes` by subclasses.
- * @ignore
+ * @internal
  */
-const POINTER_ATTRIBUTES = [
+export const POINTER_ATTRIBUTES = [
     'onpointerenter',
     'onpointerleave',
     'onpointerdown',
@@ -133,4 +133,4 @@ class EntityBaseElement extends AsyncElement {
     }
 }
 
-export { EntityBaseElement, POINTER_ATTRIBUTES };
+export { EntityBaseElement };

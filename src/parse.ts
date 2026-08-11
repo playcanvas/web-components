@@ -28,7 +28,7 @@ import { CSS_COLORS } from './colors';
  * @param value - The value to split.
  * @param count - The required number of components.
  * @returns The parsed components, or `null`.
- * @ignore
+ * @internal
  */
 export const parseComponents = (value: string, count: number): number[] | null => {
     const components = value.trim().split(/\s+/).map(Number);
@@ -61,6 +61,7 @@ const cloneDefault = <T extends Color | Quat | Vec2 | Vec3 | Vec4 | null>(value:
  * @param value - The attribute value to parse (`null` when the attribute is absent).
  * @param defaultValue - The value to use when the attribute is absent or removed.
  * @returns The parsed boolean.
+ * @internal
  */
 export const parseBool = (value: string | null, defaultValue: boolean): boolean => {
     return value === null ? defaultValue : value !== 'false';
@@ -77,6 +78,7 @@ export const parseBool = (value: string | null, defaultValue: boolean): boolean 
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Color object.
+ * @internal
  */
 export const parseColor = <T extends Color | null>(
     value: string | null,
@@ -129,6 +131,7 @@ export const parseColor = <T extends Color | null>(
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The resolved enum name.
+ * @internal
  */
 export const parseEnum = <T extends string>(
     value: string | null,
@@ -158,6 +161,7 @@ export const parseEnum = <T extends string>(
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed number.
+ * @internal
  */
 export const parseNumber = <T extends number | null>(
     value: string | null,
@@ -187,6 +191,7 @@ export const parseNumber = <T extends number | null>(
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Quat object.
+ * @internal
  */
 export const parseQuat = <T extends Quat | null>(
     value: string | null,
@@ -217,6 +222,7 @@ export const parseQuat = <T extends Quat | null>(
  * @param value - The attribute value to parse (`null` when the attribute is absent).
  * @param defaultValue - The value to use when the attribute is absent or removed.
  * @returns The parsed tag names.
+ * @internal
  */
 export const parseTags = (value: string | null, defaultValue: string[] = []): string[] => {
     if (value === null) {
@@ -239,6 +245,7 @@ export const parseTags = (value: string | null, defaultValue: string[] = []): st
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec2 object.
+ * @internal
  */
 export const parseVec2 = <T extends Vec2 | null>(
     value: string | null,
@@ -267,6 +274,7 @@ export const parseVec2 = <T extends Vec2 | null>(
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec3 object.
+ * @internal
  */
 export const parseVec3 = <T extends Vec3 | null>(
     value: string | null,
@@ -295,6 +303,7 @@ export const parseVec3 = <T extends Vec3 | null>(
  * @param defaultValue - The value to use when the attribute is absent or invalid.
  * @param attribute - The attribute name, used in the warning message.
  * @returns The parsed Vec4 object.
+ * @internal
  */
 export const parseVec4 = <T extends Vec4 | null>(
     value: string | null,
@@ -321,6 +330,7 @@ export const parseVec4 = <T extends Vec4 | null>(
  *
  * @param ref - The reference string to resolve.
  * @returns The resolved entity, or `null`.
+ * @internal
  */
 export const getEntity = (ref: string): Entity | null => {
     if (!ref) {
