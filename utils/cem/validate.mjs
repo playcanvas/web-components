@@ -195,12 +195,8 @@ if (manifest) {
         expectAttribute('pc-module', name, { type: 'string' });
     }
 
-    // The registry key other elements resolve materials by: a global attribute read through
-    // querySelector rather than an accessor, so declared with @attribute like pc-asset's id
-    expectAttribute('pc-material', 'id', { type: 'string', fieldName: undefined });
-
-    // The one engine property whose attribute shares a name with a built-in on other elements;
-    // pinned so the accessor keeps backing it
+    // The one engine property that is a pure label rather than shader state; pinned so the
+    // accessor keeps backing it
     expectAttribute('pc-material', 'name', { type: 'string', fieldName: 'name' });
     for (const name of ['id', 'src', 'type', 'data', 'atlas', 'frame-keys', 'pixels-per-unit', 'render-mode']) {
         check(Boolean(attribute('pc-asset', name)), `pc-asset is missing the '${name}' attribute`);

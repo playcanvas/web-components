@@ -136,8 +136,6 @@ type TextureSlot =
  * The two aliases are documented here rather than on an accessor, because they resolve to the
  * `gloss` properties and would otherwise inherit gloss's description - which reads inverted.
  *
- * @attribute {string} id - The id other elements reference the material by (see `pc-render`'s
- * `material` attribute).
  * @attribute {number} roughness - The roughness of the material, from 0 (shiny) to 1 (rough). An
  * alias for `gloss` that also inverts it, so do not combine it with the `gloss` attributes.
  * @attribute {string} roughness-map - The id of the `pc-asset` to use as the roughness map. An
