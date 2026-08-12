@@ -1,4 +1,4 @@
-import { BLEND_NORMAL, CULLFACE_FRONT, Texture, Vec2 } from 'playcanvas';
+import { BLEND_NORMAL, CULLFACE_FRONT, StandardMaterial, Texture, Vec2 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AssetElement } from '../../src/asset';
@@ -42,7 +42,7 @@ describe('<pc-material> integration', () => {
         expect(material!.twoSidedLighting).toBe(true);
     });
 
-    it('names the material after the element id', async () => {
+    it('names the material after the element id, following later id changes', async () => {
         const { all } = await bootApp(`
             <pc-material id="candy-red"></pc-material>
             <pc-material></pc-material>
@@ -51,7 +51,20 @@ describe('<pc-material> integration', () => {
         const [named, anonymous] = all<MaterialElement>('pc-material');
 
         expect(named.material!.name).toBe('candy-red');
-        expect(anonymous.material!.name, 'no id keeps the engine default').toBe('Untitled');
+        // Compared against a fresh material rather than the literal 'Untitled': the contract is
+        // "left at the engine default", whatever the engine names it.
+        expect(anonymous.material!.name, 'no id keeps the engine default').toBe(new StandardMaterial().name);
+
+        named.id = 'resprayed';
+        expect(named.material!.name, 'the name follows an id change').toBe('resprayed');
+
+        anonymous.id = 'adopted';
+        expect(anonymous.material!.name, 'a late id names a previously anonymous material').toBe('adopted');
+
+        named.removeAttribute('id');
+        expect(named.material!.name, 'removal keeps the last name rather than orphaning the label').toBe(
+            'resprayed'
+        );
     });
 
     it('enables the metalness workflow on a dielectric, unlike a bare StandardMaterial', async () => {

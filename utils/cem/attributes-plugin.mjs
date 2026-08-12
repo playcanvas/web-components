@@ -70,6 +70,14 @@ const EMPTY_CONSTRUCTORS = {
 const kebabToCamel = name => name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 
 /**
+ * Global attributes an element may observe for a side effect (pc-material follows `id` into its
+ * material's name). They are not backed by an accessor of the library's uniform shape, so their
+ * manifest entries come from explicit `@attribute` tags - deriving one here would publish a
+ * phantom fieldName.
+ */
+const GLOBAL_ATTRIBUTES = new Set(['id']);
+
+/**
  * Extracts `name === 'some-attribute'` comparisons, so that elements handling a single attribute
  * with an `if` rather than a `switch` (see `src/asset.ts`) are covered too.
  *
@@ -393,6 +401,9 @@ export const attributesFromCallbackPlugin = () => ({
         const sourceFile = node.getSourceFile();
 
         for (const branch of collectBranches(ts, callback.body)) {
+            if (GLOBAL_ATTRIBUTES.has(branch.name)) {
+                continue;
+            }
             const assignment = findAssignment(ts, branch.statements);
             const fieldName = assignment?.fieldName ?? kebabToCamel(branch.name);
             const { type, default: defaultValue, format } = describeValue(

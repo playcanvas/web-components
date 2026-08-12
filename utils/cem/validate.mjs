@@ -194,6 +194,10 @@ if (manifest) {
     for (const name of ['name', 'glue', 'wasm', 'fallback']) {
         expectAttribute('pc-module', name, { type: 'string' });
     }
+
+    // A global attribute observed for its side effect (the material's name follows the id):
+    // declared with @attribute, and the callback branch must not derive a phantom fieldName
+    expectAttribute('pc-material', 'id', { type: 'string', fieldName: undefined });
     for (const name of ['id', 'src', 'type', 'data', 'atlas', 'frame-keys', 'pixels-per-unit', 'render-mode']) {
         check(Boolean(attribute('pc-asset', name)), `pc-asset is missing the '${name}' attribute`);
     }
