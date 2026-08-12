@@ -5,4 +5,5 @@ https://superspl.at/scene/67841e9d
 
 CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
 
-Converted to SOG with splat-transform v3.1.7.
+Modified from the original: the second subject has been edited out, and the
+result converted to SOG with splat-transform v3.1.7.
