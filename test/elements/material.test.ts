@@ -55,7 +55,11 @@ describe('<pc-material>', () => {
 
     const create = () => document.createElement('pc-material') as MaterialElement;
 
-    const attributes = MaterialElement.observedAttributes;
+    const observed = MaterialElement.observedAttributes;
+
+    // Every observed attribute except the global 'id': element identity rather than a mirror of
+    // an engine property, its side effect - naming the material - is covered at integration tier
+    const attributes = observed.filter((attribute) => attribute !== 'id');
 
     const propertyOf = (attribute: string) => ALIASES[attribute] ?? kebabToCamel(attribute);
 
@@ -64,9 +68,9 @@ describe('<pc-material>', () => {
     };
 
     it('observes a large, duplicate-free attribute surface', () => {
-        expect(attributes.length).toBeGreaterThan(80);
-        expect(new Set(attributes).size).toBe(attributes.length);
-        expect([...attributes]).toEqual([...attributes].sort());
+        expect(observed.length).toBeGreaterThan(80);
+        expect(new Set(observed).size).toBe(observed.length);
+        expect([...observed]).toEqual([...observed].sort());
     });
 
     /**
