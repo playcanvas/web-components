@@ -145,7 +145,7 @@ describe('<pc-material>', () => {
             if (current instanceof Color) {
                 return { value: '1 0 0', expected: new Color(1, 0, 0) };
             }
-            // The remaining string-valued attributes are the map channels
+            // The remaining string-valued attributes are the map channels and the name
             return { value: 'r', expected: 'r' };
         };
 

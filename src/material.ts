@@ -251,6 +251,8 @@ class MaterialElement extends HTMLElement {
 
     private _metalnessMapUv = 0;
 
+    private _name = 'Untitled';
+
     private _normalMap = '';
 
     private _normalMapOffset = new Vec2(0, 0);
@@ -402,6 +404,7 @@ class MaterialElement extends HTMLElement {
         material.metalnessMapRotation = this._metalnessMapRotation;
         material.metalnessMapTiling = this._metalnessMapTiling;
         material.metalnessMapUv = this._metalnessMapUv;
+        material.name = this._name;
         material.normalMapOffset = this._normalMapOffset;
         material.normalMapRotation = this._normalMapRotation;
         material.normalMapTiling = this._normalMapTiling;
@@ -1616,6 +1619,28 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
+     * Sets the name of the material.
+     * @param value - The material name.
+     */
+    set name(value: string) {
+        this._name = value;
+        if (this.material) {
+            // A label rather than shader state, so no update() is scheduled
+            this.material.name = value;
+        }
+    }
+
+    /**
+     * Gets the name of the material - the label shown wherever materials surface by name, such
+     * as profilers, GPU captures and the assignments `pc-model.hierarchy()` reports. Purely a
+     * label: element references resolve through `id`.
+     * @returns The material name.
+     */
+    get name() {
+        return this._name;
+    }
+
+    /**
      * Sets the id of the `pc-asset` to use as the normal map.
      * @param value - The asset id.
      */
@@ -2243,6 +2268,7 @@ class MaterialElement extends HTMLElement {
             'metalness-map-rotation',
             'metalness-map-tiling',
             'metalness-map-uv',
+            'name',
             'normal-map',
             'normal-map-offset',
             'normal-map-rotation',
@@ -2443,6 +2469,9 @@ class MaterialElement extends HTMLElement {
                 break;
             case 'metalness-map-uv':
                 this.metalnessMapUv = parseNumber(newValue, 0, name);
+                break;
+            case 'name':
+                this.name = newValue ?? 'Untitled';
                 break;
             case 'normal-map':
                 this.normalMap = newValue ?? '';

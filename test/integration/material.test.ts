@@ -1,4 +1,4 @@
-import { BLEND_NORMAL, CULLFACE_FRONT, Texture, Vec2 } from 'playcanvas';
+import { BLEND_NORMAL, CULLFACE_FRONT, StandardMaterial, Texture, Vec2 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AssetElement } from '../../src/asset';
@@ -40,6 +40,26 @@ describe('<pc-material> integration', () => {
         expect(material!.diffuseMapTiling).toEqual(new Vec2(4, 4));
         expect(material!.diffuseMapChannel).toBe('r');
         expect(material!.twoSidedLighting).toBe(true);
+    });
+
+    it('names the material from the name attribute, independent of the id', async () => {
+        const { all } = await bootApp(`
+            <pc-material id="candy-red" name="Candy Red"></pc-material>
+            <pc-material id="smoked-glass"></pc-material>
+        `);
+
+        const [labeled, unlabeled] = all<MaterialElement>('pc-material');
+
+        expect(labeled.material!.name).toBe('Candy Red');
+        // Compared against a fresh material rather than the literal 'Untitled': the id is a
+        // reference key, never a label, so without a name the engine default stands
+        expect(unlabeled.material!.name, 'no name keeps the engine default').toBe(new StandardMaterial().name);
+
+        labeled.setAttribute('name', 'Resprayed');
+        expect(labeled.material!.name, 'the label follows the attribute').toBe('Resprayed');
+
+        labeled.removeAttribute('name');
+        expect(labeled.material!.name, 'removal restores the engine default').toBe(new StandardMaterial().name);
     });
 
     it('enables the metalness workflow on a dielectric, unlike a bare StandardMaterial', async () => {

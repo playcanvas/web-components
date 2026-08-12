@@ -194,6 +194,10 @@ if (manifest) {
     for (const name of ['name', 'glue', 'wasm', 'fallback']) {
         expectAttribute('pc-module', name, { type: 'string' });
     }
+
+    // The one engine property that is a pure label rather than shader state; pinned so the
+    // accessor keeps backing it
+    expectAttribute('pc-material', 'name', { type: 'string', fieldName: 'name' });
     for (const name of ['id', 'src', 'type', 'data', 'atlas', 'frame-keys', 'pixels-per-unit', 'render-mode']) {
         check(Boolean(attribute('pc-asset', name)), `pc-asset is missing the '${name}' attribute`);
     }
