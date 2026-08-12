@@ -42,29 +42,24 @@ describe('<pc-material> integration', () => {
         expect(material!.twoSidedLighting).toBe(true);
     });
 
-    it('names the material after the element id, following later id changes', async () => {
+    it('names the material from the name attribute, independent of the id', async () => {
         const { all } = await bootApp(`
-            <pc-material id="candy-red"></pc-material>
-            <pc-material></pc-material>
+            <pc-material id="candy-red" name="Candy Red"></pc-material>
+            <pc-material id="smoked-glass"></pc-material>
         `);
 
-        const [named, anonymous] = all<MaterialElement>('pc-material');
+        const [labeled, unlabeled] = all<MaterialElement>('pc-material');
 
-        expect(named.material!.name).toBe('candy-red');
-        // Compared against a fresh material rather than the literal 'Untitled': the contract is
-        // "left at the engine default", whatever the engine names it.
-        expect(anonymous.material!.name, 'no id keeps the engine default').toBe(new StandardMaterial().name);
+        expect(labeled.material!.name).toBe('Candy Red');
+        // Compared against a fresh material rather than the literal 'Untitled': the id is a
+        // reference key, never a label, so without a name the engine default stands
+        expect(unlabeled.material!.name, 'no name keeps the engine default').toBe(new StandardMaterial().name);
 
-        named.id = 'resprayed';
-        expect(named.material!.name, 'the name follows an id change').toBe('resprayed');
+        labeled.setAttribute('name', 'Resprayed');
+        expect(labeled.material!.name, 'the label follows the attribute').toBe('Resprayed');
 
-        anonymous.id = 'adopted';
-        expect(anonymous.material!.name, 'a late id names a previously anonymous material').toBe('adopted');
-
-        named.removeAttribute('id');
-        expect(named.material!.name, 'removal keeps the last name rather than orphaning the label').toBe(
-            'resprayed'
-        );
+        labeled.removeAttribute('name');
+        expect(labeled.material!.name, 'removal restores the engine default').toBe(new StandardMaterial().name);
     });
 
     it('enables the metalness workflow on a dielectric, unlike a bare StandardMaterial', async () => {

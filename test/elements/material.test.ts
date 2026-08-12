@@ -55,11 +55,7 @@ describe('<pc-material>', () => {
 
     const create = () => document.createElement('pc-material') as MaterialElement;
 
-    const observed = MaterialElement.observedAttributes;
-
-    // Every observed attribute except the global 'id': element identity rather than a mirror of
-    // an engine property, its side effect - naming the material - is covered at integration tier
-    const attributes = observed.filter((attribute) => attribute !== 'id');
+    const attributes = MaterialElement.observedAttributes;
 
     const propertyOf = (attribute: string) => ALIASES[attribute] ?? kebabToCamel(attribute);
 
@@ -68,9 +64,9 @@ describe('<pc-material>', () => {
     };
 
     it('observes a large, duplicate-free attribute surface', () => {
-        expect(observed.length).toBeGreaterThan(80);
-        expect(new Set(observed).size).toBe(observed.length);
-        expect([...observed]).toEqual([...observed].sort());
+        expect(attributes.length).toBeGreaterThan(80);
+        expect(new Set(attributes).size).toBe(attributes.length);
+        expect([...attributes]).toEqual([...attributes].sort());
     });
 
     /**
@@ -149,7 +145,7 @@ describe('<pc-material>', () => {
             if (current instanceof Color) {
                 return { value: '1 0 0', expected: new Color(1, 0, 0) };
             }
-            // The remaining string-valued attributes are the map channels
+            // The remaining string-valued attributes are the map channels and the name
             return { value: 'r', expected: 'r' };
         };
 
