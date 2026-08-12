@@ -4,6 +4,22 @@ import { useAsset } from './asset';
 import { AsyncElement } from './async-element';
 
 /**
+ * One material assignment of a {@link HierarchyNode} with a render component: a mesh instance's
+ * position within the component and the runtime name of its current material.
+ */
+type HierarchyMaterial = {
+    /** The mesh instance's position in the render component's `meshInstances` array. */
+    index: number;
+    /**
+     * The runtime name of the mesh instance's current material, reported as-is: the engine
+     * names an unnamed glTF material `Untitled`, and assigns a shared material named
+     * `defaultGlbMaterial` to a primitive authored without one — neither is a unique authored
+     * identifier. `null` when a script has cleared the assignment.
+     */
+    name: string | null;
+};
+
+/**
  * One node of the tree returned by {@link ModelElement.hierarchy}. A plain-data snapshot —
  * `JSON.stringify` serializes it — whose `toString()` renders the node's subtree as a printable
  * tree.
@@ -29,19 +45,25 @@ type HierarchyNode = {
     index: number;
     /** The types of the components attached to the node (e.g. 'render'), sorted. */
     components: string[];
+    /**
+     * The material assignments of the node's render component, one entry per mesh instance in
+     * component order. Empty for a node without a render component.
+     */
+    materials: HierarchyMaterial[];
     /** The node's children. */
     children: HierarchyNode[];
     /**
      * Renders the subtree rooted at this node as a printable tree, one line per node: the name,
-     * `[index]` after a name that several nodes in the model share, and the component types in
-     * parentheses.
+     * `[index]` after a name that several nodes in the model share, the component types in
+     * parentheses, and the material names of a render component in braces.
      */
     toString(): string;
 };
 
 /**
  * Formats one line of the printable hierarchy: the node's name, an `[index]` marker when the
- * name is shared by several nodes in the model, and the attached component types.
+ * name is shared by several nodes in the model, the attached component types, and the material
+ * names of a render component.
  *
  * @param node - The node to format.
  * @param counts - The number of nodes bearing each name.
@@ -50,7 +72,10 @@ type HierarchyNode = {
 const formatNode = (node: HierarchyNode, counts: ReadonlyMap<string, number>): string => {
     const index = (counts.get(node.name) ?? 0) > 1 ? ` [${node.index}]` : '';
     const components = node.components.length > 0 ? ` (${node.components.join(', ')})` : '';
-    return `${node.name}${index}${components}`;
+    // Braces rather than brackets: `[N]` already means a match index on this line
+    const materials =
+        node.materials.length > 0 ? ` {${node.materials.map((slot) => slot.name ?? 'null').join(', ')}}` : '';
+    return `${node.name}${index}${components}${materials}`;
 };
 
 /**
@@ -130,7 +155,8 @@ class ModelElement extends AsyncElement {
      * container asset has not loaded, or the element has left the document). One call grounds a
      * session — a browser console, a test, an agent — in the vocabulary `pc-node` binding
      * resolves against: the instantiated names ({@link HierarchyNode.name}), paths, match
-     * indices and attached component types. `String(...)` of the result, or of any node in it,
+     * indices, attached component types and the material assignments of render components
+     * ({@link HierarchyNode.materials}). `String(...)` of the result, or of any node in it,
      * is the printable form.
      *
      * The snapshot is plain data, computed afresh each call: it does not follow later changes
@@ -162,6 +188,10 @@ class ModelElement extends AsyncElement {
                 index,
                 // A plain GraphNode grafted into the hierarchy has no component storage
                 components: Object.keys(entity.c ?? {}).sort(),
+                materials: (entity.render?.meshInstances ?? []).map((meshInstance, slot) => ({
+                    index: slot,
+                    name: meshInstance.material?.name ?? null
+                })),
                 children: entity.children.map((child) =>
                     describe(child as Entity, pathBelowRoot ? `${pathBelowRoot}/${child.name}` : child.name)
                 )
@@ -360,4 +390,4 @@ class ModelElement extends AsyncElement {
 customElements.define('pc-model', ModelElement);
 
 export { ModelElement };
-export type { HierarchyNode };
+export type { HierarchyMaterial, HierarchyNode };
