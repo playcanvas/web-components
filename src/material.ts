@@ -251,7 +251,6 @@ class MaterialElement extends HTMLElement {
 
     private _metalnessMapUv = 0;
 
-    // The engine default, pinned against StandardMaterial by the element tier's drift suite
     private _name = 'Untitled';
 
     private _normalMap = '';
@@ -2472,8 +2471,6 @@ class MaterialElement extends HTMLElement {
                 this.metalnessMapUv = parseNumber(newValue, 0, name);
                 break;
             case 'name':
-                // Removal restores the engine default, which the element tier pins against a
-                // bare StandardMaterial
                 this.name = newValue ?? 'Untitled';
                 break;
             case 'normal-map':
