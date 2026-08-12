@@ -164,14 +164,15 @@
                                        parallax-scale="0.75"></pc-script>
                         </pc-scripts>
                     </pc-entity>
-                    <!-- She is scaled to 1.72 m and placed so that the muzzle lands 12 cm in
-                         front of the glass, at the height of the window center. The capture is
-                         Y-down, so the inner entity flips it upright and the outer one yaws
-                         the barrel onto +z, straight out of the display at the viewer.
-                         Because her head and the muzzle sit at very different depths, a
-                         lateral shift moves them across the screen by different amounts and
-                         they cannot both be centered; x balances them either side of center -->
-                    <pc-entity name="figure" position="-0.148 -1.413 -0.719" rotation="0 113 0" scale="0.077 0.077 0.077">
+                    <!-- She is scaled to 1.72 m and placed so the muzzle sits 9 cm in front of
+                         the glass, which is what reads as popping out of the display. The
+                         capture is Y-down, so the inner entity flips it upright and the outer
+                         one yaws the barrel toward the viewer - a few degrees off dead-on,
+                         which keeps its length legible rather than end-on to the eye. The
+                         position was dialled in by eye: her head and the muzzle sit at very
+                         different depths, so a lateral shift moves them across the screen by
+                         different amounts and no single value centers both -->
+                    <pc-entity name="figure" position="-0.3 -1.37 -0.719" rotation="0 122.3 0" scale="0.077 0.077 0.077">
                         <pc-entity name="figure-flip" rotation="180 0 0">
                             <pc-gsplat asset="figure"></pc-gsplat>
                         </pc-entity>
