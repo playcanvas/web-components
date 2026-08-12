@@ -9,12 +9,15 @@ export const examples = [
     { name: 'Basic Splat', path: 'splat-simple.html', category: 'Gaussian Splatting' },
     { name: 'Splat Annotations', path: 'splat-annotations.html', category: 'Gaussian Splatting' },
     { name: 'Splat Flipbook', path: 'splat-flipbook.html', category: 'Gaussian Splatting' },
-    // XR
-    { name: 'AR Avatar', path: 'ar-avatar.html', category: 'XR' },
-    { name: 'AR Hand Gestures', path: 'ar-hand-gestures.html', category: 'XR' },
-    { name: 'AR Optic Blast', path: 'ar-optic-blast.html', category: 'XR' },
-    { name: 'AR Sunglasses', path: 'ar-sunglasses.html', category: 'XR' },
-    { name: 'First Person Teleport', path: 'first-person-teleport.html', category: 'XR' },
+    // Computer Vision
+    { name: 'AR Avatar', path: 'ar-avatar.html', category: 'Computer Vision' },
+    { name: 'AR Hand Gestures', path: 'ar-hand-gestures.html', category: 'Computer Vision' },
+    { name: 'AR Optic Blast', path: 'ar-optic-blast.html', category: 'Computer Vision' },
+    { name: 'AR Sunglasses', path: 'ar-sunglasses.html', category: 'Computer Vision' },
+    { name: 'Head Tracked Window', path: 'window-tracking.html', category: 'Computer Vision' },
+    // Camera Movement
+    { name: 'First Person Teleport', path: 'first-person-teleport.html', category: 'Camera Movement' },
+    { name: 'FPS Controller', path: 'fps-controller.html', category: 'Camera Movement' },
     // Graphics
     { name: 'Basic Shapes', path: 'basic-shapes.html', category: 'Graphics' },
     { name: 'Basic Particles', path: 'basic-particles.html', category: 'Graphics' },
@@ -27,7 +30,6 @@ export const examples = [
     // Physics
     { name: 'Physics', path: 'physics.html', category: 'Physics' },
     { name: 'Physics Cluster', path: 'physics-cluster.html', category: 'Physics' },
-    { name: 'FPS Controller', path: 'fps-controller.html', category: 'Physics' },
     // Sound
     { name: 'Sound', path: 'sound.html', category: 'Sound' },
     { name: 'Positional Sound', path: 'positional-sound.html', category: 'Sound' },

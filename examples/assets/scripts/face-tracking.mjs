@@ -46,7 +46,9 @@ const VELOCITY_SMOOTHING = 0.35;
  *
  * Subclasses can extend the tracking loop through the protected hooks (`_onVideoFrame`,
  * `_onFaceLandmarks` and friends) to run extra inference on the same video frames - see
- * `opticBlastTracking` for an example that adds hand tracking.
+ * `opticBlastTracking` for an example that adds hand tracking. A subclass that wants the
+ * head position rather than a face-locked camera can clear `_drivesEntityTransform` and
+ * read `_headPos` instead - see `windowTracking`.
  *
  * Fires the following events on the application:
  *
@@ -223,6 +225,25 @@ export class FaceTracking extends Script {
      * @protected
      */
     _k = 1;
+
+    /**
+     * The tracked head position in centimeters in MediaPipe's camera space, taken from the
+     * facial transformation matrix before it is inverted (so +X is the direction the
+     * `mirror` flag makes the image run, +Y is up, and the head sits at negative Z). Raw
+     * and unsmoothed - a subclass that drives something other than a face-locked camera
+     * wants this rather than the inverted pose the base class smooths.
+     * @protected
+     */
+    _headPos = new Vec3();
+
+    /**
+     * Whether the tracked face pose is written to the entity's transform each frame. A
+     * subclass that derives its own camera transform from `_headPos` clears this, so that
+     * the base class leaves the transform alone while still maintaining the smoothed pose
+     * and `_k` for anything layered on top.
+     * @protected
+     */
+    _drivesEntityTransform = true;
 
     /** @private */
     _matrix = new Mat4();
@@ -514,6 +535,9 @@ export class FaceTracking extends Script {
             data[12] = -data[12];
         }
 
+        // Before inverting, the translation is the head's position in camera space
+        this._headPos.set(data[12], data[13], data[14]);
+
         // Inverting it yields the camera pose in face space, with the face at the origin
         this._matrix.set(data).invert();
         this._matrix.getTranslation(this._targetPos);
@@ -653,6 +677,8 @@ export class FaceTracking extends Script {
             this._rot.slerp(this._rot, this._predRot, k);
         }
 
+        if (!this._drivesEntityTransform) return;
+
         this.entity.setPosition(this._pos);
         this.entity.setRotation(this._rot);
 
@@ -742,9 +768,10 @@ export class FaceTracking extends Script {
 
     /**
      * Provides a static third-person view when no camera is available, so the page still
-     * gives a usable demo.
+     * gives a usable demo. Subclasses override this alongside `_updateSim` when their
+     * camera is not driven by the base class.
      * @param {number} dt - The delta time in seconds.
-     * @private
+     * @protected
      */
     _updateFallbackView(dt) {
         this._simTime += dt;
