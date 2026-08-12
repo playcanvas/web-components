@@ -226,13 +226,15 @@
 
             const { app } = await whenReady('pc-app');
 
-            // Re-evaluate the splat's view-dependent color every frame the camera moves.
-            // The engine defaults to re-evaluating only once the viewing angle to a node has
-            // changed by 10 degrees, which is a sound trade for a camera that flies around a
-            // scene. Head-coupled viewing never gets near it: the eye travels a couple of
-            // centimeters at arm's length, sweeping about 3 degrees in total, so the
-            // specular response would stay frozen for the whole range of movement.
-            app.scene.gsplat.colorUpdateAngle = 0;
+            // Re-evaluate the splat's view-dependent color far more often than the engine
+            // does by default. The default waits for the viewing angle to a node to change by
+            // 10 degrees, which is a sound trade for a camera that flies around a scene, but
+            // head-coupled viewing never gets near it: the eye travels a couple of centimeters
+            // at arm's length, sweeping about 3 degrees in total, so the specular response
+            // would stay frozen for the whole range of movement. A small threshold rather than
+            // 0 keeps the response continuous while skipping the frames where the head has
+            // barely moved, which halves the number of update passes during motion.
+            app.scene.gsplat.colorUpdateAngle = 0.2;
 
             const sim = new URLSearchParams(window.location.search).has('sim');
             if (sim) document.getElementById('sim-badge').style.display = 'block';
