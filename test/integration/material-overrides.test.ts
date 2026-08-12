@@ -89,7 +89,7 @@ const SKINNED_SRC = `data:application/json,${encodeURIComponent(
 )}`;
 
 const PRELUDE = `
-    <pc-material id="candy-red"></pc-material>
+    <pc-material id="candy-red" name="Candy Red"></pc-material>
     <pc-material id="smoked-glass"></pc-material>
     <pc-asset id="body" type="container" src="${BODY_SRC}"></pc-asset>
     <pc-asset id="skinned" type="container" src="${SKINNED_SRC}"></pc-asset>
@@ -394,7 +394,7 @@ describe('<pc-node> material-overrides', () => {
     });
 
     describe('discovery', () => {
-        it('reports replacements through hierarchy() by their pc-material ids', async () => {
+        it('reports replacements through hierarchy() by their material names', async () => {
             const { model, node } = await bootAuthored();
 
             expect(model.hierarchy()!.materials.map((slot) => slot.name)).toEqual([
@@ -405,14 +405,17 @@ describe('<pc-node> material-overrides', () => {
                 'CarPaint'
             ]);
 
-            node.materialOverrides = { 'name:CarPaint': 'candy-red' };
+            node.materialOverrides = { 'name:CarPaint': 'candy-red', 'name:Glass': 'smoked-glass' };
 
+            // The id is a reference key, never a label: a replacement whose pc-material carries
+            // a name attribute reports it, and one without reads the engine default - label the
+            // materials that should be identifiable in hierarchy() output.
             expect(model.hierarchy()!.materials.map((slot) => slot.name)).toEqual([
-                'candy-red',
+                'Candy Red',
                 'Untitled',
-                'Glass',
+                'Untitled',
                 'defaultGlbMaterial',
-                'candy-red'
+                'Candy Red'
             ]);
             expect(uncaught.seen).toEqual([]);
         });
