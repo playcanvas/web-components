@@ -42,6 +42,18 @@ describe('<pc-material> integration', () => {
         expect(material!.twoSidedLighting).toBe(true);
     });
 
+    it('names the material after the element id', async () => {
+        const { all } = await bootApp(`
+            <pc-material id="candy-red"></pc-material>
+            <pc-material></pc-material>
+        `);
+
+        const [named, anonymous] = all<MaterialElement>('pc-material');
+
+        expect(named.material!.name).toBe('candy-red');
+        expect(anonymous.material!.name, 'no id keeps the engine default').toBe('Untitled');
+    });
+
     it('enables the metalness workflow on a dielectric, unlike a bare StandardMaterial', async () => {
         // Without useMetalness, metalnessMap is never sampled - the LIT_METALNESS define is driven
         // straight off it - so the metalness-* attributes would do nothing at all. metalness has to

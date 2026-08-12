@@ -354,6 +354,13 @@ class MaterialElement extends HTMLElement {
         const material = new StandardMaterial();
         this.material = material;
 
+        // Engine materials are all named 'Untitled' by default; the element id makes this one
+        // identifiable wherever materials surface by name - profilers, GPU captures, and the
+        // material assignments pc-model.hierarchy() reports.
+        if (this.id) {
+            material.name = this.id;
+        }
+
         material.alphaTest = this._alphaTest;
         material.alphaToCoverage = this._alphaToCoverage;
         material.aoIntensity = this._aoIntensity;
