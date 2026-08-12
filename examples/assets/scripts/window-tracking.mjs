@@ -182,13 +182,22 @@ export class WindowTracking extends FaceTracking {
     _halfHeight = 0.097;
 
     async initialize() {
+        // Everything this script takes over on the camera is captured first, so destroying it
+        // hands back whatever was there rather than assuming the defaults. Note the clip
+        // planes have to be read before the first _applyEye writes them.
+        const camera = this.entity.camera;
+        const restore = camera && {
+            calculateProjection: camera.calculateProjection ?? null,
+            nearClip: camera.nearClip,
+            farClip: camera.farClip
+        };
+
         // Own the projection before the first frame renders, so the camera never shows a
         // frame through the default symmetric frustum
         this._updateWindowRect();
         this._seedEye();
         this._applyEye();
 
-        const camera = this.entity.camera;
         if (camera) {
             camera.calculateProjection = (projMat) => {
                 projMat.copy(this._projMat);
@@ -197,7 +206,10 @@ export class WindowTracking extends FaceTracking {
         }
 
         this.on('destroy', () => {
-            if (camera) camera.calculateProjection = null;
+            if (!restore) return;
+            camera.calculateProjection = restore.calculateProjection;
+            camera.nearClip = restore.nearClip;
+            camera.farClip = restore.farClip;
         });
 
         await super.initialize();
