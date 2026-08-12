@@ -124,3 +124,4 @@ export {
 
 export type { AsyncElementTagName } from './async-element';
 export type { HierarchyMaterial, HierarchyNode } from './model';
+export type { MaterialOverrides } from './node';

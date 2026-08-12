@@ -1,9 +1,10 @@
-import type { Entity, EventHandle, GraphNode, Quat } from 'playcanvas';
+import type { Entity, EventHandle, GraphNode, Material, MeshInstance, Quat, RenderComponent } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './components/component';
 import type { EntityElement } from './entity';
 import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
+import { MaterialElement } from './material';
 import { ModelElement } from './model';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
@@ -25,6 +26,95 @@ type AuthoredState = {
     rotation?: Quat;
     scale?: Vec3;
     tags?: string[];
+};
+
+/**
+ * A sparse mapping from selector to `pc-material` id, as carried by the `material-overrides`
+ * attribute and `materialOverrides` property. A `name:X` key selects every mesh instance of the
+ * bound node's render component whose baseline material is named `X`; an `index:N` key selects
+ * mesh instance `N` and wins over a name rule for the same instance.
+ */
+type MaterialOverrides = Readonly<Record<string, string>>;
+
+/**
+ * One baseline assignment, captured for every mesh instance of the authored render component
+ * when the first material override applies: the mesh instance, the material it displaced, and
+ * that material's name at capture time — the name `name:` selectors match, immune to later
+ * renames. `material` is `null` when a script had already cleared the assignment.
+ */
+type BaselineAssignment = {
+    meshInstance: MeshInstance;
+    material: Material | null;
+    name: string | null;
+};
+
+/** One selector of a material-overrides mapping, in parsed form. */
+type MaterialRule = { kind: 'name'; name: string; id: string } | { kind: 'index'; index: number; id: string };
+
+/**
+ * Parses one mapping into its valid rules, warning for each entry that is not one: an unknown
+ * or missing selector prefix, an empty `name:` value, an `index:` value that is not a
+ * non-negative integer, or a replacement id that is not a non-empty string. An invalid rule
+ * behaves exactly as if absent from the mapping.
+ *
+ * @param overrides - The mapping to parse.
+ * @param label - The element description for warnings.
+ * @returns The valid rules.
+ */
+const parseMaterialRules = (overrides: MaterialOverrides, label: string): MaterialRule[] => {
+    const rules: MaterialRule[] = [];
+    for (const [selector, id] of Object.entries(overrides)) {
+        if (typeof id !== 'string' || id === '') {
+            console.warn(`${label} material-overrides '${selector}' needs a pc-material id - rule ignored`);
+        } else if (selector.startsWith('name:')) {
+            // The text after the prefix is the selector value, exactly as written - a material
+            // name may legitimately begin or end with whitespace
+            const name = selector.slice('name:'.length);
+            if (name === '') {
+                console.warn(`${label} material-overrides 'name:' selector is empty - rule ignored`);
+            } else {
+                rules.push({ kind: 'name', name, id });
+            }
+        } else if (selector.startsWith('index:')) {
+            // Whitespace around the number is tolerated; Number('') is 0, so blank means NaN
+            const text = selector.slice('index:'.length).trim();
+            const index = text === '' ? NaN : Number(text);
+            if (!Number.isInteger(index) || index < 0) {
+                console.warn(
+                    `${label} material-overrides '${selector}' is not a non-negative integer index - rule ignored`
+                );
+            } else {
+                rules.push({ kind: 'index', index, id });
+            }
+        } else {
+            console.warn(`${label} material-overrides '${selector}' has no 'name:' or 'index:' prefix - rule ignored`);
+        }
+    }
+    return rules;
+};
+
+/**
+ * Parses the material-overrides attribute text. Anything but a JSON object — malformed JSON, an
+ * array, a primitive — warns and yields `null`, the absent mapping: a stale mapping must not
+ * survive an attribute value the DOM no longer represents.
+ *
+ * @param text - The attribute text.
+ * @param label - The element description for warnings.
+ * @returns The mapping, or `null`.
+ */
+const parseMaterialOverridesAttribute = (text: string, label: string): MaterialOverrides | null => {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(text);
+    } catch (error) {
+        console.warn(`${label} material-overrides is not valid JSON - treated as absent: ${(error as Error).message}`);
+        return null;
+    }
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        console.warn(`${label} material-overrides must be a JSON object - treated as absent`);
+        return null;
+    }
+    return parsed as MaterialOverrides;
 };
 
 /**
@@ -83,6 +173,13 @@ const levenshtein = (a: string, b: string): number => {
  * "x y z" triple.
  * @attribute {string} scale - Overrides the node's local scale, as an "x y z" triple.
  * @attribute {string} tags - Overrides the node's tags, separated by spaces or commas.
+ * @attribute {string} material-overrides - Overrides material assignments on the bound node's
+ * render component, as a JSON object from selector to `pc-material` id — for example
+ * `{"name:CarPaint": "candy-red", "index:7": "smoked-glass"}`. A `name:X` key selects every mesh
+ * instance whose baseline material is named `X`; an `index:N` key selects mesh instance `N` and
+ * wins over a name rule for the same instance. Assignments no rule matches keep their baseline
+ * materials, and removing the attribute restores all of them. Use `pc-model.hierarchy()` to
+ * discover the names and indices a node offers.
  * @attribute {string} onpointerenter - Script to run when the pointer moves onto the node.
  * @attribute {string} onpointerleave - Script to run when the pointer moves off the node.
  * @attribute {string} onpointermove - Script to run when the pointer moves over the node.
@@ -126,6 +223,20 @@ class NodeElement extends EntityBaseElement {
     /** The authored values displaced by this element's overrides, captured per property. */
     private _authored: AuthoredState = {};
 
+    /**
+     * The model-authored render component of the bound node, recorded at bind — before child
+     * decorations build — so a render component added later by a child `pc-render` can never
+     * become the override target. `null` when the bound node has none.
+     */
+    private _authoredRender: RenderComponent | null = null;
+
+    /**
+     * The baseline assignments displaced by the material overrides, captured for every mesh
+     * instance when the first non-empty mapping applies and released when the mapping goes
+     * absent (restoring them) or the binding dissolves.
+     */
+    private _baseline: BaselineAssignment[] | null = null;
+
     // Override values. `null` means "no override": the authored value stays in force.
 
     private _enabled: boolean | null = null;
@@ -137,6 +248,8 @@ class NodeElement extends EntityBaseElement {
     private _scale: Vec3 | null = null;
 
     private _tags: string[] | null = null;
+
+    private _materialOverrides: MaterialOverrides | null = null;
 
     /**
      * The binding state: `pending` until the host instantiates and `name` resolves, `bound`
@@ -298,6 +411,7 @@ class NodeElement extends EntityBaseElement {
         this._destroyHandle = target.once('destroy', this._onEntityDestroy, this);
         this._state = 'bound';
         this._path = this._pathOf(target, hostEntity);
+        this._authoredRender = target.render ?? null;
 
         this._applyOverrides();
         this._onReady();
@@ -333,6 +447,7 @@ class NodeElement extends EntityBaseElement {
         this._entity = null;
         this._path = null;
         this._authored = {};
+        this._authoredRender = null;
 
         // Component decorations come off through the same hook the host-ready cycle uses. A
         // dissolve that never rebinds fires no ready event, so the sweep is explicit - after
@@ -357,6 +472,9 @@ class NodeElement extends EntityBaseElement {
         this._entity = null;
         this._path = null;
         this._authored = {};
+        this._authoredRender = null;
+        // The mesh instances died with the entity - the capture is dropped, not restored
+        this._baseline = null;
         this._state = 'pending';
         this._resetReady();
     }
@@ -400,6 +518,9 @@ class NodeElement extends EntityBaseElement {
         if (this._tags !== null) {
             this.tags = this._tags;
         }
+        if (this._materialOverrides !== null) {
+            this._applyMaterialOverrides();
+        }
     }
 
     /**
@@ -426,6 +547,120 @@ class NodeElement extends EntityBaseElement {
             entity.tags.add(authored.tags);
         }
         this._authored = {};
+        this._restoreBaseline();
+    }
+
+    /**
+     * Applies the material mapping to the authored render component: parse the mapping's valid
+     * rules, capture the baseline on first application, then recompute every assignment from
+     * that baseline - name rules write over it, index rules write over them, so `index:` wins -
+     * and assign whatever changed. An absent mapping, or one with no valid rules, restores the
+     * baseline instead. Called while bound, from `_applyOverrides` and the property setter.
+     */
+    private _applyMaterialOverrides() {
+        const label = `pc-node '${this._name}'`;
+
+        const rules = this._materialOverrides ? parseMaterialRules(this._materialOverrides, label) : [];
+        if (rules.length === 0) {
+            this._restoreBaseline();
+            return;
+        }
+
+        if (!this._baseline) {
+            if (!this._authoredRender) {
+                console.warn(
+                    `${label} is bound to a node without an authored render component - material-overrides ignored`
+                );
+                return;
+            }
+            this._baseline = this._authoredRender.meshInstances.map((meshInstance) => ({
+                meshInstance,
+                material: (meshInstance.material as Material | null) ?? null,
+                name: meshInstance.material?.name ?? null
+            }));
+        }
+
+        const baseline = this._baseline;
+
+        /** Resolves a replacement id, warning when it does not resolve. */
+        const resolveReplacement = (id: string): Material | null => {
+            const material = MaterialElement.get(id);
+            if (!material) {
+                console.warn(`${label} material-overrides could not resolve pc-material '${id}' - rule ignored`);
+            }
+            return material ?? null;
+        };
+
+        // Recompute the whole list from the baseline: name rules write over it, index rules
+        // write over them. Recomputing makes mapping edits order-independent, and a rule whose
+        // replacement does not resolve simply leaves the layer below it in force.
+        const resolved = baseline.map((assignment) => assignment.material);
+
+        for (const rule of rules) {
+            if (rule.kind !== 'name') {
+                continue;
+            }
+            const material = resolveReplacement(rule.id);
+            if (!material) {
+                continue;
+            }
+            let matched = false;
+            baseline.forEach((assignment, index) => {
+                if (assignment.name === rule.name) {
+                    resolved[index] = material;
+                    matched = true;
+                }
+            });
+            if (!matched) {
+                const names = baseline.map((assignment) => `'${assignment.name}'`).join(', ');
+                console.warn(
+                    `${label} material-overrides 'name:${rule.name}' matches no assignment - ` +
+                        `baseline names: ${names || '(none)'}`
+                );
+            }
+        }
+
+        for (const rule of rules) {
+            if (rule.kind !== 'index') {
+                continue;
+            }
+            if (rule.index >= baseline.length) {
+                console.warn(
+                    `${label} material-overrides 'index:${rule.index}' is out of range - ` +
+                        `${baseline.length} assignment(s)`
+                );
+                continue;
+            }
+            const material = resolveReplacement(rule.id);
+            if (material) {
+                resolved[rule.index] = material;
+            }
+        }
+
+        baseline.forEach((assignment, index) => {
+            // The engine setter rebuilds material and shader state even for a redundant write,
+            // so only actual changes are assigned
+            if (assignment.meshInstance.material !== resolved[index]) {
+                assignment.meshInstance.material = resolved[index] as Material;
+            }
+        });
+    }
+
+    /**
+     * Restores every baseline assignment the material overrides displaced and releases the
+     * capture, so the next non-empty mapping captures afresh. Safe to call without a capture.
+     */
+    private _restoreBaseline() {
+        const baseline = this._baseline;
+        if (!baseline) {
+            return;
+        }
+        this._baseline = null;
+        for (const assignment of baseline) {
+            if (assignment.meshInstance.material !== assignment.material) {
+                assignment.meshInstance.material = assignment.material as Material;
+            }
+        }
     }
 
     /**
@@ -659,8 +894,43 @@ class NodeElement extends EntityBaseElement {
         return this._tags;
     }
 
+    /**
+     * Sets the material overrides: a sparse mapping from selector to `pc-material` id, applied
+     * to the bound node's authored render component. A `name:X` key selects every mesh instance
+     * whose baseline material is named `X`; an `index:N` key selects mesh instance `N` and wins
+     * over a name rule for the same instance. Assignments no rule matches keep their baseline
+     * materials. `null` clears the mapping, restoring every baseline assignment.
+     * @param value - The mapping, or `null`.
+     */
+    set materialOverrides(value: MaterialOverrides | null) {
+        // Copied and frozen: later caller mutation of the passed object must not silently
+        // disagree with the mapping the element applied
+        this._materialOverrides = value === null ? null : Object.freeze({ ...value });
+        if (this._state === 'bound') {
+            this._applyMaterialOverrides();
+        }
+    }
+
+    /**
+     * Gets the material overrides.
+     * @returns The mapping, or `null` while no override is set.
+     */
+    get materialOverrides(): MaterialOverrides | null {
+        return this._materialOverrides;
+    }
+
     static get observedAttributes() {
-        return ['enabled', 'index', 'name', 'position', 'rotation', 'scale', 'tags', ...POINTER_ATTRIBUTES];
+        return [
+            'enabled',
+            'index',
+            'material-overrides',
+            'name',
+            'position',
+            'rotation',
+            'scale',
+            'tags',
+            ...POINTER_ATTRIBUTES
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -683,6 +953,10 @@ class NodeElement extends EntityBaseElement {
                         this.index = index;
                     }
                 }
+                break;
+            case 'material-overrides':
+                this.materialOverrides =
+                    newValue === null ? null : parseMaterialOverridesAttribute(newValue, `pc-node '${this._name}'`);
                 break;
             case 'name':
                 this.name = newValue ?? '';
@@ -713,3 +987,4 @@ class NodeElement extends EntityBaseElement {
 customElements.define('pc-node', NodeElement);
 
 export { NodeElement };
+export type { MaterialOverrides };
