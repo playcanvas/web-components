@@ -48,7 +48,7 @@ const VELOCITY_SMOOTHING = 0.35;
  * `_onFaceLandmarks` and friends) to run extra inference on the same video frames - see
  * `opticBlastTracking` for an example that adds hand tracking. A subclass that wants the
  * head position rather than a face-locked camera can clear `_drivesEntityTransform` and
- * read `_headPos` instead - see `windowTracking`.
+ * read `_headPos` instead - see `headTrackedWindow`.
  *
  * Fires the following events on the application:
  *

@@ -139,7 +139,7 @@
             <!-- Assets -->
             <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
             <pc-asset src="assets/scripts/face-tracking.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/window-tracking.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/head-tracked-window.mjs"></pc-asset>
             <pc-asset src="assets/splats/resident-evil.sog" id="figure"></pc-asset>
             <!-- Scene. Authored in a screen-space frame measured in meters: the window is
                  the canvas rectangle, centered on the origin in the plane z = 0, with +z
@@ -157,7 +157,7 @@
                         <pc-camera clear-color="0.015 0.014 0.018 1" tonemap="aces"></pc-camera>
                         <pc-scripts>
                             <pc-script name="cameraFeed"></pc-script>
-                            <pc-script name="windowTracking"
+                            <pc-script name="headTrackedWindow"
                                        screen-width="0.31"
                                        camera-height="0.11"
                                        pop-out="0.15"
@@ -273,7 +273,7 @@
 
             // Calibration. The script derives the window rectangle from these, so writing
             // them through rebuilds the frustum on the next frame
-            const tracking = (await whenReady('pc-script[name="windowTracking"]')).script;
+            const tracking = (await whenReady('pc-script[name="headTrackedWindow"]')).script;
 
             const bindSlider = (id, format, apply) => {
                 const input = document.getElementById(id);
