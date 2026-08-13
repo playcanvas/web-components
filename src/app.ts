@@ -252,6 +252,24 @@ class AppElement extends AsyncElement {
             this._bar = new LoadingBar(this);
         }
 
+        // Upgrade the subtree before reading anything out of it. A subtree cloned from a
+        // <template> arrives entirely unupgraded - template content lives in an inert document,
+        // where custom element definitions are never looked up - and appending the clone upgrades
+        // its elements in tree order, this one before its descendants. The module query below would
+        // otherwise find plain HTMLElements with no _getLoadPromise to call, and the boot would die
+        // there, leaving the element permanently unready: no canvas, no entities, no application.
+        //
+        // Upgrading is the fix here rather than skipping whatever has not upgraded, because a
+        // <pc-module> is the one child that nothing else ever builds on its own behalf - skipping
+        // it would drop the wasm module the app asked for, silently and only for cloned apps.
+        // Upgrading runs each descendant's connectedCallback synchronously, a few lines earlier
+        // than the parser's path runs them but into the same state they see there: no application
+        // yet and _hierarchyReady false, so they defer to the sweeps below. A descendant that
+        // disconnects this element from there is caught by the generation check after the await,
+        // as any other disconnect is. An already-upgraded subtree - every other insertion path -
+        // is left completely untouched.
+        customElements.upgrade(this);
+
         // Get all pc-module elements that are direct children of the pc-app element
         const moduleElements = this.querySelectorAll<ModuleElement>(':scope > pc-module');
 

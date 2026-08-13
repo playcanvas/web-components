@@ -1,10 +1,16 @@
-import { Vec3 } from 'playcanvas';
-import { describe, expect, it } from 'vitest';
+import { Vec3, WasmModule } from 'playcanvas';
+import { describe, expect, it, vi } from 'vitest';
 
+import type { AppElement } from '../../src/app';
+import type { AssetElement } from '../../src/asset';
 import type { EntityElement } from '../../src/entity';
+import type { MaterialElement } from '../../src/material';
+import type { ModuleElement } from '../../src/module';
 import type { NodeElement } from '../../src/node';
 import { bootApp, settle } from '../helpers/app';
+import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
+import { expectNeverReady, readyWithin } from '../helpers/ready';
 
 /**
  * A `<template>` whose content is a nested `<pc-entity>` subtree, in the shape the scroll view
@@ -32,6 +38,43 @@ const STAGE_SRC = `data:application/json,${encodeURIComponent(
         nodes: [{ name: 'Podium' }]
     })
 )}`;
+
+/**
+ * A whole `<pc-app>` inside a `<template>`, carrying one of every child the boot sweeps reach for:
+ * a module it must wait on, an asset and a material it creates directly, and a nested entity
+ * hierarchy with a component at the bottom.
+ *
+ * The asset is `lazy` so nothing is fetched - the point is that the element's asset gets created at
+ * all, not that it loads.
+ */
+const APP_TEMPLATE = `
+    <template id="app">
+        <pc-app backend="null">
+            <pc-module name="Ammo" glue="ammo.wasm.js" wasm="ammo.wasm.wasm" fallback="ammo.js"></pc-module>
+            <pc-asset id="cloned-texture" type="texture" src="texture.png" lazy></pc-asset>
+            <pc-material id="cloned-material" diffuse="1 0 0"></pc-material>
+            <pc-entity name="Root" position="1 2 3">
+                <pc-entity name="Child" position="0 1 0">
+                    <pc-render type="box"></pc-render>
+                </pc-entity>
+            </pc-entity>
+        </pc-app>
+    </template>
+`;
+
+/**
+ * Stubs the engine's wasm loader, holding the instance callback until `release()` so a test can
+ * observe the window in which `<pc-app>` is gated on the module. No real network or script
+ * execution can happen in jsdom; the element's contract is what these tests pin.
+ */
+const stubWasmModule = () => {
+    let pending: (() => void) | null = null;
+    const setConfig = vi.spyOn(WasmModule, 'setConfig').mockImplementation(() => undefined);
+    const getInstance = vi.spyOn(WasmModule, 'getInstance').mockImplementation((_name, callback) => {
+        pending = () => callback({});
+    });
+    return { setConfig, getInstance, release: () => pending?.() };
+};
 
 /**
  * Insertion of a subtree cloned from a `<template>`.
@@ -112,6 +155,112 @@ describe('a <template>-cloned subtree', () => {
         expect(marker.entity!.parent, 'and parented under the bound node').toBe(node.entity);
         expect(marker.entity!.getLocalPosition().equals(new Vec3(0, 1, 0))).toBe(true);
 
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('boots a cloned <pc-app> whose children are all still unupgraded when it connects', async () => {
+        const { setConfig, getInstance, release } = stubWasmModule();
+        const handle = mount(APP_TEMPLATE);
+        const template = handle.get<HTMLTemplateElement>('template');
+
+        handle.container.appendChild(template.content.cloneNode(true));
+        release();
+
+        const appElement = handle.get<AppElement>('pc-app');
+        await readyWithin(appElement);
+        const app = appElement.app!;
+        app.autoRender = false;
+        await settle(handle.container);
+
+        // The module was loaded, not skipped. Skipping an unupgraded <pc-module> - the guard that
+        // suits a <pc-entity>, which later builds itself - would silently drop the wasm module an
+        // app asked for, since nothing else ever loads it.
+        expect(setConfig).toHaveBeenCalledWith('Ammo', {
+            glueUrl: 'ammo.wasm.js',
+            wasmUrl: 'ammo.wasm.wasm',
+            fallbackUrl: 'ammo.js'
+        });
+        expect(getInstance, 'the module was requested exactly once').toHaveBeenCalledTimes(1);
+        await readyWithin(handle.get<ModuleElement>('pc-module'));
+
+        // The application booted at all: the failure this pins left <pc-app> permanently unready,
+        // with no canvas and no entities.
+        expect(app.graphicsDevice.isNull, 'expected the null graphics device').toBe(true);
+        expect(appElement.querySelector('canvas'), 'the canvas was created').toBeTruthy();
+
+        // The ':scope > pc-asset' and ':scope > pc-material' sweeps run after two awaits, by which
+        // point the clone has upgraded either way - asserted rather than assumed.
+        expect(handle.get<AssetElement>('pc-asset').asset, 'the asset was created').toBeTruthy();
+        expect(handle.get<MaterialElement>('pc-material').material, 'the material was created').toBeTruthy();
+
+        // The entity sweep, and the attribute values it seeds entities from. Upgrading an element
+        // replays attributeChangedCallback for every attribute already on it, ahead of
+        // connectedCallback, so the cached fields are populated before any entity is created.
+        const root = handle.get<EntityElement>('pc-entity[name="Root"]');
+        const child = handle.get<EntityElement>('pc-entity[name="Child"]');
+        expect(root.entity!.parent, 'the outer entity is parented to the app root').toBe(app.root);
+        expect(child.entity!.parent, 'and the nested one under it').toBe(root.entity);
+        expect(root.entity!.getLocalPosition().equals(new Vec3(1, 2, 3)), 'position="1 2 3" applied').toBe(true);
+        expect(child.entity!.getLocalPosition().equals(new Vec3(0, 1, 0))).toBe(true);
+        expect(child.entity!.render, "the nested entity's component was added").toBeTruthy();
+
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('gates a cloned <pc-app> on its cloned <pc-module>, rather than racing it', async () => {
+        const { getInstance, release } = stubWasmModule();
+        const handle = mount(APP_TEMPLATE);
+        const template = handle.get<HTMLTemplateElement>('template');
+
+        handle.container.appendChild(template.content.cloneNode(true));
+
+        // The load was started from the element while it was still unupgraded, synchronously -
+        // WasmModule.getInstance is called from the promise executor inside _loadModule.
+        expect(getInstance, 'the module load started during the insertion').toHaveBeenCalledTimes(1);
+
+        // Nothing must proceed until the module reports in: an app that booted here would create
+        // its graphics device before the wasm module backing it was configured.
+        const appElement = handle.get<AppElement>('pc-app');
+        await expectNeverReady(appElement);
+        expect(appElement.app, 'no application while the module is outstanding').toBeNull();
+        expect(uncaught.seen, 'and no rejection from reaching into an unupgraded element').toEqual([]);
+
+        // The entity elements have upgraded and their connectedCallbacks have already run, yet no
+        // entity exists: they saw _hierarchyReady false and deferred to the boot sweep, exactly as
+        // they do on the parser's path. `null` is what distinguishes the two - an element that had
+        // not upgraded would have no `entity` accessor at all, and read back `undefined`.
+        expect(handle.get<EntityElement>('pc-entity[name="Root"]').entity, 'upgraded but deferred').toBeNull();
+        expect(handle.get<EntityElement>('pc-entity[name="Child"]').entity, 'upgraded but deferred').toBeNull();
+
+        release();
+        await readyWithin(appElement);
+        appElement.app!.autoRender = false;
+        await settle(handle.container);
+
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('abandons the boot of a cloned <pc-app> detached straight after insertion', async () => {
+        const { getInstance, release } = stubWasmModule();
+        const handle = mount(APP_TEMPLATE);
+        const template = handle.get<HTMLTemplateElement>('template');
+
+        handle.container.appendChild(template.content.cloneNode(true));
+        const appElement = handle.get<AppElement>('pc-app');
+
+        // Upgrading the subtree has already run every descendant's connectedCallback by this point,
+        // so the removal lands on a boot that has done strictly more than the parser's path would
+        // have. Releasing the module then drives it to the generation check after the module await,
+        // which is what has to stop it - a boot that continued would start an rAF ticker on an
+        // element nothing can clean up.
+        appElement.remove();
+        expect(getInstance, 'the module load had already started').toHaveBeenCalledTimes(1);
+        release();
+
+        await expectNeverReady(appElement);
+        expect(appElement.app, 'no application was created').toBeNull();
+        expect(appElement.querySelector('canvas'), 'no canvas was created').toBeNull();
+        expect(appElement.querySelector<EntityElement>('pc-entity[name="Root"]')!.entity, 'no entities').toBeNull();
         expect(uncaught.seen).toEqual([]);
     });
 });
