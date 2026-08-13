@@ -9,10 +9,16 @@
     //
     // `moduleResolution: "bundler"` and `strict` are inherited, so tests resolve extensionless
     // relative imports exactly as src/ does and are held to identical strictness.
+    //
+    // `allowJs` is for the one JS file a test imports: examples/js/example-list.mjs, the example
+    // catalogue. It stays plain JS because the example browser loads it unbuilt in a <script
+    // type="module">, so inference off the object literals is the only way to type it. `checkJs`
+    // stays off, so examples/ is read for types and never reported on.
     "extends": "./tsconfig.json",
     "compilerOptions": {
         "noEmit": true,
-        "rootDir": "."
+        "rootDir": ".",
+        "allowJs": true
     },
     "include": [
         "src/**/*",

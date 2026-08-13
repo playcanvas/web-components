@@ -71,6 +71,7 @@
     "test:unit": "vitest run --project unit",
     "test:elements": "vitest run --project elements",
     "test:integration": "vitest run --project integration",
+    "test:examples": "vitest run --project examples",
     "publint": "publint",
     "type-check": "npm run type-check:src && npm run type-check:test",
     "type-check:src": "tsc --noEmit -p tsconfig.json",

@@ -1,16 +1,23 @@
 # Tests
 
-Four tiers, three of which run in Node with jsdom and need neither a build nor a browser.
+Five tiers, four of which run in Node and need neither a build nor a browser.
 
 | Tier        | Command                    | Environment | Covers                                                                  |
 | ----------- | -------------------------- | ----------- | ----------------------------------------------------------------------- |
 | Unit        | `npm run test:unit`        | `node`      | The pure parsers in `src/parse.ts` and the `CSS_COLORS` table           |
 | Elements    | `npm run test:elements`    | `jsdom`     | Attribute and property surface, with no engine created                  |
 | Integration | `npm run test:integration` | `jsdom`     | A real `AppBase` on `NullGraphicsDevice`, via `<pc-app backend="null">` |
+| Examples    | `npm run test:examples`    | `node`      | `examples/` as a set: the catalogue against the pages on disk           |
 | Browser     | _(not yet implemented)_    | Chromium    | The built `dist/` bundle and the example pages                          |
 
-`npm test` runs the three Node tiers. `npm run test:watch` watches them, and
+`npm test` runs the four Node tiers. `npm run test:watch` watches them, and
 `npm run test:coverage` adds a v8 report under `coverage/`.
+
+The Examples tier is the odd one out: it tests the examples rather than the library, and reads sources
+as text instead of importing them. It exists because `examples/js/example-list.mjs` is the only name a
+reader sees in the sidebar while each page carries its own `<title>`, and those two drifted apart
+across a third of the examples before it was added. It also fails on an example page that the
+catalogue never lists — a page nothing imports, which no other tier can see.
 
 ## Why the library is testable headlessly
 

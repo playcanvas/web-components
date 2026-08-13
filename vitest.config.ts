@@ -88,6 +88,20 @@ export default defineConfig({
                     include: ['test/integration/**/*.test.ts'],
                     testTimeout: 15000
                 }
+            },
+            {
+                extends: true,
+                test: {
+                    /**
+                     * Consistency of examples/ as a set: the catalogue in example-list.mjs against
+                     * the pages on disk. Reads sources as text rather than loading anything, so it
+                     * needs no DOM - and unlike every tier above, it can fail on a file that
+                     * nothing imports. Last because it tests the examples, not the library.
+                     */
+                    name: 'examples',
+                    environment: 'node',
+                    include: ['test/examples/**/*.test.ts']
+                }
             }
         ],
 
