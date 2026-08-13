@@ -1,17 +1,17 @@
 import { Script } from 'playcanvas';
 
-export class VideoRecorderUi extends Script {
-    static scriptName = 'videoRecorderUi';
+export class VideoRecorderControls extends Script {
+    static scriptName = 'videoRecorderControls';
 
     initialize() {
-        this.createUI();
+        this.createControls();
         // Listen to video recording progress events
         this.app.on('encode:begin', this.onEncodeBegin, this);
         this.app.on('encode:progress', this.onEncodeProgress, this);
         this.app.on('encode:end', this.onEncodeEnd, this);
     }
 
-    createUI() {
+    createControls() {
         // Set a fixed container width to align the rows and button
         const container = document.createElement('div');
         container.style.position = 'fixed';
