@@ -95,14 +95,6 @@
 
                 button.classList.add('example-button');
 
-                button.onmouseenter = () => {
-                    button.style.background = 'rgba(255, 255, 255, 1)';
-                };
-
-                button.onmouseleave = () => {
-                    button.style.background = 'rgba(255, 255, 255, 0.9)';
-                };
-
                 button.addEventListener('click', () => {
                     resource.applyMaterialVariant(entityElement.entity, variant);
                 });
