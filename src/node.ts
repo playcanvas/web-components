@@ -2,6 +2,7 @@ import type { Entity, EventHandle, GraphNode, Material, MeshInstance, Quat, Rend
 import { Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './components/component';
+import { buildDescendantEntities } from './entity';
 import type { EntityElement } from './entity';
 import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
 import { MaterialElement } from './material';
@@ -490,13 +491,7 @@ class NodeElement extends EntityBaseElement {
         if (!app) {
             return;
         }
-        const childEntities = this.querySelectorAll<EntityElement>('pc-entity');
-        childEntities.forEach((child) => {
-            child._createEntity(app);
-        });
-        childEntities.forEach((child) => {
-            child._buildHierarchy(app);
-        });
+        buildDescendantEntities(this, app);
     }
 
     /**
