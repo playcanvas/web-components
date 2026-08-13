@@ -5,6 +5,33 @@ import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
 /**
+ * Creates and parents the entities of every descendant `<pc-entity>` of `root`, in two passes so
+ * that no parent's existence depends on document order. Called wherever a subtree could not build
+ * itself: an element inserted into an application that is already running, and a `<pc-node>` whose
+ * children waited for it to bind.
+ *
+ * Descendants that are not yet custom elements are skipped, because there is nothing useful to do
+ * for them and reaching for `_createEntity` would throw. A subtree cloned from a `<template>`
+ * arrives entirely unupgraded — template content lives in an inert document, where custom element
+ * definitions are never looked up — and appending the clone upgrades its elements in tree order,
+ * an element before its descendants. So a sweep from an element's own `connectedCallback` sees
+ * plain `HTMLElement`s below it. Each becomes an `EntityElement` moments later and its own
+ * `connectedCallback` creates and parents it, by which time the ancestor it parents under has its
+ * entity — the same guarantee tree order gives this sweep.
+ *
+ * @param root - The element whose descendant entities to build.
+ * @param app - The application to create the entities in.
+ * @internal
+ */
+export const buildDescendantEntities = (root: Element, app: AppBase) => {
+    const children = Array.from(root.querySelectorAll('pc-entity')).filter(
+        (child): child is EntityElement => child instanceof EntityElement
+    );
+    children.forEach((child) => child._createEntity(app));
+    children.forEach((child) => child._buildHierarchy(app));
+};
+
+/**
  * The EntityElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-entity/ | `<pc-entity>`} elements.
  * The EntityElement interface also inherits the properties and methods of the
@@ -172,13 +199,7 @@ class EntityElement extends EntityBaseElement {
             this._buildHierarchy(app);
 
             // Handle any child entities that might exist
-            const childEntities = this.querySelectorAll<EntityElement>('pc-entity');
-            childEntities.forEach((child) => {
-                child._createEntity(app);
-            });
-            childEntities.forEach((child) => {
-                child._buildHierarchy(app);
-            });
+            buildDescendantEntities(this, app);
         }
     }
 
