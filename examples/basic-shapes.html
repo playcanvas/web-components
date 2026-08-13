@@ -34,7 +34,7 @@
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera (with XR support) -->
-                <pc-entity name="camera root">
+                <pc-entity name="camera-root">
                     <pc-entity name="camera" position="-3 2 -3">
                         <pc-camera clear-color="lightskyblue"></pc-camera>
                         <pc-scripts>
@@ -57,15 +57,15 @@
                     </pc-scripts>
                 </pc-entity>
                 <!-- Key Light (Spot) -->
-                <pc-entity name="keyLight" position="3 5 -3" rotation="-45 -45 0">
+                <pc-entity name="key-light" position="3 5 -3" rotation="-45 -45 0">
                     <pc-light type="directional" intensity="0.75" cast-shadows shadow-type="vsm-16f" vsm-bias="0.01"></pc-light>
                 </pc-entity>
                 <!-- Fill Light (Omni) -->
-                <pc-entity name="fillLight" position="0 2 0">
+                <pc-entity name="fill-light" position="0 2 0">
                     <pc-light type="omni" intensity="0.5"></pc-light>
                 </pc-entity>
                 <!-- Rim Light (Spot) -->
-                <pc-entity name="rimLight" position="-2 4 -4" rotation="-40 45 0">
+                <pc-entity name="rim-light" position="-2 4 -4" rotation="-40 45 0">
                     <pc-light type="directional" intensity="0.75" cast-shadows shadow-type="vsm-16f" vsm-bias="0.01"></pc-light>
                 </pc-entity>
                 <!-- Box-->

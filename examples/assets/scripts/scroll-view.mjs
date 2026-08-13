@@ -26,7 +26,7 @@ export class ScrollView extends Script {
         this.templates = document.querySelectorAll('template.entry');
 
         // Add a new entry whenever the "Add entry" button is clicked.
-        const addButton = this.app.root.findByName('Add Entry Button');
+        const addButton = this.app.root.findByName('add-entry-button');
         addButton?.button?.on('click', () => this.addEntry());
 
         for (let i = 0; i < this.initialEntryCount; i++) {
@@ -50,8 +50,8 @@ export class ScrollView extends Script {
                 return;
             }
 
-            entity.findByName('Text').element.text = Math.floor(Math.random() * 100000).toString();
-            entity.findByName('Remove Button').button.on('click', () => this.removeEntry(entryElement));
+            entity.findByName('text').element.text = Math.floor(Math.random() * 100000).toString();
+            entity.findByName('remove-button').button.on('click', () => this.removeEntry(entryElement));
 
             this.refit();
         });
