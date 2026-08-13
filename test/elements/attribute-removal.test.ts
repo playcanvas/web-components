@@ -30,6 +30,8 @@ describe('attribute removal', () => {
         ['pc-element', 'texture-asset', 'textureAsset', ''],
         ['pc-element', 'text', 'text', ''],
         ['pc-gsplat', 'asset', 'asset', ''],
+        ['pc-joint', 'entity-a', 'entityA', ''],
+        ['pc-joint', 'entity-b', 'entityB', ''],
         ['pc-particles', 'asset', 'asset', ''],
         ['pc-render', 'material', 'material', ''],
         ['pc-scrollbar', 'handle', 'handle', ''],
@@ -64,6 +66,6 @@ describe('attribute removal', () => {
     it('covers every unparsed string attribute in the library', () => {
         // If a new `this.x = newValue ?? ''` branch is added without a case above, this fails.
         // Counted rather than enumerated, so it stays a one-line update rather than a second table.
-        expect(cases).toHaveLength(21);
+        expect(cases).toHaveLength(23);
     });
 });

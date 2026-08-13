@@ -21,6 +21,7 @@ import { CameraComponentElement } from './components/camera-component';
 import { CollisionComponentElement } from './components/collision-component';
 import { ComponentElement } from './components/component';
 import { ElementComponentElement } from './components/element-component';
+import { JointComponentElement } from './components/joint-component';
 import { LayoutChildComponentElement } from './components/layoutchild-component';
 import { LayoutGroupComponentElement } from './components/layoutgroup-component';
 import { LightComponentElement } from './components/light-component';
@@ -50,6 +51,7 @@ import type {
 
 declare global {
     interface HTMLElementEventMap {
+        break: CustomEvent;
         scriptattributeschange: ScriptAttributesChangeEvent;
         scriptenablechange: ScriptEnableChangeEvent;
         scriptnamechange: ScriptNameChangeEvent;
@@ -64,6 +66,7 @@ declare global {
         'pc-element': ElementComponentElement;
         'pc-entity': EntityElement;
         'pc-gsplat': GSplatComponentElement;
+        'pc-joint': JointComponentElement;
         'pc-layoutchild': LayoutChildComponentElement;
         'pc-layoutgroup': LayoutGroupComponentElement;
         'pc-light': LightComponentElement;
@@ -98,6 +101,7 @@ export {
     CollisionComponentElement,
     ComponentElement,
     ElementComponentElement,
+    JointComponentElement,
     LayoutChildComponentElement,
     LayoutGroupComponentElement,
     ParticleSystemComponentElement,

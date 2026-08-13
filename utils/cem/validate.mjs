@@ -186,9 +186,17 @@ if (manifest) {
         check(Boolean(attribute('pc-camera', name)), `pc-camera is missing the '${name}' attribute`);
     }
 
-    // The only default in the library that is not a value a user would ever type: Infinity means
-    // "no cap", which renderDefault has a dedicated branch for.
+    // The two defaults in the library that are not values a user would ever type: Infinity means
+    // "no cap" / "unbreakable", which renderDefault has a dedicated branch for.
     expectAttribute('pc-app', 'max-pixel-ratio', { type: 'number', default: 'Infinity', fieldName: 'maxPixelRatio' });
+    expectAttribute('pc-joint', 'break-impulse', { type: 'number', default: 'Infinity', fieldName: 'breakImpulse' });
+
+    // pc-joint's remaining shapes: enums from inline arrays, a Vec2 default with negative
+    // components, and string entity references
+    expectEnum('pc-joint', 'type', 5, 'fixed');
+    expectEnum('pc-joint', 'linear-motion-y', 3, 'locked');
+    expectAttribute('pc-joint', 'limits', { type: 'string', default: '-45 45', fieldName: 'limits' });
+    expectAttribute('pc-joint', 'entity-a', { type: 'string', fieldName: 'entityA' });
 
     // Attributes read with getAttribute, so declared with @attribute
     for (const name of ['name', 'glue', 'wasm', 'fallback']) {
@@ -236,6 +244,8 @@ if (manifest) {
     for (const name of ['scriptattributeschange', 'scriptenablechange', 'scriptnamechange']) {
         check(events('pc-script').includes(name), `pc-script is missing the '${name}' event`);
     }
+
+    check(events('pc-joint').includes('break'), "pc-joint is missing the 'break' event");
 
     const pointerEvents = ['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup'];
     for (const name of pointerEvents) {
