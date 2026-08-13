@@ -39,11 +39,11 @@
                 </pc-entity>
 
                 <!-- 2D screen-space UI -->
-                <pc-entity name="2D Screen">
+                <pc-entity name="2d-screen">
                     <pc-screen screen-space scale-mode="blend" scale-blend="1" resolution="1280 720" reference-resolution="1280 720"></pc-screen>
 
                     <!-- Scroll view -->
-                    <pc-entity name="ScrollView">
+                    <pc-entity name="scroll-view">
                         <pc-element type="group" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" width="230" height="400"></pc-element>
                         <pc-scrollview
                             horizontal="false"
@@ -60,28 +60,28 @@
                         </pc-scripts>
 
                         <!-- Background panel (9-sliced) -->
-                        <pc-entity name="Background">
+                        <pc-entity name="background">
                             <pc-element type="image" anchor="0 0 1 1" pivot="0.5 0.5" margin="0 0 20 0" sprite-asset="grey-panel"></pc-element>
                         </pc-entity>
 
                         <!-- Viewport (masks the content) -->
-                        <pc-entity name="Viewport" id="viewport">
+                        <pc-entity name="viewport" id="viewport">
                             <pc-element type="image" anchor="0 0 1 1" pivot="0 1" margin="0 0 20 0" color="0.2 0.2 0.2" mask></pc-element>
 
                             <!-- Content (laid out vertically, grown to fit by a script) -->
-                            <pc-entity name="Content" id="scroll-content">
+                            <pc-entity name="content" id="scroll-content">
                                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="220" height="700" use-input></pc-element>
                                 <pc-layoutgroup orientation="vertical" reverse-y alignment="0 1" padding="10 10 10 10" spacing="0 5"></pc-layoutgroup>
                             </pc-entity>
                         </pc-entity>
 
                         <!-- Vertical scrollbar -->
-                        <pc-entity name="VerticalScrollbar" id="vertical-scrollbar" position="4.536 400 0">
+                        <pc-entity name="vertical-scrollbar" id="vertical-scrollbar" position="4.536 400 0">
                             <pc-element type="image" anchor="1 0 1 1" pivot="1 1" width="20" margin="-15.464 0 -4.536 0" color="0.5 0.5 0.5" sprite-asset="grey-panel"></pc-element>
                             <pc-scrollbar orientation="vertical" value="0" handle-size="0.5" handle="#scroll-handle"></pc-scrollbar>
 
                             <!-- Draggable handle -->
-                            <pc-entity name="Handle" id="scroll-handle">
+                            <pc-entity name="handle" id="scroll-handle">
                                 <pc-element type="image" anchor="0 1 1 1" pivot="1 1" height="32" margin="0 0 0 0" sprite-asset="grey-panel" use-input></pc-element>
                                 <pc-button></pc-button>
                             </pc-entity>
@@ -89,14 +89,14 @@
                     </pc-entity>
 
                     <!-- Add entry button -->
-                    <pc-entity name="Add Entry Button" position="-10.094 231.047 0">
+                    <pc-entity name="add-entry-button" position="-10.094 231.047 0">
                         <pc-element type="group" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" width="190" height="45" use-input></pc-element>
                         <pc-button image="#add-entry-bg" transition-mode="tint" hover-tint="0.82 0.82 0.82 1" pressed-tint="0.361 0.361 0.361 1"></pc-button>
 
-                        <pc-entity name="Background" id="add-entry-bg">
+                        <pc-entity name="background" id="add-entry-bg">
                             <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="blue-button"></pc-element>
 
-                            <pc-entity name="Text">
+                            <pc-entity name="text">
                                 <pc-element type="text" anchor="0.1 0.1 0.9 0.9" pivot="0.5 0.5" margin="0 0 0 0" font-asset="kenney" font-size="32" min-font-size="8" max-font-size="32" auto-fit-width auto-fit-height auto-width="false" color="1 1 1" text="Add entry"></pc-element>
                             </pc-entity>
                         </pc-entity>
@@ -107,51 +107,51 @@
 
         <!-- Entry templates. Cloned at runtime by the scroll controller. -->
         <template class="entry" id="entry-blue">
-            <pc-entity name="Entry">
+            <pc-entity name="entry">
                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="190" height="45"></pc-element>
                 <pc-layoutchild></pc-layoutchild>
-                <pc-entity name="Background">
+                <pc-entity name="background">
                     <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="blue-button"></pc-element>
                 </pc-entity>
-                <pc-entity name="Remove Button" position="-3.976 0 0">
+                <pc-entity name="remove-button" position="-3.976 0 0">
                     <pc-element type="image" anchor="1 0.5 1 0.5" pivot="1 0.5" width="38" height="36" sprite-asset="grey-cross" use-input></pc-element>
                     <pc-button transition-mode="tint" hover-tint="0.82 0.82 0.82 1" pressed-tint="0.361 0.361 0.361 1"></pc-button>
                 </pc-entity>
-                <pc-entity name="Text" position="12.888 0 0">
+                <pc-entity name="text" position="12.888 0 0">
                     <pc-element type="text" anchor="0 0.5 0 0.5" pivot="0 0.5" font-asset="kenney" font-size="32" color="1 1 1" text="1"></pc-element>
                 </pc-entity>
             </pc-entity>
         </template>
 
         <template class="entry" id="entry-green">
-            <pc-entity name="Entry">
+            <pc-entity name="entry">
                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="190" height="45"></pc-element>
                 <pc-layoutchild></pc-layoutchild>
-                <pc-entity name="Background">
+                <pc-entity name="background">
                     <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="green-button"></pc-element>
                 </pc-entity>
-                <pc-entity name="Remove Button" position="-3.976 0 0">
+                <pc-entity name="remove-button" position="-3.976 0 0">
                     <pc-element type="image" anchor="1 0.5 1 0.5" pivot="1 0.5" width="38" height="36" sprite-asset="grey-cross" use-input></pc-element>
                     <pc-button transition-mode="tint" hover-tint="0.82 0.82 0.82 1" pressed-tint="0.361 0.361 0.361 1"></pc-button>
                 </pc-entity>
-                <pc-entity name="Text" position="12.888 0 0">
+                <pc-entity name="text" position="12.888 0 0">
                     <pc-element type="text" anchor="0 0.5 0 0.5" pivot="0 0.5" font-asset="kenney" font-size="32" color="1 1 1" text="1"></pc-element>
                 </pc-entity>
             </pc-entity>
         </template>
 
         <template class="entry" id="entry-yellow">
-            <pc-entity name="Entry">
+            <pc-entity name="entry">
                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="190" height="45"></pc-element>
                 <pc-layoutchild></pc-layoutchild>
-                <pc-entity name="Background">
+                <pc-entity name="background">
                     <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="yellow-button"></pc-element>
                 </pc-entity>
-                <pc-entity name="Remove Button" position="-3.976 0 0">
+                <pc-entity name="remove-button" position="-3.976 0 0">
                     <pc-element type="image" anchor="1 0.5 1 0.5" pivot="1 0.5" width="38" height="36" sprite-asset="grey-cross" use-input></pc-element>
                     <pc-button transition-mode="tint" hover-tint="0.82 0.82 0.82 1" pressed-tint="0.361 0.361 0.361 1"></pc-button>
                 </pc-entity>
-                <pc-entity name="Text" position="12.888 0 0">
+                <pc-entity name="text" position="12.888 0 0">
                     <pc-element type="text" anchor="0 0.5 0 0.5" pivot="0 0.5" font-asset="kenney" font-size="32" color="1 1 1" text="1"></pc-element>
                 </pc-entity>
             </pc-entity>
