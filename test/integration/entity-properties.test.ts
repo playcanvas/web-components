@@ -10,7 +10,7 @@ import { readyWithin } from '../helpers/ready';
 
 /**
  * The imperative construction path: a scene assembled with document.createElement and property
- * assignments rather than markup, which is what examples/spinning-cube-api.html demonstrates.
+ * assignments rather than markup, which is what examples/spinning-cube-dom-api.html demonstrates.
  *
  * _createEntity used to seed the entity by reading the attributes back, so anything assigned through
  * the property API before the entity existed was silently discarded - every value below came out as

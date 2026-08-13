@@ -24,6 +24,13 @@ const NOT_AN_EXAMPLE = ['index.html'];
 const titleOf = (page: string): string | undefined =>
     pages[`../../examples/${page}`]?.match(/<title>([^<]*)<\/title>/)?.[1];
 
+/** A display name reduced to its filename form: 'Spinning Cube (DOM API)' -> spinning-cube-dom-api */
+const slugOf = (name: string): string =>
+    name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
 describe('example-list.mjs', () => {
     it('lists every example page, so none is unreachable from the sidebar', () => {
         const onDisk = Object.keys(pages)
@@ -61,6 +68,17 @@ describe('example-list.mjs', () => {
     describe('<title>', () => {
         test.for(examples)('$name', ({ name, path: page }) => {
             expect(titleOf(page)).toBe(`PlayCanvas Web Components - ${name}`);
+        });
+    });
+
+    /**
+     * Deriving the filename rather than choosing one is what stops a third name per example drifting
+     * in again - the state this suite was written to clean up. It does tie the public URL to the
+     * display name: see the note in example-list.mjs before renaming an example.
+     */
+    describe('filename', () => {
+        test.for(examples)('$name', ({ name, path: page }) => {
+            expect(page).toBe(`${slugOf(name)}.html`);
         });
     });
 });
