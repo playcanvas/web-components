@@ -35,8 +35,8 @@ const MAX_MISSED_FRAMES = 5;
  *   ILoveYou) or 'None'.
  * - `hand:lost` - Fired with (slot) when a tracked hand disappears.
  */
-export class HandGestureController extends Script {
-    static scriptName = 'handGestureController';
+export class HandGestures extends Script {
+    static scriptName = 'handGestures';
 
     /**
      * The maximum number of hands to track.

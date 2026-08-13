@@ -1,7 +1,7 @@
 import { Script } from 'playcanvas';
 
-export class MorphUpdate extends Script {
-    static scriptName = 'morphUpdate';
+export class FaceMorphs extends Script {
+    static scriptName = 'faceMorphs';
 
     initialize() {
         this.app.on('face:blendshapes', (categories) => {

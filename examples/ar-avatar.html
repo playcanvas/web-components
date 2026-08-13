@@ -21,8 +21,8 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/face-detection.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/morph-update.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/face-blendshapes.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/face-morphs.mjs"></pc-asset>
             <pc-asset src="assets/models/raccoon-head.glb" id="raccoon"></pc-asset>
             <pc-asset src="assets/skies/shanghai-riverside-4k.hdr" id="shanghai"></pc-asset>
             <!-- Scene -->
@@ -34,14 +34,14 @@
                     <pc-camera clear-color="0 0 0 0" fov="80"></pc-camera>
                     <pc-scripts>
                         <pc-script name="cameraFeed"></pc-script>
-                        <pc-script name="faceDetection"></pc-script>
+                        <pc-script name="faceBlendshapes"></pc-script>
                     </pc-scripts>
                 </pc-entity>
                 <!-- Raccoon Avatar -->
                 <pc-entity name="raccoon" scale="100 100 100">
                     <pc-model asset="raccoon"></pc-model>
                     <pc-scripts>
-                        <pc-script name="morphUpdate"></pc-script>
+                        <pc-script name="faceMorphs"></pc-script>
                     </pc-scripts>
                 </pc-entity>
             </pc-scene>

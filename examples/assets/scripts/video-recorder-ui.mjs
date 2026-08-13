@@ -1,7 +1,7 @@
 import { Script } from 'playcanvas';
 
-export class VideoRecorderUI extends Script {
-    static scriptName = 'videoRecorderUI';
+export class VideoRecorderUi extends Script {
+    static scriptName = 'videoRecorderUi';
 
     initialize() {
         this.createUI();

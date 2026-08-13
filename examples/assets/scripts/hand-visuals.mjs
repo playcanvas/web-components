@@ -91,7 +91,7 @@ function lerpColor(color, to, k) {
 }
 
 /**
- * Renders neon visuals for hands tracked by the `handGestureController` script:
+ * Renders neon visuals for hands tracked by the `handGestures` script:
  *
  * - A glowing skeleton (joints and bones) per hand, colored per slot.
  * - A sparkle trail streaming from the index fingertip (boosted into a comet by the
@@ -104,7 +104,7 @@ function lerpColor(color, to, k) {
  * Everything is drawn with a single additive material and a procedural glow texture,
  * positioned in world space via `screenToWorld` so it aligns with the camera feed behind
  * the transparent canvas. Attach this script to the camera entity, after the
- * `handGestureController` script.
+ * `handGestures` script.
  */
 export class HandVisuals extends Script {
     static scriptName = 'handVisuals';

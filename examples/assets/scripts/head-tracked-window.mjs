@@ -73,8 +73,8 @@ const MAX_PREDICTION_SHIFT = 0.08;
  *
  * Fires the face events of the base class (`face:ready`, `face:found`, `face:lost`).
  */
-export class WindowTracking extends FaceTracking {
-    static scriptName = 'windowTracking';
+export class HeadTrackedWindow extends FaceTracking {
+    static scriptName = 'headTrackedWindow';
 
     /**
      * The physical width of the canvas across the display, in meters. Together with the
