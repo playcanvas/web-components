@@ -65,6 +65,7 @@
             "ElementComponent": "https://api.playcanvas.com/engine/classes/ElementComponent.html",
             "Entity": "https://api.playcanvas.com/engine/classes/Entity.html",
             "GSplatComponent": "https://api.playcanvas.com/engine/classes/GSplatComponent.html",
+            "JointComponent": "https://api.playcanvas.com/engine/classes/JointComponent.html",
             "LightComponent": "https://api.playcanvas.com/engine/classes/LightComponent.html",
             "ParticleSystemComponent": "https://api.playcanvas.com/engine/classes/ParticleSystemComponent.html",
             "RenderComponent": "https://api.playcanvas.com/engine/classes/RenderComponent.html",

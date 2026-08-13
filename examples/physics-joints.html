@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Physics Joints</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <!-- Materials -->
+            <pc-material id="ground-mat" diffuse="lightgray"></pc-material>
+            <pc-material id="anchor-mat" diffuse="slategray"></pc-material>
+            <pc-material id="fixed-mat" diffuse="tomato"></pc-material>
+            <pc-material id="ball-mat" diffuse="gold"></pc-material>
+            <pc-material id="hinge-mat" diffuse="mediumseagreen"></pc-material>
+            <pc-material id="slider-mat" diffuse="cornflowerblue"></pc-material>
+            <pc-material id="sixdof-mat" diffuse="orchid"></pc-material>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky -->
+                <pc-sky asset="studio" type="none" lighting></pc-sky>
+                <!-- Camera -->
+                <pc-entity name="camera" position="0 6 18">
+                    <pc-camera clear-color="#222222"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraControls" focus-point="0 3 0" zoom-range="2 60"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="45 30 0">
+                    <pc-light cast-shadows></pc-light>
+                </pc-entity>
+                <!-- Each joint entity below is not itself a body: its world transform is the joint
+                     frame, and its local X axis is the hinge axis, slider axis or ball twist axis.
+                     A rotation of "0 -90 0" points that axis along world Z. -->
+                <!-- Fixed joint: a breakable weld cantilevers the box in mid-air beside the anchor
+                     until the dropped ball snaps it. The <pc-joint> element fires a bubbling
+                     'break' DOM event at that moment. -->
+                <pc-entity id="fixed-anchor" name="fixed-anchor" position="-8 4.5 0" scale="0.5 0.5 0.5">
+                    <pc-render type="box" material="anchor-mat"></pc-render>
+                    <pc-collision half-extents="0.25 0.25 0.25"></pc-collision>
+                    <pc-rigidbody></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="fixed-box" name="fixed-box" position="-8.9 4.5 0">
+                    <pc-render type="box" material="fixed-mat"></pc-render>
+                    <pc-collision></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="fixed-ball" name="fixed-ball" position="-8.9 9 0" scale="0.8 0.8 0.8">
+                    <pc-render type="sphere" material="fixed-mat"></pc-render>
+                    <pc-collision type="sphere" radius="0.4"></pc-collision>
+                    <pc-rigidbody type="dynamic" mass="6"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity name="fixed-joint" position="-8.33 4.5 0">
+                    <pc-joint type="fixed" entity-a="#fixed-box" entity-b="#fixed-anchor" break-impulse="8"></pc-joint>
+                </pc-entity>
+                <!-- Ball joints: a chain of three links falls from horizontal and comes to hang
+                     within the swing and twist limits of each joint. -->
+                <pc-entity id="ball-anchor" name="ball-anchor" position="-4 5 0" scale="0.4 0.4 0.4">
+                    <pc-render type="box" material="anchor-mat"></pc-render>
+                    <pc-collision half-extents="0.2 0.2 0.2"></pc-collision>
+                    <pc-rigidbody></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="ball-link-1" name="ball-link-1" position="-4 5 0.75" scale="0.24 0.24 1">
+                    <pc-render type="box" material="ball-mat"></pc-render>
+                    <pc-collision half-extents="0.12 0.12 0.5"></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="ball-link-2" name="ball-link-2" position="-4 5 1.85" scale="0.24 0.24 1">
+                    <pc-render type="box" material="ball-mat"></pc-render>
+                    <pc-collision half-extents="0.12 0.12 0.5"></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="ball-link-3" name="ball-link-3" position="-4 5 2.95" scale="0.24 0.24 1">
+                    <pc-render type="box" material="ball-mat"></pc-render>
+                    <pc-collision half-extents="0.12 0.12 0.5"></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity name="ball-joint-1" position="-4 5 0.2" rotation="0 -90 0">
+                    <pc-joint type="ball" entity-a="#ball-link-1" entity-b="#ball-anchor" enable-limits swing-limit-y="35" swing-limit-z="35" twist-limit="10"></pc-joint>
+                </pc-entity>
+                <pc-entity name="ball-joint-2" position="-4 5 1.3" rotation="0 -90 0">
+                    <pc-joint type="ball" entity-a="#ball-link-2" entity-b="#ball-link-1" enable-limits swing-limit-y="35" swing-limit-z="35" twist-limit="10"></pc-joint>
+                </pc-entity>
+                <pc-entity name="ball-joint-3" position="-4 5 2.4" rotation="0 -90 0">
+                    <pc-joint type="ball" entity-a="#ball-link-3" entity-b="#ball-link-2" enable-limits swing-limit-y="35" swing-limit-z="35" twist-limit="10"></pc-joint>
+                </pc-entity>
+                <!-- Hinge joint: the arm falls from horizontal and swings about the world Z axis,
+                     bouncing between the -100 and +100 degree stops. -->
+                <pc-entity id="hinge-anchor" name="hinge-anchor" position="0 5 0" scale="0.5 0.5 0.5">
+                    <pc-render type="box" material="anchor-mat"></pc-render>
+                    <pc-collision half-extents="0.25 0.25 0.25"></pc-collision>
+                    <pc-rigidbody></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="hinge-arm" name="hinge-arm" position="1.35 5 0" scale="2 0.2 0.2">
+                    <pc-render type="box" material="hinge-mat"></pc-render>
+                    <pc-collision half-extents="1 0.1 0.1"></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity name="hinge-joint" position="0.3 5 0" rotation="0 -90 0">
+                    <pc-joint type="hinge" entity-a="#hinge-arm" entity-b="#hinge-anchor" enable-limits limits="-100 100"></pc-joint>
+                </pc-entity>
+                <!-- Slider joint: gravity slides the block down the tilted rail until it reaches
+                     the limit of its travel, 1.8 meters from where it started. Set motor-speed and
+                     max-motor-force to drive it back up. -->
+                <pc-entity id="slider-rail" name="slider-rail" position="4 3 0" rotation="0 0 -12" scale="4.5 0.15 0.15">
+                    <pc-render type="box" material="anchor-mat"></pc-render>
+                    <pc-collision half-extents="2.25 0.075 0.075"></pc-collision>
+                    <pc-rigidbody></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="slider-block" name="slider-block" position="2.34 3.35 0" rotation="0 0 -12" scale="0.6 0.6 0.6">
+                    <pc-render type="box" material="slider-mat"></pc-render>
+                    <pc-collision half-extents="0.3 0.3 0.3"></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity name="slider-joint" position="4 3 0" rotation="0 0 -12">
+                    <pc-joint type="slider" entity-a="#slider-block" entity-b="#slider-rail" enable-limits limits="-1.8 1.8"></pc-joint>
+                </pc-entity>
+                <!-- 6dof joint: every axis is locked except vertical translation, which is limited
+                     and sprung - the box sags under gravity, bobs on the spring and settles. -->
+                <pc-entity id="sixdof-anchor" name="sixdof-anchor" position="8 5.5 0" scale="0.5 0.5 0.5">
+                    <pc-render type="box" material="anchor-mat"></pc-render>
+                    <pc-collision half-extents="0.25 0.25 0.25"></pc-collision>
+                    <pc-rigidbody></pc-rigidbody>
+                </pc-entity>
+                <pc-entity id="sixdof-box" name="sixdof-box" position="8 4.6 0" scale="0.8 0.8 0.8">
+                    <pc-render type="box" material="sixdof-mat"></pc-render>
+                    <pc-collision half-extents="0.4 0.4 0.4"></pc-collision>
+                    <pc-rigidbody type="dynamic"></pc-rigidbody>
+                </pc-entity>
+                <pc-entity name="sixdof-joint" position="8 5.2 0">
+                    <pc-joint type="6dof" entity-a="#sixdof-box" entity-b="#sixdof-anchor" linear-motion-y="limited" linear-limits-y="-2.2 2.2" linear-stiffness="0 12 0" linear-damping="1 0.3 1"></pc-joint>
+                </pc-entity>
+                <!-- Ground -->
+                <pc-entity name="ground" position="0 -0.25 0" scale="30 0.5 10">
+                    <pc-render type="box" material="ground-mat"></pc-render>
+                    <pc-collision half-extents="15 0.25 5"></pc-collision>
+                    <pc-rigidbody></pc-rigidbody>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
