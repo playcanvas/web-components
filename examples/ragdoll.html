@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Ragdoll</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules -->
+            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/ragdoll.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <pc-asset src="assets/models/ragdoll-robot.glb" id="robot"></pc-asset>
+            <!--
+                Materials. The robot brings its own eight from the glTF - clearcoated plastic,
+                matte rubber, polished steel, anodized castings, blended glass and two emissive
+                panels - so these three only have to cover the set it stands in. All of them are
+                metalness workflow, since that is what the glTF materials use.
+            -->
+            <pc-material id="ground-mat" diffuse="#6b6e74" metalness="0" roughness="0.82" use-metalness></pc-material>
+            <pc-material id="gantry-mat" diffuse="#3f4247" metalness="1" roughness="0.42" use-metalness></pc-material>
+            <pc-material id="ball-mat" diffuse="#e8590c" metalness="0" roughness="0.48" use-metalness></pc-material>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- The HDR is the scene's only image-based light. type="none" keeps the skybox out
+                     of the frame while `lighting` still builds the environment atlas from it, so the
+                     metal and glass have something to reflect against the flat clear colour. -->
+                <pc-sky asset="studio" type="none" lighting></pc-sky>
+                <!-- Camera. The ball launcher fires from here, through wherever you tap. -->
+                <pc-entity name="camera" position="1.05 1.85 4.35">
+                    <!-- Very dark on purpose. With cameraFrame attached the scene renders into a
+                         linear HDR target and tone mapping happens at compose, so the clear colour
+                         is a linear value - this is roughly #1b1d21 once it reaches the screen. -->
+                    <pc-camera clear-color="#030304"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraControls" focus-point="0 1.5 0" zoom-range="1.5 14"></pc-script>
+                        <pc-script name="ballLauncher" material="ball-mat"></pc-script>
+                        <!-- Bloom is what makes the visor and the reactor read as lit rather than
+                             just brightly painted, and it is the reason those two materials carry a
+                             high emissive strength. cameraFrame owns tone mapping once it is
+                             attached, so it is set here rather than on pc-camera: 1 is filmic, which
+                             holds the orange accents and the cyan panels far better than the ACES
+                             curves (3 and 4), and keeps the white plastic off the clipping point
+                             that neutral (5) pushes it towards. Filmic compresses highlights harder,
+                             hence slightly more bloom than neutral needed. -->
+                        <pc-script name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
+                            "bloom": { "enabled": true, "intensity": 0.04, "blurLevel": 4 },
+                            "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.35, "radius": 0.6, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
+                            "vignette": { "enabled": true, "inner": 0.6, "outer": 1.4, "curvature": 0.7, "intensity": 0.4 }
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light. PCSS gives a contact-hard, distance-soft shadow, which is what sells the
+                     robot hanging clear of the floor. penumbra-size is the softness control and it
+                     bites hard at this scale - 0.05 smears the shadow into a barely visible smudge,
+                     where 0.012 keeps the feet and legs readable. shadow-distance is deliberately
+                     larger than the scene needs, so the shadow survives zooming out to the far end
+                     of the camera's zoom-range. -->
+                <pc-entity name="light" rotation="52 32 0">
+                    <pc-light cast-shadows
+                              shadow-type="pcss-32f"
+                              intensity="1"
+                              shadow-distance="16"
+                              shadow-resolution="2048"
+                              penumbra-size="0.012"
+                              penumbra-falloff="5"
+                              shadow-samples="16"
+                              shadow-blocker-samples="16"></pc-light>
+                </pc-entity>
+
+                <!-- The gantry the robot hangs from. Static bodies, so the balls bounce off it. -->
+                <pc-entity name="gantry">
+                    <!-- The post tops out at y=3, and the beam's underside starts there: the beam
+                         sits on the post rather than passing through it, and cantilevers out to the
+                         chain. Their left faces line up at x=-1.01. -->
+                    <pc-entity name="gantry-post" position="-0.95 1.5 -0.03" scale="0.12 3 0.12">
+                        <pc-render type="box" material="gantry-mat"></pc-render>
+                        <pc-collision half-extents="0.06 1.5 0.06"></pc-collision>
+                        <pc-rigidbody></pc-rigidbody>
+                    </pc-entity>
+                    <pc-entity name="gantry-beam" position="-0.495 3.05 -0.03" scale="1.03 0.1 0.1">
+                        <pc-render type="box" material="gantry-mat"></pc-render>
+                        <pc-collision half-extents="0.515 0.05 0.05"></pc-collision>
+                        <pc-rigidbody></pc-rigidbody>
+                    </pc-entity>
+                </pc-entity>
+
+                <!-- Everything Reset Pose puts back lives under this one entity: the ragdoll script
+                     restores every rigid body below it and re-arms every joint, so the chain has to
+                     be in here alongside the robot. -->
+                <pc-entity name="rig">
+                    <!-- The chain the robot swings on: two links, each hanging off the one above by a
+                         ball joint. The top joint names no entity-b, which pins that link to a point in
+                         world space instead of to a second body. Without the chain the robot would be
+                         bolted to the gantry and only its limbs could move; two links give it enough
+                         radius to swing as a pendulum. -->
+                    <pc-entity id="link-upper" name="link-upper" position="0 2.87 -0.03" scale="0.05 0.26 0.05">
+                        <pc-render type="box" material="gantry-mat"></pc-render>
+                        <pc-collision half-extents="0.025 0.13 0.025"></pc-collision>
+                        <pc-rigidbody type="dynamic" mass="2" angular-damping="0.1"></pc-rigidbody>
+                    </pc-entity>
+                    <pc-entity id="link-lower" name="link-lower" position="0 2.61 -0.03" scale="0.05 0.26 0.05">
+                        <pc-render type="box" material="gantry-mat"></pc-render>
+                        <pc-collision half-extents="0.025 0.13 0.025"></pc-collision>
+                        <pc-rigidbody type="dynamic" mass="2" angular-damping="0.1"></pc-rigidbody>
+                    </pc-entity>
+                    <pc-entity name="chain-top" position="0 3 -0.03" rotation="0 0 90">
+                        <pc-joint type="ball" entity-a="#link-upper"></pc-joint>
+                    </pc-entity>
+                    <pc-entity name="chain-middle" position="0 2.74 -0.03" rotation="0 0 90">
+                        <pc-joint type="ball" entity-a="#link-lower" entity-b="#link-upper"></pc-joint>
+                    </pc-entity>
+
+                    <!--
+                        The robot is one glTF holding sixteen separate parts, not a skinned mesh: each
+                        part is its own rigid body, so physics writes a world transform straight onto
+                        the node it drives. Every <pc-node> below binds one of those nodes by its name
+                        in the asset and hangs a collision shape and a rigid body on it, and each
+                        part's origin was authored at its centre of mass so the shapes sit centred.
+
+                        Each joint lives on a <pc-entity> nested inside the part it drives, positioned
+                        in that part's local space - so the joint frame follows the part rather than
+                        being pinned to a world coordinate, and this whole entity can be moved without
+                        touching a single joint. Nesting also settles the ordering: a <pc-node>'s
+                        children are built once it has bound, by which point the parts named by
+                        entity-a and entity-b (declared above it) have bound too, so both references
+                        resolve.
+
+                        Connected bodies never collide with each other, which is what lets the parts
+                        overlap at every joint. The limits below are what keep the ragdoll looking
+                        mechanical rather than liquid.
+                    -->
+                    <pc-entity name="robot" position="0 0.55 0">
+                        <pc-model asset="robot">
+                            <!-- Spine, hips first: every joint refers to the part above it -->
+                            <pc-node id="pelvis" name="pelvis">
+                                <pc-collision half-extents="0.124 0.074 0.096"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="9" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            </pc-node>
+                            <pc-node id="abdomen" name="abdomen">
+                                <pc-collision half-extents="0.090 0.083 0.086"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="waist" position="0 -0.090 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#abdomen" entity-b="#pelvis" enable-limits swing-limit-y="22" swing-limit-z="20" twist-limit="18"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="chest" name="chest">
+                                <pc-collision half-extents="0.152 0.124 0.130"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="13" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="sternum" position="0 -0.130 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#chest" entity-b="#abdomen" enable-limits swing-limit-y="18" swing-limit-z="16" twist-limit="16"></pc-joint>
+                                </pc-entity>
+                                <!-- A lifting bracket bolted to the robot's back, arching over the
+                                     shoulder to an eye above the head. Render only - no body, no
+                                     collider - so it just rides along with the chest. It exists to
+                                     put the hook where the next comment needs it. -->
+                                <pc-entity name="bracket-strut" position="0 0.30 -0.165" scale="0.05 0.42 0.05">
+                                    <pc-render type="box" material="gantry-mat"></pc-render>
+                                </pc-entity>
+                                <pc-entity name="bracket-eye" position="0 0.475 -0.09" scale="0.05 0.05 0.19">
+                                    <pc-render type="box" material="gantry-mat"></pc-render>
+                                </pc-entity>
+
+                                <!-- The hook, with no limits so it swings freely. Its height is what
+                                     keeps the ragdoll stable: hang the chest from a point off its
+                                     vertical axis and the torso has to fold to get its centre of
+                                     mass under the pin, which parks the waist, sternum and neck
+                                     cones hard against their limits and leaves the solver fighting a
+                                     standing violation every step - the whole rig buzzes. Lifting
+                                     the pin high and nearly onto the axis lets the robot hang plumb,
+                                     so those limits are never loaded and the ragdoll sits still.
+
+                                     Disabling this one element is all the Drop button does - the
+                                     constraint goes away and the robot falls and collapses. -->
+                                <pc-entity id="hook" name="hook" position="0 0.475 -0.03" rotation="0 0 90">
+                                    <pc-joint id="hook-joint" type="ball" entity-a="#chest" entity-b="#link-lower"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="head" name="head">
+                                <pc-collision half-extents="0.100 0.100 0.105"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="4" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="neck" position="0 -0.115 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#head" entity-b="#chest" enable-limits swing-limit-y="20" swing-limit-z="18" twist-limit="25"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+
+                            <!-- Left leg. Capsules for the limb segments, boxes for the feet. -->
+                            <pc-node id="thigh-l" name="thigh_l">
+                                <pc-collision type="capsule" radius="0.076" height="0.40"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="hip-l" position="0 0.215 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#thigh-l" entity-b="#pelvis" enable-limits swing-limit-y="60" swing-limit-z="40" twist-limit="25"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="shin-l" name="shin_l">
+                                <pc-collision type="capsule" radius="0.066" height="0.40"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="3.5" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <!-- A knee only bends one way: the hinge axis is X, and the shin may
+                                     only swing backwards from the pose it was authored in. -->
+                                <pc-entity name="knee-l" position="0 0.225 0">
+                                    <pc-joint type="hinge" entity-a="#shin-l" entity-b="#thigh-l" enable-limits limits="0 130"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="foot-l" name="foot_l">
+                                <pc-collision half-extents="0.068 0.050 0.143"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="1.2" friction="0.9" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="ankle-l" position="0 0.055 -0.030">
+                                    <pc-joint type="hinge" entity-a="#foot-l" entity-b="#shin-l" enable-limits limits="-25 40"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+
+                            <!-- Right leg -->
+                            <pc-node id="thigh-r" name="thigh_r">
+                                <pc-collision type="capsule" radius="0.076" height="0.40"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="hip-r" position="0 0.215 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#thigh-r" entity-b="#pelvis" enable-limits swing-limit-y="60" swing-limit-z="40" twist-limit="25"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="shin-r" name="shin_r">
+                                <pc-collision type="capsule" radius="0.066" height="0.40"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="3.5" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="knee-r" position="0 0.225 0">
+                                    <pc-joint type="hinge" entity-a="#shin-r" entity-b="#thigh-r" enable-limits limits="0 130"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="foot-r" name="foot_r">
+                                <pc-collision half-extents="0.068 0.050 0.143"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="1.2" friction="0.9" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="ankle-r" position="0 0.055 -0.030">
+                                    <pc-joint type="hinge" entity-a="#foot-r" entity-b="#shin-r" enable-limits limits="-25 40"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+
+                            <!-- Left arm. The wrist is a 6dof joint, limited on two angular axes and
+                                 locked on the rest - a universal joint, which a ball cannot express. -->
+                            <pc-node id="upper-arm-l" name="upper_arm_l">
+                                <pc-collision type="capsule" radius="0.062" height="0.30"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="2.2" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="shoulder-l" position="0 0.160 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#upper-arm-l" entity-b="#chest" enable-limits swing-limit-y="75" swing-limit-z="70" twist-limit="35"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="lower-arm-l" name="lower_arm_l">
+                                <pc-collision type="capsule" radius="0.058" height="0.25"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="1.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="elbow-l" position="0 0.125 0">
+                                    <pc-joint type="hinge" entity-a="#lower-arm-l" entity-b="#upper-arm-l" enable-limits limits="-140 0"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="hand-l" name="hand_l">
+                                <pc-collision half-extents="0.048 0.066 0.036"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="0.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="wrist-l" position="0 0.067 0">
+                                    <pc-joint type="6dof" entity-a="#hand-l" entity-b="#lower-arm-l"
+                                              angular-motion-x="limited" angular-limits-x="-55 55"
+                                              angular-motion-z="limited" angular-limits-z="-22 22"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+
+                            <!-- Right arm -->
+                            <pc-node id="upper-arm-r" name="upper_arm_r">
+                                <pc-collision type="capsule" radius="0.062" height="0.30"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="2.2" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="shoulder-r" position="0 0.160 0" rotation="0 0 90">
+                                    <pc-joint type="ball" entity-a="#upper-arm-r" entity-b="#chest" enable-limits swing-limit-y="75" swing-limit-z="70" twist-limit="35"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="lower-arm-r" name="lower_arm_r">
+                                <pc-collision type="capsule" radius="0.058" height="0.25"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="1.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="elbow-r" position="0 0.125 0">
+                                    <pc-joint type="hinge" entity-a="#lower-arm-r" entity-b="#upper-arm-r" enable-limits limits="-140 0"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                            <pc-node id="hand-r" name="hand_r">
+                                <pc-collision half-extents="0.048 0.066 0.036"></pc-collision>
+                                <pc-rigidbody type="dynamic" mass="0.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                                <pc-entity name="wrist-r" position="0 0.067 0">
+                                    <pc-joint type="6dof" entity-a="#hand-r" entity-b="#lower-arm-r"
+                                              angular-motion-x="limited" angular-limits-x="-55 55"
+                                              angular-motion-z="limited" angular-limits-z="-22 22"></pc-joint>
+                                </pc-entity>
+                            </pc-node>
+                        </pc-model>
+                    </pc-entity>
+                    <pc-scripts>
+                        <pc-script name="ragdoll"></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+
+                <!-- Ground -->
+                <pc-entity name="ground" position="0 -0.1 0" scale="24 0.2 24">
+                    <pc-render type="box" material="ground-mat"></pc-render>
+                    <pc-collision half-extents="12 0.1 12"></pc-collision>
+                    <pc-rigidbody friction="0.9"></pc-rigidbody>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            const container = document.createElement('div');
+            container.classList.add('example-button-container', 'top-right');
+
+            const button = (label, onClick) => {
+                const element = document.createElement('button');
+                element.textContent = label;
+                element.classList.add('example-button');
+                element.addEventListener('click', onClick);
+                container.appendChild(element);
+            };
+
+            // A joint is an ordinary element, so releasing the robot is just a matter of disabling
+            // one: the constraint is destroyed and the ragdoll falls.
+            const hook = document.getElementById('hook-joint');
+
+            // A settled ragdoll has been deactivated by the solver, so dropping the constraint on
+            // its own would leave it hanging there untouched - it has to be woken as well.
+            button('Drop', () => {
+                hook.enabled = false;
+                app.fire('ragdoll:wake');
+            });
+
+            // Put the bodies back first, then re-enable the hook - a joint captures its frames when
+            // its constraint is created, so it has to be re-enabled against the restored pose
+            // rather than against wherever the parts had landed.
+            button('Reset Pose', () => {
+                app.fire('ragdoll:reset');
+                hook.enabled = true;
+            });
+
+            document.body.appendChild(container);
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
