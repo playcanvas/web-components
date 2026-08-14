@@ -22,9 +22,8 @@ export class Ragdoll extends Script {
     static scriptName = 'ragdoll';
 
     initialize() {
-        /** @type {{ entity: Entity, position: Vec3, rotation: import('playcanvas').Quat }[] | null} */
-        this._rest = null;
-        this._seen = 0;
+        /** @type {Map<Entity, { position: Vec3, rotation: import('playcanvas').Quat }>} */
+        this._rest = new Map();
 
         this.app.on('ragdoll:reset', this.reset, this);
         this.app.on('ragdoll:wake', this.wake, this);
@@ -35,23 +34,19 @@ export class Ragdoll extends Script {
     }
 
     update() {
-        if (this._rest) {
-            return;
-        }
         // The bodies do not all appear on the same frame - the chain's are declared inline while the
-        // robot's wait on the container asset - so the capture holds off until the count stops
-        // growing. Capturing early would leave the rest of the rig with nowhere to be put back to.
-        const bodies = this.entity.findComponents('rigidbody');
-        const count = bodies.length;
-        if (count === 0 || count !== this._seen) {
-            this._seen = count;
-            return;
+        // robot's wait on the container asset - and there is no frame on which the rig is knowably
+        // complete. So rather than guess at one, each body is recorded the first time it is seen and
+        // a part that shows up later simply joins the rest pose then. Waiting for a settled count
+        // would have captured only the chain on any load where the asset was slower than a frame.
+        for (const { entity } of this.entity.findComponents('rigidbody')) {
+            if (!this._rest.has(entity)) {
+                this._rest.set(entity, {
+                    position: entity.getPosition().clone(),
+                    rotation: entity.getRotation().clone()
+                });
+            }
         }
-        this._rest = bodies.map(({ entity }) => ({
-            entity,
-            position: entity.getPosition().clone(),
-            rotation: entity.getRotation().clone()
-        }));
     }
 
     /**
@@ -61,9 +56,12 @@ export class Ragdoll extends Script {
      * bodies it holds, so putting every body back at once puts the joints back with them.
      */
     reset() {
-        for (const { entity, position, rotation } of this._rest ?? []) {
+        for (const [entity, rest] of this._rest) {
             const { rigidbody } = entity;
-            rigidbody.teleport(position, rotation);
+            if (!rigidbody) {
+                continue;
+            }
+            rigidbody.teleport(rest.position, rest.rotation);
             rigidbody.linearVelocity = Vec3.ZERO;
             rigidbody.angularVelocity = Vec3.ZERO;
         }
@@ -79,8 +77,8 @@ export class Ragdoll extends Script {
      * solver has to wake it up again.
      */
     wake() {
-        for (const { entity } of this._rest ?? []) {
-            entity.rigidbody.activate();
+        for (const entity of this._rest.keys()) {
+            entity.rigidbody?.activate();
         }
     }
 }

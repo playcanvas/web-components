@@ -51,12 +51,13 @@
                         <pc-script name="ballLauncher" material="ball-mat"></pc-script>
                         <!-- Bloom is what makes the visor and the reactor read as lit rather than
                              just brightly painted, and it is the reason those two materials carry a
-                             high emissive strength. cameraFrame owns tone mapping once it is
-                             attached, so it is set here rather than on pc-camera: 1 is filmic, which
-                             holds the orange accents and the cyan panels far better than the ACES
-                             curves (3 and 4), and keeps the white plastic off the clipping point
-                             that neutral (5) pushes it towards. Filmic compresses highlights harder,
-                             hence slightly more bloom than neutral needed. -->
+                             high emissive strength. It blooms out of a half-float buffer:
+                             renderFormat 12 is RGBA16F, which gives those panels the headroom to
+                             bleed from, and it degrades to RG11B10 then RGBA8 where that is not
+                             available. cameraFrame owns tone mapping once it is attached, so it is
+                             set here rather than on pc-camera - 5 is neutral. Worth knowing if you
+                             retune it: the ACES curves (3 and 4) desaturate the orange accents to
+                             cream and wash the cyan panels towards white. -->
                         <pc-script name="cameraFrame" attributes='{
                             "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
                             "bloom": { "enabled": true, "intensity": 0.04, "blurLevel": 4 },
