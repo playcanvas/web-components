@@ -12,8 +12,10 @@
  * - `parseBool` and `parseTags` take no attribute name, because every value is valid for them and
  *   so they never warn.
  *
- * `getEntity` is the exception: it resolves a reference to a live entity rather than parsing a
- * literal, and returns `null` instead of falling back to a default.
+ * `findEntityElement` and `getEntity` are the exceptions: they resolve a reference against the
+ * document rather than parsing a literal, and return `null` instead of falling back to a default.
+ * They also do not warn - what an unresolved reference means depends on the element holding it, so
+ * reporting it is left to the caller.
  */
 
 import type { Entity } from 'playcanvas';
@@ -324,15 +326,18 @@ export const parseVec4 = <T extends Vec4 | null>(
 };
 
 /**
- * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element. The reference
- * can be a CSS selector (e.g. `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare
- * entity name. Returns `null` if no matching element (or backing entity) is found.
+ * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
+ * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare entity name.
+ *
+ * Separate from {@link getEntity} so a caller reporting a failure can tell the two causes apart:
+ * nothing in the document matches the reference, or something matches but is not backing an
+ * entity (yet, or ever).
  *
  * @param ref - The reference string to resolve.
- * @returns The resolved entity, or `null`.
+ * @returns The matched element, or `null`.
  * @internal
  */
-export const getEntity = (ref: string): Entity | null => {
+export const findEntityElement = (ref: string): Element | null => {
     if (!ref) {
         return null;
     }
@@ -351,5 +356,18 @@ export const getEntity = (ref: string): Entity | null => {
         element = document.getElementById(ref) ?? document.querySelector(`pc-entity[name="${ref}"]`);
     }
 
-    return (element as { entity?: Entity } | null)?.entity ?? null;
+    return element;
+};
+
+/**
+ * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element. The reference
+ * can be a CSS selector (e.g. `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare
+ * entity name. Returns `null` if no matching element (or backing entity) is found.
+ *
+ * @param ref - The reference string to resolve.
+ * @returns The resolved entity, or `null`.
+ * @internal
+ */
+export const getEntity = (ref: string): Entity | null => {
+    return (findEntityElement(ref) as { entity?: Entity } | null)?.entity ?? null;
 };

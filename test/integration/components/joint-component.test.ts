@@ -215,14 +215,44 @@ describe('<pc-joint>', () => {
             expect(joint.component.entityA).toBeNull();
         });
 
-        it('leaves an unresolvable reference null without warning', async () => {
+        it('warns when a reference matches nothing in the document', async () => {
             const { get } = await bootApp(scene('entity-a="#nope"'));
             const joint = get<JointComponentElement>('pc-joint');
 
-            // No warning claimed here: getEntity resolves references quietly, and the guard
-            // fails the test if anything warns
+            warnings.expect("pc-joint could not resolve entity-a '#nope' - nothing in the document matches it");
             expect(joint.entityA).toBe('#nope');
             expect(joint.component.entityA).toBeNull();
+        });
+
+        it('warns differently when a reference matches an element backing no entity', async () => {
+            // Pointing at the wrong element resolves to something, so it needs its own diagnosis:
+            // the reference is fine and the target is the problem
+            const { get } = await bootApp(`<div id="not-an-entity"></div>${scene('entity-a="#not-an-entity"')}`);
+            const joint = get<JointComponentElement>('pc-joint');
+
+            warnings.expect('<div> matches it but is not backing an entity yet');
+            expect(joint.component.entityA).toBeNull();
+        });
+
+        it('warns again when a reference is reassigned and still does not resolve', async () => {
+            const { get } = await bootApp(scene('entity-a="bob"'));
+            const joint = get<JointComponentElement>('pc-joint');
+
+            joint.setAttribute('entity-a', '#still-nope');
+
+            warnings.expect("pc-joint could not resolve entity-a '#still-nope'");
+            expect(joint.component.entityA).toBeNull();
+        });
+
+        it('stays silent for an empty reference, which is the world-space case', async () => {
+            const { get } = await bootApp(scene('entity-a="bob"'));
+            const joint = get<JointComponentElement>('pc-joint');
+
+            // entity-b was never supplied, and is reassigned empty here. Neither warns: the guard
+            // fails this test if either did.
+            joint.setAttribute('entity-b', '');
+
+            expect(joint.component.entityB).toBeNull();
         });
     });
 
