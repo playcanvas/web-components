@@ -4,6 +4,8 @@ import type { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
 import type { EntityBaseElement } from '../entity-base';
 import { parseBool } from '../parse';
+import type { PropertyTable } from '../properties';
+import { applyAttribute, attributeNames } from '../properties';
 
 /**
  * Represents a component in the PlayCanvas engine.
@@ -241,16 +243,21 @@ class ComponentElement extends AsyncElement {
         return this._enabled;
     }
 
+    /**
+     * The attribute schema shared by every component element. A subclass declares its own
+     * attributes by spreading this table into its own (see `src/properties.ts`).
+     * @internal
+     */
+    static properties: PropertyTable = {
+        enabled: { parse: parseBool }
+    };
+
     static get observedAttributes() {
-        return ['enabled'];
+        return attributeNames(this.properties);
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        switch (name) {
-            case 'enabled':
-                this.enabled = parseBool(newValue, true);
-                break;
-        }
+        applyAttribute(this, name, newValue);
     }
 }
 

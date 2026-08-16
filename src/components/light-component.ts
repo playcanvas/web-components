@@ -12,7 +12,9 @@ import {
     SHADOW_VSM_32F
 } from 'playcanvas';
 
-import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';
+import { parseBool, parseColor, parseNumber } from '../parse';
+import type { PropertyTable } from '../properties';
+import { enumOf } from '../properties';
 
 import { ComponentElement } from './component';
 
@@ -507,94 +509,29 @@ class LightComponentElement extends ComponentElement {
         return this._shadowBlockerSamples;
     }
 
-    static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'color',
-            'cast-shadows',
-            'intensity',
-            'inner-cone-angle',
-            'normal-offset-bias',
-            'outer-cone-angle',
-            'penumbra-falloff',
-            'penumbra-size',
-            'range',
-            'shadow-bias',
-            'shadow-blocker-samples',
-            'shadow-distance',
-            'shadow-intensity',
-            'shadow-resolution',
-            'shadow-samples',
-            'shadow-type',
-            'type',
-            'vsm-bias',
-            'vsm-blur-size'
-        ];
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        super.attributeChangedCallback(name, _oldValue, newValue);
-
-        switch (name) {
-            case 'color':
-                this.color = parseColor(newValue, Color.WHITE, name);
-                break;
-            case 'cast-shadows':
-                this.castShadows = parseBool(newValue, false);
-                break;
-            case 'inner-cone-angle':
-                this.innerConeAngle = parseNumber(newValue, 40, name);
-                break;
-            case 'intensity':
-                this.intensity = parseNumber(newValue, 1, name);
-                break;
-            case 'normal-offset-bias':
-                this.normalOffsetBias = parseNumber(newValue, 0.05, name);
-                break;
-            case 'outer-cone-angle':
-                this.outerConeAngle = parseNumber(newValue, 45, name);
-                break;
-            case 'penumbra-falloff':
-                this.penumbraFalloff = parseNumber(newValue, 1, name);
-                break;
-            case 'penumbra-size':
-                this.penumbraSize = parseNumber(newValue, 1, name);
-                break;
-            case 'range':
-                this.range = parseNumber(newValue, 10, name);
-                break;
-            case 'shadow-bias':
-                this.shadowBias = parseNumber(newValue, 0.2, name);
-                break;
-            case 'shadow-distance':
-                this.shadowDistance = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-blocker-samples':
-                this.shadowBlockerSamples = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-resolution':
-                this.shadowResolution = parseNumber(newValue, 1024, name);
-                break;
-            case 'shadow-intensity':
-                this.shadowIntensity = parseNumber(newValue, 1, name);
-                break;
-            case 'shadow-samples':
-                this.shadowSamples = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-type':
-                this.shadowType = parseEnum(newValue, shadowTypes, 'pcf3-32f', name);
-                break;
-            case 'type':
-                this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
-                break;
-            case 'vsm-bias':
-                this.vsmBias = parseNumber(newValue, 0.01, name);
-                break;
-            case 'vsm-blur-size':
-                this.vsmBlurSize = parseNumber(newValue, 11, name);
-                break;
-        }
-    }
+    /** @internal */
+    static properties: PropertyTable = {
+        ...ComponentElement.properties,
+        castShadows: { parse: parseBool },
+        color: { parse: parseColor },
+        innerConeAngle: { parse: parseNumber },
+        intensity: { parse: parseNumber },
+        normalOffsetBias: { parse: parseNumber },
+        outerConeAngle: { parse: parseNumber },
+        penumbraFalloff: { parse: parseNumber },
+        penumbraSize: { parse: parseNumber },
+        range: { parse: parseNumber },
+        shadowBias: { parse: parseNumber },
+        shadowBlockerSamples: { parse: parseNumber },
+        shadowDistance: { parse: parseNumber },
+        shadowIntensity: { parse: parseNumber },
+        shadowResolution: { parse: parseNumber },
+        shadowSamples: { parse: parseNumber },
+        shadowType: { parse: enumOf(shadowTypes) },
+        type: { parse: enumOf(['directional', 'omni', 'spot']) },
+        vsmBias: { parse: parseNumber },
+        vsmBlurSize: { parse: parseNumber }
+    };
 }
 
 customElements.define('pc-light', LightComponentElement);
