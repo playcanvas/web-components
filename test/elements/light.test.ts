@@ -5,13 +5,13 @@ import { LightComponentElement } from '../../src/components/light-component';
 import { useGuard } from '../helpers/guard';
 
 /**
- * <pc-light> is the pilot of the static property table (src/properties.ts), so beyond the
- * element's own attribute surface these tests pin the table machinery itself: observedAttributes
- * derived from the table, dispatch through the shared attributeChangedCallback, and defaults
- * restored from the first-callback snapshot of the field initializers - for removal, and for the
- * fallback (and warning text) of an invalid value. The element caches every property to a private
- * field and only writes through once its engine component exists, so all of it is observable with
- * no <pc-app> in play.
+ * <pc-light> is the pilot of the static property-descriptor table (src/properties.ts), so beyond
+ * the element's own attribute surface these tests pin the machinery itself: observedAttributes
+ * merged across the constructor chain, dispatch through the shared attributeChangedCallback, and
+ * the descriptor's declared initial value - restored on removal, and named in the warning as the
+ * fallback of an invalid value, regardless of any earlier programmatic writes. The element caches
+ * every property to a private field and only writes through once its engine component exists, so
+ * all of it is observable with no <pc-app> in play.
  */
 describe('<pc-light>', () => {
     const { warnings } = useGuard();
@@ -55,7 +55,7 @@ describe('<pc-light>', () => {
         expect(element.intensity).toBe(1);
     });
 
-    it('falls back to the field default on an invalid number, naming it in the warning', () => {
+    it('falls back to the declared default on an invalid number, naming it in the warning', () => {
         const element = create();
 
         element.setAttribute('shadow-bias', '0.5');
@@ -64,6 +64,25 @@ describe('<pc-light>', () => {
         element.setAttribute('shadow-bias', 'steep');
         expect(element.shadowBias, 'an invalid value falls back to the default, not the previous value').toBe(0.2);
         warnings.expect("Invalid value 'steep' for attribute 'shadow-bias'. Expected a finite number. Using '0.2'.");
+    });
+
+    it('restores the declared default, not an earlier programmatic write', () => {
+        const element = create();
+
+        // A property written before the element's first attribute reaction must not shift what
+        // removal (or an invalid value) restores
+        element.intensity = 7;
+
+        element.setAttribute('intensity', '2');
+        expect(element.intensity).toBe(2);
+
+        element.removeAttribute('intensity');
+        expect(element.intensity).toBe(1);
+
+        element.intensity = 7;
+        element.setAttribute('intensity', 'garbage');
+        expect(element.intensity).toBe(1);
+        warnings.expect("Invalid value 'garbage' for attribute 'intensity'. Expected a finite number. Using '1'.");
     });
 
     it('parses a boolean attribute with the standard rules', () => {
@@ -101,13 +120,13 @@ describe('<pc-light>', () => {
         expect(element.color).toEqual(new Color(1, 1, 1));
     });
 
-    it('never hands out the recorded default itself', () => {
+    it('creates a fresh default on every removal', () => {
         const element = create();
 
         element.setAttribute('color', 'red');
         element.removeAttribute('color');
 
-        // Mutate the restored value in place; the snapshot must not be written through
+        // Mutate the restored value in place; the declared default must not be written through
         element.color.r = 0.25;
 
         element.setAttribute('color', 'blue');
@@ -123,7 +142,7 @@ describe('<pc-light>', () => {
         element.setAttribute('shadow-type', 'vsm-16f');
         expect(element.shadowType).toBe('vsm-16f');
 
-        // The fallback is the field default, not the previous value
+        // The fallback is the declared default, not the previous value
         element.setAttribute('shadow-type', 'soft');
         expect(element.shadowType).toBe('pcf3-32f');
         warnings.expect(

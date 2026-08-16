@@ -3,9 +3,12 @@ import type { Component } from 'playcanvas';
 import type { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
 import type { EntityBaseElement } from '../entity-base';
-import { parseBool } from '../parse';
 import type { PropertyTable } from '../properties';
-import { applyAttribute, attributeNames } from '../properties';
+import { applyAttribute, attributeNames, booleanProperty, defineProperties } from '../properties';
+
+const componentProperties = defineProperties({
+    enabled: booleanProperty(true)
+});
 
 /**
  * Represents a component in the PlayCanvas engine.
@@ -15,7 +18,7 @@ import { applyAttribute, attributeNames } from '../properties';
 class ComponentElement extends AsyncElement {
     private _componentName: string;
 
-    private _enabled = true;
+    private _enabled = componentProperties.enabled.initial();
 
     private _component: Component | null = null;
 
@@ -244,16 +247,14 @@ class ComponentElement extends AsyncElement {
     }
 
     /**
-     * The attribute schema shared by every component element. A subclass declares its own
-     * attributes by spreading this table into its own (see `src/properties.ts`).
+     * The attribute schema shared by every component element. A subclass declares only its own
+     * table; the chain of tables is merged at lookup (see `src/properties.ts`).
      * @internal
      */
-    static properties: PropertyTable = {
-        enabled: { parse: parseBool }
-    };
+    static properties: PropertyTable = componentProperties;
 
     static get observedAttributes() {
-        return attributeNames(this.properties);
+        return attributeNames(this);
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
