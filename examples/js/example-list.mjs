@@ -50,6 +50,7 @@ export const examples = [
     { name: 'Video Recorder', path: 'video-recorder.html', category: 'Graphics' },
     // Animation
     { name: 'GLB Animation', path: 'glb-animation.html', category: 'Animation' },
+    { name: 'Robot Arm', path: 'robot-arm.html', category: 'Animation' },
     { name: 'Tweening', path: 'tweening.html', category: 'Animation' },
     // Physics
     { name: 'Basic Physics', path: 'basic-physics.html', category: 'Physics' },
