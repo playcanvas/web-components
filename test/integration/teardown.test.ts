@@ -64,6 +64,7 @@ describe('teardown', () => {
         const cycle = async () => {
             const { unmount } = await bootApp(`
                 <pc-entity name="e">
+                    <pc-anim></pc-anim>
                     <pc-camera></pc-camera>
                     <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
                 </pc-entity>

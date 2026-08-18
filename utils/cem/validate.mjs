@@ -311,6 +311,7 @@ if (manifest) {
     // genuinely new public member belongs in this list.
     const ASYNC_MEMBERS = ['closestApp', 'closestEntity', 'ready'];
     const EXTRA_MEMBERS = new Map([
+        ['pc-anim', ['clips', 'component', 'pause', 'play', 'transition', ...ASYNC_MEMBERS]],
         ['pc-app', ['app', 'elementFromEntity', 'loadProgress', ...ASYNC_MEMBERS]],
         ['pc-asset', ['asset', 'get', ...ASYNC_MEMBERS]],
         ['pc-camera', ['component', 'endXr', 'startXr', 'xrAvailable', ...ASYNC_MEMBERS]],

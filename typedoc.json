@@ -56,6 +56,9 @@
     "excludeNotDocumented": true,
     "externalSymbolLinkMappings": {
         "playcanvas": {
+            "AnimComponent": "https://api.playcanvas.com/engine/classes/AnimComponent.html",
+            "AnimComponentLayer": "https://api.playcanvas.com/engine/classes/AnimComponentLayer.html",
+            "AnimTrack": "https://api.playcanvas.com/engine/classes/AnimTrack.html",
             "Application": "https://api.playcanvas.com/engine/classes/Application.html",
             "Asset": "https://api.playcanvas.com/engine/classes/Asset.html",
             "AudioListenerComponent": "https://api.playcanvas.com/engine/classes/AudioListenerComponent.html",

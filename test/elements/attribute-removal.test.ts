@@ -21,6 +21,9 @@ describe('attribute removal', () => {
 
     /** tag, attribute, property, and the value removal must restore. */
     const cases: [tag: string, attribute: string, property: string, restored: string][] = [
+        ['pc-anim', 'clip', 'clip', ''],
+        ['pc-anim-clip', 'asset', 'asset', ''],
+        ['pc-anim-clip', 'name', 'name', ''],
         ['pc-button', 'image', 'image', ''],
         ['pc-button', 'hover-sprite-asset', 'hoverSpriteAsset', ''],
         ['pc-button', 'pressed-sprite-asset', 'pressedSpriteAsset', ''],
@@ -66,6 +69,6 @@ describe('attribute removal', () => {
     it('covers every unparsed string attribute in the library', () => {
         // If a new `this.x = newValue ?? ''` branch is added without a case above, this fails.
         // Counted rather than enumerated, so it stays a one-line update rather than a second table.
-        expect(cases).toHaveLength(23);
+        expect(cases).toHaveLength(26);
     });
 });
