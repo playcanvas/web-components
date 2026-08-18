@@ -91,15 +91,15 @@
     "@rollup/plugin-terser": "1.0.0",
     "@rollup/plugin-typescript": "12.3.0",
     "@tweenjs/tween.js": "25.0.0",
-    "@vitest/coverage-v8": "4.1.10",
-    "concurrently": "10.0.4",
+    "@vitest/coverage-v8": "4.1.11",
+    "concurrently": "10.0.5",
     "custom-element-jet-brains-integration": "1.7.0",
     "custom-element-vs-code-integration": "1.5.0",
     "earcut": "3.2.3",
     "eslint": "9.39.5",
     "globals": "17.11.0",
     "jsdom": "30.0.1",
-    "mediabunny": "1.53.1",
+    "mediabunny": "1.55.1",
     "opentype.js": "2.0.0",
     "playcanvas": "2.21.4",
     "prettier": "3.9.6",
@@ -110,6 +110,6 @@
     "typedoc": "0.28.20",
     "typedoc-plugin-mdn-links": "5.1.1",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }
