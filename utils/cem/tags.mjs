@@ -10,16 +10,16 @@
 
 /** Every tag the library registers. Kept explicit so adding or removing an element is deliberate. */
 export const TAGS = [
-    'pc-app', 'pc-asset', 'pc-button', 'pc-camera', 'pc-collision', 'pc-element', 'pc-entity',
-    'pc-gsplat', 'pc-joint', 'pc-layoutchild', 'pc-layoutgroup', 'pc-light', 'pc-listener',
-    'pc-material', 'pc-model', 'pc-module', 'pc-node', 'pc-particles', 'pc-render', 'pc-rigidbody',
-    'pc-scene', 'pc-screen', 'pc-script', 'pc-scripts', 'pc-scrollbar', 'pc-scrollview', 'pc-sky',
-    'pc-sound', 'pc-sounds'
+    'pc-anim', 'pc-anim-clip', 'pc-app', 'pc-asset', 'pc-button', 'pc-camera', 'pc-collision',
+    'pc-element', 'pc-entity', 'pc-gsplat', 'pc-joint', 'pc-layoutchild', 'pc-layoutgroup',
+    'pc-light', 'pc-listener', 'pc-material', 'pc-model', 'pc-module', 'pc-node', 'pc-particles',
+    'pc-render', 'pc-rigidbody', 'pc-scene', 'pc-screen', 'pc-script', 'pc-scripts',
+    'pc-scrollbar', 'pc-scrollview', 'pc-sky', 'pc-sound', 'pc-sounds'
 ];
 
 /** The tags whose elements extend `ComponentElement`, and so inherit its `enabled` attribute. */
 export const COMPONENT_TAGS = [
-    'pc-button', 'pc-camera', 'pc-collision', 'pc-element', 'pc-gsplat', 'pc-joint',
+    'pc-anim', 'pc-button', 'pc-camera', 'pc-collision', 'pc-element', 'pc-gsplat', 'pc-joint',
     'pc-layoutchild', 'pc-layoutgroup', 'pc-light', 'pc-listener', 'pc-particles', 'pc-render',
     'pc-rigidbody', 'pc-screen', 'pc-scripts', 'pc-scrollbar', 'pc-scrollview', 'pc-sounds'
 ];

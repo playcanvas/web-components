@@ -252,13 +252,6 @@ class ModelElement extends AsyncElement {
         const entity = container.instantiateRenderEntity();
         this._entity = entity;
 
-        // @ts-ignore
-        if (container.animations.length > 0) {
-            entity.addComponent('anim');
-            // @ts-ignore
-            entity.anim.assignAnimation('animation', container.animations[0].resource);
-        }
-
         // The parent's readiness re-arms when it is torn down, so these can resume in a later
         // connection cycle. The entity is captured above and the generation re-checked, so a
         // stale resume cannot parent an entity a newer cycle has already destroyed.

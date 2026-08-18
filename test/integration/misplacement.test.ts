@@ -91,6 +91,19 @@ describe('misplaced elements', () => {
         await expectNeverReady(get<AsyncElement>('pc-sound'));
     });
 
+    it('warns and never becomes ready when pc-anim-clip is not a direct child of pc-anim', async () => {
+        const { get } = await bootUnsettled(`
+            <pc-entity name="e">
+                <pc-anim>
+                    <div><pc-anim-clip name="walk"></pc-anim-clip></div>
+                </pc-anim>
+            </pc-entity>
+        `);
+
+        warnings.expect("pc-anim-clip 'walk' must be a direct child of a pc-anim element");
+        await expectNeverReady(get<AsyncElement>('pc-anim-clip'));
+    });
+
     it('warns and never becomes ready for a pc-entity with no pc-app ancestor', async () => {
         const handle = mount('<pc-entity name="stray"></pc-entity>');
         const entity = handle.get<AsyncElement>('pc-entity');

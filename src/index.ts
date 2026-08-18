@@ -15,6 +15,8 @@ import { ModuleElement } from './module';
 import { AppElement } from './app';
 import { EntityElement } from './entity';
 import { AssetElement } from './asset';
+import { AnimComponentElement } from './components/anim-component';
+import { AnimClipElement } from './components/anim-clip';
 import { ListenerComponentElement } from './components/listener-component';
 import { ButtonComponentElement } from './components/button-component';
 import { CameraComponentElement } from './components/camera-component';
@@ -58,6 +60,8 @@ declare global {
     }
 
     interface HTMLElementTagNameMap {
+        'pc-anim': AnimComponentElement;
+        'pc-anim-clip': AnimClipElement;
         'pc-app': AppElement;
         'pc-asset': AssetElement;
         'pc-button': ButtonComponentElement;
@@ -96,6 +100,8 @@ export {
     AppElement,
     EntityElement,
     AssetElement,
+    AnimComponentElement,
+    AnimClipElement,
     ButtonComponentElement,
     CameraComponentElement,
     CollisionComponentElement,
