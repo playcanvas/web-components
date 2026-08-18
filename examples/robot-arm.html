@@ -345,6 +345,20 @@
             // Read afresh - a readiness cycle on the host rebuilds the component, and the layer
             const layer = () => anim.component?.baseLayer ?? null;
 
+            // Position within the active clip's track. Built on activeStateCurrentTime, not
+            // activeStateProgress: the controller already scales time-in-state by the clip's speed,
+            // and progress scales it again, so calibrate at 1.4x reports 0.58 where the clip is
+            // really 0.41 through. Neither reading wraps either, so wrap here - a looping clip
+            // starts over, one that holds its last frame clamps.
+            const trackProgress = () => {
+                const current = layer();
+                const duration = current ? current.activeStateDuration : 0;
+                const raw = duration > 0 ? current.activeStateCurrentTime / duration : 0;
+                return (CLIPS_BY_NAME.get(current?.activeState)?.loop ?? true)
+                    ? raw - Math.floor(raw)
+                    : Math.min(1, Math.max(0, raw));
+            };
+
             // Choosing a clip is one attribute write; the element cross-fades on its own
             clipSelect.value = anim.clip;
             clipSelect.addEventListener('change', () => {
@@ -411,15 +425,19 @@
                     seekToEvent(event);
                 }
             });
+            // End stops a hair short of the last frame: a looping clip wraps exactly 1.0 back to
+            // the start, so seeking right to the end would read as the beginning.
+            const SEEK_TO = { Home: 0, End: 0.999 };
+            const SEEK_BY = { ArrowLeft: -0.05, ArrowRight: 0.05 };
+
             scrub.addEventListener('keydown', (event) => {
-                const step = { ArrowLeft: -0.05, ArrowRight: 0.05, Home: -1, End: 1 }[event.key];
-                if (step === undefined) {
+                const to = SEEK_TO[event.key];
+                const by = SEEK_BY[event.key];
+                if (to === undefined && by === undefined) {
                     return;
                 }
                 event.preventDefault();
-                const current = layer();
-                const progress = current ? current.activeStateProgress : 0;
-                seekTo(Math.abs(step) === 1 ? (step + 1) / 2 : progress + step);
+                seekTo(to ?? trackProgress() + by);
             });
 
             app.on('update', () => {
@@ -427,12 +445,8 @@
                 if (!current) {
                     return;
                 }
-                // Neither engine reading wraps - activeStateProgress is time over duration, which
-                // sails past 1 on a looping clip's second pass. Only the clip's own time wraps.
                 const duration = current.activeStateDuration;
-                const raw = current.activeStateProgress ?? 0;
-                const looping = CLIPS_BY_NAME.get(current.activeState)?.loop ?? true;
-                const progress = looping ? raw - Math.floor(raw) : Math.min(1, Math.max(0, raw));
+                const progress = trackProgress();
 
                 fill.style.width = `${progress * 100}%`;
                 readout.textContent = `${(progress * duration).toFixed(2)} / ${duration.toFixed(2)}s`;
