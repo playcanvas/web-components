@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Robot Arm</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Transport bar. Glass recipe copied from example.css's .example-button, applied once
+               to the panel; sits bottom-left because js/example.mjs owns bottom-right. */
+            .anim-bar {
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                right: calc(max(16px, env(safe-area-inset-right)) + 240px);
+                bottom: max(16px, env(safe-area-inset-bottom));
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                max-width: 620px;
+                padding: 0 10px;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            @supports not (backdrop-filter: blur(12px)) {
+                .anim-bar {
+                    background-color: rgba(18, 18, 18, 0.88);
+                }
+            }
+
+            .anim-ctl {
+                display: flex;
+                flex: 0 0 auto;
+                align-items: center;
+                justify-content: center;
+                height: 40px;
+                padding: 0 8px;
+                border: 0;
+                border-radius: 6px;
+                background: transparent;
+                color: inherit;
+                font: 600 13px/1 inherit;
+                white-space: nowrap;
+                cursor: pointer;
+                transition: background-color 0.2s, color 0.2s;
+            }
+
+            .anim-ctl:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .anim-ctl:focus-visible,
+            .anim-select:focus-visible,
+            .anim-scrub:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: -2px;
+            }
+
+            .anim-ctl.active {
+                color: #ff8533;
+            }
+
+            .anim-check {
+                display: flex;
+                flex: 0 0 auto;
+                align-items: center;
+                gap: 6px;
+                height: 40px;
+                padding: 0 8px;
+                border-radius: 6px;
+                font: 600 13px/1 inherit;
+                white-space: nowrap;
+                cursor: pointer;
+                transition: background-color 0.2s, color 0.2s;
+            }
+
+            .anim-check:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .anim-check input {
+                width: 14px;
+                height: 14px;
+                margin: 0;
+                accent-color: #f60;
+                cursor: pointer;
+            }
+
+            .anim-check input:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: 2px;
+            }
+
+            /* Inlined masks rather than new files in img/ - see example.css for the icon pattern */
+            .anim-ctl.icon {
+                width: 36px;
+                padding: 0;
+            }
+
+            .anim-ctl.icon::before {
+                content: "";
+                width: 20px;
+                height: 20px;
+                background-color: currentColor;
+                -webkit-mask: center / 20px 20px no-repeat;
+                mask: center / 20px 20px no-repeat;
+            }
+
+            .anim-ctl.icon-play::before {
+                -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+                mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+            }
+
+            .anim-ctl.icon-pause::before {
+                -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 5h4v14H6zm8 0h4v14h-4z'/%3E%3C/svg%3E");
+                mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 5h4v14H6zm8 0h4v14h-4z'/%3E%3C/svg%3E");
+            }
+
+            .anim-select {
+                flex: 0 0 auto;
+                height: 40px;
+                padding: 0 26px 0 10px;
+                border: 0;
+                border-radius: 6px;
+                background-color: rgba(255, 255, 255, 0.08);
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 7px center;
+                background-size: 12px;
+                color: inherit;
+                font: 600 13px/1 inherit;
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+            }
+
+            .anim-select:hover {
+                background-color: rgba(255, 255, 255, 0.14);
+            }
+
+            /* The popup list is drawn by the OS, so it needs its own colours */
+            .anim-select option {
+                background: #1b1b1b;
+                color: #fff;
+            }
+
+            /* Button-height hit area around a hairline rail */
+            .anim-scrub {
+                display: flex;
+                flex: 1 1 90px;
+                align-items: center;
+                min-width: 60px;
+                height: 40px;
+                padding: 0 4px;
+                border-radius: 6px;
+                cursor: pointer;
+                touch-action: none;
+            }
+
+            .anim-rail {
+                position: relative;
+                width: 100%;
+                height: 4px;
+                border-radius: 2px;
+                background: rgba(255, 255, 255, 0.18);
+            }
+
+            .anim-fill {
+                position: relative;
+                width: 0;
+                height: 100%;
+                border-radius: 2px;
+                background: #f60;
+            }
+
+            .anim-fill::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                right: -6px;
+                width: 12px;
+                height: 12px;
+                margin-top: -6px;
+                border-radius: 50%;
+                background: #ff8533;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            }
+
+            .anim-readout {
+                flex: 0 0 auto;
+                min-width: 84px;
+                font: 600 11px/1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            /* Too narrow to share the bottom edge with example.mjs's buttons - sit above them */
+            @media (max-width: 720px) {
+                .anim-bar {
+                    right: max(16px, env(safe-area-inset-right));
+                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 48px);
+                    max-width: none;
+                    flex-wrap: wrap;
+                    padding: 6px 8px;
+                    gap: 6px;
+                }
+
+                .anim-scrub {
+                    order: 10;
+                    flex-basis: 100%;
+                    height: 26px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <pc-asset src="assets/models/robot-arm.glb" id="arm"></pc-asset>
+            <!-- A .glb infers type="container", so an animation-only file has to say what it is -->
+            <pc-asset src="assets/models/robot-arm-calibrate.glb" type="animation" id="calibrate-clip"></pc-asset>
+            <!-- Materials. The arm brings its own six from the glTF, so this is just the floor. -->
+            <pc-material id="floor-mat" diffuse="#4d5157" metalness="0" roughness="0.78" use-metalness></pc-material>
+            <!-- Scene. The fog hides the far edge of the (deliberately oversized) floor. -->
+            <pc-scene fog="exp2" fog-color="#050608" fog-density="0.09">
+                <!-- Sky. type="none" keeps it out of frame while `lighting` still builds the
+                     environment atlas; trimmed because it blows the steel to white at full. -->
+                <pc-sky asset="studio" type="none" intensity="0.7" lighting></pc-sky>
+                <!-- Camera. Far enough back for the folded `stow` pose to clear the frame. -->
+                <pc-entity name="camera" position="1.75 1.4 2.15">
+                    <!-- cameraFrame renders to a linear HDR target, so this is a linear value -->
+                    <pc-camera clear-color="#030304"></pc-camera>
+                    <pc-scripts>
+                        <pc-script name="cameraControls" focus-point="0 0.85 0" zoom-range="1.2 9"></pc-script>
+                        <!-- Bloom is deliberately weak: much above this and the orange shell haloes
+                             rather than just the two emissive panels. -->
+                        <pc-script name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
+                            "bloom": { "enabled": true, "intensity": 0.01, "blurLevel": 3 },
+                            "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.55, "radius": 0.4, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
+                            "vignette": { "enabled": true, "inner": 0.55, "outer": 1.4, "curvature": 0.7, "intensity": 0.45 }
+                        }'></pc-script>
+                    </pc-scripts>
+                </pc-entity>
+                <!-- Light -->
+                <pc-entity name="light" rotation="48 38 0">
+                    <pc-light cast-shadows
+                              shadow-type="pcss-32f"
+                              intensity="0.9"
+                              shadow-distance="12"
+                              shadow-resolution="2048"
+                              penumbra-size="0.014"
+                              penumbra-falloff="5"
+                              shadow-samples="16"
+                              shadow-blocker-samples="16"></pc-light>
+                </pc-entity>
+
+                <!-- Ten rigid parts in a chain, no skeleton and no skinning: tracks bind to nodes
+                     by name, so a plain hierarchy animates like a skinned mesh. Clips without an
+                     `asset` come from the model's own container, matched by name. -->
+                <pc-entity name="robot-arm">
+                    <pc-model asset="arm">
+                        <pc-anim id="arm-anim" clip="idle" transition-time="0.35">
+                            <pc-anim-clip name="idle"></pc-anim-clip>
+                            <pc-anim-clip name="pick"></pc-anim-clip>
+                            <pc-anim-clip name="place"></pc-anim-clip>
+                            <pc-anim-clip name="inspect"></pc-anim-clip>
+                            <!-- Holds its last frame when it ends - the engine reports no completion -->
+                            <pc-anim-clip name="stow" loop="false"></pc-anim-clip>
+                            <!-- Per-clip speed, on top of the component-wide multiplier -->
+                            <pc-anim-clip name="calibrate" asset="calibrate-clip" speed="1.4"></pc-anim-clip>
+                        </pc-anim>
+                    </pc-model>
+                </pc-entity>
+
+                <!-- Floor -->
+                <pc-entity name="floor" position="0 -0.05 0" scale="80 0.1 80">
+                    <pc-render type="box" material="floor-mat"></pc-render>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            const anim = document.getElementById('arm-anim');
+
+            // A ready <pc-app> is not enough - the host entity's readiness cycle is what builds the
+            // component, so awaiting the clips is what guarantees the layer exists below.
+            const clipElements = [...anim.querySelectorAll('pc-anim-clip')];
+            await Promise.all(clipElements.map(clip => clip.ready()));
+
+            const CLIPS_BY_NAME = new Map(clipElements.map(clip => [clip.name, clip]));
+            const SPEEDS = [1, 0.5, 0.25];
+            const BLEND = 0.35;
+
+            const bar = document.createElement('div');
+            bar.className = 'anim-bar';
+            bar.innerHTML = `
+                <button id="transport" class="anim-ctl icon icon-pause" type="button" aria-label="Pause"></button>
+                <select id="clip" class="anim-select" aria-label="Clip">
+                    ${clipElements.map(({ name }) => `<option value="${name}">${name[0].toUpperCase()}${name.slice(1)}</option>`).join('')}
+                </select>
+                <div id="scrub" class="anim-scrub" tabindex="0" role="slider"
+                     aria-label="Playhead" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="anim-rail"><div id="fill" class="anim-fill"></div></div>
+                </div>
+                <span id="readout" class="anim-readout">0.00 / 0.00s</span>
+                <button id="speed" class="anim-ctl" type="button">1x</button>
+                <label class="anim-check"><input id="blend" type="checkbox"> Blend</label>
+            `;
+            document.body.appendChild(bar);
+
+            const transport = bar.querySelector('#transport');
+            const clipSelect = bar.querySelector('#clip');
+            const scrub = bar.querySelector('#scrub');
+            const rail = bar.querySelector('.anim-rail');
+            const fill = bar.querySelector('#fill');
+            const readout = bar.querySelector('#readout');
+            const speedButton = bar.querySelector('#speed');
+            const blendCheck = bar.querySelector('#blend');
+
+            // Read afresh - a readiness cycle on the host rebuilds the component, and the layer
+            const layer = () => anim.component?.baseLayer ?? null;
+
+            // Choosing a clip is one attribute write; the element cross-fades on its own
+            clipSelect.value = anim.clip;
+            clipSelect.addEventListener('change', () => {
+                anim.setAttribute('clip', clipSelect.value);
+            });
+
+            let paused = false;
+            transport.addEventListener('click', () => {
+                paused = !paused;
+                if (paused) {
+                    anim.pause();
+                    // pause() clears only the component's flag, so that a pause is exactly
+                    // reversible. Seeking repaints the pose only when the layer's flag is clear
+                    // too - without this the timeline would scrub and the arm would not move.
+                    const current = layer();
+                    if (current) {
+                        current.playing = false;
+                    }
+                } else {
+                    anim.play();
+                }
+                transport.classList.toggle('icon-play', paused);
+                transport.classList.toggle('icon-pause', !paused);
+                transport.setAttribute('aria-label', paused ? 'Play' : 'Pause');
+            });
+
+            // A multiplier across every clip, on top of each clip's own speed
+            let speedIndex = 0;
+            speedButton.addEventListener('click', () => {
+                speedIndex = (speedIndex + 1) % SPEEDS.length;
+                anim.setAttribute('speed', String(SPEEDS[speedIndex]));
+                speedButton.textContent = `${SPEEDS[speedIndex]}x`;
+                speedButton.classList.toggle('active', speedIndex !== 0);
+            });
+
+            // Clear this and switch from Idle to Calibrate to see what the cross-fade was doing
+            blendCheck.checked = anim.transitionTime > 0;
+            blendCheck.addEventListener('change', () => {
+                anim.setAttribute('transition-time', blendCheck.checked ? String(BLEND) : '0');
+            });
+
+            // Scrubbing goes through the engine's layer, which the element points at for playback
+            // state it does not expose itself.
+            const seekTo = (fraction) => {
+                const current = layer();
+                if (!current) {
+                    return;
+                }
+                const clamped = Math.min(1, Math.max(0, fraction));
+                current.activeStateCurrentTime = clamped * current.activeStateDuration;
+            };
+
+            const seekToEvent = (event) => {
+                const bounds = rail.getBoundingClientRect();
+                seekTo((event.clientX - bounds.left) / bounds.width);
+            };
+
+            scrub.addEventListener('pointerdown', (event) => {
+                seekToEvent(event);                          // seek first - capture can throw
+                scrub.setPointerCapture(event.pointerId);
+            });
+            scrub.addEventListener('pointermove', (event) => {
+                if (scrub.hasPointerCapture(event.pointerId)) {
+                    seekToEvent(event);
+                }
+            });
+            scrub.addEventListener('keydown', (event) => {
+                const step = { ArrowLeft: -0.05, ArrowRight: 0.05, Home: -1, End: 1 }[event.key];
+                if (step === undefined) {
+                    return;
+                }
+                event.preventDefault();
+                const current = layer();
+                const progress = current ? current.activeStateProgress : 0;
+                seekTo(Math.abs(step) === 1 ? (step + 1) / 2 : progress + step);
+            });
+
+            app.on('update', () => {
+                const current = layer();
+                if (!current) {
+                    return;
+                }
+                // Neither engine reading wraps - activeStateProgress is time over duration, which
+                // sails past 1 on a looping clip's second pass. Only the clip's own time wraps.
+                const duration = current.activeStateDuration;
+                const raw = current.activeStateProgress ?? 0;
+                const looping = CLIPS_BY_NAME.get(current.activeState)?.loop ?? true;
+                const progress = looping ? raw - Math.floor(raw) : Math.min(1, Math.max(0, raw));
+
+                fill.style.width = `${progress * 100}%`;
+                readout.textContent = `${(progress * duration).toFixed(2)} / ${duration.toFixed(2)}s`;
+                scrub.setAttribute('aria-valuenow', String(Math.round(progress * 100)));
+
+                // The clip can change from anywhere, so the dropdown follows the layer
+                if (current.activeState !== clipSelect.value && CLIPS_BY_NAME.has(current.activeState)) {
+                    clipSelect.value = current.activeState;
+                }
+            });
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
