@@ -495,6 +495,41 @@ describe('<pc-anim>', () => {
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
         });
 
+        it('preserves a pause and its playhead across a rebuild', async () => {
+            const { app, get, step } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-entity name="holder"><pc-model asset="m">
+                    <pc-anim>
+                        <pc-anim-clip name="Walk"></pc-anim-clip>
+                        <pc-anim-clip name="Run"></pc-anim-clip>
+                    </pc-anim>
+                </pc-model></pc-entity>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            // Two steps: the first tick is consumed by the START transition
+            step(0.25);
+            step(0.25);
+            anim.pause();
+            const time = anim.component.baseLayer!.activeStateCurrentTime;
+            expect(time).toBeGreaterThan(0);
+
+            // Rebuild while paused: remove the inactive clip
+            (anim.children[1] as AnimClipElement).remove();
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Walk']));
+
+            expect(anim.component.playing).toBe(false);
+            expect(anim.component.baseLayer!.activeState).toBe('Walk');
+            expect(anim.component.baseLayer!.activeStateCurrentTime).toBeCloseTo(time, 5);
+
+            const held = bonePosition(app).y;
+            step(0.25);
+            expect(bonePosition(app).y).toBe(held);
+
+            anim.play();
+            step(0.25);
+            expect(bonePosition(app).y).toBeGreaterThan(held);
+        });
+
         it('falls back to the next clip when the active one is removed', async () => {
             const { get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}

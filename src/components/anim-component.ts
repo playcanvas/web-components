@@ -17,12 +17,15 @@ type ContainerWithAnimations = ContainerResource & { animations: Asset[] };
 
 /**
  * A playback snapshot captured before a clip-set rebuild and restored afterwards, so a rebuild
- * whose active clip survives it is seamless.
+ * whose active clip survives it is seamless. Both playing flags are captured: the component's
+ * gates the system tick, the layer controller's gates the layer, and they legitimately diverge —
+ * {@link AnimComponentElement.pause} clears only the component's.
  */
 type PlaybackState = {
     state: string;
     time: number;
     playing: boolean;
+    layerPlaying: boolean;
 };
 
 /**
@@ -293,8 +296,9 @@ class AnimComponentElement extends ComponentElement {
     /**
      * Applies the active-clip selection: the declared `clip` when it names an assigned state,
      * else a captured pre-rebuild state when it survived, else the engine's default (the first
-     * assigned clip). A restore also reinstates the playhead and both playing flags — the
-     * system tick reads the component's, the layer's controller reads its own.
+     * assigned clip). A restore also reinstates the playhead and both playing flags exactly as
+     * captured — the reassignment that preceded it set both to the `activate` outcome, which is
+     * not necessarily the state the rebuild interrupted.
      */
     private _applySelection(restore?: PlaybackState) {
         const component = this.component;
@@ -322,9 +326,7 @@ class AnimComponentElement extends ComponentElement {
             if (target === restore.state) {
                 layer.activeStateCurrentTime = restore.time;
             }
-            if (restore.playing) {
-                layer.playing = true;
-            }
+            layer.playing = restore.layerPlaying;
             component.playing = restore.playing;
         }
     }
@@ -355,7 +357,8 @@ class AnimComponentElement extends ComponentElement {
         const restore = layer ? {
             state: layer.activeState,
             time: layer.activeStateCurrentTime,
-            playing: component.playing
+            playing: component.playing,
+            layerPlaying: layer.playing
         } : undefined;
         component.removeStateGraph();
         this._applyClips(restore);
@@ -463,6 +466,8 @@ class AnimComponentElement extends ComponentElement {
         if (!component || !layer) {
             return;
         }
+        // layer.play sets the layer controller's playing flag; the component's is the system
+        // gate. Setting both is what makes this a resume regardless of how playback stopped.
         if (name !== undefined) {
             if (!layer.states.includes(name)) {
                 return;
@@ -481,6 +486,9 @@ class AnimComponentElement extends ComponentElement {
         if (!this.component) {
             return;
         }
+        // Only the component flag - the single gate the system tick reads - is cleared. The
+        // layer controller's flag is left as-is so a pause is exactly reversible, whether
+        // resumed through play() (which sets both) or through the component API directly.
         this.component.playing = false;
     }
 
