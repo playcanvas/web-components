@@ -146,160 +146,158 @@
                         overlap at every joint. The limits below are what keep the ragdoll looking
                         mechanical rather than liquid.
                     -->
-                    <pc-entity name="robot" position="0 0.55 0">
-                        <pc-model asset="robot">
-                            <!-- Spine, hips first: every joint refers to the part above it -->
-                            <pc-node id="pelvis" name="pelvis">
-                                <pc-collision half-extents="0.124 0.074 0.096"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="9" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                            </pc-node>
-                            <pc-node id="abdomen" name="abdomen">
-                                <pc-collision half-extents="0.090 0.083 0.086"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="waist" position="0 -0.090 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#abdomen" entity-b="#pelvis" enable-limits swing-limit-y="22" swing-limit-z="20" twist-limit="18"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="chest" name="chest">
-                                <pc-collision half-extents="0.152 0.124 0.130"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="13" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="sternum" position="0 -0.130 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#chest" entity-b="#abdomen" enable-limits swing-limit-y="18" swing-limit-z="16" twist-limit="16"></pc-joint>
-                                </pc-entity>
-                                <!-- A lifting bracket bolted to the robot's back, arching over the
-                                     shoulder to an eye above the head. Render only - no body, no
-                                     collider - so it just rides along with the chest. It exists to
-                                     put the hook where the next comment needs it. -->
-                                <pc-entity name="bracket-strut" position="0 0.30 -0.165" scale="0.05 0.42 0.05">
-                                    <pc-render type="box" material="gantry-mat"></pc-render>
-                                </pc-entity>
-                                <pc-entity name="bracket-eye" position="0 0.475 -0.09" scale="0.05 0.05 0.19">
-                                    <pc-render type="box" material="gantry-mat"></pc-render>
-                                </pc-entity>
+                    <pc-model name="robot" asset="robot" position="0 0.55 0">
+                        <!-- Spine, hips first: every joint refers to the part above it -->
+                        <pc-node id="pelvis" name="pelvis">
+                            <pc-collision half-extents="0.124 0.074 0.096"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="9" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                        </pc-node>
+                        <pc-node id="abdomen" name="abdomen">
+                            <pc-collision half-extents="0.090 0.083 0.086"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="waist" position="0 -0.090 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#abdomen" entity-b="#pelvis" enable-limits swing-limit-y="22" swing-limit-z="20" twist-limit="18"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="chest" name="chest">
+                            <pc-collision half-extents="0.152 0.124 0.130"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="13" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="sternum" position="0 -0.130 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#chest" entity-b="#abdomen" enable-limits swing-limit-y="18" swing-limit-z="16" twist-limit="16"></pc-joint>
+                            </pc-entity>
+                            <!-- A lifting bracket bolted to the robot's back, arching over the
+                                 shoulder to an eye above the head. Render only - no body, no
+                                 collider - so it just rides along with the chest. It exists to
+                                 put the hook where the next comment needs it. -->
+                            <pc-entity name="bracket-strut" position="0 0.30 -0.165" scale="0.05 0.42 0.05">
+                                <pc-render type="box" material="gantry-mat"></pc-render>
+                            </pc-entity>
+                            <pc-entity name="bracket-eye" position="0 0.475 -0.09" scale="0.05 0.05 0.19">
+                                <pc-render type="box" material="gantry-mat"></pc-render>
+                            </pc-entity>
 
-                                <!-- The hook, with no limits so it swings freely. Its height is what
-                                     keeps the ragdoll stable: hang the chest from a point off its
-                                     vertical axis and the torso has to fold to get its centre of
-                                     mass under the pin, which parks the waist, sternum and neck
-                                     cones hard against their limits and leaves the solver fighting a
-                                     standing violation every step - the whole rig buzzes. Lifting
-                                     the pin high and nearly onto the axis lets the robot hang plumb,
-                                     so those limits are never loaded and the ragdoll sits still.
+                            <!-- The hook, with no limits so it swings freely. Its height is what
+                                 keeps the ragdoll stable: hang the chest from a point off its
+                                 vertical axis and the torso has to fold to get its centre of
+                                 mass under the pin, which parks the waist, sternum and neck
+                                 cones hard against their limits and leaves the solver fighting a
+                                 standing violation every step - the whole rig buzzes. Lifting
+                                 the pin high and nearly onto the axis lets the robot hang plumb,
+                                 so those limits are never loaded and the ragdoll sits still.
 
-                                     Disabling this one element is all the Drop button does - the
-                                     constraint goes away and the robot falls and collapses. -->
-                                <pc-entity id="hook" name="hook" position="0 0.475 -0.03" rotation="0 0 90">
-                                    <pc-joint id="hook-joint" type="ball" entity-a="#chest" entity-b="#link-lower"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="head" name="head">
-                                <pc-collision half-extents="0.100 0.100 0.105"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="4" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="neck" position="0 -0.115 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#head" entity-b="#chest" enable-limits swing-limit-y="20" swing-limit-z="18" twist-limit="25"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
+                                 Disabling this one element is all the Drop button does - the
+                                 constraint goes away and the robot falls and collapses. -->
+                            <pc-entity id="hook" name="hook" position="0 0.475 -0.03" rotation="0 0 90">
+                                <pc-joint id="hook-joint" type="ball" entity-a="#chest" entity-b="#link-lower"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="head" name="head">
+                            <pc-collision half-extents="0.100 0.100 0.105"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="4" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="neck" position="0 -0.115 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#head" entity-b="#chest" enable-limits swing-limit-y="20" swing-limit-z="18" twist-limit="25"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
 
-                            <!-- Left leg. Capsules for the limb segments, boxes for the feet. -->
-                            <pc-node id="thigh-l" name="thigh_l">
-                                <pc-collision type="capsule" radius="0.076" height="0.40"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="hip-l" position="0 0.215 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#thigh-l" entity-b="#pelvis" enable-limits swing-limit-y="60" swing-limit-z="40" twist-limit="25"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="shin-l" name="shin_l">
-                                <pc-collision type="capsule" radius="0.066" height="0.40"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="3.5" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <!-- A knee only bends one way: the hinge axis is X, and the shin may
-                                     only swing backwards from the pose it was authored in. -->
-                                <pc-entity name="knee-l" position="0 0.225 0">
-                                    <pc-joint type="hinge" entity-a="#shin-l" entity-b="#thigh-l" enable-limits limits="0 130"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="foot-l" name="foot_l">
-                                <pc-collision half-extents="0.068 0.050 0.143"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="1.2" friction="0.9" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="ankle-l" position="0 0.055 -0.030">
-                                    <pc-joint type="hinge" entity-a="#foot-l" entity-b="#shin-l" enable-limits limits="-25 40"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
+                        <!-- Left leg. Capsules for the limb segments, boxes for the feet. -->
+                        <pc-node id="thigh-l" name="thigh_l">
+                            <pc-collision type="capsule" radius="0.076" height="0.40"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="hip-l" position="0 0.215 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#thigh-l" entity-b="#pelvis" enable-limits swing-limit-y="60" swing-limit-z="40" twist-limit="25"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="shin-l" name="shin_l">
+                            <pc-collision type="capsule" radius="0.066" height="0.40"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="3.5" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <!-- A knee only bends one way: the hinge axis is X, and the shin may
+                                 only swing backwards from the pose it was authored in. -->
+                            <pc-entity name="knee-l" position="0 0.225 0">
+                                <pc-joint type="hinge" entity-a="#shin-l" entity-b="#thigh-l" enable-limits limits="0 130"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="foot-l" name="foot_l">
+                            <pc-collision half-extents="0.068 0.050 0.143"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="1.2" friction="0.9" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="ankle-l" position="0 0.055 -0.030">
+                                <pc-joint type="hinge" entity-a="#foot-l" entity-b="#shin-l" enable-limits limits="-25 40"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
 
-                            <!-- Right leg -->
-                            <pc-node id="thigh-r" name="thigh_r">
-                                <pc-collision type="capsule" radius="0.076" height="0.40"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="hip-r" position="0 0.215 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#thigh-r" entity-b="#pelvis" enable-limits swing-limit-y="60" swing-limit-z="40" twist-limit="25"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="shin-r" name="shin_r">
-                                <pc-collision type="capsule" radius="0.066" height="0.40"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="3.5" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="knee-r" position="0 0.225 0">
-                                    <pc-joint type="hinge" entity-a="#shin-r" entity-b="#thigh-r" enable-limits limits="0 130"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="foot-r" name="foot_r">
-                                <pc-collision half-extents="0.068 0.050 0.143"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="1.2" friction="0.9" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="ankle-r" position="0 0.055 -0.030">
-                                    <pc-joint type="hinge" entity-a="#foot-r" entity-b="#shin-r" enable-limits limits="-25 40"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
+                        <!-- Right leg -->
+                        <pc-node id="thigh-r" name="thigh_r">
+                            <pc-collision type="capsule" radius="0.076" height="0.40"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="hip-r" position="0 0.215 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#thigh-r" entity-b="#pelvis" enable-limits swing-limit-y="60" swing-limit-z="40" twist-limit="25"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="shin-r" name="shin_r">
+                            <pc-collision type="capsule" radius="0.066" height="0.40"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="3.5" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="knee-r" position="0 0.225 0">
+                                <pc-joint type="hinge" entity-a="#shin-r" entity-b="#thigh-r" enable-limits limits="0 130"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="foot-r" name="foot_r">
+                            <pc-collision half-extents="0.068 0.050 0.143"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="1.2" friction="0.9" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="ankle-r" position="0 0.055 -0.030">
+                                <pc-joint type="hinge" entity-a="#foot-r" entity-b="#shin-r" enable-limits limits="-25 40"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
 
-                            <!-- Left arm. The wrist is a 6dof joint, limited on two angular axes and
-                                 locked on the rest - a universal joint, which a ball cannot express. -->
-                            <pc-node id="upper-arm-l" name="upper_arm_l">
-                                <pc-collision type="capsule" radius="0.062" height="0.30"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="2.2" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="shoulder-l" position="0 0.160 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#upper-arm-l" entity-b="#chest" enable-limits swing-limit-y="75" swing-limit-z="70" twist-limit="35"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="lower-arm-l" name="lower_arm_l">
-                                <pc-collision type="capsule" radius="0.058" height="0.25"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="1.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="elbow-l" position="0 0.125 0">
-                                    <pc-joint type="hinge" entity-a="#lower-arm-l" entity-b="#upper-arm-l" enable-limits limits="-140 0"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="hand-l" name="hand_l">
-                                <pc-collision half-extents="0.048 0.066 0.036"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="0.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="wrist-l" position="0 0.067 0">
-                                    <pc-joint type="6dof" entity-a="#hand-l" entity-b="#lower-arm-l"
-                                              angular-motion-x="limited" angular-limits-x="-55 55"
-                                              angular-motion-z="limited" angular-limits-z="-22 22"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
+                        <!-- Left arm. The wrist is a 6dof joint, limited on two angular axes and
+                             locked on the rest - a universal joint, which a ball cannot express. -->
+                        <pc-node id="upper-arm-l" name="upper_arm_l">
+                            <pc-collision type="capsule" radius="0.062" height="0.30"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="2.2" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="shoulder-l" position="0 0.160 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#upper-arm-l" entity-b="#chest" enable-limits swing-limit-y="75" swing-limit-z="70" twist-limit="35"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="lower-arm-l" name="lower_arm_l">
+                            <pc-collision type="capsule" radius="0.058" height="0.25"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="1.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="elbow-l" position="0 0.125 0">
+                                <pc-joint type="hinge" entity-a="#lower-arm-l" entity-b="#upper-arm-l" enable-limits limits="-140 0"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="hand-l" name="hand_l">
+                            <pc-collision half-extents="0.048 0.066 0.036"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="0.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="wrist-l" position="0 0.067 0">
+                                <pc-joint type="6dof" entity-a="#hand-l" entity-b="#lower-arm-l"
+                                          angular-motion-x="limited" angular-limits-x="-55 55"
+                                          angular-motion-z="limited" angular-limits-z="-22 22"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
 
-                            <!-- Right arm -->
-                            <pc-node id="upper-arm-r" name="upper_arm_r">
-                                <pc-collision type="capsule" radius="0.062" height="0.30"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="2.2" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="shoulder-r" position="0 0.160 0" rotation="0 0 90">
-                                    <pc-joint type="ball" entity-a="#upper-arm-r" entity-b="#chest" enable-limits swing-limit-y="75" swing-limit-z="70" twist-limit="35"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="lower-arm-r" name="lower_arm_r">
-                                <pc-collision type="capsule" radius="0.058" height="0.25"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="1.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="elbow-r" position="0 0.125 0">
-                                    <pc-joint type="hinge" entity-a="#lower-arm-r" entity-b="#upper-arm-r" enable-limits limits="-140 0"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                            <pc-node id="hand-r" name="hand_r">
-                                <pc-collision half-extents="0.048 0.066 0.036"></pc-collision>
-                                <pc-rigidbody type="dynamic" mass="0.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
-                                <pc-entity name="wrist-r" position="0 0.067 0">
-                                    <pc-joint type="6dof" entity-a="#hand-r" entity-b="#lower-arm-r"
-                                              angular-motion-x="limited" angular-limits-x="-55 55"
-                                              angular-motion-z="limited" angular-limits-z="-22 22"></pc-joint>
-                                </pc-entity>
-                            </pc-node>
-                        </pc-model>
-                    </pc-entity>
+                        <!-- Right arm -->
+                        <pc-node id="upper-arm-r" name="upper_arm_r">
+                            <pc-collision type="capsule" radius="0.062" height="0.30"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="2.2" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="shoulder-r" position="0 0.160 0" rotation="0 0 90">
+                                <pc-joint type="ball" entity-a="#upper-arm-r" entity-b="#chest" enable-limits swing-limit-y="75" swing-limit-z="70" twist-limit="35"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="lower-arm-r" name="lower_arm_r">
+                            <pc-collision type="capsule" radius="0.058" height="0.25"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="1.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="elbow-r" position="0 0.125 0">
+                                <pc-joint type="hinge" entity-a="#lower-arm-r" entity-b="#upper-arm-r" enable-limits limits="-140 0"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                        <pc-node id="hand-r" name="hand_r">
+                            <pc-collision half-extents="0.048 0.066 0.036"></pc-collision>
+                            <pc-rigidbody type="dynamic" mass="0.6" friction="0.8" angular-damping="0.06"></pc-rigidbody>
+                            <pc-entity name="wrist-r" position="0 0.067 0">
+                                <pc-joint type="6dof" entity-a="#hand-r" entity-b="#lower-arm-r"
+                                          angular-motion-x="limited" angular-limits-x="-55 55"
+                                          angular-motion-z="limited" angular-limits-z="-22 22"></pc-joint>
+                            </pc-entity>
+                        </pc-node>
+                    </pc-model>
                     <pc-scripts>
                         <pc-script name="ragdoll"></pc-script>
                     </pc-scripts>

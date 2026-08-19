@@ -109,7 +109,7 @@ class ComponentElement extends AsyncElement {
             // It still becomes ready (with a null `component`), so warn rather than fail silently
             const label = this.id ? ` '${this.id}'` : '';
             console.warn(
-                `${this.tagName.toLowerCase()}${label} must be a descendant of pc-entity - component not added`
+                `${this.tagName.toLowerCase()}${label} must be a descendant of pc-entity, pc-model or pc-node - component not added`
             );
             return;
         }
@@ -214,8 +214,9 @@ class ComponentElement extends AsyncElement {
 
     /**
      * The PlayCanvas component instance. `null` until the element is ready, and also for an
-     * element that is not a descendant of a `<pc-entity>` — await {@link whenReady} or the
-     * element's `ready()` promise before accessing it.
+     * element that is not a descendant of an entity-fronting element (`<pc-entity>`,
+     * `<pc-model>` or `<pc-node>`) — await {@link whenReady} or the element's `ready()` promise
+     * before accessing it.
      * @returns The component instance, or `null`.
      */
     get component(): Component | null {

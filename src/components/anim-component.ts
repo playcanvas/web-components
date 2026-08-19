@@ -101,28 +101,28 @@ class AnimComponentElement extends ComponentElement {
     private _warnedClip: string | null = null;
 
     /**
-     * Rebinds when a model under the host announces readiness. The engine resolves each curve
-     * once, at the first tick after assignment, and never retries — and its mesh-instance
+     * Rebinds when a model that is not this component's host announces readiness — a sibling or
+     * deeper model whose content changed under the assigned clips. The engine resolves each
+     * curve once, at the first tick after assignment, and never retries — and its mesh-instance
      * broadcast fires before an instantiated hierarchy is parented, so a model that loads after
-     * the clips were assigned would otherwise stay silently unbound. A re-instantiation of the
-     * implicit clip source (the parent `<pc-model>`) means a new container, so the clip set
-     * refreshes instead — unless every clip declares its own asset, where a rebind suffices.
+     * the clips were assigned would otherwise stay silently unbound. The host model's own cycles
+     * are excluded: those re-enter through {@link initComponent}, which refreshes the whole clip
+     * set against the new container.
      */
     private _onModelReady = (event: Event) => {
         if (!(event.target instanceof ModelElement) || !this.component) {
             return;
         }
-        // A model cycle can replace the skeleton source's host entity (a rebuild under a
-        // retargeting pc-node), so the binding root is re-asserted before anything rebinds.
-        this._applyRootBone();
-        if (event.target === this.parentElement) {
-            const implicit = this._autoAssigned ||
-                [...this._assignedClips.values()].some(clip => !clip.asset);
-            if (implicit) {
-                this._refreshClips();
-                return;
-            }
+        // The host model's own readiness cycle already re-initialized this component through
+        // ComponentElement's host-ready listener, which is attached first and so has run by now.
+        // Acting here too would resolve every track twice and capture the playhead-restore
+        // snapshot mid-rebuild.
+        if (event.target === this._modelListenerTarget) {
+            return;
         }
+        // A model cycle can replace the skeleton source's host entity (a rebuild under a
+        // retargeting pc-node), so the binding root is re-asserted before the rebind.
+        this._applyRootBone();
         this.component.rebind();
     };
 
@@ -184,7 +184,15 @@ class AnimComponentElement extends ComponentElement {
         }
 
         this._applyRootBone();
-        this._applyClips();
+
+        if (this.component.baseLayer) {
+            // The component survived the host's readiness cycle (a pc-model reloading content on
+            // its stable host entity). A loaded graph cannot be reassigned in place, so drop it
+            // and reassign from the current source, restoring the active clip and playhead.
+            this._refreshClips();
+        } else {
+            this._applyClips();
+        }
     }
 
     disconnectedCallback() {

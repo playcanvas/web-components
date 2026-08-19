@@ -52,15 +52,14 @@
                     <pc-light cast-shadows></pc-light>
                 </pc-entity>
                 <!-- Robot -->
-                <pc-entity name="robot">
-                    <pc-model asset="robot"></pc-model>
+                <pc-model name="robot" asset="robot">
                     <pc-sounds max-distance="12" positional>
                         <pc-sound asset="footsteps" auto-play loop></pc-sound>
                     </pc-sounds>
                     <pc-scripts>
                         <pc-script name="orbit"></pc-script>
                     </pc-scripts>
-                </pc-entity>
+                </pc-model>
             </pc-scene>
         </pc-app>
         <script type="module" src="js/example.mjs"></script>

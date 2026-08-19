@@ -141,7 +141,7 @@ describe('<pc-anim>', () => {
         it('assigns every clip of the model, first clip playing', async () => {
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m"><pc-anim></pc-anim></pc-model></pc-entity>
+                <pc-model asset="m"><pc-anim></pc-anim></pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -158,7 +158,7 @@ describe('<pc-anim>', () => {
         it('warns when the enclosing model has no animations', async () => {
             const { get } = await bootApp(`
                 <pc-asset id="still" type="container" src="${animatedSrc()}"></pc-asset>
-                <pc-entity name="holder"><pc-model asset="still"><pc-anim></pc-anim></pc-model></pc-entity>
+                <pc-model asset="still"><pc-anim></pc-anim></pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -170,23 +170,72 @@ describe('<pc-anim>', () => {
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
                 <pc-asset id="m2" type="container" src="${animatedSrc('Jump')}"></pc-asset>
-                <pc-entity name="holder"><pc-model asset="m"><pc-anim></pc-anim></pc-model></pc-entity>
+                <pc-model asset="m"><pc-anim></pc-anim></pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
 
+            // The host's readiness cycle owns the refresh; the model-ready listener must not run
+            // a second one. Each track resolving exactly once is the observable difference.
+            const assign = vi.spyOn(anim.component, 'assignAnimation');
+
             get<ModelElement>('pc-model').setAttribute('asset', 'm2');
 
             await vi.waitFor(() => expect(anim.clips).toEqual(['Jump']));
+            expect(assign, 'the swap assigned the new container track exactly once').toHaveBeenCalledTimes(1);
             step(0.5);
             expect(bonePosition(app).y).toBeGreaterThan(0);
             expect(uncaught.seen).toEqual([]);
         });
 
+        it('restores the active clip and playhead across a swap whose clip names survive', async () => {
+            const { get, step } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-asset id="m2" type="container" src="${animatedSrc('Walk', 'Run')}"></pc-asset>
+                <pc-model asset="m"><pc-anim clip="Run"></pc-anim></pc-model>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
+            step(0.3);
+            const layer = anim.component.baseLayer!;
+            expect(layer.activeState).toBe('Run');
+            const time = layer.activeStateCurrentTime;
+            expect(time).toBeGreaterThan(0);
+
+            get<ModelElement>('pc-model').setAttribute('asset', 'm2');
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run']));
+
+            const restored = anim.component.baseLayer!;
+            expect(restored.activeState, 'the surviving selection is restored').toBe('Run');
+            // The app ticks on rAF between the capture and this read, so the playhead has moved
+            // on a little - but a dropped restore would have reset it to (near) zero.
+            expect(restored.activeStateCurrentTime, 'the interrupted playhead carried over').toBeGreaterThanOrEqual(time);
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('keeps the component on the model host under legacy wrapper markup', async () => {
+            // The arrangement that predates the model host: a wrapper entity that only supplied
+            // the transform. The component now attaches to the model's host rather than the
+            // wrapper, and playback is unchanged.
+            const { app, get, step } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-entity name="legacy"><pc-model asset="m"><pc-anim></pc-anim></pc-model></pc-entity>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
+
+            const model = get<ModelElement>('pc-model');
+            expect(anim.component.entity, 'the component landed on the model host').toBe(model.entity);
+            expect((app.root.findByName('legacy') as Entity).anim, 'not on the wrapper').toBeUndefined();
+
+            step(0.5);
+            expect(bonePosition(app).y).toBeGreaterThan(0);
+        });
+
         it('skips container tracks the engine cannot host, naming each', async () => {
             const { get } = await bootApp(`
                 <pc-asset id="odd" type="container" src="${animatedSrc('Walk', 'Walk', 'bad.name')}"></pc-asset>
-                <pc-entity name="holder"><pc-model asset="odd"><pc-anim></pc-anim></pc-model></pc-entity>
+                <pc-model asset="odd"><pc-anim></pc-anim></pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -200,12 +249,12 @@ describe('<pc-anim>', () => {
         it('assigns only the declared clips, first declared active', async () => {
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim>
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                         <pc-anim-clip name="Run"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -221,12 +270,12 @@ describe('<pc-anim>', () => {
         it('plays the clip declared by the clip attribute from boot', async () => {
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim clip="Run">
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                         <pc-anim-clip name="Run"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -239,7 +288,9 @@ describe('<pc-anim>', () => {
 
         it('resolves clips from an explicit asset beside the model', async () => {
             // The clip references the container itself rather than riding the implicit source -
-            // the arrangement used when clips live in a library asset separate from the skeleton
+            // the arrangement used when clips live in a library asset separate from the skeleton.
+            // The wrapper is deliberate: it pins the sibling-model/outer-host path, where the
+            // component's host is the enclosing entity rather than the model.
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
                 <pc-entity name="holder">
@@ -254,6 +305,37 @@ describe('<pc-anim>', () => {
             expect(anim.clips).toEqual(['Run']);
             step(0.5);
             expect(bonePosition(app).x).toBeGreaterThan(0);
+        });
+
+        it('rebinds without reassigning when a sibling model swaps its content', async () => {
+            // A sibling model is not the component's host, so its readiness cycles must not
+            // rebuild the clip set - the assigned tracks stand and only their curve bindings
+            // re-resolve against the new hierarchy.
+            const { app, get, step } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-asset id="m2" type="container" src="${animatedSrc('Jump')}"></pc-asset>
+                <pc-entity name="holder">
+                    <pc-model asset="m"></pc-model>
+                    <pc-anim>
+                        <pc-anim-clip name="Run" asset="m"></pc-anim-clip>
+                    </pc-anim>
+                </pc-entity>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            expect(anim.clips).toEqual(['Run']);
+
+            const assign = vi.spyOn(anim.component, 'assignAnimation');
+            const rebind = vi.spyOn(anim.component, 'rebind');
+
+            get<ModelElement>('pc-model').setAttribute('asset', 'm2');
+            await readyWithin(get<ModelElement>('pc-model'));
+
+            expect(rebind, 'the sibling cycle rebinds').toHaveBeenCalled();
+            expect(assign, 'without touching the clip set').not.toHaveBeenCalled();
+            expect(anim.clips).toEqual(['Run']);
+
+            step(0.5);
+            expect(bonePosition(app).x, 'the old track drives the new content').toBeGreaterThan(0);
         });
 
         it('resolves animation and animclip typed assets', async () => {
@@ -291,11 +373,11 @@ describe('<pc-anim>', () => {
         it('falls back to the first track with a warning when no name matches', async () => {
             const { get } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim activate="false">
                         <pc-anim-clip name="Dive"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -309,12 +391,12 @@ describe('<pc-anim>', () => {
     describe('clip switching', () => {
         const DECLARED = `
             ${WALK_RUN_IDLE}
-            <pc-entity name="holder"><pc-model asset="m">
+            <pc-model asset="m">
                 <pc-anim>
                     <pc-anim-clip name="Walk"></pc-anim-clip>
                     <pc-anim-clip name="Run"></pc-anim-clip>
                 </pc-anim>
-            </pc-model></pc-entity>
+            </pc-model>
         `;
 
         it('switches clips with a hard cut when the clip attribute changes', async () => {
@@ -406,12 +488,12 @@ describe('<pc-anim>', () => {
         it('defers playback until play() when activate is false', async () => {
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim activate="false" clip="Run">
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                         <pc-anim-clip name="Run"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -431,11 +513,11 @@ describe('<pc-anim>', () => {
     describe('dynamic clip changes', () => {
         const WALK_ONLY = `
             ${WALK_RUN_IDLE}
-            <pc-entity name="holder"><pc-model asset="m">
+            <pc-model asset="m">
                 <pc-anim>
                     <pc-anim-clip name="Walk"></pc-anim-clip>
                 </pc-anim>
-            </pc-model></pc-entity>
+            </pc-model>
         `;
 
         it('appends a clip without interrupting the active one', async () => {
@@ -462,7 +544,7 @@ describe('<pc-anim>', () => {
         it('replaces an auto-assigned set with declared children', async () => {
             const { get } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m"><pc-anim></pc-anim></pc-model></pc-entity>
+                <pc-model asset="m"><pc-anim></pc-anim></pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
@@ -477,12 +559,12 @@ describe('<pc-anim>', () => {
         it('rebuilds on removal, flipping back to auto-assign after the last child', async () => {
             const { get } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim>
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                         <pc-anim-clip name="Run"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             const [walk, run] = Array.from(anim.children) as AnimClipElement[];
@@ -498,12 +580,12 @@ describe('<pc-anim>', () => {
         it('preserves a pause and its playhead across a rebuild', async () => {
             const { app, get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim>
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                         <pc-anim-clip name="Run"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             // Two steps: the first tick is consumed by the START transition
@@ -533,12 +615,12 @@ describe('<pc-anim>', () => {
         it('falls back to the next clip when the active one is removed', async () => {
             const { get, step } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim>
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                         <pc-anim-clip name="Run"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             step(0.1);
@@ -554,11 +636,11 @@ describe('<pc-anim>', () => {
         it('renames a clip in place', async () => {
             const { app, get, step } = await bootApp(`
                 <pc-asset id="solo" type="container" src="${animatedSrc('Walk')}"></pc-asset>
-                <pc-entity name="holder"><pc-model asset="solo">
+                <pc-model asset="solo">
                     <pc-anim>
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             const clip = anim.children[0] as AnimClipElement;
@@ -593,11 +675,11 @@ describe('<pc-anim>', () => {
         it('clamps and holds the last pose of a non-looping clip', async () => {
             const { app, get, step } = await bootApp(`
                 <pc-asset id="solo" type="container" src="${animatedSrc('Walk')}"></pc-asset>
-                <pc-entity name="holder"><pc-model asset="solo">
+                <pc-model asset="solo">
                     <pc-anim>
                         <pc-anim-clip name="Walk" loop="false"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
@@ -620,13 +702,13 @@ describe('<pc-anim>', () => {
             const { get } = await bootApp(`
                 ${WALK_RUN_IDLE}
                 <pc-asset id="m2" type="container" src="${animatedSrc('Jump')}"></pc-asset>
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-node name="bone">
                         <pc-anim>
                             <pc-anim-clip name="Run" asset="m"></pc-anim-clip>
                         </pc-anim>
                     </pc-node>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             expect(anim.clips).toEqual(['Run']);
@@ -676,11 +758,11 @@ describe('<pc-anim>', () => {
         it('rejects empty, dotted and duplicate clip names', async () => {
             const { get } = await bootApp(`
                 ${WALK_RUN_IDLE}
-                <pc-entity name="holder"><pc-model asset="m">
+                <pc-model asset="m">
                     <pc-anim>
                         <pc-anim-clip name="Walk"></pc-anim-clip>
                     </pc-anim>
-                </pc-model></pc-entity>
+                </pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 

@@ -148,22 +148,20 @@
                      ellipsoid approximating the cranium. Nudged forward to counter the
                      backward drift the nose bridge anchor shows on strong head turns
                      (fit found live with the ?debug view) -->
-                <pc-entity name="head-occluder" position="0 0 2.5">
-                    <pc-model asset="face"></pc-model>
+                <pc-model name="head-occluder" asset="face" position="0 0 2.5">
                     <pc-scripts>
                         <pc-script name="headOccluder" center="0 1 -3.5" size="13.5 20 13"></pc-script>
                     </pc-scripts>
-                </pc-entity>
+                </pc-model>
                 <!-- The sunglasses, worn at the nose bridge of canonical face space and hidden
                      until there is a face to wear them (see the page script). The model is
                      authored resting on a flat surface, so a slight pantoscopic tilt (the
                      bottom of the lenses tucking toward the cheeks) makes it sit naturally -->
-                <pc-entity name="sunglasses" enabled="false" position="0 -0.7 7.5" rotation="8 0 0" scale="100 100 100">
-                    <pc-model asset="sunglasses"></pc-model>
+                <pc-model name="sunglasses" asset="sunglasses" enabled="false" position="0 -0.7 7.5" rotation="8 0 0" scale="100 100 100">
                     <pc-scripts>
                         <pc-script name="lensTint"></pc-script>
                     </pc-scripts>
-                </pc-entity>
+                </pc-model>
             </pc-scene>
         </pc-app>
 
@@ -223,7 +221,7 @@
             });
 
             // The glasses only exist while there is a face to wear them
-            const sunglasses = document.querySelector('pc-entity[name="sunglasses"]');
+            const sunglasses = document.querySelector('pc-model[name="sunglasses"]');
 
             app.on('face:found', () => {
                 sunglasses.enabled = true;

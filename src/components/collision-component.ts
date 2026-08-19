@@ -64,7 +64,9 @@ class CollisionComponentElement extends ComponentElement {
      * no attribute to supply it - so the host's visible geometry, the meaning a mesh collider
      * on a glTF node carries, fills the gap. Runs on every application (so a rebound `pc-node`
      * recomputes it) and on a runtime switch to `type="mesh"`; an explicitly assigned
-     * `renderAsset` is never overwritten.
+     * `renderAsset` is never overwritten. A `pc-model` host entity never carries a render
+     * component (the instantiated content beneath it does), so a mesh collider that should take
+     * an asset's geometry belongs on a bound `pc-node`.
      */
     private _applyMeshGeometryDefault() {
         const component = this.component;

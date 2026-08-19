@@ -279,20 +279,18 @@
                 <!-- Ten rigid parts in a chain, no skeleton and no skinning: tracks bind to nodes
                      by name, so a plain hierarchy animates like a skinned mesh. Clips without an
                      `asset` come from the model's own container, matched by name. -->
-                <pc-entity name="robot-arm">
-                    <pc-model asset="arm">
-                        <pc-anim id="arm-anim" clip="idle" transition-time="0.35">
-                            <pc-anim-clip name="idle"></pc-anim-clip>
-                            <pc-anim-clip name="pick"></pc-anim-clip>
-                            <pc-anim-clip name="place"></pc-anim-clip>
-                            <pc-anim-clip name="inspect"></pc-anim-clip>
-                            <!-- Holds its last frame when it ends - the engine reports no completion -->
-                            <pc-anim-clip name="stow" loop="false"></pc-anim-clip>
-                            <!-- Per-clip speed, on top of the component-wide multiplier -->
-                            <pc-anim-clip name="calibrate" asset="calibrate-clip" speed="1.4"></pc-anim-clip>
-                        </pc-anim>
-                    </pc-model>
-                </pc-entity>
+                <pc-model name="robot-arm" asset="arm">
+                    <pc-anim id="arm-anim" clip="idle" transition-time="0.35">
+                        <pc-anim-clip name="idle"></pc-anim-clip>
+                        <pc-anim-clip name="pick"></pc-anim-clip>
+                        <pc-anim-clip name="place"></pc-anim-clip>
+                        <pc-anim-clip name="inspect"></pc-anim-clip>
+                        <!-- Holds its last frame when it ends - the engine reports no completion -->
+                        <pc-anim-clip name="stow" loop="false"></pc-anim-clip>
+                        <!-- Per-clip speed, on top of the component-wide multiplier -->
+                        <pc-anim-clip name="calibrate" asset="calibrate-clip" speed="1.4"></pc-anim-clip>
+                    </pc-anim>
+                </pc-model>
 
                 <!-- Floor -->
                 <pc-entity name="floor" position="0 -0.05 0" scale="80 0.1 80">

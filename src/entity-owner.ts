@@ -130,10 +130,10 @@ class EntityOwnerElement extends EntityBaseElement {
     }
 
     /**
-     * Parents the backing entity: under the entity of the nearest ancestor `<pc-entity>` or
-     * `<pc-node>` when there is one, and under the application root otherwise. Called by the
-     * containing `<pc-app>` element once a sweep has created every entity, so a parent's
-     * existence never depends on document order.
+     * Parents the backing entity: under the entity of the nearest ancestor `<pc-entity>`,
+     * `<pc-model>` or `<pc-node>` when there is one, and under the application root otherwise.
+     * Called by the containing `<pc-app>` element once a sweep has created every entity, so a
+     * parent's existence never depends on document order.
      *
      * @param app - The application whose root adopts parentless entities.
      * @internal
