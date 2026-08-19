@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { AsyncElement, ComponentElement } from '../../src/index';
-import { COMPONENT_TAGS, READY_TAGS, TAGS } from '../helpers/tags';
+import { AsyncElement, ComponentElement, EntityBaseElement } from '../../src/index';
+import { COMPONENT_TAGS, ENTITY_TAGS, READY_TAGS, TAGS } from '../helpers/tags';
 
 /**
  * The runtime twin of validate.mjs's manifest checks. It catches a case the manifest cannot see: an
@@ -33,6 +33,16 @@ describe('customElements registration', () => {
 
     it.for(COMPONENT_TAGS)('%s extends ComponentElement', (tag) => {
         expect(document.createElement(tag)).toBeInstanceOf(ComponentElement);
+    });
+
+    it.for(ENTITY_TAGS)('%s extends EntityBaseElement, so it fronts an entity', (tag) => {
+        expect(document.createElement(tag)).toBeInstanceOf(EntityBaseElement);
+    });
+
+    it.for(ENTITY_TAGS)('%s observes the onpointer* attributes', (tag) => {
+        const observed = (customElements.get(tag) as unknown as { observedAttributes?: string[] })?.observedAttributes;
+        expect(observed).toContain('onpointerdown');
+        expect(observed).toContain('onpointerenter');
     });
 
     it.for(COMPONENT_TAGS)('%s inherits the enabled attribute from ComponentElement', (tag) => {

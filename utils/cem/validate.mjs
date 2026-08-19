@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { COMPONENT_TAGS, READY_TAGS, TAGS } from './tags.mjs';
+import { COMPONENT_TAGS, ENTITY_TAGS, READY_TAGS, TAGS } from './tags.mjs';
 
 const dist = fileURLToPath(new URL('../../dist/', import.meta.url));
 
@@ -91,8 +91,16 @@ if (manifest) {
     expectAttribute('pc-camera', 'clear-color', { default: '0.75 0.75 0.75 1' });
     expectAttribute('pc-camera', 'rect', { default: '0 0 1 1' });
     expectAttribute('pc-scene', 'gravity', { default: '0 -9.81 0' });
-    expectAttribute('pc-entity', 'position', { default: '0 0 0' });
+    expectAttribute('pc-entity', 'position', { default: '0 0 0', fieldName: 'position' });
     expectAttribute('pc-entity', 'scale', { default: '1 1 1' });
+    expectAttribute('pc-model', 'position', { default: '0 0 0', fieldName: 'position' });
+    expectAttribute('pc-model', 'scale', { default: '1 1 1' });
+
+    // The entity-owning accessors live on a shared base class, but the attributes plugin can only
+    // read a same-module member's JSDoc - these descriptions exist solely because the leaf classes
+    // re-declare them as @attribute tags, so their loss is pinned here.
+    check(Boolean(attribute('pc-entity', 'position')?.description), 'pc-entity[position] has no description');
+    check(Boolean(attribute('pc-model', 'position')?.description), 'pc-model[position] has no description');
     expectAttribute('pc-button', 'hit-padding', { default: '0 0 0 0' });
     expectAttribute('pc-button', 'hover-tint', { default: '1 1 1' });
     expectAttribute('pc-collision', 'angular-offset', { default: '0 0 0' });
@@ -248,8 +256,10 @@ if (manifest) {
     check(events('pc-joint').includes('break'), "pc-joint is missing the 'break' event");
 
     const pointerEvents = ['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup'];
-    for (const name of pointerEvents) {
-        check(events('pc-entity').includes(name), `pc-entity is missing the '${name}' event`);
+    for (const tag of ENTITY_TAGS) {
+        for (const name of pointerEvents) {
+            check(events(tag).includes(name), `${tag} is missing the '${name}' event`);
+        }
     }
     const strayPointerEvents = pointerEvents.filter(name => events('pc-app').includes(name));
     check(strayPointerEvents.length === 0,
@@ -319,7 +329,7 @@ if (manifest) {
         // roughness and roughnessMap are the alias accessors: their attributes resolve to the
         // gloss fields, so no attribute claims them as its backing member
         ['pc-material', ['get', 'material', 'roughness', 'roughnessMap']],
-        ['pc-model', ['entity', 'hierarchy', ...ASYNC_MEMBERS]],
+        ['pc-model', ['addEventListener', 'contentEntity', 'entity', 'hierarchy', 'removeEventListener', ...ASYNC_MEMBERS]],
         ['pc-module', [...ASYNC_MEMBERS]],
         ['pc-node', ['addEventListener', 'entity', 'path', 'removeEventListener', 'state', ...ASYNC_MEMBERS]],
         ['pc-particles', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],

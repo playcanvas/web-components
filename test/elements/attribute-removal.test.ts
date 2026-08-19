@@ -47,9 +47,11 @@ describe('attribute removal', () => {
         ['pc-model', 'asset', 'asset', ''],
         ['pc-sky', 'asset', 'asset', ''],
 
-        // The odd one out: pc-entity's backing field starts at the engine's default entity name,
-        // so restoring '' would leave a nameless entity that no name lookup could find.
-        ['pc-entity', 'name', 'name', 'Untitled']
+        // The odd ones out: the entity-owning elements' backing fields start at the engine's
+        // default entity name, so restoring '' would leave a nameless entity that no name lookup
+        // could find.
+        ['pc-entity', 'name', 'name', 'Untitled'],
+        ['pc-model', 'name', 'name', 'Untitled']
     ];
 
     it.for(cases)('%s[%s] restores its default on removal', ([tag, attribute, property, restored]) => {
@@ -69,6 +71,6 @@ describe('attribute removal', () => {
     it('covers every unparsed string attribute in the library', () => {
         // If a new `this.x = newValue ?? ''` branch is added without a case above, this fails.
         // Counted rather than enumerated, so it stays a one-line update rather than a second table.
-        expect(cases).toHaveLength(26);
+        expect(cases).toHaveLength(27);
     });
 });

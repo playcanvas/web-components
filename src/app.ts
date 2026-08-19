@@ -66,8 +66,8 @@ import {
 
 import type { AssetElement } from './asset';
 import { AsyncElement } from './async-element';
-import type { EntityElement } from './entity';
 import type { EntityBaseElement } from './entity-base';
+import type { EntityOwnerElement } from './entity-owner';
 import { LoadingBar } from './loading-bar';
 import type { MaterialElement } from './material';
 import type { ModuleElement } from './module';
@@ -75,6 +75,13 @@ import { parseBool, parseEnum, parseNumber } from './parse';
 
 /** The pointer event types the application synthesizes on `<pc-entity>` elements via picking. */
 const pointerEventTypes = ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'] as const;
+
+/**
+ * The event types whose listeners make an element a hover target. Hover resolution walks past
+ * elements listening for none of them, so a silent element never swallows an ancestor's
+ * enter/leave pair.
+ */
+const hoverEventTypes = ['pointerenter', 'pointerleave', 'pointermove'] as const;
 
 /**
  * Gives `pc-app` the sizing contract of a replaced element (`<video>`, `<img>`): a block-level
@@ -163,9 +170,9 @@ class AppElement extends AsyncElement {
 
     /**
      * The elements backing this application's entities, keyed by the entity itself. Registered
-     * by EntityElement at creation (and NodeElement at binding) and removed when an entity is
-     * destroyed or unbound, this joins engine scene nodes back to their owning elements by
-     * identity - never by name.
+     * by entity-owning elements at creation (pc-entity, and pc-model for its host) and by
+     * NodeElement at binding, and removed when an entity is destroyed or unbound, this joins
+     * engine scene nodes back to their owning elements by identity - never by name.
      */
     private _entityElements = new Map<GraphNode, EntityBaseElement>();
 
@@ -462,15 +469,16 @@ class AppElement extends AsyncElement {
             materialElement._createMaterial();
         });
 
-        // Create all entities
-        const entityElements = this.querySelectorAll<EntityElement>('pc-entity');
-        Array.from(entityElements).forEach((entityElement) => {
-            entityElement._createEntity(app);
+        // Create all entities. pc-model joins the sweep because it owns a host entity of its
+        // own; its instantiated content arrives later, beneath that host.
+        const ownerElements = this.querySelectorAll<EntityOwnerElement>('pc-entity, pc-model');
+        Array.from(ownerElements).forEach((ownerElement) => {
+            ownerElement._createEntity(app);
         });
 
         // Build hierarchy
-        entityElements.forEach((entityElement) => {
-            entityElement._buildHierarchy(app);
+        ownerElements.forEach((ownerElement) => {
+            ownerElement._buildHierarchy(app);
         });
 
         // Building the hierarchy dispatched each entity's ready event synchronously, and a
@@ -602,9 +610,9 @@ class AppElement extends AsyncElement {
         // created from onpointer* attributes when their elements were first upgraded, or
         // listeners carried over from before a re-boot)
         pointerEventTypes.forEach((type) => {
-            const anyListeners = Array.from(this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')).some(
-                (entity) => entity._hasListeners(type)
-            );
+            const anyListeners = Array.from(
+                this.querySelectorAll<EntityBaseElement>('pc-entity, pc-model, pc-node')
+            ).some((entity) => entity._hasListeners(type));
             if (anyListeners) {
                 this._onPointerListenerAdded(type);
             }
@@ -659,10 +667,10 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Returns the `<pc-entity>` or `<pc-node>` element whose backing entity is `entity`, or
-     * `null` if the entity is not fronted by an element of this application - for example, an
-     * unbound node inside a model's instantiated hierarchy, or an entity created through the
-     * engine API.
+     * Returns the `<pc-entity>`, `<pc-model>` or `<pc-node>` element whose backing entity is
+     * `entity`, or `null` if the entity is not fronted by an element of this application - for
+     * example, an unbound node inside a model's instantiated hierarchy, or an entity created
+     * through the engine API.
      *
      * @param entity - The entity to look up.
      * @returns The element fronting the entity, or `null`.
@@ -672,18 +680,19 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Resolves the element that owns a picked node: the nearest node up the parent chain -
-     * starting with the node itself - that is fronted by a `<pc-entity>` or `<pc-node>` of this
-     * application. A hit inside a model's instantiated hierarchy therefore resolves to the
-     * nearest bound `<pc-node>`, or failing that the element hosting the model.
+     * Resolves the element that owns hover for a picked node: the nearest node up the parent
+     * chain - starting with the node itself - whose element listens for any of the hover event
+     * types. Skipping silent elements matches {@link _elementWithListener}, so a registered
+     * element with no hover listeners (a `<pc-model>` host, a plain child entity) is transparent
+     * to hover rather than swallowing a listening ancestor's enter/leave pair.
      *
      * @param node - The picked node, or `null`.
-     * @returns The owning element, or `null`.
+     * @returns The hover-owning element, or `null`.
      */
-    private _elementFromNode(node: GraphNode | null): EntityBaseElement | null {
+    private _hoverTarget(node: GraphNode | null): EntityBaseElement | null {
         while (node !== null) {
             const element = this._entityElements.get(node);
-            if (element) {
+            if (element && hoverEventTypes.some((type) => element._hasListeners(type))) {
                 return element;
             }
             node = node.parent;
@@ -831,9 +840,10 @@ class AppElement extends AsyncElement {
         const node = await this._pickNode(event);
         if (token !== this._pickToken || !this._picker) return;
 
-        // The hovered element is the nearest one up the node's parent chain, listening or not -
-        // dispatch is gated per event type below
-        const newHoverEntity = this._elementFromNode(node);
+        // The hovered element is the nearest one up the node's parent chain with a hover
+        // listener - the nearest-listener rule down/up use. Dispatch is still gated per event
+        // type below: having any hover listener selects the target, each event needs its own.
+        const newHoverEntity = this._hoverTarget(node);
 
         // Handle enter/leave events
         if (this._hoveredEntity !== newHoverEntity) {
@@ -898,9 +908,9 @@ class AppElement extends AsyncElement {
     }
 
     private _onPointerListenerRemoved(type: string) {
-        const hasListeners = Array.from(this.querySelectorAll<EntityBaseElement>('pc-entity, pc-node')).some((entity) =>
-            entity._hasListeners(type)
-        );
+        const hasListeners = Array.from(
+            this.querySelectorAll<EntityBaseElement>('pc-entity, pc-model, pc-node')
+        ).some((entity) => entity._hasListeners(type));
 
         if (!hasListeners && this._canvas) {
             this._hasPointerListeners[type] = false;

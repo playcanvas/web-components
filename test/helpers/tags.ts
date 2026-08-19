@@ -7,4 +7,4 @@
  * for a `.mts` specifier, which would not exist at runtime - hence the single exception here rather
  * than one at every call site.
  */
-export { COMPONENT_TAGS, READY_TAGS, TAGS } from '../../utils/cem/tags.mjs';
+export { COMPONENT_TAGS, ENTITY_TAGS, READY_TAGS, TAGS } from '../../utils/cem/tags.mjs';

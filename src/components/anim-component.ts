@@ -112,6 +112,9 @@ class AnimComponentElement extends ComponentElement {
         if (!(event.target instanceof ModelElement) || !this.component) {
             return;
         }
+        // A model cycle can replace the skeleton source's host entity (a rebuild under a
+        // retargeting pc-node), so the binding root is re-asserted before anything rebinds.
+        this._applyRootBone();
         if (event.target === this.parentElement) {
             const implicit = this._autoAssigned ||
                 [...this._assignedClips.values()].some(clip => !clip.asset);
@@ -122,6 +125,35 @@ class AnimComponentElement extends ComponentElement {
         }
         this.component.rebind();
     };
+
+    /**
+     * The model whose host entity scopes this component's curve binding: the parent `pc-model`,
+     * or the sole `pc-model` among the parent's direct children (the arrangement where clips
+     * live in a library asset beside the skeleton). `null` when there is no such model, or more
+     * than one — an ambiguous skeleton is left to the engine's name-based resolution.
+     */
+    private _skeletonSource(): ModelElement | null {
+        const parent = this.parentElement;
+        if (parent instanceof ModelElement) {
+            return parent;
+        }
+        const models = parent ? parent.querySelectorAll(':scope > pc-model') : null;
+        return models?.length === 1 && models[0] instanceof ModelElement ? models[0] : null;
+    }
+
+    /**
+     * Points the component's binding root at the skeleton source's host entity. The host wraps
+     * the instantiated content, so left at its default — the component's own entity — the engine
+     * binder mis-resolves curves that target the asset's root node: its fallback treats the
+     * graph as the asset root once the root is no longer a direct child. The write is skipped
+     * while unchanged, because the engine setter itself triggers a rebind.
+     */
+    private _applyRootBone() {
+        const host = this._skeletonSource()?.entity ?? null;
+        if (host && this.component.rootBone !== host) {
+            this.component.rootBone = host;
+        }
+    }
 
     /** @ignore */
     constructor() {
@@ -151,6 +183,7 @@ class AnimComponentElement extends ComponentElement {
             this._modelListenerTarget = host;
         }
 
+        this._applyRootBone();
         this._applyClips();
     }
 

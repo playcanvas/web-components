@@ -83,6 +83,17 @@ const flush = () =>
         setTimeout(resolve, 0);
     });
 
+/**
+ * The smallest valid glTF - no meshes, one named node - for the tests that need a real model
+ * host between a picked content node and a listening wrapper. Loads from a data: URI, so no I/O.
+ */
+const CONTAINER_SRC = `data:application/json,${encodeURIComponent(JSON.stringify({
+    asset: { version: '2.0' },
+    scene: 0,
+    scenes: [{ nodes: [0] }],
+    nodes: [{ name: 'content-root' }]
+}))}`;
+
 describe('pc-app pointer picking', () => {
     useGuard();
 
@@ -149,8 +160,7 @@ describe('pc-app pointer picking', () => {
 
     it('walks up to the nearest ancestor that has a pc-entity', async () => {
         // A picked GLB gives back its own internal nodes - Object_8 and friends - which no
-        // element created, so the walk to the model's host entity is what makes a model pickable
-        // at all.
+        // element created, so the walk up the parent chain is what makes a model pickable at all.
         const { appElement, canvas, entity, spies } = await bootTarget();
         const inner = modelNode('Object_8', modelNode('GLTF_SceneRootNode', entity));
         stubPicker(appElement, [[hit(inner)]]);
@@ -159,6 +169,69 @@ describe('pc-app pointer picking', () => {
         await flush();
 
         expect(spies.pointerenter).toHaveBeenCalledTimes(1);
+    });
+
+    it('hover walks past a registered element with no hover listeners', async () => {
+        // Hover resolution is listener-aware, like down/up: a registered but silent element (a
+        // pc-model host, a plain child entity) is transparent, so crossing between its geometry
+        // and the listening ancestor's produces no spurious leave/enter pair on the ancestor.
+        const handle = await bootApp(`
+            <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+            <pc-entity name="outer"><pc-entity name="silent"></pc-entity></pc-entity>
+        `);
+        const outer = handle.get<EntityElement>('pc-entity[name="outer"]');
+        const silent = handle.get<EntityElement>('pc-entity[name="silent"]');
+        const spies = { pointerenter: vi.fn(), pointerleave: vi.fn() };
+        Object.entries(spies).forEach(([type, spy]) => outer.addEventListener(type, spy));
+        const canvas = handle.appElement.querySelector('canvas')!;
+
+        stubPicker(handle.appElement, [[hit(silent.entity!)], [hit(outer.entity!)], []]);
+
+        canvas.dispatchEvent(move(400, 300));
+        await flush();
+        expect(spies.pointerenter, 'the hit on the silent child resolves to the listener').toHaveBeenCalledTimes(1);
+
+        canvas.dispatchEvent(move(410, 300));
+        await flush();
+        expect(spies.pointerleave, 'moving to the ancestor itself is not a crossing').not.toHaveBeenCalled();
+        expect(spies.pointerenter).toHaveBeenCalledTimes(1);
+
+        canvas.dispatchEvent(move(10, 10));
+        await flush();
+        expect(spies.pointerleave, 'leaving the subtree fires exactly one leave').toHaveBeenCalledTimes(1);
+    });
+
+    it('resolves a hit inside a model through the silent host to the listening wrapper', async () => {
+        // The tweening-example shape: hover handlers on a wrapper entity around a bare pc-model.
+        // The model's registered host entity sits between the content and the wrapper, and must
+        // not swallow the wrapper's hover - unless the model itself listens, in which case it is
+        // the nearer owner.
+        const handle = await bootApp(`
+            <pc-asset id="m" type="container" src="${CONTAINER_SRC}"></pc-asset>
+            <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+            <pc-entity name="wrapper"><pc-model asset="m"></pc-model></pc-entity>
+        `);
+        const wrapper = handle.get<EntityElement>('pc-entity[name="wrapper"]');
+        const model = handle.get('pc-model');
+        const wrapperEnter = vi.fn();
+        wrapper.addEventListener('pointerenter', wrapperEnter);
+        const canvas = handle.appElement.querySelector('canvas')!;
+
+        stubPicker(handle.appElement, [[hit(model.contentEntity!)], [], [hit(model.contentEntity!)]]);
+
+        canvas.dispatchEvent(move(400, 300));
+        await flush();
+        expect(wrapperEnter, 'the silent host is transparent to hover').toHaveBeenCalledTimes(1);
+
+        canvas.dispatchEvent(move(10, 10));
+        await flush();
+
+        const modelEnter = vi.fn();
+        model.addEventListener('pointerenter', modelEnter);
+        canvas.dispatchEvent(move(400, 300));
+        await flush();
+        expect(modelEnter, 'a listening model is the nearer hover owner').toHaveBeenCalledTimes(1);
+        expect(wrapperEnter).toHaveBeenCalledTimes(1);
     });
 
     it('dispatches pointerleave once the pointer moves off the entity', async () => {

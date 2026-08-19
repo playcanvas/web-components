@@ -102,7 +102,9 @@ export class BakedAo extends Script {
         // castShadowsLightmap defaults to true for them.
         const models = Array.from(document.querySelectorAll('pc-model'));
         const request = () => {
-            if (models.every((model) => model.entity)) {
+            // contentEntity, not entity: the host entity exists from boot, while the content is
+            // what the bake needs in the scene.
+            if (models.every((model) => model.contentEntity)) {
                 this._scheduleBake();
             }
         };

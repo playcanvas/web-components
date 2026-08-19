@@ -17,11 +17,12 @@ export const POINTER_ATTRIBUTES = [
 ] as const;
 
 /**
- * The base class for elements that front an engine {@link Entity}: `<pc-entity>`, which creates
- * one, and `<pc-node>`, which binds to one inside a model's instantiated hierarchy. It carries
- * what both need — the `entity` contract, registration with the owning application (which joins
- * picked scene nodes back to elements by identity, never by name), and the pointer listener
- * bookkeeping that lets the application lazily attach its canvas handlers.
+ * The base class for elements that front an engine {@link Entity}: `<pc-entity>` and
+ * `<pc-model>`, which create one, and `<pc-node>`, which binds to one inside a model's
+ * instantiated hierarchy. It carries what all of them need — the `entity` contract, registration
+ * with the owning application (which joins picked scene nodes back to elements by identity,
+ * never by name), and the pointer listener bookkeeping that lets the application lazily attach
+ * its canvas handlers.
  */
 class EntityBaseElement extends AsyncElement {
     protected _entity: Entity | null = null;
