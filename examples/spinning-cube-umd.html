@@ -18,7 +18,7 @@
                 }
 
                 // registerScript resolves the application's script registry, so it can only run
-                // once the application exists. The <pc-script name="rotate"> below is left pending
+                // once the application exists. The <pc-script-instance name="rotate"> below is left pending
                 // until the class arrives, so registering after boot still wires it up.
                 pwc.whenReady('pc-app').then(() => pc.registerScript(Rotate, 'rotate'));
             </script>
@@ -35,9 +35,9 @@
                 <!-- Cube -->
                 <pc-entity name="cube">
                     <pc-render type="box"></pc-render>
-                    <pc-scripts>
-                        <pc-script name="rotate"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="rotate"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

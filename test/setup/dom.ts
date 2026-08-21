@@ -110,7 +110,7 @@ Object.defineProperty(window, 'devicePixelRatio', {
 // - navigator.xr: absent means XrManager reports supported === false, which is the correct
 //   headless answer. A truthy stub would push it down paths jsdom cannot honour.
 // - AudioContext: absent means SoundManager's lazy context getter returns null. Verified that
-//   <pc-sounds>/<pc-sound> still create slots via addSlot() with no context.
+//   <pc-sound>/<pc-sound-slot> still create slots via addSlot() with no context.
 
 afterEach(() => {
     viewport = { ...DEFAULT_VIEWPORT };

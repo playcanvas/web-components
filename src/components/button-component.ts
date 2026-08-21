@@ -17,6 +17,8 @@ const transitionModes = new Map<'tint' | 'sprite', number>([
  * The ButtonComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Engine component: {@link ButtonComponent} (`button`).
+ *
  * @category Components
  */
 class ButtonComponentElement extends ComponentElement {

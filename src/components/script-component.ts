@@ -15,14 +15,14 @@ import {
 } from '../parse';
 
 import { ComponentElement } from './component';
-import { ScriptElement } from './script';
+import { ScriptInstanceElement } from './script-instance';
 
 /**
- * Attributes on `pc-script` that never map to script attributes: the element's own API (derived
+ * Attributes on `pc-script-instance` that never map to script attributes: the element's own API (derived
  * from its observed attributes) plus reserved and global HTML attribute names.
  */
 const RESERVED_ATTRIBUTES = new Set([
-    ...ScriptElement.observedAttributes,
+    ...ScriptInstanceElement.observedAttributes,
     'accesskey',
     'autocapitalize',
     'autofocus',
@@ -54,7 +54,7 @@ const RESERVED_ATTRIBUTES = new Set([
 ]);
 
 /**
- * Checks whether a `pc-script` attribute name is reserved (and so never maps to a script
+ * Checks whether a `pc-script-instance` attribute name is reserved (and so never maps to a script
  * attribute). Reserved names are the element's own API, global HTML attribute names, `data-*`
  * and `aria-*` attributes, names starting with `_` (framework-stamped attributes), and real
  * inline event handler names (`onclick` etc. — detected via the platform, so script attributes
@@ -244,9 +244,11 @@ export type ScriptNameChangeEvent = {
 
 /**
  * The ScriptComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-scripts/ | `<pc-scripts>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-script/ | `<pc-script>`} elements.
  * The ScriptComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link ScriptComponent} (`script`).
  *
  * @category Components
  */
@@ -268,14 +270,14 @@ class ScriptComponentElement extends ComponentElement {
 
     connectedCallback() {
         // (Re-)observe on every connection - disconnectedCallback disconnects the observer.
-        // Attribute changes on child pc-script elements are watched here too: per-property
+        // Attribute changes on child pc-script-instance elements are watched here too: per-property
         // script attributes are not statically known, so they cannot use observedAttributes.
         this.observer.observe(this, { childList: true, subtree: true, attributes: true });
         return super.connectedCallback();
     }
 
     protected initComponent() {
-        this.querySelectorAll<ScriptElement>(':scope > pc-script').forEach((scriptElement) => {
+        this.querySelectorAll<ScriptInstanceElement>(':scope > pc-script-instance').forEach((scriptElement) => {
             // A host readiness cycle re-runs this against a component that can have survived it
             // (a pc-model reloading content on its stable host entity). The engine rejects a
             // duplicate create - returning null, silently in production builds - which would
@@ -433,12 +435,12 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Returns the camelCase keys of the per-property attributes present on a `pc-script`
+     * Returns the camelCase keys of the per-property attributes present on a `pc-script-instance`
      * element.
-     * @param scriptElement - The `pc-script` element.
+     * @param scriptElement - The `pc-script-instance` element.
      * @returns The camelCase keys.
      */
-    private inlineKeys(scriptElement: ScriptElement): Set<string> {
+    private inlineKeys(scriptElement: ScriptInstanceElement): Set<string> {
         const keys = new Set<string>();
         for (const attr of Array.from(scriptElement.attributes)) {
             if (!isReservedAttribute(attr.name)) {
@@ -449,13 +451,13 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Resolves the script instance owned by a `pc-script` element. Returns `null` when the
+     * Resolves the script instance owned by a `pc-script-instance` element. Returns `null` when the
      * element has no created script, or when its name resolves to a script created by a
      * different element (e.g. a duplicate-named sibling).
-     * @param scriptElement - The `pc-script` element.
+     * @param scriptElement - The `pc-script-instance` element.
      * @returns The owned script, or `null`.
      */
-    private scriptFor(scriptElement: ScriptElement): Script | null {
+    private scriptFor(scriptElement: ScriptInstanceElement): Script | null {
         const name = scriptElement.getAttribute('name');
         if (!name || !this.component) return null;
 
@@ -464,7 +466,7 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     private handleScriptAttributesChange(event: ScriptAttributesChangeEvent) {
-        const scriptElement = event.target as ScriptElement;
+        const scriptElement = event.target as ScriptInstanceElement;
         const script = this.scriptFor(scriptElement);
         if (script) {
             // Per-property attributes stay authoritative: keys they pin are excluded here
@@ -473,7 +475,7 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     private handleScriptEnableChange(event: ScriptEnableChangeEvent) {
-        const scriptElement = event.target as ScriptElement;
+        const scriptElement = event.target as ScriptInstanceElement;
 
         // Apply any queued per-property changes first, so that initialize() (fired by the
         // engine on first effective enable) sees every attribute value set this tick
@@ -486,7 +488,7 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Handles a runtime `name` change on a child `pc-script`, swapping the engine script instance
+     * Handles a runtime `name` change on a child `pc-script-instance`, swapping the engine script instance
      * to match. Without this the element would keep pointing at the old-name instance: the old
      * script would go on running while every subsequent update (attribute changes, enable
      * changes, destruction on removal) resolved the new name and silently no-opped.
@@ -496,10 +498,10 @@ class ScriptComponentElement extends ComponentElement {
      * @param event - The name change event.
      */
     private handleScriptNameChange(event: ScriptNameChangeEvent) {
-        const scriptElement = event.target as ScriptElement;
+        const scriptElement = event.target as ScriptInstanceElement;
 
-        // Only direct children are managed, matching initComponent's ':scope > pc-script'
-        // contract - the event bubbles, so a deeper pc-script must not be created here
+        // Only direct children are managed, matching initComponent's ':scope > pc-script-instance'
+        // contract - the event bubbles, so a deeper pc-script-instance must not be created here
         if (scriptElement.parentElement !== this) return;
 
         // Before the component exists there is nothing to swap: initComponent creates from
@@ -518,14 +520,14 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Creates the script instance for a `pc-script` element. The instance is created disabled,
+     * Creates the script instance for a `pc-script-instance` element. The instance is created disabled,
      * the element's converted attributes are merged over the instance's defaults (which is what
      * allows plain numeric arrays to be typed against those defaults), and only then is the
      * declared enabled state applied — so `initialize()` runs with every attribute in place.
-     * @param scriptElement - The `pc-script` element to create the script instance for.
+     * @param scriptElement - The `pc-script-instance` element to create the script instance for.
      * @returns The created script, or `null`.
      */
-    private createScript(scriptElement: ScriptElement): Script | null {
+    private createScript(scriptElement: ScriptInstanceElement): Script | null {
         const name = scriptElement.getAttribute('name');
         if (!name || !this.component) return null;
 
@@ -542,28 +544,28 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Applies a `pc-script` element's declared state to a script instance: the `attributes` JSON
+     * Applies a `pc-script-instance` element's declared state to a script instance: the `attributes` JSON
      * first with per-property-shadowed keys stripped, then the per-property attributes — each
      * property is written exactly once and individual attributes win — and finally the declared
      * enabled state, so `initialize()` runs with every attribute in place.
      * @param script - The script instance.
-     * @param scriptElement - The `pc-script` element holding the declared state.
+     * @param scriptElement - The `pc-script-instance` element holding the declared state.
      */
-    private applyDeclaredState(script: Script, scriptElement: ScriptElement) {
+    private applyDeclaredState(script: Script, scriptElement: ScriptInstanceElement) {
         this.applyAttributes(script, scriptElement.scriptAttributes, this.inlineKeys(scriptElement));
         this.applyInlineAttributes(script, scriptElement);
         script.enabled = scriptElement.enabled;
     }
 
     /**
-     * Applies the per-property attributes present on a `pc-script` element — any attribute that
+     * Applies the per-property attributes present on a `pc-script-instance` element — any attribute that
      * is not part of the element's own API or a reserved HTML attribute name. These are applied
      * after the `attributes` JSON, so an individual attribute always takes precedence over the
      * blob.
      * @param script - The script to apply the attributes to.
-     * @param scriptElement - The `pc-script` element holding the attributes.
+     * @param scriptElement - The `pc-script-instance` element holding the attributes.
      */
-    private applyInlineAttributes(script: any, scriptElement: ScriptElement) {
+    private applyInlineAttributes(script: any, scriptElement: ScriptInstanceElement) {
         const scriptName = scriptElement.getAttribute('name') ?? '';
         for (const attr of Array.from(scriptElement.attributes)) {
             if (!isReservedAttribute(attr.name)) {
@@ -573,13 +575,13 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Applies a single per-property attribute change to the script of a `pc-script` element.
+     * Applies a single per-property attribute change to the script of a `pc-script-instance` element.
      * When the attribute has been removed, the value from the `attributes` JSON (if any) takes
      * effect again.
-     * @param scriptElement - The `pc-script` element whose attribute changed.
+     * @param scriptElement - The `pc-script-instance` element whose attribute changed.
      * @param attributeName - The name of the changed attribute.
      */
-    private applyScriptProperty(scriptElement: ScriptElement, attributeName: string) {
+    private applyScriptProperty(scriptElement: ScriptInstanceElement, attributeName: string) {
         const script = this.scriptFor(scriptElement);
         if (!script) return;
 
@@ -615,7 +617,7 @@ class ScriptComponentElement extends ComponentElement {
 
             if (typeof current === 'function' || SCRIPT_API_MEMBERS.has(key)) {
                 console.warn(
-                    `Ignoring attribute '${attributeName}' on pc-script '${scriptName}' - '${key}' is part of the Script API.`
+                    `Ignoring attribute '${attributeName}' on pc-script-instance '${scriptName}' - '${key}' is part of the Script API.`
                 );
                 return;
             }
@@ -670,11 +672,11 @@ class ScriptComponentElement extends ComponentElement {
 
     private handleMutations(mutations: MutationRecord[]) {
         for (const mutation of mutations) {
-            // Handle per-property attribute changes on child pc-script elements
+            // Handle per-property attribute changes on child pc-script-instance elements
             if (mutation.type === 'attributes') {
                 const target = mutation.target;
                 if (
-                    target instanceof ScriptElement &&
+                    target instanceof ScriptInstanceElement &&
                     target.parentElement === this &&
                     mutation.attributeName &&
                     !isReservedAttribute(mutation.attributeName)
@@ -686,17 +688,17 @@ class ScriptComponentElement extends ComponentElement {
 
             // Only direct children are managed - the observer watches the subtree for attribute
             // changes, but deeper childList records must not create or destroy scripts
-            // (matching initComponent's ':scope > pc-script' contract)
+            // (matching initComponent's ':scope > pc-script-instance' contract)
             if (mutation.target !== this) {
                 continue;
             }
 
-            // Handle removed nodes first, so that replacing a pc-script with a same-named one
+            // Handle removed nodes first, so that replacing a pc-script-instance with a same-named one
             // destroys the old script before the replacement is created. Only destroy a script
             // this element actually owns - a duplicate-named element whose own create() failed
             // must not take down the live script on removal.
             mutation.removedNodes.forEach((node) => {
-                if (node instanceof ScriptElement) {
+                if (node instanceof ScriptInstanceElement) {
                     const scriptName = node.getAttribute('name');
                     if (
                         scriptName &&
@@ -712,7 +714,7 @@ class ScriptComponentElement extends ComponentElement {
 
             // Handle added nodes
             mutation.addedNodes.forEach((node) => {
-                if (node instanceof ScriptElement) {
+                if (node instanceof ScriptInstanceElement) {
                     this.createScript(node);
                 }
             });
@@ -733,6 +735,6 @@ class ScriptComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-scripts', ScriptComponentElement);
+customElements.define('pc-script', ScriptComponentElement);
 
 export { ScriptComponentElement };

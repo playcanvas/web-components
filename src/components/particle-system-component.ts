@@ -6,9 +6,11 @@ import { ComponentElement } from './component';
 
 /**
  * The ParticleSystemComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-particles/ | `<pc-particles>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-particle-system/ | `<pc-particle-system>`} elements.
  * The ParticleSystemComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link ParticleSystemComponent} (`particlesystem`).
  *
  * @category Components
  */
@@ -147,6 +149,6 @@ class ParticleSystemComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-particles', ParticleSystemComponentElement);
+customElements.define('pc-particle-system', ParticleSystemComponentElement);
 
 export { ParticleSystemComponentElement };

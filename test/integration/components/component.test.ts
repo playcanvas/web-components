@@ -199,11 +199,11 @@ describe('component hosting', () => {
             const { get } = await bootApp(`
                 ${ASSETS}
                 <pc-model asset="m">
-                    <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
+                    <pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound>
                 </pc-model>
             `);
             const model = get<ModelElement>('pc-model');
-            const sounds = get('pc-sounds') as { component?: { slots: Record<string, unknown> } };
+            const sounds = get('pc-sound') as { component?: { slots: Record<string, unknown> } };
 
             expect(Object.keys(sounds.component!.slots)).toContain('blip');
 

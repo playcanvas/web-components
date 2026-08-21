@@ -164,7 +164,7 @@ if (manifest) {
     expectEnum('pc-light', 'type', 3, 'directional');
     expectEnum('pc-camera', 'tonemap', 7, 'none');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
-    expectEnum('pc-scrollview', 'horizontal-scrollbar-visibility', 2, 'when-required');
+    expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'when-required');
 
     // Two-value enums that replaced booleans. Both are named for the engine property they drive, so
     // the description has to survive as well - the old names ('blend', 'orthographic') are what made
@@ -208,7 +208,7 @@ if (manifest) {
 
     // Attributes read with getAttribute, so declared with @attribute
     for (const name of ['name', 'glue', 'wasm', 'fallback']) {
-        expectAttribute('pc-module', name, { type: 'string' });
+        expectAttribute('pc-wasm', name, { type: 'string' });
     }
 
     // The one engine property that is a pure label rather than shader state; pinned so the
@@ -228,7 +228,7 @@ if (manifest) {
     expectAttribute('pc-asset', 'srgb', { type: 'boolean', default: 'false', fieldName: 'srgb' });
     expectAttribute('pc-asset', 'mipmaps', { type: 'boolean', default: 'true', fieldName: 'mipmaps' });
 
-    // Inherited from ComponentElement - pc-listener and pc-scripts declare no attributes of their
+    // Inherited from ComponentElement - pc-audio-listener and pc-script declare no attributes of their
     // own, so they prove the inheritance step rather than merely surviving it
     for (const tag of COMPONENT_TAGS) {
         const enabled = attribute(tag, 'enabled');
@@ -250,7 +250,7 @@ if (manifest) {
     check(!events('pc-material').includes('ready'), 'pc-material should not have a ready event');
 
     for (const name of ['scriptattributeschange', 'scriptenablechange', 'scriptnamechange']) {
-        check(events('pc-script').includes(name), `pc-script is missing the '${name}' event`);
+        check(events('pc-script-instance').includes(name), `pc-script-instance is missing the '${name}' event`);
     }
 
     check(events('pc-joint').includes('break'), "pc-joint is missing the 'break' event");
@@ -330,12 +330,12 @@ if (manifest) {
         // gloss fields, so no attribute claims them as its backing member
         ['pc-material', ['get', 'material', 'roughness', 'roughnessMap']],
         ['pc-model', ['addEventListener', 'contentEntity', 'entity', 'hierarchy', 'removeEventListener', ...ASYNC_MEMBERS]],
-        ['pc-module', [...ASYNC_MEMBERS]],
+        ['pc-wasm', [...ASYNC_MEMBERS]],
         ['pc-node', ['addEventListener', 'entity', 'path', 'removeEventListener', 'state', ...ASYNC_MEMBERS]],
-        ['pc-particles', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
+        ['pc-particle-system', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
         ['pc-scene', ['scene', ...ASYNC_MEMBERS]],
-        ['pc-script', ['script', ...ASYNC_MEMBERS]],
-        ['pc-sound', ['soundSlot', ...ASYNC_MEMBERS]]
+        ['pc-script-instance', ['script', ...ASYNC_MEMBERS]],
+        ['pc-sound-slot', ['soundSlot', ...ASYNC_MEMBERS]]
     ]);
     for (const tag of COMPONENT_TAGS) {
         if (!EXTRA_MEMBERS.has(tag)) {

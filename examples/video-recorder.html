@@ -32,8 +32,8 @@
                         <pc-entity name="camera" position="0 1.5 1">
                             <pc-camera></pc-camera>
                         </pc-entity>
-                        <pc-scripts>
-                            <pc-script name="tweener" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="tweener" attributes='{
                                 "activate": true,
                                 "tweens": [
                                     {
@@ -47,11 +47,11 @@
                                         "yoyo": true
                                     }
                                 ]
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="tweener" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="tweener" attributes='{
                             "activate": true,
                             "tweens": [
                                 {
@@ -65,8 +65,8 @@
                                     "yoyo": true
                                 }
                             ]
-                        }'></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Biker -->
                 <pc-entity name="biker" rotation="180 0 0">
@@ -74,10 +74,10 @@
                 </pc-entity>
                 <!-- Video Recorder -->
                 <pc-entity name="recorder">
-                    <pc-scripts>
-                        <pc-script name="videoRecorder"></pc-script>
-                        <pc-script name="videoRecorderControls"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="videoRecorder"></pc-script-instance>
+                        <pc-script-instance name="videoRecorderControls"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

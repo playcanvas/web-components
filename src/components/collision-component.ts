@@ -17,6 +17,8 @@ import { ComponentElement } from './component';
  * retargets or rebinds picks up the new node's geometry. An entity with no asset-backed render
  * component warns, and the collider has no shape.
  *
+ * Engine component: {@link CollisionComponent} (`collision`).
+ *
  * @category Components
  */
 class CollisionComponentElement extends ComponentElement {

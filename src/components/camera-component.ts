@@ -41,6 +41,8 @@ const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2
  * The CameraComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Engine component: {@link CameraComponent} (`camera`).
+ *
  * @category Components
  */
 class CameraComponentElement extends ComponentElement {

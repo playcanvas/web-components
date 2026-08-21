@@ -7,9 +7,11 @@ import { ComponentElement } from './component';
 
 /**
  * The RigidBodyComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-rigidbody/ | `<pc-rigidbody>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-rigid-body/ | `<pc-rigid-body>`} elements.
  * The RigidBodyComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link RigidBodyComponent} (`rigidbody`).
  *
  * @category Components
  */
@@ -235,6 +237,6 @@ class RigidBodyComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-rigidbody', RigidBodyComponentElement);
+customElements.define('pc-rigid-body', RigidBodyComponentElement);
 
 export { RigidBodyComponentElement };

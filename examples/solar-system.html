@@ -528,7 +528,7 @@
              loader, so the built-in loading bar is disabled -->
         <pc-app loading-bar="false">
             <!-- Modules -->
-            <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
             <!-- Assets -->
             <pc-asset src="assets/scripts/solar-system.mjs"></pc-asset>
             <pc-asset src="assets/models/planets/sun.glb" id="sun"></pc-asset>
@@ -545,18 +545,18 @@
                 <!-- Camera -->
                 <pc-entity name="camera" position="0 7.6 63">
                     <pc-camera clear-color="0 0 0 0" fov="35" near-clip="0.5" far-clip="1500" tonemap="neutral"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="planetTour"
-                                   planets="entity:planets"
-                                   frame="7"
-                                   side="0.35"
-                                   lift="0.12"
-                                   damping="5"
-                                   dwell="0.3"
-                                   drift="1"
-                                   overview-position="7 -250 22"
-                                   overview-target="-20 -150 0"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="planetTour"
+                                            planets="entity:planets"
+                                            frame="7"
+                                            side="0.35"
+                                            lift="0.12"
+                                            damping="5"
+                                            dwell="0.3"
+                                            drift="1"
+                                            overview-position="7 -250 22"
+                                            overview-target="-20 -150 0"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Lighting: warm key, faint cool fill -->
                 <pc-entity name="key-light" rotation="50 30 0">
@@ -568,60 +568,60 @@
                 <!-- Bodies: the tour visits this group's children, in order -->
                 <pc-entity name="planets">
                     <pc-model name="sun" asset="sun">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="9"></pc-script>
-                            <pc-script name="planetSpin" speed="1.5"></pc-script>
-                            <pc-script name="sunGlow" intensity="6"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="9"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="1.5"></pc-script-instance>
+                            <pc-script-instance name="sunGlow" intensity="6"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="mercury" asset="mercury" position="0 -30 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="1.05"></pc-script>
-                            <pc-script name="planetSpin" speed="2"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="1.05"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="2"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="venus" asset="venus" position="0 -60 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="1.55"></pc-script>
-                            <pc-script name="planetSpin" speed="-1.5" tilt="0 0 -3"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="1.55"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="-1.5" tilt="0 0 -3"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="earth" asset="earth" position="0 -90 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="1.65"></pc-script>
-                            <pc-script name="planetSpin" speed="5" tilt="0 0 -23.4"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="1.65"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="5" tilt="0 0 -23.4"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="mars" asset="mars" position="0 -120 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="1.3"></pc-script>
-                            <pc-script name="planetSpin" speed="5" tilt="0 0 -25.2"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="1.3"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="5" tilt="0 0 -25.2"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="jupiter" asset="jupiter" position="0 -150 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="4.5"></pc-script>
-                            <pc-script name="planetSpin" speed="12" tilt="0 0 -3.1"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="4.5"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="12" tilt="0 0 -3.1"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="saturn" asset="saturn" position="0 -180 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="6.2"></pc-script>
-                            <pc-script name="planetSpin" speed="10" tilt="18 0 -26.7"></pc-script>
-                            <pc-script name="tourStop" radius="4.6"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="6.2"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="10" tilt="18 0 -26.7"></pc-script-instance>
+                            <pc-script-instance name="tourStop" radius="4.6"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="uranus" asset="uranus" position="0 -210 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="2.6"></pc-script>
-                            <pc-script name="planetSpin" speed="7" tilt="0 0 -97.8"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="2.6"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="7" tilt="0 0 -97.8"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                     <pc-model name="neptune" asset="neptune" position="0 -240 0">
-                        <pc-scripts>
-                            <pc-script name="normalizeScale" radius="2.5"></pc-script>
-                            <pc-script name="planetSpin" speed="7" tilt="0 0 -28.3"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="normalizeScale" radius="2.5"></pc-script-instance>
+                            <pc-script-instance name="planetSpin" speed="7" tilt="0 0 -28.3"></pc-script-instance>
+                        </pc-script>
                     </pc-model>
                 </pc-entity>
             </pc-scene>
@@ -809,9 +809,9 @@
             ];
 
             // A snappier camera and no idle drift under reduced motion - runtime changes to
-            // pc-script attributes are applied live to the script instance
+            // pc-script-instance attributes are applied live to the script instance
             if (reducedMotion) {
-                const tour = document.querySelector('pc-script[name="planetTour"]');
+                const tour = document.querySelector('pc-script-instance[name="planetTour"]');
                 tour.setAttribute('damping', '30');
                 tour.setAttribute('drift', '0');
             }
@@ -976,7 +976,7 @@
             const camera = document.querySelector('pc-entity[name="camera"]').entity;
             const sunEntity = document.querySelector('pc-model[name="sun"]').entity;
             const sunRadius = parseFloat(document.querySelector(
-                'pc-model[name="sun"] pc-script[name="normalizeScale"]').getAttribute('radius')) || 9;
+                'pc-model[name="sun"] pc-script-instance[name="normalizeScale"]').getAttribute('radius')) || 9;
             const sunScreen = new Vec3();
             const toSun = new Vec3();
             const glowLoop = () => {

@@ -45,7 +45,7 @@
                     <!-- Scroll view -->
                     <pc-entity name="scroll-view">
                         <pc-element type="group" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" width="230" height="400"></pc-element>
-                        <pc-scrollview
+                        <pc-scroll-view
                             horizontal="false"
                             vertical="true"
                             scroll-mode="bounce"
@@ -54,10 +54,10 @@
                             vertical-scrollbar-visibility="when-required"
                             viewport="#viewport"
                             content="#scroll-content"
-                            vertical-scrollbar="#vertical-scrollbar"></pc-scrollview>
-                        <pc-scripts>
-                            <pc-script name="scrollView"></pc-script>
-                        </pc-scripts>
+                            vertical-scrollbar="#vertical-scrollbar"></pc-scroll-view>
+                        <pc-script>
+                            <pc-script-instance name="scrollView"></pc-script-instance>
+                        </pc-script>
 
                         <!-- Background panel (9-sliced) -->
                         <pc-entity name="background">
@@ -71,7 +71,7 @@
                             <!-- Content (laid out vertically, grown to fit by a script) -->
                             <pc-entity name="content" id="scroll-content">
                                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="220" height="700" use-input></pc-element>
-                                <pc-layoutgroup orientation="vertical" reverse-y alignment="0 1" padding="10 10 10 10" spacing="0 5"></pc-layoutgroup>
+                                <pc-layout-group orientation="vertical" reverse-y alignment="0 1" padding="10 10 10 10" spacing="0 5"></pc-layout-group>
                             </pc-entity>
                         </pc-entity>
 
@@ -109,7 +109,7 @@
         <template class="entry" id="entry-blue">
             <pc-entity name="entry">
                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="190" height="45"></pc-element>
-                <pc-layoutchild></pc-layoutchild>
+                <pc-layout-child></pc-layout-child>
                 <pc-entity name="background">
                     <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="blue-button"></pc-element>
                 </pc-entity>
@@ -126,7 +126,7 @@
         <template class="entry" id="entry-green">
             <pc-entity name="entry">
                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="190" height="45"></pc-element>
-                <pc-layoutchild></pc-layoutchild>
+                <pc-layout-child></pc-layout-child>
                 <pc-entity name="background">
                     <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="green-button"></pc-element>
                 </pc-entity>
@@ -143,7 +143,7 @@
         <template class="entry" id="entry-yellow">
             <pc-entity name="entry">
                 <pc-element type="group" anchor="0 1 0 1" pivot="0 1" width="190" height="45"></pc-element>
-                <pc-layoutchild></pc-layoutchild>
+                <pc-layout-child></pc-layout-child>
                 <pc-entity name="background">
                     <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="190" height="45" sprite-asset="yellow-button"></pc-element>
                 </pc-entity>

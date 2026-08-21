@@ -6,9 +6,11 @@ import { ComponentElement } from './component';
 
 /**
  * The LayoutChildComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-layoutchild/ | `<pc-layoutchild>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-layout-child/ | `<pc-layout-child>`} elements.
  * The LayoutChildComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link LayoutChildComponent} (`layoutchild`).
  *
  * @category Components
  */
@@ -229,6 +231,6 @@ class LayoutChildComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-layoutchild', LayoutChildComponentElement);
+customElements.define('pc-layout-child', LayoutChildComponentElement);
 
 export { LayoutChildComponentElement };

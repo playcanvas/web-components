@@ -35,23 +35,23 @@
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="0.2 0.15 0.3">
                         <pc-camera></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="cameraControls"
-                                       enable-fly="false"
-                                       enable-pan="false"
-                                       focus-point="0 0.05 0"
-                                       zoom-range="0.25 1"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
+                                                enable-fly="false"
+                                                enable-pan="false"
+                                                focus-point="0 0.05 0"
+                                                zoom-range="0.25 1"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                        <pc-script name="xrMenu" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
                             "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
                             "fontAsset": "asset:arial-font"
-                        }'></pc-script>
-                        <pc-script name="xrNavigation"></pc-script>
-                        <pc-script name="xrSession"></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light">
@@ -61,9 +61,9 @@
                 <pc-model name="shoe" asset="shoe"></pc-model>
                 <!-- Shadow Catcher -->
                 <pc-entity name="shadow-catcher">
-                    <pc-scripts>
-                        <pc-script name="shadowCatcher" scale="0.5 0.5 0.5"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="shadowCatcher" scale="0.5 0.5 0.5"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

@@ -57,7 +57,7 @@
             renderComponent.setAttribute('type', 'box');
             cube.appendChild(renderComponent);
 
-            const scriptsComponent = document.createElement('pc-scripts');
+            const scriptsComponent = document.createElement('pc-script');
             cube.appendChild(scriptsComponent);
 
             // Engine APIs are different: registerScript resolves the application's script
@@ -73,7 +73,7 @@
             registerScript(Rotate, 'rotate');
 
             // Appended after registration, so the instance is created immediately
-            const script = document.createElement('pc-script');
+            const script = document.createElement('pc-script-instance');
             script.setAttribute('name', 'rotate');
             scriptsComponent.appendChild(script);
         </script>

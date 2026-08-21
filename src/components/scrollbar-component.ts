@@ -16,6 +16,8 @@ const orientations = new Map<'horizontal' | 'vertical', number>([
  * The ScrollbarComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Engine component: {@link ScrollbarComponent} (`scrollbar`).
+ *
  * @category Components
  */
 class ScrollbarComponentElement extends ComponentElement {

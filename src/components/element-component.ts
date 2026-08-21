@@ -12,6 +12,13 @@ import { ComponentElement } from './component';
  * The ElementComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Despite the name, this is not a base class or a generic wrapper: it is the engine's 2D UI
+ * component, which gives its host entity a rectangle in a `<pc-screen>` hierarchy that draws
+ * either an image, a line of text or nothing (`type="image"`, `"text"` or `"group"`). The tag
+ * spells the engine component it adds, as every component element does.
+ *
+ * Engine component: {@link ElementComponent} (`element`).
+ *
  * @category Components
  */
 class ElementComponentElement extends ComponentElement {

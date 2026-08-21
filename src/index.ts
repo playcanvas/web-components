@@ -11,31 +11,31 @@
 
 // Note that order matters here (e.g. pc-entity and pc-model must be defined before components)
 import { AsyncElement, whenReady } from './async-element';
-import { ModuleElement } from './module';
+import { WasmElement } from './wasm';
 import { AppElement } from './app';
 import { EntityElement } from './entity';
 import { ModelElement } from './model';
 import { AssetElement } from './asset';
 import { AnimComponentElement } from './components/anim-component';
 import { AnimClipElement } from './components/anim-clip';
-import { ListenerComponentElement } from './components/listener-component';
+import { AudioListenerComponentElement } from './components/audio-listener-component';
 import { ButtonComponentElement } from './components/button-component';
 import { CameraComponentElement } from './components/camera-component';
 import { CollisionComponentElement } from './components/collision-component';
 import { ComponentElement } from './components/component';
 import { ElementComponentElement } from './components/element-component';
 import { JointComponentElement } from './components/joint-component';
-import { LayoutChildComponentElement } from './components/layoutchild-component';
-import { LayoutGroupComponentElement } from './components/layoutgroup-component';
+import { LayoutChildComponentElement } from './components/layout-child-component';
+import { LayoutGroupComponentElement } from './components/layout-group-component';
 import { LightComponentElement } from './components/light-component';
-import { ParticleSystemComponentElement } from './components/particlesystem-component';
+import { ParticleSystemComponentElement } from './components/particle-system-component';
 import { RenderComponentElement } from './components/render-component';
-import { RigidBodyComponentElement } from './components/rigidbody-component';
+import { RigidBodyComponentElement } from './components/rigid-body-component';
 import { ScreenComponentElement } from './components/screen-component';
 import { ScrollbarComponentElement } from './components/scrollbar-component';
-import { ScrollViewComponentElement } from './components/scrollview-component';
+import { ScrollViewComponentElement } from './components/scroll-view-component';
 import { ScriptComponentElement } from './components/script-component';
-import { ScriptElement } from './components/script';
+import { ScriptInstanceElement } from './components/script-instance';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
 import { GSplatComponentElement } from './components/gsplat-component';
@@ -72,32 +72,32 @@ declare global {
         'pc-entity': EntityElement;
         'pc-gsplat': GSplatComponentElement;
         'pc-joint': JointComponentElement;
-        'pc-layoutchild': LayoutChildComponentElement;
-        'pc-layoutgroup': LayoutGroupComponentElement;
+        'pc-layout-child': LayoutChildComponentElement;
+        'pc-layout-group': LayoutGroupComponentElement;
         'pc-light': LightComponentElement;
-        'pc-listener': ListenerComponentElement;
+        'pc-audio-listener': AudioListenerComponentElement;
         'pc-material': MaterialElement;
         'pc-model': ModelElement;
-        'pc-module': ModuleElement;
+        'pc-wasm': WasmElement;
         'pc-node': NodeElement;
-        'pc-particles': ParticleSystemComponentElement;
+        'pc-particle-system': ParticleSystemComponentElement;
         'pc-render': RenderComponentElement;
-        'pc-rigidbody': RigidBodyComponentElement;
+        'pc-rigid-body': RigidBodyComponentElement;
         'pc-scene': SceneElement;
         'pc-screen': ScreenComponentElement;
-        'pc-script': ScriptElement;
-        'pc-scripts': ScriptComponentElement;
+        'pc-script-instance': ScriptInstanceElement;
+        'pc-script': ScriptComponentElement;
         'pc-scrollbar': ScrollbarComponentElement;
-        'pc-scrollview': ScrollViewComponentElement;
+        'pc-scroll-view': ScrollViewComponentElement;
         'pc-sky': SkyElement;
-        'pc-sound': SoundSlotElement;
-        'pc-sounds': SoundComponentElement;
+        'pc-sound-slot': SoundSlotElement;
+        'pc-sound': SoundComponentElement;
     }
 }
 
 export {
     AsyncElement,
-    ModuleElement,
+    WasmElement,
     AppElement,
     EntityElement,
     AssetElement,
@@ -113,14 +113,14 @@ export {
     LayoutGroupComponentElement,
     ParticleSystemComponentElement,
     LightComponentElement,
-    ListenerComponentElement,
+    AudioListenerComponentElement,
     RenderComponentElement,
     RigidBodyComponentElement,
     ScreenComponentElement,
     ScrollbarComponentElement,
     ScrollViewComponentElement,
     ScriptComponentElement,
-    ScriptElement,
+    ScriptInstanceElement,
     SoundComponentElement,
     SoundSlotElement,
     GSplatComponentElement,

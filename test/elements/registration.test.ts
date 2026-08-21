@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AsyncElement, ComponentElement, EntityBaseElement } from '../../src/index';
-import { COMPONENT_TAGS, ENTITY_TAGS, READY_TAGS, TAGS } from '../helpers/tags';
+import { COMPONENT_TAGS, componentTagId, ENTITY_TAGS, READY_TAGS, TAGS } from '../helpers/tags';
 
 /**
  * The runtime twin of validate.mjs's manifest checks. It catches a case the manifest cannot see: an
@@ -48,5 +48,14 @@ describe('customElements registration', () => {
     it.for(COMPONENT_TAGS)('%s inherits the enabled attribute from ComponentElement', (tag) => {
         const observed = (customElements.get(tag) as unknown as { observedAttributes?: string[] })?.observedAttributes;
         expect(observed).toContain('enabled');
+    });
+
+    // The naming rule stated in utils/cem/tags.mjs, made load-bearing. A component tag has to
+    // spell the engine component id it adds, so that an author who knows either spelling can
+    // derive the other without a lookup table. `_componentName` is TypeScript-private, not
+    // runtime-private, and is what the element actually passes to `entity.addComponent`.
+    it.for(COMPONENT_TAGS)('%s states its engine component id', (tag) => {
+        const element = document.createElement(tag) as unknown as { _componentName: string };
+        expect(element._componentName).toBe(componentTagId(tag));
     });
 });

@@ -28,7 +28,7 @@ const container = document.createElement('div');
 container.classList.add('example-button-container', 'bottom-right');
 
 // Add AR/VR buttons if the app supports XR and the example uses XR scripts
-const xrScriptSelector = 'pc-script[name="xrSession"], pc-script[name="xrControllers"], pc-script[name="xrNavigation"]';
+const xrScriptSelector = 'pc-script-instance[name="xrSession"], pc-script-instance[name="xrControllers"], pc-script-instance[name="xrNavigation"]';
 if (app.xr && document.querySelector(xrScriptSelector)) {
     const xrModes = [
         { type: XRTYPE_AR, iconClass: 'icon-ar', title: 'Enter AR', event: 'ar:start' },

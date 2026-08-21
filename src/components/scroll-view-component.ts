@@ -25,9 +25,11 @@ const visibilities = new Map<'always' | 'when-required', number>([
 
 /**
  * The ScrollViewComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-scrollview/ | `<pc-scrollview>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-scroll-view/ | `<pc-scroll-view>`} elements.
  * The ScrollViewComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link ScrollViewComponent} (`scrollview`).
  *
  * @category Components
  */
@@ -437,6 +439,6 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-scrollview', ScrollViewComponentElement);
+customElements.define('pc-scroll-view', ScrollViewComponentElement);
 
 export { ScrollViewComponentElement };

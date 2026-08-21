@@ -15,7 +15,7 @@
  *   `AppElement`.
  * - Attributes and events declared on the `AsyncElement` and `ComponentElement` base classes are
  *   copied onto the elements that inherit them, marked with `inheritedFrom`. Without this, an
- *   element like `<pc-listener>` would appear to have no attributes at all, when in fact it
+ *   element like `<pc-audio-listener>` would appear to have no attributes at all, when in fact it
  *   accepts `enabled`. The copy is skipped for anything already present, so it is a no-op for
  *   whatever the analyzer already flattens on its own.
  * - TSDoc `{@link}` tags are rewritten as markdown. Manifest consumers render descriptions as

@@ -65,30 +65,30 @@ describe('misplaced elements', () => {
         warnings.expect("pc-material 'red' must be a direct child of pc-app - material not created");
     });
 
-    it('warns and never becomes ready when pc-script is not a direct child of pc-scripts', async () => {
+    it('warns and never becomes ready when pc-script-instance is not a direct child of pc-script', async () => {
         const { get } = await bootUnsettled(`
             <pc-entity name="e">
-                <pc-scripts>
-                    <div><pc-script name="rotate"></pc-script></div>
-                </pc-scripts>
+                <pc-script>
+                    <div><pc-script-instance name="rotate"></pc-script-instance></div>
+                </pc-script>
             </pc-entity>
         `);
 
-        warnings.expect("pc-script 'rotate' must be a direct child of pc-scripts - script not created");
-        await expectNeverReady(get<AsyncElement>('pc-script'));
+        warnings.expect("pc-script-instance 'rotate' must be a direct child of pc-script - script not created");
+        await expectNeverReady(get<AsyncElement>('pc-script-instance'));
     });
 
-    it('warns and never becomes ready when pc-sound is not a direct child of pc-sounds', async () => {
+    it('warns and never becomes ready when pc-sound-slot is not a direct child of pc-sound', async () => {
         const { get } = await bootUnsettled(`
             <pc-entity name="e">
-                <pc-sounds>
-                    <div><pc-sound name="blip"></pc-sound></div>
-                </pc-sounds>
+                <pc-sound>
+                    <div><pc-sound-slot name="blip"></pc-sound-slot></div>
+                </pc-sound>
             </pc-entity>
         `);
 
-        warnings.expect('pc-sound must be a direct child of a pc-sounds element');
-        await expectNeverReady(get<AsyncElement>('pc-sound'));
+        warnings.expect('pc-sound-slot must be a direct child of a pc-sound element');
+        await expectNeverReady(get<AsyncElement>('pc-sound-slot'));
     });
 
     it('warns and never becomes ready when pc-anim-clip is not a direct child of pc-anim', async () => {

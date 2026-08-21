@@ -152,7 +152,7 @@ describe('<pc-app> lifecycle', () => {
             <pc-scene fog="linear"></pc-scene>
             <pc-entity name="e">
                 <pc-camera></pc-camera>
-                <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
+                <pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound>
             </pc-entity>
             <pc-model asset="reboot-m"></pc-model>
         `);
@@ -190,7 +190,7 @@ describe('<pc-app> lifecycle', () => {
         expect(cameraElement.component, 'the camera component is back').toBeTruthy();
         expect(cameraElement.component.entity).toBe(entityElement.entity);
 
-        const soundsComponent = (get('pc-sounds') as { component?: { slots: Record<string, unknown> } }).component;
+        const soundsComponent = (get('pc-sound') as { component?: { slots: Record<string, unknown> } }).component;
         expect(Object.keys(soundsComponent!.slots), 'the sound slot is back').toContain('blip');
 
         // ...the model's host was recreated in the new application, re-registered, and its

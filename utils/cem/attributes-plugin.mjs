@@ -143,7 +143,7 @@ const collectBranches = (ts, body) => {
 
 /**
  * Finds the property a branch writes to. The search descends into nested blocks so that branches
- * wrapping their assignment in an `if` or `try` (see `pc-script`'s `attributes`) are handled.
+ * wrapping their assignment in an `if` or `try` (see `pc-script-instance`'s `attributes`) are handled.
  * Private backing fields are skipped in favor of the public accessor.
  *
  * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.

@@ -6,8 +6,8 @@ import type { AssetElement } from '../../src/asset';
 import type { EntityElement } from '../../src/entity';
 import type { MaterialElement } from '../../src/material';
 import type { ModelElement } from '../../src/model';
-import type { ModuleElement } from '../../src/module';
 import type { NodeElement } from '../../src/node';
+import type { WasmElement } from '../../src/wasm';
 import { bootApp, settle } from '../helpers/app';
 import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
@@ -51,7 +51,7 @@ const STAGE_SRC = `data:application/json,${encodeURIComponent(
 const APP_TEMPLATE = `
     <template id="app">
         <pc-app backend="null">
-            <pc-module name="Ammo" glue="ammo.wasm.js" wasm="ammo.wasm.wasm" fallback="ammo.js"></pc-module>
+            <pc-wasm name="Ammo" glue="ammo.wasm.js" wasm="ammo.wasm.wasm" fallback="ammo.js"></pc-wasm>
             <pc-asset id="cloned-texture" type="texture" src="texture.png" lazy></pc-asset>
             <pc-material id="cloned-material" diffuse="1 0 0"></pc-material>
             <pc-entity name="Root" position="1 2 3">
@@ -200,7 +200,7 @@ describe('a <template>-cloned subtree', () => {
         app.autoRender = false;
         await settle(handle.container);
 
-        // The module was loaded, not skipped. Skipping an unupgraded <pc-module> - the guard that
+        // The module was loaded, not skipped. Skipping an unupgraded <pc-wasm> - the guard that
         // suits a <pc-entity>, which later builds itself - would silently drop the wasm module an
         // app asked for, since nothing else ever loads it.
         expect(setConfig).toHaveBeenCalledWith('Ammo', {
@@ -209,7 +209,7 @@ describe('a <template>-cloned subtree', () => {
             fallbackUrl: 'ammo.js'
         });
         expect(getInstance, 'the module was requested exactly once').toHaveBeenCalledTimes(1);
-        await readyWithin(handle.get<ModuleElement>('pc-module'));
+        await readyWithin(handle.get<WasmElement>('pc-wasm'));
 
         // The application booted at all: the failure this pins left <pc-app> permanently unready,
         // with no canvas and no entities.
@@ -235,7 +235,7 @@ describe('a <template>-cloned subtree', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
-    it('gates a cloned <pc-app> on its cloned <pc-module>, rather than racing it', async () => {
+    it('gates a cloned <pc-app> on its cloned <pc-wasm>, rather than racing it', async () => {
         const { getInstance, release } = stubWasmModule();
         const handle = mount(APP_TEMPLATE);
         const template = handle.get<HTMLTemplateElement>('template');

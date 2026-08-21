@@ -341,10 +341,10 @@
                 <!-- Camera: framed by boardCamera every frame, jolted by cameraShake -->
                 <pc-entity name="camera" position="0 12 32">
                     <pc-camera clear-color="0 0 0 0" fov="45" tonemap="neutral" far-clip="200"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="boardCamera" target="0 10.5 0" frame-width="14" frame-height="26" elevation="1.5"></pc-script>
-                        <pc-script name="cameraShake" intensity="0.4" decay="1.4"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="boardCamera" target="0 10.5 0" frame-width="14" frame-height="26" elevation="1.5"></pc-script-instance>
+                        <pc-script-instance name="cameraShake" intensity="0.4" decay="1.4"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
 
                 <!-- A warm key light casts the block shadows; a faint cool fill lifts
@@ -383,30 +383,30 @@
                      above. The grid child gets its cell lines built by boardGrid. -->
                 <pc-entity name="game-board">
                     <pc-entity name="grid" position="0 0 -0.5">
-                        <pc-scripts>
-                            <pc-script name="boardGrid" width="10" height="20" material="grid-line"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="boardGrid" width="10" height="20" material="grid-line"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="fallingBlocks"
-                                   block-asset="asset:rounded-box"
-                                   board-width="10"
-                                   board-height="20"
-                                   drop-interval="1000"
-                                   min-drop-interval="100"
-                                   speed-step="100"
-                                   flash-duration="0.25"></pc-script>
-                        <pc-script name="touchControls" drag-cell="24" drag-row="28"></pc-script>
-                    </pc-scripts>
-                    <pc-sounds>
-                        <pc-sound name="rotate" asset="rotate-sound" overlap volume="0.6"></pc-sound>
-                        <pc-sound name="drop" asset="drop-sound" overlap></pc-sound>
+                    <pc-script>
+                        <pc-script-instance name="fallingBlocks"
+                                            block-asset="asset:rounded-box"
+                                            board-width="10"
+                                            board-height="20"
+                                            drop-interval="1000"
+                                            min-drop-interval="100"
+                                            speed-step="100"
+                                            flash-duration="0.25"></pc-script-instance>
+                        <pc-script-instance name="touchControls" drag-cell="24" drag-row="28"></pc-script-instance>
+                    </pc-script>
+                    <pc-sound>
+                        <pc-sound-slot name="rotate" asset="rotate-sound" overlap volume="0.6"></pc-sound-slot>
+                        <pc-sound-slot name="drop" asset="drop-sound" overlap></pc-sound-slot>
                         <!-- The lock tick reuses the drop sample, pitched down and quieter -->
-                        <pc-sound name="lock" asset="drop-sound" overlap pitch="0.7" volume="0.45"></pc-sound>
-                        <pc-sound name="clear1" asset="clear1-sound" overlap></pc-sound>
-                        <pc-sound name="clear4" asset="clear4-sound" overlap></pc-sound>
-                        <pc-sound name="gameover" asset="gameover-sound"></pc-sound>
-                    </pc-sounds>
+                        <pc-sound-slot name="lock" asset="drop-sound" overlap pitch="0.7" volume="0.45"></pc-sound-slot>
+                        <pc-sound-slot name="clear1" asset="clear1-sound" overlap></pc-sound-slot>
+                        <pc-sound-slot name="clear4" asset="clear4-sound" overlap></pc-sound-slot>
+                        <pc-sound-slot name="gameover" asset="gameover-sound"></pc-sound-slot>
+                    </pc-sound>
                 </pc-entity>
             </pc-scene>
         </pc-app>
@@ -488,7 +488,7 @@
             // Respect reduced motion by zeroing the camera shake - per-property script
             // attributes can be set at any time, even before the app has booted
             if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                document.querySelector('pc-script[name="cameraShake"]').setAttribute('intensity', '0');
+                document.querySelector('pc-script-instance[name="cameraShake"]').setAttribute('intensity', '0');
             }
 
             const { app } = await whenReady('pc-app');

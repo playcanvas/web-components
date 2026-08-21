@@ -11,6 +11,8 @@ import { ComponentElement } from './component';
  * The GSplatComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Engine component: {@link GSplatComponent} (`gsplat`).
+ *
  * @category Components
  */
 class GSplatComponentElement extends ComponentElement {

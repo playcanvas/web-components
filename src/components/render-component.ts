@@ -15,6 +15,8 @@ import { ComponentElement } from './component';
  * to `box`). It does not cover the engine's `asset` render type, since there is no way to supply
  * a render asset here — use `pc-model` for glTF content instead.
  *
+ * Engine component: {@link RenderComponent} (`render`).
+ *
  * @category Components
  */
 class RenderComponentElement extends ComponentElement {

@@ -59,7 +59,7 @@ describe('teardown', () => {
             <pc-entity name="light"><pc-light type="directional"></pc-light></pc-entity>
             <pc-entity name="box">
                 <pc-render type="box"></pc-render>
-                <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
+                <pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound>
             </pc-entity>
             <pc-model asset="teardown-m"></pc-model>
         `);
@@ -79,7 +79,7 @@ describe('teardown', () => {
                 <pc-entity name="e">
                     <pc-anim></pc-anim>
                     <pc-camera></pc-camera>
-                    <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
+                    <pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound>
                 </pc-entity>
             `);
             unmount();
@@ -92,15 +92,15 @@ describe('teardown', () => {
         await cycle();
     });
 
-    it('does not throw when a pc-sound is added and removed within the same task', async () => {
+    it('does not throw when a pc-sound-slot is added and removed within the same task', async () => {
         // Regression test for #310. SoundSlotElement.connectedCallback awaits its parent's ready
         // promise and then used to dereference `soundElement!.component!` with no re-check, so a
         // slot removed while that await was pending resumed against a null component and threw
         // "Cannot read properties of null (reading 'addSlot')" as an unhandled rejection.
-        const { get } = await bootApp('<pc-entity name="e"><pc-sounds></pc-sounds></pc-entity>');
-        const sounds = get('pc-sounds');
+        const { get } = await bootApp('<pc-entity name="e"><pc-sound></pc-sound></pc-entity>');
+        const sounds = get('pc-sound');
 
-        const slot = document.createElement('pc-sound');
+        const slot = document.createElement('pc-sound-slot');
         slot.setAttribute('name', 'blip');
         sounds.appendChild(slot);
         slot.remove();
@@ -110,13 +110,13 @@ describe('teardown', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
-    it('does not throw when the whole app is removed while a pc-sound is connecting', async () => {
+    it('does not throw when the whole app is removed while a pc-sound-slot is connecting', async () => {
         // The wider version of #310: the slot itself stays put, but the <pc-app> above it is torn
         // down while the slot's connectedCallback is still suspended.
-        const { get, unmount } = await bootApp('<pc-entity name="e"><pc-sounds></pc-sounds></pc-entity>');
-        const sounds = get('pc-sounds');
+        const { get, unmount } = await bootApp('<pc-entity name="e"><pc-sound></pc-sound></pc-entity>');
+        const sounds = get('pc-sound');
 
-        const slot = document.createElement('pc-sound');
+        const slot = document.createElement('pc-sound-slot');
         slot.setAttribute('name', 'blip');
         sounds.appendChild(slot);
         unmount();
@@ -126,16 +126,16 @@ describe('teardown', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
-    it('removes the slot from the component when a pc-sound is removed', async () => {
+    it('removes the slot from the component when a pc-sound-slot is removed', async () => {
         // The bug this covers was found by the test above: disconnectedCallback used to rediscover
         // its parent through the warning getter, but parentElement is already null by then - so
         // removeSlot was never called (the slot leaked on a still-live component) and an ordinary
-        // removal emitted a misleading "must be a direct child of a pc-sounds element" warning.
+        // removal emitted a misleading "must be a direct child of a pc-sound element" warning.
         const { get } = await bootApp(
-            '<pc-entity name="e"><pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds></pc-entity>'
+            '<pc-entity name="e"><pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound></pc-entity>'
         );
-        const soundsElement = get('pc-sounds');
-        const slot = get('pc-sound');
+        const soundsElement = get('pc-sound');
+        const slot = get('pc-sound-slot');
         const component = (soundsElement as { component?: { slots: Record<string, unknown> } }).component!;
 
         expect(Object.keys(component.slots)).toContain('blip');
