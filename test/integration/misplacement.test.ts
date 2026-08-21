@@ -33,21 +33,21 @@ describe('misplaced elements', () => {
         return { ...handle, appElement };
     };
 
-    it('warns and skips the component when a component element is outside pc-entity', async () => {
+    it('warns and skips the component when a component element is outside any entity host', async () => {
         const { get } = await bootUnsettled('<pc-camera></pc-camera>');
         const camera = get<ComponentElement>('pc-camera');
 
-        // The documented exception to the never-settles rule: a component element outside a
-        // pc-entity still becomes ready, but with a null component.
+        // The documented exception to the never-settles rule: a component element outside an
+        // entity-fronting element still becomes ready, but with a null component.
         await readyWithin(camera);
         expect(camera.component).toBeNull();
-        warnings.expect('pc-camera must be a descendant of pc-entity - component not added');
+        warnings.expect('pc-camera must be a descendant of pc-entity, pc-model or pc-node - component not added');
     });
 
     it('includes the element id in the warning when one is set', async () => {
         const { get } = await bootUnsettled('<pc-camera id="main"></pc-camera>');
         await readyWithin(get<ComponentElement>('pc-camera'));
-        warnings.expect("pc-camera 'main' must be a descendant of pc-entity - component not added");
+        warnings.expect("pc-camera 'main' must be a descendant of pc-entity, pc-model or pc-node - component not added");
     });
 
     it('warns and never becomes ready when pc-asset is not a direct child of pc-app', async () => {

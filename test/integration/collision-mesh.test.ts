@@ -116,6 +116,22 @@ describe('<pc-collision> mesh geometry default', () => {
         expect(collision.component!.renderAsset).toBeNull();
     });
 
+    it('warns for a mesh collider directly under a pc-model, whose host carries no geometry', async () => {
+        // The component attaches to the model's host entity, which never has a render component -
+        // the content root beneath it does. A mesh collider that should take an asset's geometry
+        // belongs on a bound pc-node, as above; pinning the warning keeps that contract explicit.
+        const { get } = await bootApp(
+            `${MESH_ASSET}<pc-model asset="m" name="prop"><pc-collision type="mesh"></pc-collision></pc-model>`
+        );
+        const collision = get<CollisionComponentElement>('pc-collision');
+        await readyWithin(collision);
+
+        warnings.expect(
+            `pc-collision type="mesh" on 'prop' found no asset-backed render component to take geometry from - collider has no shape`
+        );
+        expect(collision.component!.renderAsset).toBeNull();
+    });
+
     it('warns for a primitive render component, which has no asset to collide against', async () => {
         const { get } = await bootApp(
             '<pc-entity name="prim"><pc-render type="box"></pc-render><pc-collision type="mesh"></pc-collision></pc-entity>'

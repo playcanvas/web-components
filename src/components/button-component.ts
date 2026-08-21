@@ -121,7 +121,9 @@ class ButtonComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` whose image
-     * element is used for visual transitions. Defaults to the button's own entity.
+     * element is used for visual transitions. Defaults to the button's own entity — inside a
+     * `<pc-model>`, that is the model's host entity, so supply an explicit reference to target a
+     * UI entity instead.
      * @param value - The image entity reference.
      */
     set image(value: string) {

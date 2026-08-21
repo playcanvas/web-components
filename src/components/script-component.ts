@@ -275,8 +275,17 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     protected initComponent() {
-        // Handle initial script elements
         this.querySelectorAll<ScriptElement>(':scope > pc-script').forEach((scriptElement) => {
+            // A host readiness cycle re-runs this against a component that can have survived it
+            // (a pc-model reloading content on its stable host entity). The engine rejects a
+            // duplicate create - returning null, silently in production builds - which would
+            // skip attribute application entirely. A surviving instance is re-asserted instead,
+            // so both cycle outcomes leave the component reflecting the element's declared state.
+            const script = this.scriptFor(scriptElement);
+            if (script) {
+                this.applyDeclaredState(script, scriptElement);
+                return;
+            }
             this.createScript(scriptElement);
         });
     }
@@ -525,15 +534,25 @@ class ScriptComponentElement extends ComponentElement {
 
         scriptElement._script = script;
 
-        // The JSON blob first with per-property-shadowed keys stripped, then the per-property
-        // attributes: each property is written exactly once and individual attributes win
-        this.applyAttributes(script, scriptElement.scriptAttributes, this.inlineKeys(scriptElement));
-        this.applyInlineAttributes(script, scriptElement);
-        script.enabled = scriptElement.enabled;
+        this.applyDeclaredState(script, scriptElement);
 
         scriptElement._onScriptCreated();
 
         return script;
+    }
+
+    /**
+     * Applies a `pc-script` element's declared state to a script instance: the `attributes` JSON
+     * first with per-property-shadowed keys stripped, then the per-property attributes — each
+     * property is written exactly once and individual attributes win — and finally the declared
+     * enabled state, so `initialize()` runs with every attribute in place.
+     * @param script - The script instance.
+     * @param scriptElement - The `pc-script` element holding the declared state.
+     */
+    private applyDeclaredState(script: Script, scriptElement: ScriptElement) {
+        this.applyAttributes(script, scriptElement.scriptAttributes, this.inlineKeys(scriptElement));
+        this.applyInlineAttributes(script, scriptElement);
+        script.enabled = scriptElement.enabled;
     }
 
     /**

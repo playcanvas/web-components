@@ -58,9 +58,7 @@
                     <pc-light type="directional" cast-shadows shadow-distance="1" shadow-intensity="0.6" shadow-resolution="1024" shadow-type="vsm-16f"></pc-light>
                 </pc-entity>
                 <!-- Shoe -->
-                <pc-entity name="shoe">
-                    <pc-model asset="shoe"></pc-model>
-                </pc-entity>
+                <pc-model name="shoe" asset="shoe"></pc-model>
                 <!-- Shadow Catcher -->
                 <pc-entity name="shadow-catcher">
                     <pc-scripts>
@@ -73,8 +71,8 @@
         <script type="module">
             import { whenReady } from '@playcanvas/web-components';
 
-            const [entityElement, assetElement] = await Promise.all([
-                whenReady('pc-entity[name="shoe"]'),
+            const [modelElement, assetElement] = await Promise.all([
+                whenReady('pc-model[name="shoe"]'),
                 whenReady('pc-asset#shoe')
             ]);
 
@@ -96,7 +94,7 @@
                 button.classList.add('example-button');
 
                 button.addEventListener('click', () => {
-                    resource.applyMaterialVariant(entityElement.entity, variant);
+                    resource.applyMaterialVariant(modelElement.entity, variant);
                 });
 
                 buttonContainer.appendChild(button);
