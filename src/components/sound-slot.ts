@@ -94,7 +94,7 @@ class SoundSlotElement extends AsyncElement {
         this._connectionGeneration++;
 
         // Uses the cached parent rather than a fresh lookup, since parentElement is already null
-        // by now. The component itself is null if the parent <pc-sound-slot> (or the whole <pc-app>) is
+        // by now. The component itself is null if the parent <pc-sound> (or the whole <pc-app>) is
         // being torn down — parents disconnect first and have already removed the component.
         this._soundElement?.component?.removeSlot(this._name);
         this._soundElement = null;
