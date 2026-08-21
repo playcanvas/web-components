@@ -263,7 +263,11 @@ class ModelElement extends EntityOwnerElement {
             this._createEntity(app);
             this._buildHierarchy(app);
 
-            buildDescendantEntities(this, app);
+            // A build that deferred (an unresolved pc-node above) defers the whole subtree with
+            // it - the node's bind sweeps it.
+            if (this._built) {
+                buildDescendantEntities(this, app);
+            }
         }
     }
 

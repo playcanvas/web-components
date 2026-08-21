@@ -256,6 +256,51 @@ describe('<pc-anim>', () => {
             expect(bonePosition(app).x).toBeGreaterThan(0);
         });
 
+        it('clears the managed binding root when a second model makes the skeleton ambiguous', async () => {
+            const { get } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-asset id="m2" type="container" src="${animatedSrc('Jump')}"></pc-asset>
+                <pc-entity name="holder">
+                    <pc-model asset="m"></pc-model>
+                    <pc-anim>
+                        <pc-anim-clip name="Run" asset="m"></pc-anim-clip>
+                    </pc-anim>
+                </pc-entity>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            const model = get<ModelElement>('pc-model');
+            expect(anim.component.rootBone, 'the sole sibling model pins the root').toBe(model.entity);
+
+            // A second sibling model leaves no single skeleton to pin - the stale pin must not
+            // survive, or curves would keep binding against whichever model happened to be first.
+            const second = document.createElement('pc-model');
+            second.setAttribute('asset', 'm2');
+            model.parentElement!.appendChild(second);
+            await readyWithin(second);
+
+            expect(anim.component.rootBone, 'the ambiguous source clears the pin').toBeNull();
+        });
+
+        it('leaves a binding root assigned through the engine API alone', async () => {
+            const { app, get } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-asset id="m2" type="container" src="${animatedSrc('Jump')}"></pc-asset>
+                <pc-entity name="holder"><pc-model asset="m"><pc-anim></pc-anim></pc-model></pc-entity>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            const model = get<ModelElement>('pc-model');
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
+            expect(anim.component.rootBone).toBe(model.entity);
+
+            const custom = app.root.findByName('holder') as Entity;
+            anim.component.rootBone = custom;
+
+            model.setAttribute('asset', 'm2');
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Jump']));
+
+            expect(anim.component.rootBone, "the user's choice outranks the managed default").toBe(custom);
+        });
+
         it('resolves animation and animclip typed assets', async () => {
             // A data: URI cannot reach the engine's GLB animation parser (it keys off the .glb
             // extension), so the multi-track 'animation' shape is produced directly: a lazy
