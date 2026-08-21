@@ -55,8 +55,11 @@ class EntityElement extends EntityOwnerElement {
             this._createEntity(app);
             this._buildHierarchy(app);
 
-            // Handle any child entities that might exist
-            buildDescendantEntities(this, app);
+            // Handle any child entities that might exist. A build that deferred (an unresolved
+            // pc-node above) defers the whole subtree with it - the node's bind sweeps it.
+            if (this._built) {
+                buildDescendantEntities(this, app);
+            }
         }
     }
 

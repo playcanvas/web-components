@@ -150,6 +150,14 @@ class EntityOwnerElement extends EntityBaseElement {
             return;
         }
 
+        // An owner that exists but is not yet parented is itself deferred behind an unresolved
+        // node further up. Building beneath it would announce readiness for an entity that is
+        // not in the scene graph; stay unbuilt with it - the node's bind sweeps the whole
+        // subtree, ancestors before descendants.
+        if (closestEntity instanceof EntityOwnerElement && !closestEntity._built) {
+            return;
+        }
+
         this._built = true;
 
         if (closestEntity?.entity) {

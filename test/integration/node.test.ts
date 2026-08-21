@@ -72,6 +72,37 @@ describe('<pc-node>', () => {
     };
 
     describe('binding', () => {
+        it('defers a nested entity subtree entirely until the binding resolves', async () => {
+            // Every level below an unresolved node must stay out of the scene graph - including
+            // descendants of an owner that itself deferred, which must neither parent beneath the
+            // owner's floating entity nor announce readiness from outside the graph.
+            const { model } = await bootCar('');
+
+            const node = document.createElement('pc-node');
+            node.setAttribute('name', 'Nowhere');
+            const outer = document.createElement('pc-entity');
+            outer.setAttribute('name', 'outer');
+            const inner = document.createElement('pc-entity');
+            inner.setAttribute('name', 'inner');
+            outer.appendChild(inner);
+            node.appendChild(outer);
+            model.appendChild(node);
+
+            warnings.expect("pc-node 'Nowhere' not found in model 'car'");
+            expect(node.state).toBe('missing');
+            expect(outer.entity!.parent, 'the deferred owner is unparented').toBeNull();
+            expect(inner.entity?.parent ?? null, 'and so is everything beneath it').toBeNull();
+            await expectNeverReady(inner);
+
+            node.setAttribute('name', 'Head');
+
+            expect(node.state).toBe('bound');
+            expect(outer.entity!.parent, 'the bind parents the whole chain').toBe(node.entity);
+            expect(inner.entity!.parent).toBe(outer.entity);
+            await readyWithin(inner);
+            expect(uncaught.seen).toEqual([]);
+        });
+
         it('binds a uniquely named node and registers it as a pick target', async () => {
             const { appElement, get } = await bootCar('<pc-node name="Head"></pc-node>');
             const node = get<NodeElement>('pc-node');
