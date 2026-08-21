@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { EntityElement } from '../../src/entity';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
+import { readyWithin } from '../helpers/ready';
 
 /**
  * A macrotask turn, so disconnect callbacks and suspended awaits run to completion.
@@ -13,6 +14,16 @@ const settleTask = () =>
     new Promise((resolve) => {
         setTimeout(resolve, 0);
     });
+
+/** The smallest valid glTF, for the pc-model host registration cases. Loads from a data: URI. */
+const MODEL_ASSET_TAG = `<pc-asset id="map-m" type="container" src="data:application/json,${encodeURIComponent(
+    JSON.stringify({
+        asset: { version: '2.0' },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'map-root' }]
+    })
+)}"></pc-asset>`;
 
 /**
  * The entity map is what joins engine scene nodes back to their owning elements by identity.
@@ -84,6 +95,46 @@ describe('pc-app entity map', () => {
         expect(fresh, 'a fresh entity was created').not.toBeNull();
         expect(fresh).not.toBe(oldEntity);
         expect(appElement.elementFromEntity(fresh!)).toBe(parentElement);
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('registers a pc-model host, never its instantiated content', async () => {
+        const { appElement, get } = await bootApp(`${MODEL_ASSET_TAG}<pc-model asset="map-m"></pc-model>`);
+        const model = get('pc-model');
+
+        expect(appElement.elementFromEntity(model.entity!), 'the host resolves to the element').toBe(model);
+        expect(appElement.elementFromEntity(model.contentEntity!),
+            'content nodes stay unregistered, so picks fall through to the host').toBeNull();
+    });
+
+    it('resets a pc-model when a user script destroys its host', async () => {
+        const { appElement, get } = await bootApp(`${MODEL_ASSET_TAG}<pc-model asset="map-m"></pc-model>`);
+        const model = get('pc-model');
+        const host = model.entity!;
+
+        host.destroy();
+
+        expect(appElement.elementFromEntity(host)).toBeNull();
+        expect(model.entity, 'the element no longer references the destroyed host').toBeNull();
+        expect(model.contentEntity, 'the content died with the host subtree').toBeNull();
+    });
+
+    it('registers a fresh host when a pc-model is removed and re-added', async () => {
+        const { appElement, get } = await bootApp(`${MODEL_ASSET_TAG}<pc-model asset="map-m"></pc-model>`);
+        const model = get('pc-model');
+        const container = model.parentElement!;
+        const oldHost = model.entity!;
+
+        model.remove();
+        await settleTask();
+        expect(appElement.elementFromEntity(oldHost), 'the destroyed host is unregistered').toBeNull();
+
+        container.appendChild(model);
+        await readyWithin(model);
+
+        expect(model.entity, 'a fresh host was created').not.toBe(oldHost);
+        expect(appElement.elementFromEntity(model.entity!)).toBe(model);
+        expect(model.contentEntity!.parent, 'the content was re-instantiated beneath it').toBe(model.entity);
         expect(uncaught.seen).toEqual([]);
     });
 });

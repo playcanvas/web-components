@@ -9,11 +9,12 @@
 
 /* eslint-disable import-x/order */
 
-// Note that order matters here (e.g. pc-entity must be defined before components)
+// Note that order matters here (e.g. pc-entity and pc-model must be defined before components)
 import { AsyncElement, whenReady } from './async-element';
 import { ModuleElement } from './module';
 import { AppElement } from './app';
 import { EntityElement } from './entity';
+import { ModelElement } from './model';
 import { AssetElement } from './asset';
 import { AnimComponentElement } from './components/anim-component';
 import { AnimClipElement } from './components/anim-clip';
@@ -39,8 +40,8 @@ import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
 import { GSplatComponentElement } from './components/gsplat-component';
 import { EntityBaseElement } from './entity-base';
+import { EntityOwnerElement } from './entity-owner';
 import { MaterialElement } from './material';
-import { ModelElement } from './model';
 import { NodeElement } from './node';
 import { SceneElement } from './scene';
 import { SkyElement } from './sky';
@@ -124,6 +125,7 @@ export {
     SoundSlotElement,
     GSplatComponentElement,
     EntityBaseElement,
+    EntityOwnerElement,
     MaterialElement,
     ModelElement,
     NodeElement,

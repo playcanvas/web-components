@@ -17,6 +17,12 @@ export const TAGS = [
     'pc-scrollbar', 'pc-scrollview', 'pc-sky', 'pc-sound', 'pc-sounds'
 ];
 
+/**
+ * The tags whose elements extend `EntityBaseElement`, and so front an engine entity: they are
+ * pick targets and carry the `onpointer*` attributes and pointer events.
+ */
+export const ENTITY_TAGS = ['pc-entity', 'pc-model', 'pc-node'];
+
 /** The tags whose elements extend `ComponentElement`, and so inherit its `enabled` attribute. */
 export const COMPONENT_TAGS = [
     'pc-anim', 'pc-button', 'pc-camera', 'pc-collision', 'pc-element', 'pc-gsplat', 'pc-joint',

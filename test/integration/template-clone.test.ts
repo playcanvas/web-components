@@ -5,6 +5,7 @@ import type { AppElement } from '../../src/app';
 import type { AssetElement } from '../../src/asset';
 import type { EntityElement } from '../../src/entity';
 import type { MaterialElement } from '../../src/material';
+import type { ModelElement } from '../../src/model';
 import type { ModuleElement } from '../../src/module';
 import type { NodeElement } from '../../src/node';
 import { bootApp, settle } from '../helpers/app';
@@ -154,6 +155,33 @@ describe('a <template>-cloned subtree', () => {
         expect(marker.entity, 'the attachment entity was created').toBeTruthy();
         expect(marker.entity!.parent, 'and parented under the bound node').toBe(node.entity);
         expect(marker.entity!.getLocalPosition().equals(new Vec3(0, 1, 0))).toBe(true);
+
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('builds a cloned <pc-model> appended to a running app', async () => {
+        const { get, container } = await bootApp(`
+            <pc-asset id="stage" type="container" src="${STAGE_SRC}"></pc-asset>
+            <pc-entity name="Content"></pc-entity>
+            <template id="prop">
+                <pc-model asset="stage" position="1 2 3"></pc-model>
+            </template>
+        `);
+        const content = get<EntityElement>('pc-entity[name="Content"]');
+        const template = get<HTMLTemplateElement>('template');
+
+        content.appendChild(template.content.cloneNode(true));
+
+        // The host is built synchronously on upgrade, like a cloned pc-entity; the content
+        // instantiates asynchronously behind the element's readiness.
+        const model = content.querySelector<ModelElement>(':scope > pc-model')!;
+        expect(model.entity, 'the cloned host was created').toBeTruthy();
+        expect(model.entity!.parent, 'and parented under the entity it was appended to').toBe(content.entity);
+        expect(model.entity!.getLocalPosition().equals(new Vec3(1, 2, 3)), 'position="1 2 3" applied').toBe(true);
+
+        await settle(container);
+        expect(model.contentEntity, 'the content was instantiated').toBeTruthy();
+        expect(model.contentEntity!.parent, 'beneath the host').toBe(model.entity);
 
         expect(uncaught.seen).toEqual([]);
     });

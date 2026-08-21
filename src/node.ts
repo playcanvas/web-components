@@ -2,9 +2,9 @@ import type { Entity, EventHandle, GraphNode, Material, MeshInstance, Quat, Rend
 import { Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './components/component';
-import { buildDescendantEntities } from './entity';
-import type { EntityElement } from './entity';
 import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
+import { buildDescendantEntities } from './entity-owner';
+import type { EntityOwnerElement } from './entity-owner';
 import { MaterialElement } from './material';
 import { ModelElement } from './model';
 import { parseBool, parseTags, parseVec3 } from './parse';
@@ -318,7 +318,10 @@ class NodeElement extends EntityBaseElement {
      * is retained untouched — a redundant edit must not flicker overrides through a revert.
      */
     private _rebind() {
-        const hostEntity = this._host?.entity ?? null;
+        // A model fronts a host entity of its own; the names this element resolves are the
+        // asset's, so the search starts at the instantiated content root, not the wrapper.
+        const host = this._host;
+        const hostEntity = (host instanceof ModelElement ? host.contentEntity : host?.entity) ?? null;
 
         if (!hostEntity || !this._name) {
             // Host not instantiated (or nothing to look up yet): return to pending. An assigned
@@ -435,8 +438,9 @@ class NodeElement extends EntityBaseElement {
         this._revertOverrides();
 
         // Attachment points anchor to the bound node, so they cannot outlive the binding. Each
-        // destroyed entity resets its element, which the next _buildChildren re-creates.
-        this.querySelectorAll<EntityElement>('pc-entity').forEach((child) => {
+        // destroyed entity resets its element, which the next _buildChildren re-creates - a
+        // model host among them re-instantiates its content when it rebuilds.
+        this.querySelectorAll<EntityOwnerElement>('pc-entity, pc-model').forEach((child) => {
             if (child.closestEntity === this) {
                 child.entity?.destroy();
             }

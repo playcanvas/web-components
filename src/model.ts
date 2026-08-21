@@ -1,7 +1,10 @@
 import type { ContainerResource, Entity, EventHandle } from 'playcanvas';
+import { Vec3 } from 'playcanvas';
 
 import { useAsset } from './asset';
-import { AsyncElement } from './async-element';
+import { POINTER_ATTRIBUTES } from './entity-base';
+import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
+import { parseBool, parseTags, parseVec3 } from './parse';
 
 /**
  * One material assignment of a {@link HierarchyNode} with a render component: a mesh instance's
@@ -104,14 +107,42 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * The ModelElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
- * The element becomes ready once its container asset has loaded and the instantiated hierarchy has
- * been added to the scene — `entity` is non-null by then. A failed load also settles readiness,
- * with `entity` remaining `null`: readiness means the load settled, not that it succeeded — listen
- * for `error`, or check `entity`, to tell the outcomes apart. Changing `asset` re-arms readiness
- * and instantiates anew, so a `ready()` obtained after the change resolves against the new
- * hierarchy. A `pc-model` outside a `pc-app`, or referencing an unknown asset id, warns and never
- * becomes ready.
+ * The element creates and fronts a stable host entity: `entity` is that host, created when the
+ * application builds its hierarchy and kept across `asset` changes, so the element's transform
+ * and tags are instance placement that composes with whatever transform the asset authored on
+ * its root. The instantiated content is parented beneath the host and exposed as
+ * {@link contentEntity}.
  *
+ * The element becomes ready once its current asset selection has settled: the container asset
+ * has loaded and its content root has been parented beneath the host, the load has failed
+ * (`contentEntity` stays `null` — listen for `error`, or check `contentEntity`, to tell the
+ * outcomes apart), or no asset is assigned at all. Changing `asset` re-arms readiness and
+ * instantiates anew, so a `ready()` obtained after the change resolves against the new content.
+ * A `pc-model` outside a `pc-app`, or referencing an unknown asset id, warns and never becomes
+ * ready.
+ *
+ * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
+ * intersects the model's geometry, exactly as for `<pc-entity>` — a hit on a content node that no
+ * `pc-node` fronts resolves to this element.
+ *
+ * @attribute {boolean} enabled - The enabled state of the model.
+ * @attribute {string} name - The name of the model.
+ * @attribute {string} position - The position of the model.
+ * @attribute {string} rotation - The rotation of the model.
+ * @attribute {string} scale - The scale of the model.
+ * @attribute {string} tags - The tags of the model.
+ * @attribute {string} onpointerenter - Script to run when the pointer moves onto the model.
+ * @attribute {string} onpointerleave - Script to run when the pointer moves off the model.
+ * @attribute {string} onpointermove - Script to run when the pointer moves over the model.
+ * @attribute {string} onpointerdown - Script to run when a pointer button is pressed over the
+ * model.
+ * @attribute {string} onpointerup - Script to run when a pointer button is released over the
+ * model.
+ * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the model.
+ * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the model.
+ * @fires {PointerEvent} pointermove - Fired when the pointer moves over the model.
+ * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the model.
+ * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the model.
  * @fires {Event} load - Fired each time a container asset finishes instantiating, including
  * re-instantiation after `asset` changes. Does not bubble — listen on this element, or use a
  * capture-phase listener on an ancestor.
@@ -119,16 +150,16 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * error in `message`. Does not bubble. The element still becomes ready — readiness means the load
  * settled, not that it succeeded.
  */
-class ModelElement extends AsyncElement {
+class ModelElement extends EntityOwnerElement {
     private _asset = '';
 
-    private _entity: Entity | null = null;
+    private _contentEntity: Entity | null = null;
 
     /**
-     * Incremented on every new load and on disconnect, and captured by a load when it starts. A
-     * load that resumes from an await or a load callback abandons itself if the value has moved
-     * on, so a superseded load can neither instantiate a second entity nor parent one that has
-     * since been destroyed.
+     * Incremented on every new load, on disconnect, and when the host entity dies, and captured
+     * by a load when it starts. A load that resumes from an await or a load callback abandons
+     * itself if the value has moved on, so a superseded load can neither instantiate a second
+     * content root nor parent one under a host a newer cycle has already replaced.
      */
     private _loadGeneration = 0;
 
@@ -142,12 +173,13 @@ class ModelElement extends AsyncElement {
     private _errorHandle: EventHandle | null = null;
 
     /**
-     * The root entity of the instantiated model. `null` until the container asset has loaded
-     * and been instantiated, and again once the element has been removed from the document.
-     * @returns The model's root entity, or `null`.
+     * The root entity of the instantiated model content, parented beneath the host entity.
+     * `null` until the container asset has loaded and been instantiated, after a failed load,
+     * and again once the element has been removed from the document.
+     * @returns The content root entity, or `null`.
      */
-    get entity(): Entity | null {
-        return this._entity;
+    get contentEntity(): Entity | null {
+        return this._contentEntity;
     }
 
     /**
@@ -160,12 +192,13 @@ class ModelElement extends AsyncElement {
      * is the printable form.
      *
      * The snapshot is plain data, computed afresh each call: it does not follow later changes
-     * to the hierarchy, and mutating it changes nothing.
+     * to the hierarchy, and mutating it changes nothing. It covers the instantiated content
+     * only — the host entity the element fronts is not part of the asset's node tree.
      *
      * @returns The root of the instantiated node tree, or `null`.
      */
     hierarchy(): HierarchyNode | null {
-        const root = this._entity;
+        const root = this._contentEntity;
         if (!root) {
             return null;
         }
@@ -214,19 +247,59 @@ class ModelElement extends AsyncElement {
         // A model outside an application is inert and never becomes ready, so awaiting it hangs.
         // Warn rather than fail silently, naming the parent it requires, as every other misplaced
         // element does.
-        if (!this.closestApp) {
+        const closestApp = this.closestApp;
+        if (!closestApp) {
             const label = this._asset ? ` '${this._asset}'` : '';
             console.warn(`pc-model${label} must be a descendant of pc-app - model not created`);
             return;
         }
-        this._loadModel();
+
+        // If the app is already running, create the host immediately; during a boot, the app's
+        // own sweep does it. Either way, _onBuilt starts the content load once the host is
+        // parented.
+        if (closestApp._hierarchyReady) {
+            const app = closestApp.app!;
+
+            this._createEntity(app);
+            this._buildHierarchy(app);
+
+            // A build that deferred (an unresolved pc-node above) defers the whole subtree with
+            // it - the node's bind sweeps it.
+            if (this._built) {
+                buildDescendantEntities(this, app);
+            }
+        }
     }
 
     disconnectedCallback() {
+        // Destroying the host destroys the instantiated content with it, and the destroy hook
+        // resets the element. The generation guard comes first so a load suspended on an await
+        // cannot resume against the torn-down element.
         this._loadGeneration++;
         this._detachLoadHandlers();
-        this._unloadModel();
-        this._resetReady();
+        this._entity?.destroy();
+    }
+
+    /**
+     * Starts (or restarts) the content load once the host has been parented. Readiness is not
+     * announced here — it tracks the content settling, not the host entering the scene graph.
+     */
+    protected override _onBuilt() {
+        this._loadContent();
+    }
+
+    /**
+     * Extends the owner reset for the content: the engine's destroy cascade has already taken
+     * the content root down with the host subtree, so only the reference and the in-flight load
+     * are dropped here. The next build re-creates the host and re-instantiates the content.
+     *
+     * @param entity - The host entity that was destroyed.
+     */
+    protected override _onEntityDestroy(entity: Entity) {
+        this._loadGeneration++;
+        this._detachLoadHandlers();
+        this._contentEntity = null;
+        super._onEntityDestroy(entity);
     }
 
     private _detachLoadHandlers() {
@@ -237,9 +310,9 @@ class ModelElement extends AsyncElement {
     }
 
     /**
-     * Resolves readiness and dispatches the `load` event. Called once the instantiated hierarchy
-     * has been parented — readiness means "in the scene graph", matching `pc-entity`, so a ready
-     * model's entity always has world transforms.
+     * Resolves readiness and dispatches the `load` event. Called once the instantiated content
+     * has been parented beneath the host — the host itself is already in the scene graph by
+     * then, so a ready model's content always has world transforms.
      */
     private _announceLoad() {
         this._onReady();
@@ -247,46 +320,29 @@ class ModelElement extends AsyncElement {
     }
 
     private _instantiate(container: ContainerResource) {
-        const generation = this._loadGeneration;
-
-        const entity = container.instantiateRenderEntity();
-        this._entity = entity;
-
-        // The parent's readiness re-arms when it is torn down, so these can resume in a later
-        // connection cycle. The entity is captured above and the generation re-checked, so a
-        // stale resume cannot parent an entity a newer cycle has already destroyed.
-        const parentEntityElement = this.closestEntity;
-        if (parentEntityElement) {
-            parentEntityElement.ready().then(() => {
-                if (generation !== this._loadGeneration) {
-                    return;
-                }
-                parentEntityElement.entity!.addChild(entity);
-                this._announceLoad();
-            });
-        } else {
-            const appElement = this.closestApp;
-            if (appElement) {
-                appElement.ready().then(() => {
-                    if (generation !== this._loadGeneration) {
-                        return;
-                    }
-                    appElement.app!.root.addChild(entity);
-                    this._announceLoad();
-                });
-            }
-        }
+        const content = container.instantiateRenderEntity();
+        this._contentEntity = content;
+        this._entity!.addChild(content);
+        this._announceLoad();
     }
 
-    private async _loadModel() {
-        this._unloadModel();
+    private _destroyContent() {
+        this._contentEntity?.destroy();
+        this._contentEntity = null;
+    }
+
+    private async _loadContent() {
+        // The old content goes down synchronously, so a reader that checks after an asset change
+        // never sees the outgoing hierarchy. The host survives - components and child entities
+        // attached to it carry over to the new content.
+        this._destroyContent();
 
         // Supersede any load already in flight - only the newest load may instantiate
         const generation = ++this._loadGeneration;
         this._detachLoadHandlers();
 
         // Re-arm readiness so a waiter obtained after an asset change resolves against the new
-        // hierarchy. A no-op on first connection, where readiness is still pending.
+        // content. A no-op on first connection, where readiness is still pending.
         this._resetReady();
 
         const appElement = this.closestApp;
@@ -302,14 +358,25 @@ class ModelElement extends AsyncElement {
             return;
         }
 
+        // The host may not be parented yet - a model under a pc-node that has not bound, reached
+        // through the asset setter. Nothing settles here: _onBuilt re-runs this load once the
+        // host builds.
+        if (!this._entity || !this._built) {
+            return;
+        }
+
+        if (this._asset === '') {
+            // No asset assigned is a settled selection: the element is a usable host (components
+            // attach, waiters resolve) with no content. Assigning an asset later re-arms.
+            this._onReady();
+            return;
+        }
+
         const asset = useAsset(this._asset);
         if (!asset) {
-            // An empty id is a legitimate transient (the asset may be assigned later); a
-            // non-empty one that resolves to nothing is a dead end - say so rather than staying
+            // A non-empty id that resolves to nothing is a dead end - say so rather than staying
             // silently pending.
-            if (this._asset) {
-                console.warn(`pc-model could not find asset '${this._asset}' - model not created`);
-            }
+            console.warn(`pc-model could not find asset '${this._asset}' - model not created`);
             return;
         }
 
@@ -331,7 +398,7 @@ class ModelElement extends AsyncElement {
                 if (generation !== this._loadGeneration) {
                     return;
                 }
-                // A failed load settles readiness with a null entity, mirroring pc-asset:
+                // A failed load settles readiness with a null contentEntity, mirroring pc-asset:
                 // readiness means the load settled, not that it succeeded.
                 this.dispatchEvent(
                     new ErrorEvent('error', {
@@ -343,11 +410,6 @@ class ModelElement extends AsyncElement {
         }
     }
 
-    private _unloadModel() {
-        this._entity?.destroy();
-        this._entity = null;
-    }
-
     /**
      * Sets the id of the `pc-asset` to use for the model.
      * @param value - The asset ID.
@@ -355,7 +417,7 @@ class ModelElement extends AsyncElement {
     set asset(value: string) {
         this._asset = value;
         if (this.isConnected) {
-            this._loadModel();
+            this._loadContent();
         }
     }
 
@@ -368,13 +430,38 @@ class ModelElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset'];
+        return ['asset', 'enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...POINTER_ATTRIBUTES];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
             case 'asset':
                 this.asset = newValue ?? '';
+                break;
+            case 'enabled':
+                this.enabled = parseBool(newValue, true);
+                break;
+            case 'name':
+                this.name = newValue ?? 'Untitled';
+                break;
+            case 'position':
+                this.position = parseVec3(newValue, Vec3.ZERO, name);
+                break;
+            case 'rotation':
+                this.rotation = parseVec3(newValue, Vec3.ZERO, name);
+                break;
+            case 'scale':
+                this.scale = parseVec3(newValue, Vec3.ONE, name);
+                break;
+            case 'tags':
+                this.tags = parseTags(newValue);
+                break;
+            case 'onpointerenter':
+            case 'onpointerleave':
+            case 'onpointerdown':
+            case 'onpointerup':
+            case 'onpointermove':
+                this._updateInlineHandler(name, newValue);
                 break;
         }
     }

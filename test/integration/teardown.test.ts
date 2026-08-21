@@ -4,6 +4,17 @@ import type { AppElement } from '../../src/app';
 import type { EntityElement } from '../../src/entity';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
+import { readyWithin } from '../helpers/ready';
+
+/** The smallest valid glTF, for the pc-model teardown cases. Loads from a data: URI. */
+const MODEL_ASSET_TAG = `<pc-asset id="teardown-m" type="container" src="data:application/json,${encodeURIComponent(
+    JSON.stringify({
+        asset: { version: '2.0' },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'teardown-root' }]
+    })
+)}"></pc-asset>`;
 
 /**
  * Teardown is where this library is most fragile, because a <pc-app> disconnects BEFORE its
@@ -42,6 +53,7 @@ describe('teardown', () => {
     it('tears down a full tree of component elements without throwing', async () => {
         // Every element type that carries a teardown guard, in one tree.
         const { unmount } = await bootApp(`
+            ${MODEL_ASSET_TAG}
             <pc-scene></pc-scene>
             <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
             <pc-entity name="light"><pc-light type="directional"></pc-light></pc-entity>
@@ -49,6 +61,7 @@ describe('teardown', () => {
                 <pc-render type="box"></pc-render>
                 <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
             </pc-entity>
+            <pc-model asset="teardown-m"></pc-model>
         `);
 
         unmount();
@@ -165,6 +178,34 @@ describe('teardown', () => {
         expect(childEntity, 'the child is attached to the hierarchy').toBeTruthy();
         expect(childElement.entity, "and is the element's own entity").toBe(childEntity);
         expect(childEntity?.parent, 'parented under the parent entity, not the root').toBe(parentEntity);
+    });
+
+    it('rebuilds a pc-model inside a removed and re-added pc-entity subtree', async () => {
+        // The model's host dies with the ancestor's destroy cascade, resetting the element
+        // through its destroy hook. Re-adding the ancestor rebuilds descendants through
+        // buildDescendantEntities, which must include model hosts - and a rebuilt host must
+        // re-instantiate its content from the still-loaded asset.
+        const { app, get, all } = await bootApp(`
+            ${MODEL_ASSET_TAG}
+            <pc-entity name="parent"><pc-model asset="teardown-m"></pc-model></pc-entity>
+        `);
+        const parentElement = all<EntityElement>('pc-entity')[0];
+        const container = parentElement.parentElement as AppElement;
+        const model = get('pc-model');
+        const oldHost = model.entity!;
+
+        parentElement.remove();
+        await settleTask();
+        expect(model.entity, 'the host died with the subtree').toBeNull();
+        expect(model.contentEntity, 'the content died with the host').toBeNull();
+
+        container.appendChild(parentElement);
+        await readyWithin(model);
+
+        expect(model.entity, 'a fresh host was created').not.toBe(oldHost);
+        expect(model.entity!.parent, 'parented under the recreated parent entity').toBe(app.root.findByName('parent'));
+        expect(model.contentEntity!.parent, 'the content was re-instantiated beneath the host').toBe(model.entity);
+        expect(uncaught.seen).toEqual([]);
     });
 
     it('restores every level when a three-deep pc-entity subtree is removed and re-added', async () => {

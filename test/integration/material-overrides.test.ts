@@ -108,7 +108,7 @@ describe('<pc-node> material-overrides', () => {
             smokedGlass: booted.get<MaterialElement>('pc-material[id="smoked-glass"]').material!
         };
         /** The body render component's mesh instances, read fresh from the current hierarchy. */
-        const meshInstances = () => model.entity!.render!.meshInstances;
+        const meshInstances = () => model.contentEntity!.render!.meshInstances;
         return { ...booted, model, node, replacements, meshInstances };
     };
 
@@ -358,7 +358,7 @@ describe('<pc-node> material-overrides', () => {
                 'candy-red'
             );
             expect(decoration.isConnected).toBe(true);
-            expect(booted.get<ModelElement>('pc-model').entity).toBeTruthy();
+            expect(booted.get<ModelElement>('pc-model').contentEntity).toBeTruthy();
             expect(uncaught.seen).toEqual([]);
         });
 

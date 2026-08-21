@@ -9,6 +9,16 @@ import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
 
+/** The smallest valid glTF, for the pc-model re-boot case. Loads from a data: URI. */
+const MODEL_ASSET_TAG = `<pc-asset id="reboot-m" type="container" src="data:application/json,${encodeURIComponent(
+    JSON.stringify({
+        asset: { version: '2.0' },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'reboot-root' }]
+    })
+)}"></pc-asset>`;
+
 /**
  * <pc-app> boot and teardown state. Removing the element must return it - and everything that
  * keyed off its readiness - to the pre-boot state, so that re-inserting it boots afresh, and so
@@ -138,11 +148,13 @@ describe('<pc-app> lifecycle', () => {
 
     it('re-boots a removed pc-app when it is re-added within the same task', async () => {
         const handle = await bootApp(`
+            ${MODEL_ASSET_TAG}
             <pc-scene fog="linear"></pc-scene>
             <pc-entity name="e">
                 <pc-camera></pc-camera>
                 <pc-sounds><pc-sound name="blip"></pc-sound></pc-sounds>
             </pc-entity>
+            <pc-model asset="reboot-m"></pc-model>
         `);
         const { appElement, app: firstApp, container, get } = handle;
 
@@ -180,6 +192,14 @@ describe('<pc-app> lifecycle', () => {
 
         const soundsComponent = (get('pc-sounds') as { component?: { slots: Record<string, unknown> } }).component;
         expect(Object.keys(soundsComponent!.slots), 'the sound slot is back').toContain('blip');
+
+        // ...the model's host was recreated in the new application, re-registered, and its
+        // content re-instantiated beneath it...
+        const modelElement = get('pc-model');
+        expect(modelElement.entity, 'the model host is back').toBeTruthy();
+        expect(modelElement.entity!.parent).toBe(app!.root);
+        expect(appElement.elementFromEntity(modelElement.entity!), 'and re-registered').toBe(modelElement);
+        expect(modelElement.contentEntity!.parent, 'with re-instantiated content').toBe(modelElement.entity);
 
         // ...and the scene element announced the new scene, with its settings re-applied.
         const sceneElement = get<SceneElement>('pc-scene');

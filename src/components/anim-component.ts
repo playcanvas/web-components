@@ -1,4 +1,4 @@
-import type { AnimComponent, Asset, ContainerResource } from 'playcanvas';
+import type { AnimComponent, Asset, ContainerResource, Entity } from 'playcanvas';
 import { ANIM_CONTROL_STATES, AnimTrack } from 'playcanvas';
 
 import { AssetElement } from '../asset';
@@ -72,6 +72,12 @@ class AnimComponentElement extends ComponentElement {
     private _clip = '';
 
     /**
+     * The binding root this element last assigned through {@link _applyRootBone}, distinguishing
+     * its own writes from a `rootBone` assigned through the engine API — which is left alone.
+     */
+    private _managedRootBone: Entity | null = null;
+
+    /**
      * The element the model-readiness listener is attached to, held so disconnection can detach
      * it after `closestEntity` no longer resolves.
      */
@@ -112,6 +118,9 @@ class AnimComponentElement extends ComponentElement {
         if (!(event.target instanceof ModelElement) || !this.component) {
             return;
         }
+        // A model cycle can replace the skeleton source's host entity (a rebuild under a
+        // retargeting pc-node), so the binding root is re-asserted before anything rebinds.
+        this._applyRootBone();
         if (event.target === this.parentElement) {
             const implicit = this._autoAssigned ||
                 [...this._assignedClips.values()].some(clip => !clip.asset);
@@ -122,6 +131,51 @@ class AnimComponentElement extends ComponentElement {
         }
         this.component.rebind();
     };
+
+    /**
+     * The model whose host entity scopes this component's curve binding: the parent `pc-model`,
+     * or the sole `pc-model` among the parent's direct children (the arrangement where clips
+     * live in a library asset beside the skeleton). `null` when there is no such model, or more
+     * than one — an ambiguous skeleton is left to the engine's name-based resolution.
+     */
+    private _skeletonSource(): ModelElement | null {
+        const parent = this.parentElement;
+        if (parent instanceof ModelElement) {
+            return parent;
+        }
+        const models = parent ? parent.querySelectorAll(':scope > pc-model') : null;
+        return models?.length === 1 && models[0] instanceof ModelElement ? models[0] : null;
+    }
+
+    /**
+     * Keeps the component's binding root pointing at the skeleton source's host entity. The host
+     * wraps the instantiated content, so left at its default — the component's own entity — the
+     * engine binder mis-resolves curves that target the asset's root node: its fallback treats
+     * the graph as the asset root once the root is no longer a direct child.
+     *
+     * Authoritative in both directions for values this element assigned: a source appearing pins
+     * its host, and a source dissolving (the model gone, or a second model making the skeleton
+     * ambiguous) clears the pin rather than leaving it on a stale host. A root assigned through
+     * the engine API is never overwritten — the user's choice outranks the managed default.
+     * Writes are skipped while unchanged, because the engine setter itself triggers a rebind.
+     */
+    private _applyRootBone() {
+        const component = this.component;
+
+        // A non-null root this element did not assign came through the engine API. A fresh
+        // component starts at null, which is always reclaimable.
+        if (component.rootBone !== null && component.rootBone !== this._managedRootBone) {
+            return;
+        }
+
+        const host = this._skeletonSource()?.entity ?? null;
+        if (component.rootBone !== host) {
+            // The engine setter accepts null - restoring the component's own entity as the
+            // binding graph - but its declared type does not
+            component.rootBone = host as Entity;
+        }
+        this._managedRootBone = host;
+    }
 
     /** @ignore */
     constructor() {
@@ -151,6 +205,7 @@ class AnimComponentElement extends ComponentElement {
             this._modelListenerTarget = host;
         }
 
+        this._applyRootBone();
         this._applyClips();
     }
 
@@ -163,6 +218,7 @@ class AnimComponentElement extends ComponentElement {
         this._sourceGeneration++;
         this._assignedClips.clear();
         this._autoAssigned = false;
+        this._managedRootBone = null;
 
         super.disconnectedCallback();
     }
@@ -353,6 +409,10 @@ class AnimComponentElement extends ComponentElement {
         if (!component) {
             return;
         }
+        // A clip-set change is also a chance for the skeleton source to have changed shape (a
+        // clip child appearing or leaving can accompany a model coming or going) - re-derive the
+        // binding root before the reassignment binds against it.
+        this._applyRootBone();
         const layer = component.baseLayer;
         const restore = layer ? {
             state: layer.activeState,

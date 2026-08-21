@@ -209,7 +209,7 @@ describe('<pc-model> hierarchy()', () => {
         const { model } = await bootCar();
         expect(model.hierarchy()!.components).toEqual([]);
 
-        model.entity!.addComponent('camera');
+        model.contentEntity!.addComponent('camera');
 
         expect(model.hierarchy()!.components, 'a fresh snapshot sees the new component').toEqual(['camera']);
         expect(uncaught.seen).toEqual([]);
@@ -261,7 +261,7 @@ describe('<pc-model> hierarchy()', () => {
     it('reads the material assignments at call time', async () => {
         const { get } = await bootApp(`${ASSETS}<pc-model asset="body"></pc-model>`);
         const model = get<ModelElement>('pc-model');
-        const meshInstances = model.entity!.render!.meshInstances;
+        const meshInstances = model.contentEntity!.render!.meshInstances;
 
         const replacement = new StandardMaterial();
         replacement.name = 'Resprayed';

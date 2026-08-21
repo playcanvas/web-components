@@ -1,3 +1,4 @@
+import { Vec3 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AppElement } from '../../src/app';
@@ -36,9 +37,9 @@ describe('<pc-model>', () => {
     });
 
     it('abandons a load whose element is removed while it waits', async () => {
-        // _loadModel parks on the app's ready promise, which is already resolved here - so the
+        // _loadContent parks on the app's ready promise, which is already resolved here - so the
         // load resumes one microtask after connect. A same-task removal lands in that window,
-        // and the resumed load must not instantiate an entity for an element that is gone.
+        // and the resumed load must not instantiate content for an element that is gone.
         const { appElement, get } = await bootApp(ASSET_TAG);
 
         expect(get('pc-asset').asset!.loaded, 'the container asset really loaded').toBe(true);
@@ -50,7 +51,8 @@ describe('<pc-model>', () => {
 
         await settleTask();
 
-        expect(model.entity, 'no entity was instantiated for the removed element').toBeNull();
+        expect(model.entity, 'the host died with the removal').toBeNull();
+        expect(model.contentEntity, 'no content was instantiated for the removed element').toBeNull();
         expect(uncaught.seen).toEqual([]);
     });
 
@@ -76,7 +78,7 @@ describe('<pc-model>', () => {
         await vi.waitFor(() => expect(asset.loaded).toBe(true));
         await settleTask();
 
-        expect(model.entity, 'nothing was instantiated for the removed element').toBeNull();
+        expect(model.contentEntity, 'nothing was instantiated for the removed element').toBeNull();
         expect(uncaught.seen).toEqual([]);
     });
 
@@ -119,12 +121,12 @@ describe('<pc-model>', () => {
         appElement.app!.autoRender = false;
 
         expect(instantiations, 'the superseded load did not instantiate').toBe(1);
-        expect(handle.get('pc-model').entity, 'the surviving load produced the entity').toBeTruthy();
+        expect(handle.get('pc-model').contentEntity, 'the surviving load produced the content').toBeTruthy();
         expect(uncaught.seen).toEqual([]);
     });
 
     describe('readiness', () => {
-        it('resolves ready only once the model is instantiated and parented', async () => {
+        it('resolves ready only once the content is instantiated and parented', async () => {
             const { appElement } = await bootApp(ASSET_TAG.replace('>', ' lazy>'));
 
             const model = document.createElement('pc-model');
@@ -136,29 +138,36 @@ describe('<pc-model>', () => {
                 ready = true;
             });
 
+            // The host exists from the moment of connection - readiness tracks the content, not
+            // the host entering the scene graph.
+            expect(model.entity, 'the host is created on connection').not.toBeNull();
+
             // Let the connect continuations run: the app-ready resume on the first hop, the asset
             // subscription on the second. The data: fetch needs a macrotask, so the load cannot
             // have completed yet.
             await Promise.resolve();
             await Promise.resolve();
             expect(ready, 'not ready before the asset has loaded').toBe(false);
-            expect(model.entity, 'no entity before the asset has loaded').toBeNull();
+            expect(model.contentEntity, 'no content before the asset has loaded').toBeNull();
 
             await readyWithin(model);
-            expect(model.entity, 'ready implies an instantiated entity').not.toBeNull();
-            expect(model.entity!.parent, 'ready implies the entity is parented').toBe(appElement.app!.root);
+            expect(model.contentEntity, 'ready implies instantiated content').not.toBeNull();
+            expect(model.contentEntity!.parent, 'ready implies the content is parented beneath the host').toBe(model.entity);
+            expect(model.entity!.parent, 'the host is parented under the application root').toBe(appElement.app!.root);
             expect(uncaught.seen).toEqual([]);
         });
 
-        it('stays pending without warning while no asset is assigned', async () => {
+        it('becomes ready with no content while no asset is assigned', async () => {
             const { appElement } = await bootApp();
 
             const model = document.createElement('pc-model');
             appElement.appendChild(model);
 
-            // An unassigned asset is a legitimate transient (the property may be set later), so
-            // the element waits silently - the guard fails this test if anything warns.
-            await expectNeverReady(model);
+            // An empty selection is settled: the element is a usable host with nothing to load.
+            // No warning either - the guard fails this test if anything warns.
+            await readyWithin(model);
+            expect(model.entity, 'the host exists without an asset').not.toBeNull();
+            expect(model.contentEntity, 'there is no content to instantiate').toBeNull();
         });
 
         it('warns and never becomes ready when no asset matches the id', async () => {
@@ -187,17 +196,17 @@ describe('<pc-model>', () => {
 
             const model = document.createElement('pc-model');
             model.setAttribute('asset', 'm');
-            const seen: { entity: unknown; bubbles: boolean }[] = [];
+            const seen: { content: unknown; bubbles: boolean }[] = [];
             model.addEventListener('load', (event) => {
-                seen.push({ entity: model.entity, bubbles: event.bubbles });
+                seen.push({ content: model.contentEntity, bubbles: event.bubbles });
             });
             appElement.appendChild(model);
 
             await readyWithin(model);
             expect(seen).toHaveLength(1);
-            expect(seen[0].entity, 'the entity is set by the time load fires').toBe(model.entity);
+            expect(seen[0].content, 'the content is set by the time load fires').toBe(model.contentEntity);
             expect(seen[0].bubbles, 'load does not bubble, mirroring pc-asset').toBe(false);
-            expect(model.entity).not.toBeNull();
+            expect(model.contentEntity).not.toBeNull();
             expect(uncaught.seen).toEqual([]);
         });
 
@@ -213,7 +222,8 @@ describe('<pc-model>', () => {
             appElement.appendChild(model);
 
             await readyWithin(model);
-            expect(model.entity, 'readiness means the load settled, not that it succeeded').toBeNull();
+            expect(model.contentEntity, 'readiness means the load settled, not that it succeeded').toBeNull();
+            expect(model.entity, 'the host survives a failed load').not.toBeNull();
             expect(seen).toHaveLength(1);
             expect(seen[0].message, 'the engine error is forwarded').not.toBe('');
             expect(seen[0].bubbles).toBe(false);
@@ -225,11 +235,12 @@ describe('<pc-model>', () => {
     });
 
     describe('[asset]', () => {
-        it('re-instantiates and re-arms readiness when the asset changes', async () => {
+        it('re-instantiates content beneath the surviving host when the asset changes', async () => {
             const { appElement, get } = await bootApp(`${ASSET_TAG}${ASSET_TAG_B}<pc-model asset="m"></pc-model>`);
             const model = get('pc-model');
 
-            const first = model.entity!;
+            const host = model.entity!;
+            const first = model.contentEntity!;
             expect(first.findByName('model-root'), 'the first model is instantiated').not.toBeNull();
 
             let loads = 0;
@@ -238,16 +249,51 @@ describe('<pc-model>', () => {
             });
 
             model.setAttribute('asset', 'm2');
-            expect(model.entity, 'the old hierarchy is torn down synchronously').toBeNull();
+            expect(model.contentEntity, 'the old content is torn down synchronously').toBeNull();
+            expect(model.entity, 'the host survives the change').toBe(host);
 
             await readyWithin(model);
-            const second = model.entity!;
-            expect(second, 'a new hierarchy was instantiated').not.toBe(first);
-            expect(second.findByName('model-root-b'), 'the new hierarchy comes from the new asset').not.toBeNull();
-            expect(second.parent, 'the new hierarchy is parented').toBe(appElement.app!.root);
-            expect(first.parent, 'the old hierarchy left the scene').toBeNull();
+            const second = model.contentEntity!;
+            expect(second, 'new content was instantiated').not.toBe(first);
+            expect(second.findByName('model-root-b'), 'the new content comes from the new asset').not.toBeNull();
+            expect(second.parent, 'the new content is parented beneath the host').toBe(host);
+            expect(host.parent, 'the host never left the scene').toBe(appElement.app!.root);
+            expect(first.parent, 'the old content left the scene').toBeNull();
             expect(loads, 'each instantiation fires load').toBe(1);
             expect(uncaught.seen).toEqual([]);
+        });
+    });
+
+    describe('host entity', () => {
+        it('registers the host so picks and lookups resolve to this element', async () => {
+            const { appElement, get } = await bootApp(`${ASSET_TAG}<pc-model asset="m"></pc-model>`);
+            const model = get('pc-model');
+
+            expect(appElement.elementFromEntity(model.entity!), 'the identity map points back here').toBe(model);
+            expect(appElement.elementFromEntity(model.contentEntity!),
+                'the content root itself is not fronted by any element').toBeNull();
+        });
+
+        it('applies authored properties to the host and writes changes through', async () => {
+            const { get } = await bootApp(
+                `${ASSET_TAG}<pc-model asset="m" name="prop" position="1 2 3" scale="2 2 2" tags="a, b"></pc-model>`
+            );
+            const model = get('pc-model');
+            const host = model.entity!;
+
+            expect(host.name).toBe('prop');
+            expect(host.getLocalPosition().equals(new Vec3(1, 2, 3))).toBe(true);
+            expect(host.getLocalScale().equals(new Vec3(2, 2, 2))).toBe(true);
+            expect(host.tags.list().sort()).toEqual(['a', 'b']);
+
+            model.position = new Vec3(4, 5, 6);
+            model.enabled = false;
+            expect(host.getLocalPosition().equals(new Vec3(4, 5, 6))).toBe(true);
+            expect(host.enabled).toBe(false);
+
+            // The authored transform composes with the host's rather than being overwritten by it:
+            // the content root keeps its own local transform beneath the placed host.
+            expect(model.contentEntity!.parent).toBe(host);
         });
     });
 });
