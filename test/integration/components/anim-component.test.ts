@@ -65,7 +65,7 @@ describe('<pc-anim>', () => {
     describe('#component', () => {
         it('creates the anim component with the engine defaults', async () => {
             // A bare pc-anim outside a pc-model is an empty component driven through the JS
-            // API - deliberately silent, like a pc-sounds with no slots
+            // API - deliberately silent, like a pc-sound with no slots
             const { get } = await bootApp('<pc-entity name="e"><pc-anim></pc-anim></pc-entity>');
             const anim = get<AnimComponentElement>('pc-anim');
             const component = anim.component;

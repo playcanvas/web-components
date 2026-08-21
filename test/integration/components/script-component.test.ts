@@ -1,8 +1,8 @@
 import { Script } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
-import type { ScriptElement } from '../../../src/components/script';
 import type { ScriptComponentElement } from '../../../src/components/script-component';
+import type { ScriptInstanceElement } from '../../../src/components/script-instance';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
 import { readyWithin } from '../../helpers/ready';
@@ -36,7 +36,7 @@ class Probe extends Script {
 
 /**
  * Boots an app with the two containers, registers the probe script, and inserts a pc-model
- * hosting a pc-scripts/pc-script pair at runtime - scripts must be registered before the script
+ * hosting a pc-script/pc-script-instance pair at runtime - scripts must be registered before the script
  * element creates its instance.
  *
  * @returns The booted handle plus the model, scripts, script elements and the instance.
@@ -48,14 +48,14 @@ const bootProbe = async () => {
     const model = document.createElement('pc-model');
     model.setAttribute('asset', 'm');
     model.innerHTML = `
-        <pc-scripts>
-            <pc-script name="probe" attributes='{"speed": 5}' label="hi"></pc-script>
-        </pc-scripts>
+        <pc-script>
+            <pc-script-instance name="probe" attributes='{"speed": 5}' label="hi"></pc-script-instance>
+        </pc-script>
     `;
     handle.appElement.appendChild(model);
 
-    const scriptsElement = model.querySelector<ScriptComponentElement>('pc-scripts')!;
-    const scriptElement = model.querySelector<ScriptElement>('pc-script')!;
+    const scriptsElement = model.querySelector<ScriptComponentElement>('pc-script')!;
+    const scriptElement = model.querySelector<ScriptInstanceElement>('pc-script-instance')!;
     await readyWithin(scriptElement);
 
     const script = scriptElement.script as Probe;
@@ -63,13 +63,13 @@ const bootProbe = async () => {
 };
 
 /**
- * A `pc-scripts` inside a `pc-model` attaches to the model's stable host entity, so a model
+ * A `pc-script` inside a `pc-model` attaches to the model's stable host entity, so a model
  * asset change cycles the element's readiness against a component - and script instances - that
  * survived it. The cycle must re-assert each element's declared state on the surviving instance
  * rather than re-create it (the engine rejects a duplicate create by returning null, silently in
  * production builds, which used to skip attribute application entirely).
  */
-describe('<pc-scripts>', () => {
+describe('<pc-script>', () => {
     const { uncaught, warnings } = useGuard();
 
     it('creates the script with both declared-state channels applied', async () => {
@@ -110,7 +110,7 @@ describe('<pc-scripts>', () => {
         expect(script.label, 'the per-property attribute re-applied').toBe('hi');
     });
 
-    it('re-fires ready on pc-scripts but not on pc-script across the cycle', async () => {
+    it('re-fires ready on pc-script but not on pc-script-instance across the cycle', async () => {
         const { model, scriptsElement, scriptElement } = await bootProbe();
 
         let scriptsReady = 0;
@@ -123,10 +123,10 @@ describe('<pc-scripts>', () => {
         model.setAttribute('asset', 'm2');
         await readyWithin(model);
 
-        // The pc-scripts element announces the cycle; the pc-script's instance survived, so its
+        // The pc-script element announces the cycle; the pc-script-instance's instance survived, so its
         // own readiness - "an instance exists for this element" - never lapsed.
-        expect(scriptsReady, 'pc-scripts re-announced').toBe(1);
-        expect(scriptReady, 'pc-script did not').toBe(0);
+        expect(scriptsReady, 'pc-script re-announced').toBe(1);
+        expect(scriptReady, 'pc-script-instance did not').toBe(0);
         expect(uncaught.seen).toEqual([]);
     });
 });

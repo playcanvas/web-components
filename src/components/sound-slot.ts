@@ -8,7 +8,7 @@ import { SoundComponentElement } from './sound-component';
 
 /**
  * The SoundSlotElement interface provides properties and methods for manipulating
- * `<pc-sound>` elements. The SoundSlotElement interface also inherits the properties and
+ * `<pc-sound-slot>` elements. The SoundSlotElement interface also inherits the properties and
  * methods of the {@link AsyncElement} interface.
  */
 class SoundSlotElement extends AsyncElement {
@@ -31,7 +31,7 @@ class SoundSlotElement extends AsyncElement {
     private _volume = 1;
 
     /**
-     * The `<pc-sounds>` this slot was added to, captured at connect time.
+     * The `<pc-sound>` this slot was added to, captured at connect time.
      *
      * `disconnectedCallback` cannot rediscover it: by the time the element is disconnected its
      * `parentElement` is already `null`, so a lookup would both fail to find the component and
@@ -94,7 +94,7 @@ class SoundSlotElement extends AsyncElement {
         this._connectionGeneration++;
 
         // Uses the cached parent rather than a fresh lookup, since parentElement is already null
-        // by now. The component itself is null if the parent <pc-sound> (or the whole <pc-app>) is
+        // by now. The component itself is null if the parent <pc-sound-slot> (or the whole <pc-app>) is
         // being torn down — parents disconnect first and have already removed the component.
         this._soundElement?.component?.removeSlot(this._name);
         this._soundElement = null;
@@ -106,7 +106,7 @@ class SoundSlotElement extends AsyncElement {
         const soundElement = this.parentElement as SoundComponentElement;
 
         if (!(soundElement instanceof SoundComponentElement)) {
-            console.warn('pc-sound must be a direct child of a pc-sounds element');
+            console.warn('pc-sound-slot must be a direct child of a pc-sound element');
             return null;
         }
 
@@ -324,6 +324,6 @@ class SoundSlotElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-sound', SoundSlotElement);
+customElements.define('pc-sound-slot', SoundSlotElement);
 
 export { SoundSlotElement };

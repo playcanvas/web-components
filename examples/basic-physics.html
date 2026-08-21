@@ -18,7 +18,7 @@
     <body>
         <pc-app>
             <!-- Modules -->
-            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
+            <pc-wasm name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-wasm>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/grid.mjs"></pc-asset>
@@ -37,19 +37,19 @@
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="5 3 5">
                         <pc-camera clear-color="#222222"></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="cameraControls" zoom-range="0.1 100"></pc-script>
-                        </pc-scripts>
+                        <pc-script>
+                            <pc-script-instance name="cameraControls" zoom-range="0.1 100"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                        <pc-script name="xrMenu" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
                             "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
                             "fontAsset": "asset:arial-font"
-                        }'></pc-script>
-                        <pc-script name="xrNavigation"></pc-script>
-                        <pc-script name="xrSession"></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="45 45 0" cast-shadows>
@@ -58,20 +58,20 @@
                 <!-- Box 1 -->
                 <pc-model name="box1" asset="cube" position="0 4 0">
                     <pc-collision></pc-collision>
-                    <pc-rigidbody type="dynamic" restitution="0.9"></pc-rigidbody>
+                    <pc-rigid-body type="dynamic" restitution="0.9"></pc-rigid-body>
                 </pc-model>
                 <!-- Box 2 -->
                 <pc-model name="box2" asset="cube" position="0 2 0">
                     <pc-collision></pc-collision>
-                    <pc-rigidbody type="dynamic" restitution="0.9"></pc-rigidbody>
+                    <pc-rigid-body type="dynamic" restitution="0.9"></pc-rigid-body>
                 </pc-model>
                 <!-- Ground -->
                 <pc-entity name="plane" scale="1000 1000 1000">
                     <pc-collision half-extents="100 0.5 100" linear-offset="0 -0.5 0"></pc-collision>
-                    <pc-rigidbody></pc-rigidbody>
-                    <pc-scripts>
-                        <pc-script name="grid"></pc-script>
-                    </pc-scripts>
+                    <pc-rigid-body></pc-rigid-body>
+                    <pc-script>
+                        <pc-script-instance name="grid"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

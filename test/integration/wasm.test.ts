@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { AppElement } from '../../src/app';
 import { whenReady } from '../../src/index';
-import type { ModuleElement } from '../../src/module';
+import type { WasmElement } from '../../src/wasm';
 import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
@@ -21,7 +21,7 @@ const stubWasmModule = () => {
     return { setConfig, getInstance };
 };
 
-describe('<pc-module>', () => {
+describe('<pc-wasm>', () => {
     const { warnings } = useGuard();
 
     it('loads the configured module, becomes ready and lets the app boot', async () => {
@@ -29,11 +29,11 @@ describe('<pc-module>', () => {
 
         const handle = mount(
             '<pc-app backend="null">' +
-                '<pc-module name="Ammo" glue="ammo.wasm.js" wasm="ammo.wasm.wasm" fallback="ammo.js"></pc-module>' +
+                '<pc-wasm name="Ammo" glue="ammo.wasm.js" wasm="ammo.wasm.wasm" fallback="ammo.js"></pc-wasm>' +
                 '</pc-app>'
         );
 
-        await readyWithin(handle.get<ModuleElement>('pc-module'));
+        await readyWithin(handle.get<WasmElement>('pc-wasm'));
         expect(setConfig).toHaveBeenCalledWith('Ammo', {
             glueUrl: 'ammo.wasm.js',
             wasmUrl: 'ammo.wasm.wasm',
@@ -45,13 +45,13 @@ describe('<pc-module>', () => {
         await readyWithin(handle.get<AppElement>('pc-app'));
     });
 
-    it("resolves whenReady('pc-module') instead of throwing", async () => {
+    it("resolves whenReady('pc-wasm') instead of throwing", async () => {
         stubWasmModule();
-        mount('<pc-module name="Ammo" glue="g.js" wasm="a.wasm" fallback="f.js"></pc-module>');
+        mount('<pc-wasm name="Ammo" glue="g.js" wasm="a.wasm" fallback="f.js"></pc-wasm>');
 
         // Threw for the whole pre-AsyncElement life of this element
-        const moduleElement = await whenReady('pc-module');
-        expect(moduleElement.tagName.toLowerCase()).toBe('pc-module');
+        const moduleElement = await whenReady('pc-wasm');
+        expect(moduleElement.tagName.toLowerCase()).toBe('pc-wasm');
     });
 
     it('reads attributes set after creation, not at construction', async () => {
@@ -60,7 +60,7 @@ describe('<pc-module>', () => {
 
         // The old constructor-time read made exactly this sequence configure the engine with
         // null for every value before the attributes existed
-        const moduleElement = document.createElement('pc-module');
+        const moduleElement = document.createElement('pc-wasm');
         moduleElement.setAttribute('name', 'Ammo');
         moduleElement.setAttribute('glue', 'glue.js');
         moduleElement.setAttribute('wasm', 'ammo.wasm');
@@ -79,18 +79,18 @@ describe('<pc-module>', () => {
 
     it('warns and never becomes ready without a name, but does not block the app', async () => {
         stubWasmModule();
-        const handle = mount('<pc-app backend="null"><pc-module glue="g.js"></pc-module></pc-app>');
+        const handle = mount('<pc-app backend="null"><pc-wasm glue="g.js"></pc-wasm></pc-app>');
 
         // The broken module must not brick the whole application
         await readyWithin(handle.get<AppElement>('pc-app'));
-        await expectNeverReady(handle.get<ModuleElement>('pc-module'));
-        warnings.expect("pc-module requires a 'name' attribute");
+        await expectNeverReady(handle.get<WasmElement>('pc-wasm'));
+        warnings.expect("pc-wasm requires a 'name' attribute");
     });
 
     it('does not reload or re-arm readiness when re-inserted', async () => {
         const { setConfig, getInstance } = stubWasmModule();
-        const handle = mount('<pc-module name="Ammo" glue="g.js" wasm="a.wasm" fallback="f.js"></pc-module>');
-        const moduleElement = handle.get<ModuleElement>('pc-module');
+        const handle = mount('<pc-wasm name="Ammo" glue="g.js" wasm="a.wasm" fallback="f.js"></pc-wasm>');
+        const moduleElement = handle.get<WasmElement>('pc-wasm');
         await readyWithin(moduleElement);
 
         moduleElement.remove();

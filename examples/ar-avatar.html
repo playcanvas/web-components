@@ -32,16 +32,16 @@
                 <!-- Camera -->
                 <pc-entity name="camera">
                     <pc-camera clear-color="0 0 0 0" fov="80"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="cameraFeed"></pc-script>
-                        <pc-script name="faceBlendshapes"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="cameraFeed"></pc-script-instance>
+                        <pc-script-instance name="faceBlendshapes"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Raccoon Avatar -->
                 <pc-model name="raccoon" asset="raccoon" scale="100 100 100">
-                    <pc-scripts>
-                        <pc-script name="faceMorphs"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="faceMorphs"></pc-script-instance>
+                    </pc-script>
                 </pc-model>
             </pc-scene>
         </pc-app>

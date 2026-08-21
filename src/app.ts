@@ -70,8 +70,8 @@ import type { EntityBaseElement } from './entity-base';
 import type { EntityOwnerElement } from './entity-owner';
 import { LoadingBar } from './loading-bar';
 import type { MaterialElement } from './material';
-import type { ModuleElement } from './module';
 import { parseBool, parseEnum, parseNumber } from './parse';
+import type { WasmElement } from './wasm';
 
 /** The pointer event types the application synthesizes on `<pc-entity>` elements via picking. */
 const pointerEventTypes = ['pointermove', 'pointerdown', 'pointerup', 'pointerenter', 'pointerleave'] as const;
@@ -267,7 +267,7 @@ class AppElement extends AsyncElement {
         // there, leaving the element permanently unready: no canvas, no entities, no application.
         //
         // Upgrading is the fix here rather than skipping whatever has not upgraded, because a
-        // <pc-module> is the one child that nothing else ever builds on its own behalf - skipping
+        // <pc-wasm> is the one child that nothing else ever builds on its own behalf - skipping
         // it would drop the wasm module the app asked for, silently and only for cloned apps.
         // Upgrading runs each descendant's connectedCallback synchronously, a few lines earlier
         // than the parser's path runs them but into the same state they see there: no application
@@ -277,11 +277,11 @@ class AppElement extends AsyncElement {
         // is left completely untouched.
         customElements.upgrade(this);
 
-        // Get all pc-module elements that are direct children of the pc-app element
-        const moduleElements = this.querySelectorAll<ModuleElement>(':scope > pc-module');
+        // Get all pc-wasm elements that are direct children of the pc-app element
+        const wasmElements = this.querySelectorAll<WasmElement>(':scope > pc-wasm');
 
         // Wait for all modules to load
-        await Promise.all(Array.from(moduleElements).map((module) => module._getLoadPromise()));
+        await Promise.all(Array.from(wasmElements).map((element) => element._getLoadPromise()));
 
         // The element may have been removed while the modules loaded. Nothing beyond the loading
         // bar exists yet, and disconnectedCallback has already destroyed that.

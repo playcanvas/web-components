@@ -28,9 +28,11 @@ const fittings = new Map<'none' | 'stretch' | 'shrink' | 'both', number>([
 
 /**
  * The LayoutGroupComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-layoutgroup/ | `<pc-layoutgroup>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-layout-group/ | `<pc-layout-group>`} elements.
  * The LayoutGroupComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link LayoutGroupComponent} (`layoutgroup`).
  *
  * @category Components
  */
@@ -304,6 +306,6 @@ class LayoutGroupComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-layoutgroup', LayoutGroupComponentElement);
+customElements.define('pc-layout-group', LayoutGroupComponentElement);
 
 export { LayoutGroupComponentElement };

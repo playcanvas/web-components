@@ -251,17 +251,17 @@
                 <pc-entity name="camera" position="1.75 1.4 2.15">
                     <!-- cameraFrame renders to a linear HDR target, so this is a linear value -->
                     <pc-camera clear-color="#030304"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="cameraControls" focus-point="0 0.85 0" zoom-range="1.2 9"></pc-script>
+                    <pc-script>
+                        <pc-script-instance name="cameraControls" focus-point="0 0.85 0" zoom-range="1.2 9"></pc-script-instance>
                         <!-- Bloom is deliberately weak: much above this and the orange shell haloes
                              rather than just the two emissive panels. -->
-                        <pc-script name="cameraFrame" attributes='{
+                        <pc-script-instance name="cameraFrame" attributes='{
                             "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
                             "bloom": { "enabled": true, "intensity": 0.01, "blurLevel": 3 },
                             "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.55, "radius": 0.4, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
                             "vignette": { "enabled": true, "inner": 0.55, "outer": 1.4, "curvature": 0.7, "intensity": 0.45 }
-                        }'></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="48 38 0">

@@ -4,8 +4,8 @@ import { AsyncElement } from '../async-element';
 import { parseBool } from '../parse';
 
 /**
- * The ScriptElement interface provides properties and methods for manipulating
- * `<pc-script>` elements. The ScriptElement interface also inherits the properties and
+ * The ScriptInstanceElement interface provides properties and methods for manipulating
+ * `<pc-script-instance>` elements. The ScriptInstanceElement interface also inherits the properties and
  * methods of the {@link AsyncElement} interface.
  *
  * Script attributes can be supplied through two channels:
@@ -27,7 +27,7 @@ import { parseBool } from '../parse';
  * new-name one, re-applying both attribute channels to it.
  *
  * The element becomes ready once its script instance has been created by the parent
- * `<pc-scripts>` element.
+ * `<pc-script>` element.
  *
  * @fires {CustomEvent} scriptattributeschange - Fired when the script's attributes change. The
  * `detail` carries the new `attributes` object. Bubbles.
@@ -36,13 +36,13 @@ import { parseBool } from '../parse';
  * @fires {CustomEvent} scriptnamechange - Fired when the script is renamed on a live element. The
  * `detail` carries `oldName` and `newName`. Bubbles.
  */
-class ScriptElement extends AsyncElement {
+class ScriptInstanceElement extends AsyncElement {
     private _attributes: Record<string, any> = {};
 
     private _enabled = true;
 
     /**
-     * The Script instance created for this element by its parent `<pc-scripts>` element.
+     * The Script instance created for this element by its parent `<pc-script>` element.
      * @internal
      */
     _script: Script | null = null;
@@ -97,11 +97,11 @@ class ScriptElement extends AsyncElement {
 
     /**
      * Sets the name of the script to create. The `name` attribute is the single source of truth
-     * (it is what the parent `<pc-scripts>` element reads when creating the instance), so the
+     * (it is what the parent `<pc-script>` element reads when creating the instance), so the
      * property writes through to it — assigning before insertion works as expected:
      *
      * ```js
-     * const script = document.createElement('pc-script');
+     * const script = document.createElement('pc-script-instance');
      * script.name = 'rotate';
      * scriptsElement.appendChild(script);
      * await script.ready();
@@ -131,11 +131,11 @@ class ScriptElement extends AsyncElement {
     }
 
     connectedCallback() {
-        // Script instances are created by the parent pc-scripts element, so an element placed
+        // Script instances are created by the parent pc-script element, so an element placed
         // anywhere else is inert and never becomes ready - warn rather than hang silently
-        if (this.parentElement?.tagName !== 'PC-SCRIPTS') {
+        if (this.parentElement?.tagName !== 'PC-SCRIPT') {
             console.warn(
-                `pc-script '${this.getAttribute('name')}' must be a direct child of pc-scripts - script not created`
+                `pc-script-instance '${this.getAttribute('name')}' must be a direct child of pc-script - script not created`
             );
         }
     }
@@ -149,7 +149,7 @@ class ScriptElement extends AsyncElement {
     }
 
     /**
-     * Called by the parent `<pc-scripts>` element when the script instance has been created.
+     * Called by the parent `<pc-script>` element when the script instance has been created.
      * Creation can happen more than once per connection (a runtime `name` change recreates the
      * instance), but `_onReady` signals readiness at most once per cycle.
      * @internal
@@ -173,7 +173,7 @@ class ScriptElement extends AsyncElement {
                     this.scriptAttributes = JSON.parse(newValue);
                 } catch (error) {
                     console.warn(
-                        `Invalid 'attributes' JSON on pc-script '${this.getAttribute('name')}': ${(error as Error).message}`
+                        `Invalid 'attributes' JSON on pc-script-instance '${this.getAttribute('name')}': ${(error as Error).message}`
                     );
                 }
                 break;
@@ -197,6 +197,6 @@ class ScriptElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-script', ScriptElement);
+customElements.define('pc-script-instance', ScriptInstanceElement);
 
-export { ScriptElement };
+export { ScriptInstanceElement };

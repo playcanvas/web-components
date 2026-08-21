@@ -155,14 +155,14 @@
                          frustum, which makes fov and aspect ratio inert -->
                     <pc-entity name="camera" position="0 0 0.55">
                         <pc-camera clear-color="0.015 0.014 0.018 1" tonemap="aces"></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="cameraFeed"></pc-script>
-                            <pc-script name="headTrackedWindow"
+                        <pc-script>
+                            <pc-script-instance name="cameraFeed"></pc-script-instance>
+                            <pc-script-instance name="headTrackedWindow"
                                        screen-width="0.31"
                                        camera-height="0.11"
                                        pop-out="0.15"
-                                       parallax-scale="0.75"></pc-script>
-                        </pc-scripts>
+                                       parallax-scale="0.75"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <!-- She is scaled to 1.72 m and placed so the muzzle sits 9 cm in front of
                          the glass, which is what reads as popping out of the display. The
@@ -187,7 +187,7 @@
             // parse time, ahead of the deferred module scripts) so no camera permission
             // is ever requested
             if (new URLSearchParams(window.location.search).has('sim')) {
-                document.querySelector('pc-script[name="cameraFeed"]')?.remove();
+                document.querySelector('pc-script-instance[name="cameraFeed"]')?.remove();
             }
         </script>
 
@@ -273,7 +273,7 @@
 
             // Calibration. The script derives the window rectangle from these, so writing
             // them through rebuilds the frustum on the next frame
-            const tracking = (await whenReady('pc-script[name="headTrackedWindow"]')).script;
+            const tracking = (await whenReady('pc-script-instance[name="headTrackedWindow"]')).script;
 
             const bindSlider = (id, format, apply) => {
                 const input = document.getElementById(id);

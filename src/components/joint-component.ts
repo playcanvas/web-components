@@ -26,6 +26,8 @@ type MotionMode = 'locked' | 'limited' | 'free';
  * constraint breaks. A broken joint no longer constrains its bodies; calling `refreshFrames()` on
  * the underlying component re-attaches it. Bubbles and is composed.
  *
+ * Engine component: {@link JointComponent} (`joint`).
+ *
  * @category Components
  */
 class JointComponentElement extends ComponentElement {

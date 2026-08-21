@@ -6,9 +6,11 @@ import { ComponentElement } from './component';
 
 /**
  * The SoundComponentElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-sounds/ | `<pc-sounds>`} elements.
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-sound/ | `<pc-sound>`} elements.
  * The SoundComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * Engine component: {@link SoundComponent} (`sound`).
  *
  * @category Components
  */
@@ -227,6 +229,6 @@ class SoundComponentElement extends ComponentElement {
     }
 }
 
-customElements.define('pc-sounds', SoundComponentElement);
+customElements.define('pc-sound', SoundComponentElement);
 
 export { SoundComponentElement };

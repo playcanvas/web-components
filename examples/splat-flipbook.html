@@ -35,44 +35,44 @@
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="-2 1.25 0">
                         <pc-camera far-clip="1500" fov="50" tone-mapping="aces"></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="cameraControls"
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
                                        enable-fly="false"
                                        enable-pan="true"
                                        focus-point="0 1.25 0"
-                                       zoom-range="0.2 2.5"></pc-script>
-                        </pc-scripts>
+                                       zoom-range="0.2 2.5"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                        <pc-script name="xrMenu" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
                             "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
                             "fontAsset": "asset:arial-font"
-                        }'></pc-script>
-                        <pc-script name="xrNavigation"></pc-script>
-                        <pc-script name="xrSession"></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Animated Splat (Flipbook) -->
                 <pc-entity name="animated-splat" rotation="0 -90 180">
                     <pc-gsplat cast-shadows></pc-gsplat>
-                    <pc-scripts>
-                        <pc-script name="gsplatFlipbook"
+                    <pc-script>
+                        <pc-script-instance name="gsplatFlipbook"
                                    fps="30"
                                    folder="https://code.playcanvas.com/examples_data/example_basketball_02"
                                    filename-pattern="{frame:03}.compressed.ply"
                                    start-frame="1"
                                    end-frame="149"
                                    play-mode="bounce"
-                                   playing="true"></pc-script>
-                    </pc-scripts>
+                                   playing="true"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Shadow Catcher -->
                 <pc-entity name="shadow-catcher" position="0 0 0">
                     <pc-render type="plane" cast-shadows="false"></pc-render>
-                    <pc-scripts>
-                        <pc-script name="shadowCatcher" scale="10 10 10"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="shadowCatcher" scale="10 10 10"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="55 320 0">

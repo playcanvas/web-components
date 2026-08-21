@@ -18,7 +18,7 @@
     <body>
         <pc-app>
             <!-- Modules -->
-            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
+            <pc-wasm name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-wasm>
             <!-- Assets -->
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/scripts/gravity.mjs"></pc-asset>
@@ -32,8 +32,8 @@
                 <!-- Camera -->
                 <pc-entity name="camera" position="0 0 5">
                     <pc-camera clear-color="lightgray" tonemap="neutral"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="cameraFrame" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="cameraFrame" attributes='{
                             "ssao": {
                                 "type": "combine",
                                 "blurEnabled": true,
@@ -44,18 +44,18 @@
                                 "minAngle": 20,
                                 "scale": 1
                             }
-                        }'></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Physical Sphere Template -->
                 <template id="sphere-template">
                     <pc-entity>
                         <pc-render type="sphere" material="mediumseagreen"></pc-render>
                         <pc-collision type="sphere"></pc-collision>
-                        <pc-rigidbody type="dynamic" angular-damping="0.9" linear-damping="0.9" restitution="0.9"></pc-rigidbody>
-                        <pc-scripts>
-                            <pc-script name="gravity"></pc-script>
-                        </pc-scripts>
+                        <pc-rigid-body type="dynamic" angular-damping="0.9" linear-damping="0.9" restitution="0.9"></pc-rigid-body>
+                        <pc-script>
+                            <pc-script-instance name="gravity"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                 </template>
                 <!-- Physical Pointer -->
@@ -65,10 +65,10 @@
                     </pc-entity>
                     <pc-light type="omni" cast-shadows></pc-light>
                     <pc-collision type="sphere" radius="0.25"></pc-collision>
-                    <pc-rigidbody type="kinematic" restitution="0.9"></pc-rigidbody>
-                    <pc-scripts>
-                        <pc-script name="followPointer"></pc-script>
-                    </pc-scripts>
+                    <pc-rigid-body type="kinematic" restitution="0.9"></pc-rigid-body>
+                    <pc-script>
+                        <pc-script-instance name="followPointer"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

@@ -169,11 +169,11 @@
                 <!-- Camera (driven by face tracking) -->
                 <pc-entity name="camera">
                     <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="cameraFeed"></pc-script>
-                        <pc-script name="opticBlastTracking"></pc-script>
-                        <pc-script name="opticBlastVisuals"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="cameraFeed"></pc-script-instance>
+                        <pc-script-instance name="opticBlastTracking"></pc-script-instance>
+                        <pc-script-instance name="opticBlastVisuals"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- The visor, worn at the origin of canonical face space -->
                 <pc-model name="visor" asset="visor" position="0 -5 1" scale="0.085 0.085 0.085"></pc-model>
@@ -186,7 +186,7 @@
             // parse time, ahead of the deferred module scripts) so no camera permission
             // is ever requested
             if (new URLSearchParams(window.location.search).has('sim')) {
-                document.querySelector('pc-script[name="cameraFeed"]')?.remove();
+                document.querySelector('pc-script-instance[name="cameraFeed"]')?.remove();
             }
         </script>
 
@@ -248,7 +248,7 @@
 
             // Charge progress bar, synced to the script's charge-time attribute
             const chargeSecs = parseFloat(
-                document.querySelector('pc-script[name="opticBlastVisuals"]')?.getAttribute('charge-time') ?? '3'
+                document.querySelector('pc-script-instance[name="opticBlastVisuals"]')?.getAttribute('charge-time') ?? '3'
             ) || 3;
             const charge = document.getElementById('charge');
             const chargeFill = document.getElementById('charge-fill');

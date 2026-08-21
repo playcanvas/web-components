@@ -35,17 +35,17 @@
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="0 1 7">
                         <pc-camera clear-color="#8099e6"></pc-camera>
-                        <pc-listener></pc-listener>
+                        <pc-audio-listener></pc-audio-listener>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                        <pc-script name="xrMenu" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
                             "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
                             "fontAsset": "asset:arial-font"
-                        }'></pc-script>
-                        <pc-script name="xrNavigation"></pc-script>
-                        <pc-script name="xrSession"></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light" rotation="45 0 0">
@@ -53,12 +53,12 @@
                 </pc-entity>
                 <!-- Robot -->
                 <pc-model name="robot" asset="robot">
-                    <pc-sounds max-distance="12" positional>
-                        <pc-sound asset="footsteps" auto-play loop></pc-sound>
-                    </pc-sounds>
-                    <pc-scripts>
-                        <pc-script name="orbit"></pc-script>
-                    </pc-scripts>
+                    <pc-sound max-distance="12" positional>
+                        <pc-sound-slot asset="footsteps" auto-play loop></pc-sound-slot>
+                    </pc-sound>
+                    <pc-script>
+                        <pc-script-instance name="orbit"></pc-script-instance>
+                    </pc-script>
                 </pc-model>
             </pc-scene>
         </pc-app>

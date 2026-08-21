@@ -18,8 +18,8 @@
     <body>
         <pc-app>
             <!-- Modules -->
-            <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
-            <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/annotations.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
@@ -39,22 +39,22 @@
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="0 1.75 8">
                         <pc-camera tonemap="aces2"></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="cameraControls"
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
                                        focus-point="0 1.75 0"
                                        pitch-range="-90 0"
-                                       zoom-range="5 25"></pc-script>
-                        </pc-scripts>
+                                       zoom-range="5 25"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                        <pc-script name="xrMenu" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
                             "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
                             "fontAsset": "asset:arial-font"
-                        }'></pc-script>
-                        <pc-script name="xrNavigation"></pc-script>
-                        <pc-script name="xrSession"></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Light -->
                 <pc-entity name="light">
@@ -62,79 +62,79 @@
                 </pc-entity>
                 <!-- Jet Fighter -->
                 <pc-entity name="jet-fighter" position="-2 1.6 0" rotation="0 0 3">
-                    <pc-scripts>
-                        <pc-script name="annotationManager"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="annotationManager"></pc-script-instance>
+                    </pc-script>
                     <pc-model asset="jet-fighter"></pc-model>
                     <pc-entity name="annotation1" position="5.5 1.2 0">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "1",
                                 "title": "Cockpit Canopy",
                                 "text": "Transparent canopy offering visibility and housing the pilot\u0027s controls."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <pc-entity name="annotation2" position="8 0.25 0">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "2",
                                 "title": "Nose Cone & Radar",
                                 "text": "Houses the advanced radar system for targeting and navigation."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <pc-entity name="annotation3" position="5 -0.5 0">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "3",
                                 "title": "Inlet Ducts",
                                 "text": "Provides airflow to the engines, crucial for maintaining thrust."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <pc-entity name="annotation4" position="0.5 0 5.1">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "4",
                                 "title": "Wingtip Missile Rails",
                                 "text": "Can be equipped with AIM-9 Sidewinder missiles for air-to-air combat."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <pc-entity name="annotation5" position="-4 0 0">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "5",
                                 "title": "Jet Engine Nozzles",
                                 "text": "Dual afterburning turbofan engines for high-speed performance."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <pc-entity name="annotation6" position="1 -1 -1">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "6",
                                 "title": "Main Landing Gear",
                                 "text": "Retractable gear for safe takeoff and landing on runways."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                     <pc-entity name="annotation7" position="2 0 -3.1">
-                        <pc-scripts>
-                            <pc-script name="annotation" attributes='{
+                        <pc-script>
+                            <pc-script-instance name="annotation" attributes='{
                                 "label": "7",
                                 "title": "Forward Leading-Edge Flaps",
                                 "text": "Enhance maneuverability during high-speed or low-speed flight."
-                            }'></pc-script>
-                        </pc-scripts>
+                            }'></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
                 </pc-entity>
                 <!-- Shadow Catcher -->
                 <pc-entity name="shadow-catcher">
-                    <pc-scripts>
-                        <pc-script name="shadowCatcher" scale="15 15 15"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="shadowCatcher" scale="15 15 15"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

@@ -18,8 +18,8 @@
     <body>
         <pc-app>
             <!-- Modules -->
-            <pc-module name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-module>
-            <pc-module name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-module>
+            <pc-wasm name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-wasm>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/first-person-controller.mjs"></pc-asset>
             <pc-asset src="assets/scripts/static-body.mjs"></pc-asset>
@@ -35,16 +35,16 @@
                         <pc-camera></pc-camera>
                     </pc-entity>
                     <pc-collision type="capsule" radius="0.5" height="1.8"></pc-collision>
-                    <pc-rigidbody type="dynamic" angular-factor="0 0 0" mass="100" friction="0.5" restitution="0"></pc-rigidbody>
-                    <pc-scripts>
-                        <pc-script name="firstPersonController" camera="entity:camera"></pc-script>
-                    </pc-scripts>
+                    <pc-rigid-body type="dynamic" angular-factor="0 0 0" mass="100" friction="0.5" restitution="0"></pc-rigid-body>
+                    <pc-script>
+                        <pc-script-instance name="firstPersonController" camera="entity:camera"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Map -->
                 <pc-model name="map" asset="map">
-                    <pc-scripts>
-                        <pc-script name="staticBody"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="staticBody"></pc-script-instance>
+                    </pc-script>
                 </pc-model>
             </pc-scene>
         </pc-app>

@@ -18,7 +18,7 @@
     <body>
         <pc-app>
             <!-- Modules -->
-            <pc-module name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-module>
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
@@ -40,46 +40,46 @@
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="0 1.75 5">
                         <pc-camera fov="35" tonemap="neutral"></pc-camera>
-                        <pc-scripts>
-                            <pc-script name="cameraControls"
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
                                        enable-fly="false"
                                        enable-pan="false"
                                        focus-point="0 0.5 0"
                                        pitch-range="-90 0"
-                                       zoom-range="2.5 15"></pc-script>
-                        </pc-scripts>
+                                       zoom-range="2.5 15"></pc-script-instance>
+                        </pc-script>
                     </pc-entity>
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                        <pc-script name="xrMenu" attributes='{
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
                             "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
                             "fontAsset": "asset:arial-font"
-                        }'></pc-script>
-                        <pc-script name="xrNavigation"></pc-script>
-                        <pc-script name="xrSession"></pc-script>
-                    </pc-scripts>
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- Car -->
                 <pc-model name="car" asset="car" position="0 0.625 0" rotation="0 -90 0">
                     <!-- The GLB bakes caption text (and a shadow) into its ground plane - hide
                          it and let the baked AO ground below provide a real one instead -->
                     <pc-node name="Plane" enabled="false"></pc-node>
-                    <pc-scripts>
-                        <pc-script name="chooseColor"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="chooseColor"></pc-script-instance>
+                    </pc-script>
                 </pc-model>
                 <!-- Ground (ambient occlusion baked into it, for a contact shadow) -->
                 <pc-entity name="ground" scale="20 1 20">
                     <pc-render type="plane" cast-shadows="false" material="ground"></pc-render>
-                    <pc-scripts>
-                        <pc-script name="bakedAo"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="bakedAo"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- XR -->
                 <pc-entity name="xr">
-                    <pc-scripts>
-                        <pc-script name="xrControllers"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>

@@ -14,7 +14,7 @@ export type Mounted = {
 
 const mounted = new Set<Mounted>();
 
-const LIBRARY_SELECTOR = 'pc-app, pc-asset, pc-entity, pc-material, pc-model, pc-module, pc-node, pc-scene, pc-sky';
+const LIBRARY_SELECTOR = 'pc-app, pc-asset, pc-entity, pc-material, pc-model, pc-node, pc-scene, pc-sky, pc-wasm';
 
 /**
  * Fails if a previous test left library elements in the document.

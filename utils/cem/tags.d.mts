@@ -5,3 +5,4 @@ export declare const TAGS: string[];
 export declare const ENTITY_TAGS: string[];
 export declare const COMPONENT_TAGS: string[];
 export declare const READY_TAGS: string[];
+export declare const componentTagId: (tag: string) => string;

@@ -46,6 +46,8 @@ type PlaybackState = {
  * the underlying {@link AnimComponent} (via {@link component}) for playback state beyond what
  * this element exposes.
  *
+ * Engine component: {@link AnimComponent} (`anim`).
+ *
  * @category Components
  */
 class AnimComponentElement extends ComponentElement {

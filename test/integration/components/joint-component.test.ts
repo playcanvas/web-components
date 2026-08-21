@@ -12,10 +12,10 @@ import { useGuard } from '../../helpers/guard';
  * component - which is exactly the surface these tests pin.
  */
 const BODIES = `
-    <pc-entity id="anchor-id" name="anchor"><pc-rigidbody></pc-rigidbody></pc-entity>
+    <pc-entity id="anchor-id" name="anchor"><pc-rigid-body></pc-rigid-body></pc-entity>
     <pc-entity id="bob-id" name="bob">
         <pc-collision></pc-collision>
-        <pc-rigidbody type="dynamic"></pc-rigidbody>
+        <pc-rigid-body type="dynamic"></pc-rigid-body>
     </pc-entity>
 `;
 
@@ -186,7 +186,7 @@ describe('<pc-joint>', () => {
         it('retargets a body when the attribute changes at runtime', async () => {
             const { app, get } = await bootApp(
                 `${scene('entity-a="bob" entity-b="anchor"')}
-                <pc-entity id="post-id" name="post"><pc-rigidbody></pc-rigidbody></pc-entity>`
+                <pc-entity id="post-id" name="post"><pc-rigid-body></pc-rigid-body></pc-entity>`
             );
             const joint = get<JointComponentElement>('pc-joint');
 

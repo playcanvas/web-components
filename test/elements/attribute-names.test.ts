@@ -108,12 +108,12 @@ describe('renamed attributes', () => {
         expect(warnings.seen).toEqual([]);
     });
 
-    it('leaves pc-scrollview aligned with the engine', () => {
+    it('leaves pc-scroll-view aligned with the engine', () => {
         // Deliberately NOT renamed to scroll-x / scroll-y. These mirror
         // ScrollViewComponent.horizontal / .vertical, and the engine itself pairs those with
         // ORIENTATION_HORIZONTAL, so the ambiguity with <pc-scrollbar>'s orientation values is
         // inherited rather than introduced here - not enough to justify diverging.
-        const element = document.createElement('pc-scrollview');
+        const element = document.createElement('pc-scroll-view');
 
         expect(element.horizontal, 'both axes scroll by default').toBe(true);
         expect(element.vertical).toBe(true);

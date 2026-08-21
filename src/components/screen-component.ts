@@ -20,6 +20,8 @@ const scaleModes = new Map<'none' | 'blend', string>([
  * The ScreenComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Engine component: {@link ScreenComponent} (`screen`).
+ *
  * @category Components
  */
 class ScreenComponentElement extends ComponentElement {

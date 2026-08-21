@@ -137,10 +137,10 @@
                      orbit that the sim and no-camera fallback modes use -->
                 <pc-entity name="camera" position="0 2.5 46">
                     <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
-                    <pc-scripts>
-                        <pc-script name="cameraFeed"></pc-script>
-                        <pc-script name="faceTracking"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="cameraFeed"></pc-script-instance>
+                        <pc-script-instance name="faceTracking"></pc-script-instance>
+                    </pc-script>
                 </pc-entity>
                 <!-- An invisible head that hides the arms of the glasses behind the skull and
                      lets the nose occlude the far rim on head turns: MediaPipe's canonical
@@ -149,18 +149,18 @@
                      backward drift the nose bridge anchor shows on strong head turns
                      (fit found live with the ?debug view) -->
                 <pc-model name="head-occluder" asset="face" position="0 0 2.5">
-                    <pc-scripts>
-                        <pc-script name="headOccluder" center="0 1 -3.5" size="13.5 20 13"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="headOccluder" center="0 1 -3.5" size="13.5 20 13"></pc-script-instance>
+                    </pc-script>
                 </pc-model>
                 <!-- The sunglasses, worn at the nose bridge of canonical face space and hidden
                      until there is a face to wear them (see the page script). The model is
                      authored resting on a flat surface, so a slight pantoscopic tilt (the
                      bottom of the lenses tucking toward the cheeks) makes it sit naturally -->
                 <pc-model name="sunglasses" asset="sunglasses" enabled="false" position="0 -0.7 7.5" rotation="8 0 0" scale="100 100 100">
-                    <pc-scripts>
-                        <pc-script name="lensTint"></pc-script>
-                    </pc-scripts>
+                    <pc-script>
+                        <pc-script-instance name="lensTint"></pc-script-instance>
+                    </pc-script>
                 </pc-model>
             </pc-scene>
         </pc-app>
@@ -172,12 +172,12 @@
             // is ever requested
             const params = new URLSearchParams(window.location.search);
             if (params.has('sim')) {
-                document.querySelector('pc-script[name="cameraFeed"]')?.remove();
+                document.querySelector('pc-script-instance[name="cameraFeed"]')?.remove();
             }
             // ?debug renders the normally invisible head occluder (the face mesh in green,
             // the cranium ellipsoid in blue) to check its fit against the tracked face
             if (params.has('debug')) {
-                document.querySelector('pc-script[name="headOccluder"]')?.setAttribute('debug', 'true');
+                document.querySelector('pc-script-instance[name="headOccluder"]')?.setAttribute('debug', 'true');
             }
         </script>
 

@@ -37,6 +37,8 @@ const shadowTypes = new Map<
  * The LightComponentElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
+ * Engine component: {@link LightComponent} (`light`).
+ *
  * @category Components
  */
 class LightComponentElement extends ComponentElement {

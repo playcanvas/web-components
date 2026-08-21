@@ -3,9 +3,9 @@ import { basisInitialize, WasmModule } from 'playcanvas';
 import { AsyncElement } from './async-element';
 
 /**
- * The ModuleElement interface provides properties and methods for manipulating
- * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-module/ | `<pc-module>`}
- * elements. The ModuleElement interface also inherits the properties and methods of the
+ * The WasmElement interface provides properties and methods for manipulating
+ * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-wasm/ | `<pc-wasm>`}
+ * elements. The WasmElement interface also inherits the properties and methods of the
  * {@link AsyncElement} interface.
  *
  * The attributes are read once, when the module starts loading - on the element's first
@@ -14,7 +14,7 @@ import { AsyncElement } from './async-element';
  * modules configure engine-global state that never unloads, so readiness is not re-armed by
  * removing the element, and a re-inserted element does not load again.
  *
- * A `<pc-module>` without a `name` warns and never becomes ready; a containing `<pc-app>` still
+ * A `<pc-wasm>` without a `name` warns and never becomes ready; a containing `<pc-app>` still
  * boots.
  *
  * @attribute {string} name - The name of the WebAssembly module to configure, e.g. `Basis` or
@@ -24,7 +24,7 @@ import { AsyncElement } from './async-element';
  * @attribute {string} fallback - The URL of the module's asm.js fallback script, used when
  * WebAssembly is unavailable.
  */
-class ModuleElement extends AsyncElement {
+class WasmElement extends AsyncElement {
     private _loadPromise: Promise<void> | null = null;
 
     connectedCallback() {
@@ -34,7 +34,7 @@ class ModuleElement extends AsyncElement {
     private async _loadModule(): Promise<void> {
         const name = this.getAttribute('name');
         if (!name) {
-            console.warn("pc-module requires a 'name' attribute - no module was configured");
+            console.warn("pc-wasm requires a 'name' attribute - no module was configured");
             return;
         }
 
@@ -74,6 +74,6 @@ class ModuleElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-module', ModuleElement);
+customElements.define('pc-wasm', WasmElement);
 
-export { ModuleElement };
+export { WasmElement };
