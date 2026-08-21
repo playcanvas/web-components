@@ -106,6 +106,36 @@ describe('component hosting', () => {
     });
 
     describe('child entities of a pc-model', () => {
+        it('defer with a model that is itself deferred behind an unresolved node', async () => {
+            // A model inserted under a pc-node that has not bound creates its host but cannot
+            // parent it. Its own children must defer with it - not parent beneath the floating
+            // host and announce readiness from outside the scene graph.
+            const { get } = await bootApp(`${ASSETS}<pc-model asset="m"></pc-model>`);
+            const outer = get<ModelElement>('pc-model');
+
+            const node = document.createElement('pc-node');
+            node.setAttribute('name', 'Nowhere');
+            const model = document.createElement('pc-model');
+            model.setAttribute('asset', 'm2');
+            const child = document.createElement('pc-entity');
+            child.setAttribute('name', 'attachment');
+            model.appendChild(child);
+            node.appendChild(model);
+            outer.appendChild(node);
+
+            warnings.expect("pc-node 'Nowhere' not found in model 'm'");
+            expect(model.entity!.parent, 'the deferred host is unparented').toBeNull();
+            expect(child.entity?.parent ?? null, 'and its child defers with it').toBeNull();
+            await expectNeverReady(model);
+
+            node.setAttribute('name', 'content-root');
+
+            expect(model.entity!.parent, 'the bind parents the host under the bound node').toBe(node.entity);
+            expect(child.entity!.parent, 'and the child beneath the host').toBe(model.entity);
+            await readyWithin(model);
+            expect(model.contentEntity!.parent, 'the content arrived beneath the host too').toBe(model.entity);
+        });
+
         it('parent under the host at build, without waiting for the content', async () => {
             const { appElement } = await bootApp(
                 `<pc-asset id="m" type="container" src="${containerSrc('content-root')}" lazy></pc-asset>`
