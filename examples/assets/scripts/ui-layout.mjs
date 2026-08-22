@@ -4,11 +4,20 @@ import { Script } from 'playcanvas';
  * Drives the world-space layout board. The controls along its foot resize the panel, retune the
  * tile field's layout group and add or remove tiles.
  *
- * Everything the script touches, it touches through element attributes rather than through the
- * engine components behind them. That keeps the board's state readable in devtools, and it side
- * steps a timing trap: a cloned tile's `<pc-element>` component does not exist the instant the
- * `<pc-entity>` reports ready, so assigning `entity.element.text` there is a silent no-op, while
- * an attribute is picked up whenever the component does arrive.
+ * Which of the two APIs the script reaches for depends on when the thing it is addressing was
+ * built, and the split is worth understanding before copying either half:
+ *
+ * - Anything declared in the page - the panel, the readout, the control buttons and their labels -
+ *   has its components by the time `initialize()` runs, so those go through the components
+ *   directly: `button.on('click')`, `element.text`.
+ * - A tile cloned at runtime does not. Its `<pc-element>` component does not exist the instant the
+ *   `<pc-entity>` reports ready, so assigning `entity.element.color` there is a silent no-op. Its
+ *   tint and number are therefore set as attributes on the clone, which the component picks up
+ *   whenever it does arrive.
+ *
+ * The panel's size and the readout text go through attributes too, for a different reason: they
+ * are the derived state, and having them on the elements means the board can be read in devtools
+ * while it animates.
  *
  * Two things the board is built to show off:
  *
@@ -230,9 +239,13 @@ export class UiLayout extends Script {
         return Math.max(1, Math.ceil(this.tiles.length / perRow));
     }
 
+    /**
+     * Retitles a control. The label is declared in the page rather than cloned, so its component
+     * exists by the time this first runs and can be written to directly - the guard is for the
+     * misconfigured case, not a timing one.
+     */
     _label(controlName, text) {
-        const control = this.entity.findByName(controlName);
-        const label = control?.findByName('label');
+        const label = this.entity.findByName(controlName)?.findByName('label');
         if (label?.element) {
             label.element.text = text;
         }
