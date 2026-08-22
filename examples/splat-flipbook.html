@@ -34,7 +34,7 @@
                 <!-- Camera (with XR support) -->
                 <pc-entity name="camera-root">
                     <pc-entity name="camera" position="-2 1.25 0">
-                        <pc-camera far-clip="1500" fov="50" tone-mapping="aces"></pc-camera>
+                        <pc-camera far-clip="1500" fov="50" tonemap="aces"></pc-camera>
                         <pc-script>
                             <pc-script-instance name="cameraControls"
                                                 enable-fly="false"
@@ -79,15 +79,13 @@
                     <pc-light type="directional"
                         cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
                         shadow-distance="10" shadow-intensity="0.15"
-                        shadow-resolution="1024" shadow-type="pcf5-16f"
-                    </pc-light>
+                        shadow-resolution="1024" shadow-type="pcf5-16f"></pc-light>
                 </pc-entity>
                 <pc-entity name="light" rotation="55 220 0">
                     <pc-light type="directional"
                         cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
                         shadow-distance="10" shadow-intensity="0.15"
-                        shadow-resolution="1024" shadow-type="pcf5-16f"
-                    </pc-light>
+                        shadow-resolution="1024" shadow-type="pcf5-16f"></pc-light>
                 </pc-entity>
             </pc-scene>
         </pc-app>
