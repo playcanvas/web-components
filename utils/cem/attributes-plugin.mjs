@@ -1,21 +1,29 @@
 /**
- * Custom Elements Manifest plugin that derives attribute metadata from each element's
- * `attributeChangedCallback`.
+ * Custom Elements Manifest plugin that derives attribute metadata from each element's attribute
+ * declarations, from either of two sources:
  *
- * Every element in this library declares its attributes in `static get observedAttributes()` and
- * handles them in an `attributeChangedCallback` whose body is a uniform mapping of the form:
+ * - A static `properties` table of descriptors (see `src/properties.ts`), where an entry of the
+ *   form `shadowType: enumProperty(shadowTypes, 'pcf3-32f')` carries the property (`fieldName`,
+ *   unless retargeted by `property`), the attribute name (kebab-cased, unless overridden by
+ *   `attribute`), the attribute's type (implied by the descriptor factory), its enum values (the
+ *   factory's first argument) and its default (the declared initial value — or the `invalid`
+ *   fallback, for a property whose initial value is `null`, matching the constant the
+ *   invalid-value warning names). The descriptor is the single authoritative declaration:
+ *   runtime dispatch reads the same one.
  *
- * ```js
- * case 'clear-color':
- *     this.clearColor = parseColor(newValue, new Color(0.75, 0.75, 0.75, 1), name);
- *     break;
- * ```
+ * - Transitionally, an `attributeChangedCallback` whose body is a uniform mapping of the form:
  *
- * That single expression carries everything the manifest needs: the attribute name, the property
- * it writes to (`fieldName`), the attribute's type (implied by the `parse*` helper) and its
- * default value (the helper's second argument). Deriving all of it here keeps the manifest in
- * lockstep with the code, rather than requiring ~200 hand-written `@attribute` tags that would
- * silently drift.
+ *   ```js
+ *   case 'clear-color':
+ *       this.clearColor = parseColor(newValue, new Color(0.75, 0.75, 0.75, 1), name);
+ *       break;
+ *   ```
+ *
+ *   which carries the same metadata, with the default restated as the helper's second argument.
+ *   This path retires once the last element migrates to a `properties` table.
+ *
+ * Deriving all of it here keeps the manifest in lockstep with the code, rather than requiring
+ * ~200 hand-written `@attribute` tags that would silently drift.
  */
 
 /**
@@ -67,7 +75,44 @@ const EMPTY_CONSTRUCTORS = {
     Vec4: '0 0 0 0'
 };
 
+/**
+ * The property-descriptor factories from `src/properties.ts`, mapped to the manifest type each
+ * one implies. String attributes never publish a default — every one of them names an external
+ * resource (or a label) with no meaningful value to suggest.
+ */
+const PROPERTY_FACTORIES = {
+    booleanProperty: { type: 'boolean' },
+    numberProperty: { type: 'number' },
+    enumProperty: { type: 'enum' },
+    stringProperty: { type: 'string', omitDefault: true },
+    colorProperty: { type: 'string', format: 'color' }
+};
+
 const kebabToCamel = name => name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+
+const camelToKebab = name => name.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`);
+
+/**
+ * Resolves an identifier to the initializer of its module-scope `const` declaration.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').SourceFile} sourceFile - The file to search.
+ * @param {string} name - The identifier text.
+ * @returns {import('typescript').Expression | undefined} The initializer, or `undefined`.
+ */
+const resolveModuleConst = (ts, sourceFile, name) => {
+    for (const statement of sourceFile.statements) {
+        if (!ts.isVariableStatement(statement)) {
+            continue;
+        }
+        for (const declaration of statement.declarationList.declarations) {
+            if (declaration.name.getText() === name && declaration.initializer) {
+                return declaration.initializer;
+            }
+        }
+    }
+    return undefined;
+};
 
 /**
  * Extracts `name === 'some-attribute'` comparisons, so that elements handling a single attribute
@@ -192,6 +237,10 @@ const resolveEnumValues = (ts, sourceFile, expression) => {
         .filter(element => ts.isStringLiteralLike(element))
         .map(element => element.text);
 
+    if (!expression) {
+        return [];
+    }
+
     if (ts.isArrayLiteralExpression(expression)) {
         return fromArrayLiteral(expression);
     }
@@ -201,42 +250,34 @@ const resolveEnumValues = (ts, sourceFile, expression) => {
     }
 
     // Resolve a module-scope `const orientations = new Map<'horizontal' | 'vertical', number>([...])`
-    const name = expression.text;
-    for (const statement of sourceFile.statements) {
-        if (!ts.isVariableStatement(statement)) {
-            continue;
+    const initializer = resolveModuleConst(ts, sourceFile, expression.text);
+    if (!initializer) {
+        return [];
+    }
+
+    if (ts.isArrayLiteralExpression(initializer)) {
+        return fromArrayLiteral(initializer);
+    }
+
+    if (ts.isNewExpression(initializer)) {
+        // Prefer the entry keys, falling back to the `Map<union, number>` type argument
+        const entries = initializer.arguments?.[0];
+        if (entries && ts.isArrayLiteralExpression(entries)) {
+            const keys = entries.elements
+                .filter(entry => ts.isArrayLiteralExpression(entry))
+                .map(entry => entry.elements[0])
+                .filter(key => key && ts.isStringLiteralLike(key))
+                .map(key => key.text);
+            if (keys.length > 0) {
+                return keys;
+            }
         }
-        for (const declaration of statement.declarationList.declarations) {
-            if (declaration.name.getText() !== name || !declaration.initializer) {
-                continue;
-            }
-            const { initializer } = declaration;
 
-            if (ts.isArrayLiteralExpression(initializer)) {
-                return fromArrayLiteral(initializer);
-            }
-
-            if (ts.isNewExpression(initializer)) {
-                // Prefer the entry keys, falling back to the `Map<union, number>` type argument
-                const entries = initializer.arguments?.[0];
-                if (entries && ts.isArrayLiteralExpression(entries)) {
-                    const keys = entries.elements
-                        .filter(entry => ts.isArrayLiteralExpression(entry))
-                        .map(entry => entry.elements[0])
-                        .filter(key => key && ts.isStringLiteralLike(key))
-                        .map(key => key.text);
-                    if (keys.length > 0) {
-                        return keys;
-                    }
-                }
-
-                const union = initializer.typeArguments?.[0];
-                if (union && ts.isUnionTypeNode(union)) {
-                    return union.types
-                        .filter(type => ts.isLiteralTypeNode(type) && ts.isStringLiteralLike(type.literal))
-                        .map(type => type.literal.text);
-                }
-            }
+        const union = initializer.typeArguments?.[0];
+        if (union && ts.isUnionTypeNode(union)) {
+            return union.types
+                .filter(type => ts.isLiteralTypeNode(type) && ts.isStringLiteralLike(type.literal))
+                .map(type => type.literal.text);
         }
     }
 
@@ -345,6 +386,129 @@ const describeValue = (ts, sourceFile, value, context) => {
 };
 
 /**
+ * Collects the entries of a class's static `properties` descriptor table (see
+ * `src/properties.ts`). The table is a module-scope `const` (the backing field initializers
+ * reference it), so an identifier initializer is resolved to its declaration and the
+ * `defineProperties(...)` wrapper unwrapped. Each entry is a descriptor-factory call plus its
+ * resolved options.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').SourceFile} sourceFile - The file declaring the element.
+ * @param {import('typescript').ClassDeclaration} node - The class declaration.
+ * @returns {{ fieldName: string, attribute: string, factory: string,
+ *   args: readonly import('typescript').Expression[],
+ *   invalid?: import('typescript').Expression }[]} The entries.
+ */
+const collectTableEntries = (ts, sourceFile, node) => {
+    const member = node.members.find(candidate => ts.isPropertyDeclaration(candidate) &&
+        candidate.name.getText() === 'properties' &&
+        candidate.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.StaticKeyword));
+    if (!member?.initializer) {
+        return [];
+    }
+
+    let table = member.initializer;
+    if (ts.isIdentifier(table)) {
+        table = resolveModuleConst(ts, sourceFile, table.text);
+    }
+    if (table && ts.isCallExpression(table) && table.expression.getText() === 'defineProperties') {
+        table = table.arguments[0];
+    }
+    if (!table || !ts.isObjectLiteralExpression(table)) {
+        return [];
+    }
+
+    const entries = [];
+    for (const property of table.properties) {
+        if (!ts.isPropertyAssignment(property) || !ts.isCallExpression(property.initializer)) {
+            continue;
+        }
+        const key = ts.isStringLiteralLike(property.name) ? property.name.text : property.name.getText();
+        const { arguments: args } = property.initializer;
+
+        let attribute;
+        let fieldName = key;
+        let invalid;
+
+        // The trailing options argument, when present
+        const options = args[args.length - 1];
+        if (options && ts.isObjectLiteralExpression(options)) {
+            for (const option of options.properties) {
+                if (!ts.isPropertyAssignment(option)) {
+                    continue;
+                }
+                const name = option.name.getText();
+                if (name === 'attribute' && ts.isStringLiteralLike(option.initializer)) {
+                    attribute = option.initializer.text;
+                } else if (name === 'property' && ts.isStringLiteralLike(option.initializer)) {
+                    fieldName = option.initializer.text;
+                } else if (name === 'invalid') {
+                    invalid = option.initializer;
+                }
+            }
+        }
+
+        entries.push({
+            fieldName,
+            attribute: attribute ?? camelToKebab(key),
+            factory: property.initializer.expression.getText(),
+            args,
+            invalid
+        });
+    }
+    return entries;
+};
+
+/**
+ * Derives an attribute's type and default from its descriptor-factory call. The published
+ * default is the declared initial value — or the `invalid` fallback, for a property whose
+ * initial value is `null` (renderDefault omits `null`), matching the constant the invalid-value
+ * warning names.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').SourceFile} sourceFile - The file declaring the element.
+ * @param {ReturnType<typeof collectTableEntries>[number]} entry - The table entry.
+ * @param {string} context - A label used in warnings.
+ * @returns {{ type: string, default?: string, format?: string }} The derived metadata.
+ */
+const describeEntry = (ts, sourceFile, entry, context) => {
+    const factory = PROPERTY_FACTORIES[entry.factory];
+    if (!factory) {
+        console.warn(`[cem] unknown property descriptor for ${context}; falling back to string`);
+        return { type: 'string' };
+    }
+
+    // A mutable initial value is declared as a factory — `() => new Color(1, 1, 1)` — so the
+    // rendered default is the factory's body
+    const unwrap = expression => (expression && ts.isArrowFunction(expression) && !ts.isBlock(expression.body) ?
+        expression.body :
+        expression);
+
+    // enumProperty(valid, initial, options?) carries the valid names first; the value factories
+    // are (initial, options?)
+    const initial = factory.type === 'enum' ? entry.args[1] : entry.args[0];
+    const defaultValue = renderDefault(ts, unwrap(entry.invalid) ?? unwrap(initial));
+
+    if (factory.type === 'enum') {
+        const values = resolveEnumValues(ts, sourceFile, entry.args[0]);
+        if (values.length === 0) {
+            console.warn(`[cem] could not resolve enum values for ${context}; falling back to string`);
+            return { type: 'string', default: defaultValue };
+        }
+        return {
+            type: values.map(name => `'${name}'`).join(' | '),
+            default: defaultValue
+        };
+    }
+
+    return {
+        type: factory.type,
+        default: factory.omitDefault ? undefined : defaultValue,
+        format: factory.format
+    };
+};
+
+/**
  * Reduces a member's JSDoc to a single tooltip-friendly sentence, rewriting the accessor voice
  * ("Sets the field of view of the camera.") into the declarative voice an attribute description
  * wants ("The field of view of the camera.").
@@ -384,26 +548,14 @@ export const attributesFromCallbackPlugin = () => ({
             return;
         }
 
-        const callback = node.members.find(member => ts.isMethodDeclaration(member) &&
-            member.name.getText() === 'attributeChangedCallback');
-        if (!callback?.body) {
-            return;
-        }
-
         const sourceFile = node.getSourceFile();
 
-        for (const branch of collectBranches(ts, callback.body)) {
-            const assignment = findAssignment(ts, branch.statements);
-            const fieldName = assignment?.fieldName ?? kebabToCamel(branch.name);
-            const { type, default: defaultValue, format } = describeValue(
-                ts, sourceFile, assignment?.value, `${classDoc.name}'s '${branch.name}'`
-            );
-
+        const record = (name, fieldName, { type, default: defaultValue, format }) => {
             classDoc.attributes ??= [];
 
-            let attribute = classDoc.attributes.find(existing => existing.name === branch.name);
+            let attribute = classDoc.attributes.find(existing => existing.name === name);
             if (!attribute) {
-                attribute = { name: branch.name };
+                attribute = { name };
                 classDoc.attributes.push(attribute);
             }
 
@@ -416,6 +568,28 @@ export const attributesFromCallbackPlugin = () => ({
                 // Consumed (and removed) in moduleLinkPhase, once member docs are available
                 attribute._pwcFormat = format;
             }
+        };
+
+        // The static `properties` descriptor table
+        for (const entry of collectTableEntries(ts, sourceFile, node)) {
+            record(entry.attribute, entry.fieldName, describeEntry(
+                ts, sourceFile, entry, `${classDoc.name}'s '${entry.attribute}'`
+            ));
+        }
+
+        // Transitional: the attributeChangedCallback switch
+        const callback = node.members.find(member => ts.isMethodDeclaration(member) &&
+            member.name.getText() === 'attributeChangedCallback');
+        if (!callback?.body) {
+            return;
+        }
+
+        for (const branch of collectBranches(ts, callback.body)) {
+            const assignment = findAssignment(ts, branch.statements);
+            const fieldName = assignment?.fieldName ?? kebabToCamel(branch.name);
+            record(branch.name, fieldName, describeValue(
+                ts, sourceFile, assignment?.value, `${classDoc.name}'s '${branch.name}'`
+            ));
         }
     },
 

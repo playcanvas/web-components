@@ -12,7 +12,7 @@ import {
     SHADOW_VSM_32F
 } from 'playcanvas';
 
-import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';
+import { booleanProperty, colorProperty, defineProperties, enumProperty, numberProperty } from '../properties';
 
 import { ComponentElement } from './component';
 
@@ -31,6 +31,28 @@ const shadowTypes = new Map<
     ['pcss-32f', SHADOW_PCSS_32F]
 ]);
 
+const lightProperties = defineProperties({
+    castShadows: booleanProperty(false),
+    color: colorProperty(() => new Color(1, 1, 1)),
+    innerConeAngle: numberProperty(40),
+    intensity: numberProperty(1),
+    normalOffsetBias: numberProperty(0.05),
+    outerConeAngle: numberProperty(45),
+    penumbraFalloff: numberProperty(1),
+    penumbraSize: numberProperty(1),
+    range: numberProperty(10),
+    shadowBias: numberProperty(0.2),
+    shadowBlockerSamples: numberProperty(16),
+    shadowDistance: numberProperty(16),
+    shadowIntensity: numberProperty(1),
+    shadowResolution: numberProperty(1024),
+    shadowSamples: numberProperty(16),
+    shadowType: enumProperty(shadowTypes, 'pcf3-32f'),
+    type: enumProperty(['directional', 'omni', 'spot'], 'directional'),
+    vsmBias: numberProperty(0.01),
+    vsmBlurSize: numberProperty(11)
+});
+
 /**
  * The LightComponentElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-light/ | `<pc-light>`} elements.
@@ -42,52 +64,43 @@ const shadowTypes = new Map<
  * @category Components
  */
 class LightComponentElement extends ComponentElement {
-    private _castShadows = false;
+    private _castShadows = lightProperties.castShadows.initial();
 
-    private _color = new Color(1, 1, 1);
+    private _color = lightProperties.color.initial();
 
-    private _innerConeAngle = 40;
+    private _innerConeAngle = lightProperties.innerConeAngle.initial();
 
-    private _intensity = 1;
+    private _intensity = lightProperties.intensity.initial();
 
-    private _normalOffsetBias = 0.05;
+    private _normalOffsetBias = lightProperties.normalOffsetBias.initial();
 
-    private _outerConeAngle = 45;
+    private _outerConeAngle = lightProperties.outerConeAngle.initial();
 
-    private _range = 10;
+    private _range = lightProperties.range.initial();
 
-    private _shadowBias = 0.2;
+    private _shadowBias = lightProperties.shadowBias.initial();
 
-    private _shadowDistance = 16;
+    private _shadowDistance = lightProperties.shadowDistance.initial();
 
-    private _shadowIntensity = 1;
+    private _shadowIntensity = lightProperties.shadowIntensity.initial();
 
-    private _shadowResolution = 1024;
+    private _shadowResolution = lightProperties.shadowResolution.initial();
 
-    private _shadowType:
-        | 'pcf1-16f'
-        | 'pcf1-32f'
-        | 'pcf3-16f'
-        | 'pcf3-32f'
-        | 'pcf5-16f'
-        | 'pcf5-32f'
-        | 'vsm-16f'
-        | 'vsm-32f'
-        | 'pcss-32f' = 'pcf3-32f';
+    private _shadowType = lightProperties.shadowType.initial();
 
-    private _type: 'directional' | 'omni' | 'spot' = 'directional';
+    private _type = lightProperties.type.initial();
 
-    private _vsmBias = 0.01;
+    private _vsmBias = lightProperties.vsmBias.initial();
 
-    private _vsmBlurSize = 11;
+    private _vsmBlurSize = lightProperties.vsmBlurSize.initial();
 
-    private _penumbraSize = 1;
+    private _penumbraSize = lightProperties.penumbraSize.initial();
 
-    private _penumbraFalloff = 1;
+    private _penumbraFalloff = lightProperties.penumbraFalloff.initial();
 
-    private _shadowSamples = 16;
+    private _shadowSamples = lightProperties.shadowSamples.initial();
 
-    private _shadowBlockerSamples = 16;
+    private _shadowBlockerSamples = lightProperties.shadowBlockerSamples.initial();
 
     /** @ignore */
     constructor() {
@@ -509,94 +522,8 @@ class LightComponentElement extends ComponentElement {
         return this._shadowBlockerSamples;
     }
 
-    static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'color',
-            'cast-shadows',
-            'intensity',
-            'inner-cone-angle',
-            'normal-offset-bias',
-            'outer-cone-angle',
-            'penumbra-falloff',
-            'penumbra-size',
-            'range',
-            'shadow-bias',
-            'shadow-blocker-samples',
-            'shadow-distance',
-            'shadow-intensity',
-            'shadow-resolution',
-            'shadow-samples',
-            'shadow-type',
-            'type',
-            'vsm-bias',
-            'vsm-blur-size'
-        ];
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        super.attributeChangedCallback(name, _oldValue, newValue);
-
-        switch (name) {
-            case 'color':
-                this.color = parseColor(newValue, Color.WHITE, name);
-                break;
-            case 'cast-shadows':
-                this.castShadows = parseBool(newValue, false);
-                break;
-            case 'inner-cone-angle':
-                this.innerConeAngle = parseNumber(newValue, 40, name);
-                break;
-            case 'intensity':
-                this.intensity = parseNumber(newValue, 1, name);
-                break;
-            case 'normal-offset-bias':
-                this.normalOffsetBias = parseNumber(newValue, 0.05, name);
-                break;
-            case 'outer-cone-angle':
-                this.outerConeAngle = parseNumber(newValue, 45, name);
-                break;
-            case 'penumbra-falloff':
-                this.penumbraFalloff = parseNumber(newValue, 1, name);
-                break;
-            case 'penumbra-size':
-                this.penumbraSize = parseNumber(newValue, 1, name);
-                break;
-            case 'range':
-                this.range = parseNumber(newValue, 10, name);
-                break;
-            case 'shadow-bias':
-                this.shadowBias = parseNumber(newValue, 0.2, name);
-                break;
-            case 'shadow-distance':
-                this.shadowDistance = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-blocker-samples':
-                this.shadowBlockerSamples = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-resolution':
-                this.shadowResolution = parseNumber(newValue, 1024, name);
-                break;
-            case 'shadow-intensity':
-                this.shadowIntensity = parseNumber(newValue, 1, name);
-                break;
-            case 'shadow-samples':
-                this.shadowSamples = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-type':
-                this.shadowType = parseEnum(newValue, shadowTypes, 'pcf3-32f', name);
-                break;
-            case 'type':
-                this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
-                break;
-            case 'vsm-bias':
-                this.vsmBias = parseNumber(newValue, 0.01, name);
-                break;
-            case 'vsm-blur-size':
-                this.vsmBlurSize = parseNumber(newValue, 11, name);
-                break;
-        }
-    }
+    /** @internal */
+    static properties = lightProperties;
 }
 
 customElements.define('pc-light', LightComponentElement);
