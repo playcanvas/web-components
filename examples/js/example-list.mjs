@@ -64,5 +64,6 @@ export const examples = [
     { name: '2D Screen', path: '2d-screen.html', category: 'UI & Text' },
     { name: 'Text', path: 'text.html', category: 'UI & Text' },
     { name: '3D Text', path: '3d-text.html', category: 'UI & Text' },
-    { name: 'Scroll View', path: 'scroll-view.html', category: 'UI & Text' }
+    { name: 'Scroll View', path: 'scroll-view.html', category: 'UI & Text' },
+    { name: 'UI Layout', path: 'ui-layout.html', category: 'UI & Text' }
 ];

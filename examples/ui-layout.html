@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - UI Layout</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/ui-layout.mjs"></pc-asset>
+            <pc-asset src="assets/fonts/kenney-future.json" type="font" id="kenney"></pc-asset>
+            <!-- Texture atlas. The atlas must be declared before the sprites that reference it.
+                 Both frames carry a border, so both can be nine-sliced: the panel's is its 10px
+                 rounded corner, and the button's bottom border is the 10px bevel that would
+                 otherwise squash when the control row stretches it. -->
+            <pc-asset id="ui-sheet" type="textureatlas" src="assets/textures/ui-spritesheet.png" min-filter="linear-mip-linear" mag-filter="linear" anisotropy="1" mipmaps srgb data='{"rgbm":false,"frames":{"0":{"name":"blue_button","border":[8,10,8,7],"rect":[1,150,190,45],"pivot":[0.5,0.5]},"3":{"name":"grey_panel","border":[10,10,10,10],"rect":[41,1,100,100],"pivot":[0.5,0.5]}}}'></pc-asset>
+            <!-- Sprites. pixels-per-unit="1" keeps one atlas pixel to one screen unit, so a
+                 sliced border stays the size the atlas declares at any element size. -->
+            <pc-asset id="panel-sprite" type="sprite" atlas="ui-sheet" frame-keys="3" pixels-per-unit="1" render-mode="sliced"></pc-asset>
+            <pc-asset id="button-sprite" type="sprite" atlas="ui-sheet" frame-keys="0" pixels-per-unit="1" render-mode="sliced"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera-root">
+                    <pc-entity name="camera" position="1.65 2.15 5.7">
+                        <pc-camera clear-color="#11151c" fov="42"></pc-camera>
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
+                                                enable-fly="false"
+                                                enable-pan="false"
+                                                focus-point="0 1.6 0"
+                                                pitch-range="-35 35"
+                                                zoom-range="3.5 11"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                </pc-entity>
+                <!-- Board. A world-space screen - no screen-space attribute - so the interface is
+                     an object in the scene that the camera orbits, not an overlay on top of it.
+                     The entity scale is what converts screen units to world units.
+
+                     Only the panel's width is scripted. Every band inside it is anchored to two
+                     opposite edges, so the header, field and control row follow the panel on
+                     their own, and the control row's layout group redistributes its buttons. -->
+                <pc-entity name="board" position="0 1.6 0" scale="0.0052 0.0052 0.0052">
+                    <pc-screen resolution="1000 640" reference-resolution="1000 640"></pc-screen>
+                    <pc-script>
+                        <pc-script-instance name="uiLayout"></pc-script-instance>
+                    </pc-script>
+
+                    <!-- Drop shadow: the same sliced sprite, tinted black and offset, which
+                         lifts the board off the backdrop. -->
+                    <pc-entity name="panel-shadow" position="7 -11 -1">
+                        <pc-element id="shadow-element" type="image" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" width="900" height="520" color="0 0 0" opacity="0.5" sprite-asset="panel-sprite"></pc-element>
+                    </pc-entity>
+
+                    <!-- Panel -->
+                    <pc-entity name="panel">
+                        <pc-element id="panel-element" type="image" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" width="900" height="520" color="0.15 0.18 0.24" sprite-asset="panel-sprite"></pc-element>
+
+                        <!-- Header bar, pinned to the panel's top edge -->
+                        <pc-entity name="header">
+                            <pc-element type="image" anchor="0 1 1 1" pivot="0.5 1" margin="14 0 14 14" height="66" color="0.11 0.13 0.18" sprite-asset="panel-sprite"></pc-element>
+
+                            <pc-entity name="title">
+                                <pc-element type="text" anchor="0 0.5 0 0.5" pivot="0 0.5" margin="20 0 0 0" font-asset="kenney" font-size="26" color="0.93 0.96 1" text="UI Layout"></pc-element>
+                            </pc-entity>
+                            <pc-entity name="readout">
+                                <pc-element id="readout-element" type="text" anchor="1 0.5 1 0.5" pivot="1 0.5" margin="0 0 20 0" auto-width="false" auto-height="false" auto-fit-width width="330" height="20" font-asset="kenney" font-size="16" min-font-size="8" max-font-size="16" color="0.42 0.54 0.68" text="-"></pc-element>
+                            </pc-entity>
+                        </pc-entity>
+
+                        <!-- Tile field. Stretched between the header and the control row, so it
+                             grows with the panel in both directions. -->
+                        <pc-entity name="field">
+                            <pc-element type="image" anchor="0 0 1 1" pivot="0.5 0.5" margin="14 84 14 92" color="0.09 0.11 0.15" sprite-asset="panel-sprite" mask></pc-element>
+
+                            <pc-entity name="tiles">
+                                <pc-element type="group" anchor="0 0 1 1" pivot="0.5 0.5" margin="10 10 10 10"></pc-element>
+                                <pc-layout-group id="tiles-group" orientation="horizontal" wrap reverse-y alignment="0 1" spacing="12 12"></pc-layout-group>
+                            </pc-entity>
+                        </pc-entity>
+
+                        <!-- Control row, pinned to the panel's bottom edge. width-fitting="stretch"
+                             hands the row's width out to the buttons in proportion to each one's
+                             fit-width-proportion, so they refill the row whenever it resizes. -->
+                        <pc-entity name="controls">
+                            <pc-element type="group" anchor="0 0 1 0" pivot="0.5 0" margin="14 14 14 0" height="56"></pc-element>
+                            <pc-layout-group orientation="horizontal" alignment="0 0.5" spacing="10 0" width-fitting="both" height-fitting="stretch"></pc-layout-group>
+
+                            <pc-entity name="control-narrower">
+                                <pc-element type="image" anchor="0 0 0 0" pivot="0 0" width="90" height="56" color="0.26 0.31 0.4" sprite-asset="button-sprite" use-input></pc-element>
+                                <pc-layout-child fit-width-proportion="0.55" min-width="56"></pc-layout-child>
+                                <pc-button transition-mode="tint" hover-tint="1.3 1.3 1.3 1" pressed-tint="0.65 0.65 0.65 1" fade-duration="80"></pc-button>
+                                <pc-entity name="label">
+                                    <pc-element type="text" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" font-asset="kenney" font-size="26" color="0.93 0.96 1" text="-"></pc-element>
+                                </pc-entity>
+                            </pc-entity>
+
+                            <pc-entity name="control-wider">
+                                <pc-element type="image" anchor="0 0 0 0" pivot="0 0" width="90" height="56" color="0.26 0.31 0.4" sprite-asset="button-sprite" use-input></pc-element>
+                                <pc-layout-child fit-width-proportion="0.55" min-width="56"></pc-layout-child>
+                                <pc-button transition-mode="tint" hover-tint="1.3 1.3 1.3 1" pressed-tint="0.65 0.65 0.65 1" fade-duration="80"></pc-button>
+                                <pc-entity name="label">
+                                    <pc-element type="text" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" font-asset="kenney" font-size="26" color="0.93 0.96 1" text="+"></pc-element>
+                                </pc-entity>
+                            </pc-entity>
+
+                            <pc-entity name="control-orientation">
+                                <pc-element type="image" anchor="0 0 0 0" pivot="0 0" width="90" height="56" color="0.19 0.6 0.85" sprite-asset="button-sprite" use-input></pc-element>
+                                <pc-layout-child fit-width-proportion="1.5" min-width="104"></pc-layout-child>
+                                <pc-button transition-mode="tint" hover-tint="1.25 1.25 1.25 1" pressed-tint="0.65 0.65 0.65 1" fade-duration="80"></pc-button>
+                                <pc-entity name="label">
+                                    <pc-element type="text" anchor="0 0.5 1 0.5" pivot="0.5 0.5" margin="10 0 10 0" auto-width="false" auto-height="false" auto-fit-width font-asset="kenney" font-size="18" min-font-size="9" max-font-size="18" height="24" color="1 1 1" text="Row"></pc-element>
+                                </pc-entity>
+                            </pc-entity>
+
+                            <pc-entity name="control-wrap">
+                                <pc-element type="image" anchor="0 0 0 0" pivot="0 0" width="90" height="56" color="0.4 0.76 0.35" sprite-asset="button-sprite" use-input></pc-element>
+                                <pc-layout-child fit-width-proportion="1.5" min-width="104"></pc-layout-child>
+                                <pc-button transition-mode="tint" hover-tint="1.25 1.25 1.25 1" pressed-tint="0.65 0.65 0.65 1" fade-duration="80"></pc-button>
+                                <pc-entity name="label">
+                                    <pc-element type="text" anchor="0 0.5 1 0.5" pivot="0.5 0.5" margin="10 0 10 0" auto-width="false" auto-height="false" auto-fit-width font-asset="kenney" font-size="18" min-font-size="9" max-font-size="18" height="24" color="0.06 0.16 0.05" text="Wrap on"></pc-element>
+                                </pc-entity>
+                            </pc-entity>
+
+                            <pc-entity name="control-remove">
+                                <pc-element type="image" anchor="0 0 0 0" pivot="0 0" width="90" height="56" color="0.88 0.4 0.14" sprite-asset="button-sprite" use-input></pc-element>
+                                <pc-layout-child fit-width-proportion="1.2" min-width="92"></pc-layout-child>
+                                <pc-button transition-mode="tint" hover-tint="1.25 1.25 1.25 1" pressed-tint="0.65 0.65 0.65 1" fade-duration="80"></pc-button>
+                                <pc-entity name="label">
+                                    <pc-element type="text" anchor="0 0.5 1 0.5" pivot="0.5 0.5" margin="10 0 10 0" auto-width="false" auto-height="false" auto-fit-width font-asset="kenney" font-size="18" min-font-size="9" max-font-size="18" height="24" color="1 1 1" text="Remove"></pc-element>
+                                </pc-entity>
+                            </pc-entity>
+
+                            <pc-entity name="control-add">
+                                <pc-element type="image" anchor="0 0 0 0" pivot="0 0" width="90" height="56" color="0.97 0.75 0.1" sprite-asset="button-sprite" use-input></pc-element>
+                                <pc-layout-child fit-width-proportion="1.2" min-width="92"></pc-layout-child>
+                                <pc-button transition-mode="tint" hover-tint="1.25 1.25 1.25 1" pressed-tint="0.65 0.65 0.65 1" fade-duration="80"></pc-button>
+                                <pc-entity name="label">
+                                    <pc-element type="text" anchor="0 0.5 1 0.5" pivot="0.5 0.5" margin="10 0 10 0" auto-width="false" auto-height="false" auto-fit-width font-asset="kenney" font-size="18" min-font-size="9" max-font-size="18" height="24" color="0.16 0.13 0.03" text="Add tile"></pc-element>
+                                </pc-entity>
+                            </pc-entity>
+                        </pc-entity>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+
+        <!-- Tile template. Cloned by the board script, so a tile's own layout stays declarative. -->
+        <template id="tile">
+            <pc-entity name="tile">
+                <pc-element type="image" anchor="0 1 0 1" pivot="0 1" width="128" height="86" color="0.19 0.6 0.85" sprite-asset="panel-sprite"></pc-element>
+                <pc-layout-child min-width="128" min-height="86"></pc-layout-child>
+                <pc-entity name="tile-label">
+                    <pc-element type="text" anchor="0.5 0.5 0.5 0.5" pivot="0.5 0.5" font-asset="kenney" font-size="30" color="1 1 1" text="1"></pc-element>
+                </pc-entity>
+            </pc-entity>
+        </template>
+
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
