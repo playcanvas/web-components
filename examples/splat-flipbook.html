@@ -68,24 +68,24 @@
                     </pc-script>
                 </pc-entity>
                 <!-- Shadow Catcher -->
-                <pc-entity name="shadow-catcher" position="0 0 0">
+                <pc-entity name="shadow-catcher">
                     <pc-render type="plane" cast-shadows="false"></pc-render>
                     <pc-script>
                         <pc-script-instance name="shadowCatcher" scale="10 10 10"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Light -->
-                <pc-entity name="light" rotation="55 320 0">
+                <!-- Lights -->
+                <pc-entity name="key-light" rotation="55 320 0">
                     <pc-light type="directional"
-                        cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
-                        shadow-distance="10" shadow-intensity="0.15"
-                        shadow-resolution="1024" shadow-type="pcf5-16f"></pc-light>
+                              cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
+                              shadow-distance="10" shadow-intensity="0.15"
+                              shadow-resolution="1024" shadow-type="pcf5-16f"></pc-light>
                 </pc-entity>
-                <pc-entity name="light" rotation="55 220 0">
+                <pc-entity name="fill-light" rotation="55 220 0">
                     <pc-light type="directional"
-                        cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
-                        shadow-distance="10" shadow-intensity="0.15"
-                        shadow-resolution="1024" shadow-type="pcf5-16f"></pc-light>
+                              cast-shadows shadow-bias="0.1" normal-offset-bias="0.05"
+                              shadow-distance="10" shadow-intensity="0.15"
+                              shadow-resolution="1024" shadow-type="pcf5-16f"></pc-light>
                 </pc-entity>
             </pc-scene>
         </pc-app>
