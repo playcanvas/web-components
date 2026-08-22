@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Splat Streaming</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            #loading {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: #121212;
+                color: #999;
+                font: 14px system-ui, sans-serif;
+                letter-spacing: 0.05em;
+                transition: opacity 0.5s ease;
+            }
+
+            #loading.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            #loading span {
+                animation: pulse 1.5s ease-in-out infinite;
+            }
+
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app antialias="false" depth-buffer="false" max-pixel-ratio="1" stencil-buffer="false">
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/fonts/arial.json" type="font" id="arial-font"></pc-asset>
+            <!-- A level-of-detail SOG scene streamed from SuperSplat: 'URBEX: Sanatorium Inside' by
+                 Christoph Schindelar (https://superspl.at/scene/8429e5e2). Only the preloaded
+                 lod-meta.json is downloaded up front - the splat data itself streams in on demand, at
+                 a level of detail driven by the camera. The explicit type is required because a .json
+                 extension alone infers a plain json asset. -->
+            <pc-asset src="https://d28zzqy0iyovbz.cloudfront.net/8429e5e2/v1/lod-meta.json" type="gsplat" id="sanatorium"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera (with XR support) -->
+                <pc-entity name="camera-root">
+                    <pc-entity name="camera" position="2.011 -0.127 -6.347">
+                        <pc-camera clear-color="black" fov="80"></pc-camera>
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
+                                                focus-point="1.662 -0.056 -5.818"
+                                                move-speed="2"
+                                                move-fast-speed="4"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
+                            "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
+                            "fontAsset": "asset:arial-font"
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Sanatorium: lod-range-min pins streaming to the coarsest of the scene's 6 LOD
+                     levels, so the whole scene arrives quickly for the initial reveal. The script
+                     below lifts the pin once loading settles. -->
+                <pc-entity name="sanatorium" rotation="0 0 180">
+                    <pc-gsplat asset="sanatorium" lod-range-min="5"></pc-gsplat>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div id="loading"><span>Streaming scene&hellip;</span></div>
+        <script type="module" src="js/example.mjs"></script>
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            // Reveal the way the SuperSplat Viewer does: hold a cover until the pinned (coarsest)
+            // LOD of the whole scene has streamed in, then lift the pin so higher LODs refine the
+            // view by camera distance. The gsplat system fires 'frame:ready' every frame with the
+            // streaming state: ready with nothing loading means the reveal can happen.
+            const onFrameReady = (camera, layer, ready, loading) => {
+                if (ready && loading === 0) {
+                    app.systems.gsplat.off('frame:ready', onFrameReady);
+                    document.querySelector('pc-gsplat').removeAttribute('lod-range-min');
+                    document.getElementById('loading').classList.add('hidden');
+                }
+            };
+            app.systems.gsplat.on('frame:ready', onFrameReady);
+        </script>
+    </body>
+</html>
