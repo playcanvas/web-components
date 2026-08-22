@@ -7,7 +7,7 @@
 [![Reddit](https://img.shields.io/badge/Reddit-FF4500?style=flat&logo=reddit&logoColor=white&color=black)](https://www.reddit.com/r/PlayCanvas)
 [![X](https://img.shields.io/badge/X-000000?style=flat&logo=x&logoColor=white&color=black)](https://x.com/intent/follow?screen_name=playcanvas)
 
-| [User Manual](https://developer.playcanvas.com//user-manual/web-components) | [API Reference](https://api.playcanvas.com/web-components) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) |
+| [User Manual](https://developer.playcanvas.com/user-manual/web-components) | [API Reference](https://api.playcanvas.com/web-components) | [Examples](https://playcanvas.github.io/web-components/examples) | [Blog](https://blog.playcanvas.com) | [Forum](https://forum.playcanvas.com) |
 
 PlayCanvas Web Components are a set of custom HTML elements for building 3D interactive web apps. Using the declarative nature of HTML makes it both easy and fun to incorporate 3D into your website. Check out this simple example:
 
@@ -30,9 +30,11 @@ PlayCanvas Web Components are a set of custom HTML elements for building 3D inte
 
 ## Examples
 
-<img width="5120" height="2160" alt="examples" src="https://github.com/user-attachments/assets/92cf1156-c93f-46b5-8d05-e576967ceaf3" />
+<a href="https://playcanvas.github.io/web-components/examples">
+  <img width="5120" height="2160" alt="PlayCanvas Web Components examples gallery showing interactive 3D demos" src="https://github.com/user-attachments/assets/92cf1156-c93f-46b5-8d05-e576967ceaf3" />
+</a>
 
-See PlayCanvas Web Components in action here: https://playcanvas.github.io/web-components/examples
+Explore the [PlayCanvas Web Components examples gallery](https://playcanvas.github.io/web-components/examples).
 
 ## Usage
 
