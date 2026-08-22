@@ -15,7 +15,7 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  * `missing`/`ambiguous`/`duplicate` when resolution failed — each accompanied by a warning
  * naming the cause.
  */
-type NodeBindingState = 'pending' | 'bound' | 'missing' | 'ambiguous' | 'duplicate';
+export type NodeBindingState = 'pending' | 'bound' | 'missing' | 'ambiguous' | 'duplicate';
 
 /**
  * The authored values a bound node's overrides displaced, captured per property when the first

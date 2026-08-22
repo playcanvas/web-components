@@ -69,7 +69,7 @@ class EntityOwnerElement extends EntityBaseElement {
     private _tags: string[] = [];
 
     /**
-     * Whether the hierarchy has been built for this entity — set once {@link _buildHierarchy} has
+     * Whether the hierarchy has been built for this entity — set once `_buildHierarchy` has
      * parented it. Read by subclasses that gate work on the entity being in the scene graph.
      */
     protected _built = false;
@@ -170,7 +170,7 @@ class EntityOwnerElement extends EntityBaseElement {
     }
 
     /**
-     * Called by {@link _buildHierarchy} once the backing entity has been parented — exactly once
+     * Called by `_buildHierarchy` once the backing entity has been parented — exactly once
      * per build cycle. The default announces readiness, which is what a parented `<pc-entity>`
      * means; `<pc-model>` overrides it to start loading content instead, because its readiness
      * tracks the content settling rather than the host entering the scene graph.

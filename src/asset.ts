@@ -26,7 +26,8 @@ const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([
     ['tiled', SPRITE_RENDERMODE_TILED]
 ]);
 
-type AddressMode = 'repeat' | 'clamp' | 'mirror';
+/** The addressing modes for a texture asset. */
+export type AddressMode = 'repeat' | 'clamp' | 'mirror';
 
 const addressModes = new Map<AddressMode, number>([
     ['repeat', ADDRESS_REPEAT],
@@ -34,7 +35,8 @@ const addressModes = new Map<AddressMode, number>([
     ['mirror', ADDRESS_MIRRORED_REPEAT]
 ]);
 
-type MinFilterMode =
+/** The minification filter modes for a texture asset. */
+export type MinFilterMode =
     'nearest' | 'linear' | 'nearest-mip-nearest' | 'linear-mip-nearest' | 'nearest-mip-linear' | 'linear-mip-linear';
 
 const minFilterModes = new Map<MinFilterMode, number>([
@@ -46,8 +48,11 @@ const minFilterModes = new Map<MinFilterMode, number>([
     ['linear-mip-linear', FILTER_LINEAR_MIPMAP_LINEAR]
 ]);
 
-// Magnification has no mip variants - the engine (and the GPU) only accepts these two.
-type MagFilterMode = 'nearest' | 'linear';
+/**
+ * The magnification filter modes for a texture asset. Magnification has no mip variants - the
+ * engine (and the GPU) only accepts these two.
+ */
+export type MagFilterMode = 'nearest' | 'linear';
 
 const magFilterModes = new Map<MagFilterMode, number>([
     ['nearest', FILTER_NEAREST],
