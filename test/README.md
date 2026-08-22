@@ -7,17 +7,36 @@ Five tiers, four of which run in Node and need neither a build nor a browser.
 | Unit        | `npm run test:unit`        | `node`      | The pure parsers in `src/parse.ts` and the `CSS_COLORS` table           |
 | Elements    | `npm run test:elements`    | `jsdom`     | Attribute and property surface, with no engine created                  |
 | Integration | `npm run test:integration` | `jsdom`     | A real `AppBase` on `NullGraphicsDevice`, via `<pc-app backend="null">` |
-| Examples    | `npm run test:examples`    | `node`      | `examples/` as a set: the catalogue against the pages on disk           |
+| Examples    | `npm run test:examples`    | `node`\*    | `examples/` as a set: the catalogue, and the markup of every page       |
 | Browser     | _(not yet implemented)_    | Chromium    | The built `dist/` bundle and the example pages                          |
 
 `npm test` runs the four Node tiers. `npm run test:watch` watches them, and
 `npm run test:coverage` adds a v8 report under `coverage/`.
 
-The Examples tier is the odd one out: it tests the examples rather than the library, and reads sources
-as text instead of importing them. It exists because `examples/js/example-list.mjs` is the only name a
-reader sees in the sidebar while each page carries its own `<title>`, and those two drifted apart
-across a third of the examples before it was added. It also fails on an example page that the
-catalogue never lists — a page nothing imports, which no other tier can see.
+The Examples tier is the odd one out: it tests the examples rather than the library. `npm test` still
+needs no build and no browser, but `example-markup.test.ts` needs a DOM and so carries a
+`// @vitest-environment jsdom` docblock — hence the `*` above. `example-list.test.ts`, the rest of the
+tier, still reads its sources as text and imports nothing.
+
+`example-list.test.ts` exists because `examples/js/example-list.mjs` is the only name a reader sees in
+the sidebar while each page carries its own `<title>`, and those two drifted apart across a third of
+the examples before it was added. It also fails on an example page that the catalogue never lists — a
+page nothing imports, which no other tier can see.
+
+`example-markup.test.ts` parses every page and checks it against the registered elements, because
+nothing else does: `npm run lint` and `npm run fmt` are both scoped to `examples/js` and
+`examples/assets/scripts`, so no tool reads `examples/*.html` or the inline `<script type="module">`
+blocks in a dozen of them. Two classes of defect had accumulated unseen — an attribute the element
+does not accept, which is dropped in silence, and a start tag that is never closed, which browsers
+recover from by folding the closing tag into an attribute name. Both are asserted per page, so a
+failure names the file and the attribute.
+
+Its one hand-maintained list is `READ_ONCE_ATTRIBUTES`, for attributes an element reads in
+`connectedCallback` rather than observing: those are absent from `observedAttributes`, and the
+generated custom-elements manifest that does carry them is a build artifact this tier cannot use.
+Adding such an attribute means adding it there too. A guard test asserts the attribute sets come back
+populated, so a refactor that moved declarations off `observedAttributes` fails loudly instead of
+passing vacuously.
 
 ## Why the library is testable headlessly
 
