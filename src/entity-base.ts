@@ -78,7 +78,7 @@ class EntityBaseElement extends AsyncElement {
      * Tracks whether an inline `onpointer*` attribute is present. The browser itself compiles and
      * runs these attributes — they are standard `GlobalEventHandlers`, so setting one replaces
      * the previous handler and removing it removes the handler, exactly like `onclick` on any
-     * HTML element. But because they bypass {@link addEventListener}, the connect/disconnect
+     * HTML element. But because they bypass {@link EventTarget.addEventListener}, the connect/disconnect
      * bookkeeping that lets the application lazily attach its canvas pointer handlers must be
      * kept in sync here.
      *
@@ -122,7 +122,7 @@ class EntityBaseElement extends AsyncElement {
 
     /**
      * Whether the element has a listener for an event type, registered either with
-     * {@link addEventListener} or with the matching inline `onpointer*` attribute. Read by the
+     * {@link EventTarget.addEventListener} or with the matching inline `onpointer*` attribute. Read by the
      * containing `<pc-app>` element to gate pointer event synthesis.
      *
      * @param type - The event type.

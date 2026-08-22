@@ -134,6 +134,17 @@ export {
     whenReady
 };
 
+export type { AddressMode, MagFilterMode, MinFilterMode } from './asset';
 export type { AsyncElementTagName } from './async-element';
+export type { JointType, MotionMode } from './components/joint-component';
+export type {
+    BlendType,
+    ColorChannel,
+    CullMode,
+    FresnelModel,
+    OccludeSpecular,
+    OpacityDither,
+    ScalarChannel
+} from './material';
 export type { HierarchyMaterial, HierarchyNode } from './model';
-export type { MaterialOverrides } from './node';
+export type { MaterialOverrides, NodeBindingState } from './node';

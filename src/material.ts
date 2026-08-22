@@ -29,7 +29,8 @@ import type { AppElement } from './app';
 import { useAsset } from './asset';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2 } from './parse';
 
-type BlendType =
+/** The blend modes for a material. */
+export type BlendType =
     | 'none'
     | 'normal'
     | 'additive'
@@ -56,7 +57,8 @@ const blendTypes = new Map<BlendType, number>([
     ['subtractive', BLEND_SUBTRACTIVE]
 ]);
 
-type CullMode = 'none' | 'back' | 'front' | 'front-and-back';
+/** The face culling modes for a material. */
+export type CullMode = 'none' | 'back' | 'front' | 'front-and-back';
 
 const cullModes = new Map<CullMode, number>([
     ['none', CULLFACE_NONE],
@@ -65,14 +67,16 @@ const cullModes = new Map<CullMode, number>([
     ['front-and-back', CULLFACE_FRONTANDBACK]
 ]);
 
-type FresnelModel = 'none' | 'schlick';
+/** The Fresnel models for a material. */
+export type FresnelModel = 'none' | 'schlick';
 
 const fresnelModels = new Map<FresnelModel, number>([
     ['none', FRESNEL_NONE],
     ['schlick', FRESNEL_SCHLICK]
 ]);
 
-type OccludeSpecular = 'none' | 'ao' | 'gloss-dependent';
+/** The specular occlusion modes for a material. */
+export type OccludeSpecular = 'none' | 'ao' | 'gloss-dependent';
 
 const occludeSpeculars = new Map<OccludeSpecular, number>([
     ['none', SPECOCC_NONE],
@@ -80,17 +84,20 @@ const occludeSpeculars = new Map<OccludeSpecular, number>([
     ['gloss-dependent', SPECOCC_GLOSSDEPENDENT]
 ]);
 
+/** The opacity dithering modes for a material. */
+export type OpacityDither = 'none' | 'bayer8' | 'bluenoise' | 'ignnoise';
+
 // The DITHER_* constants are strings whose values are exactly these names, so a parsed value is
 // assigned to the material unchanged rather than mapped through a table.
-type OpacityDither = 'none' | 'bayer8' | 'bluenoise' | 'ignnoise';
-
 const opacityDithers: OpacityDither[] = ['none', 'bayer8', 'bluenoise', 'ignnoise'];
 
-type ColorChannel = 'r' | 'g' | 'b' | 'a' | 'rgb';
+/** The texture channels a color map can sample. */
+export type ColorChannel = 'r' | 'g' | 'b' | 'a' | 'rgb';
 
 const colorChannels: ColorChannel[] = ['r', 'g', 'b', 'a', 'rgb'];
 
-type ScalarChannel = 'r' | 'g' | 'b' | 'a';
+/** The texture channels a scalar map can sample. */
+export type ScalarChannel = 'r' | 'g' | 'b' | 'a';
 
 const scalarChannels: ScalarChannel[] = ['r', 'g', 'b', 'a'];
 

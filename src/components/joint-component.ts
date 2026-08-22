@@ -5,9 +5,14 @@ import { getEntity, parseBool, parseEnum, parseNumber, parseVec2, parseVec3 } fr
 
 import { ComponentElement } from './component';
 
-type JointType = 'fixed' | 'ball' | 'hinge' | 'slider' | '6dof';
+/** The constraint types supported by the `<pc-joint>` element. */
+export type JointType = 'fixed' | 'ball' | 'hinge' | 'slider' | '6dof';
 
-type MotionMode = 'locked' | 'limited' | 'free';
+/**
+ * The motion modes for a single joint axis: fully constrained (`locked`), constrained within
+ * limits (`limited`) or unconstrained (`free`).
+ */
+export type MotionMode = 'locked' | 'limited' | 'free';
 
 /**
  * The JointComponentElement interface provides properties and methods for manipulating

@@ -12,7 +12,7 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  *
  * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
  * intersects this entity's geometry. They are only generated while the entity has a listener for
- * them, registered either with {@link addEventListener} or with the matching inline `onpointer*`
+ * them, registered either with {@link EventTarget.addEventListener} or with the matching inline `onpointer*`
  * attribute.
  *
  * @attribute {boolean} enabled - The enabled state of the entity.
