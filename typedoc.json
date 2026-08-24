@@ -110,5 +110,6 @@
     "readme": "none",
     "searchGroupBoosts": {
         "Classes": 2
-    }
+    },
+    "useFirstParagraphOfCommentAsSummary": true
 }
