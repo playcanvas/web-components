@@ -48,6 +48,11 @@ type PlaybackState = {
  *
  * Engine component: {@link AnimComponent} (`anim`).
  *
+ * @elementSummary The `<pc-anim>` element plays animation clips over its entity's hierarchy, taken
+ * from `<pc-anim-clip>` children or from the enclosing `<pc-model>`'s own animations. The first
+ * clip plays automatically, and the `clip` attribute switches between them. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class AnimComponentElement extends ComponentElement {

@@ -10,6 +10,9 @@ import { SoundComponentElement } from './sound-component';
  * The SoundSlotElement interface provides properties and methods for manipulating
  * `<pc-sound-slot>` elements. The SoundSlotElement interface also inherits the properties and
  * methods of the {@link AsyncElement} interface.
+ *
+ * @elementSummary The `<pc-sound-slot>` element declares one named sound on its parent `<pc-sound>`
+ * — its asset, volume, pitch, looping and autoplay. Must be a direct child of `<pc-sound>`.
  */
 class SoundSlotElement extends AsyncElement {
     private _asset = '';

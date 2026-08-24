@@ -164,6 +164,11 @@ const levenshtein = (a: string, b: string): number => {
  * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
  * intersects the bound node's geometry, exactly as for `<pc-entity>`.
  *
+ * @elementSummary The `<pc-node>` element binds to a node inside the hierarchy a `<pc-model>`
+ * instantiated and declares overrides against it: a transform, an enabled state, tags, components
+ * to add, or content to attach. Its `name` is a lookup, never a rename. Must be a descendant of
+ * `<pc-model>`.
+ *
  * @attribute {string} name - The name of the node to bind, resolved within the nearest ancestor
  * `pc-model` (or `pc-node`) once it has instantiated.
  * @attribute {number} index - Which match to bind when `name` matches more than one node,

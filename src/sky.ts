@@ -10,6 +10,10 @@ import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
  * The SkyElement interface provides properties and methods for manipulating
  * `<pc-sky>` elements. The SkyElement interface also inherits the properties and
  * methods of the {@link HTMLElement} interface.
+ *
+ * @elementSummary The `<pc-sky>` element renders a skybox from a texture asset, projected as an
+ * infinite background, a box or a dome, and optionally lights the scene from it. Must be a direct
+ * child of `<pc-scene>`.
  */
 class SkyElement extends AsyncElement {
     private _asset = '';

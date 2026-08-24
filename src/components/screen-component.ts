@@ -22,6 +22,10 @@ const scaleModes = new Map<'none' | 'blend', string>([
  *
  * Engine component: {@link ScreenComponent} (`screen`).
  *
+ * @elementSummary The `<pc-screen>` element gives its entity a 2D space — in screen space or in the
+ * world — that a hierarchy of `<pc-element>` descendants lays out inside. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class ScreenComponentElement extends ComponentElement {

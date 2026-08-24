@@ -13,6 +13,11 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link RigidBodyComponent} (`rigidbody`).
  *
+ * @elementSummary The `<pc-rigid-body>` element hands its entity to the physics simulation, with
+ * attributes for its type, mass, friction and restitution. It needs a sibling `<pc-collision>` for
+ * its shape, and `Ammo` loaded through `<pc-wasm>`. Must be a child of a `<pc-entity>`,
+ * `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class RigidBodyComponentElement extends ComponentElement {

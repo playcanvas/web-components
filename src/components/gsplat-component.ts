@@ -13,6 +13,10 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link GSplatComponent} (`gsplat`).
  *
+ * @elementSummary The `<pc-gsplat>` element renders the 3D Gaussian splats of a `gsplat` asset at
+ * its entity, with attributes for shadow casting and level of detail. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class GSplatComponentElement extends ComponentElement {

@@ -39,6 +39,10 @@ const shadowTypes = new Map<
  *
  * Engine component: {@link LightComponent} (`light`).
  *
+ * @elementSummary The `<pc-light>` element lights the scene from its entity — as a directional,
+ * omni or spot light — with attributes for color, intensity, range and shadows. Must be a child of
+ * a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class LightComponentElement extends ComponentElement {

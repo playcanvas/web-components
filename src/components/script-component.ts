@@ -250,6 +250,9 @@ export type ScriptNameChangeEvent = {
  *
  * Engine component: {@link ScriptComponent} (`script`).
  *
+ * @elementSummary The `<pc-script>` element holds the `<pc-script-instance>` children that attach
+ * scripts to its entity. Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class ScriptComponentElement extends ComponentElement {
