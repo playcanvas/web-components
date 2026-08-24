@@ -1,4 +1,4 @@
-import type { CameraComponent } from 'playcanvas';
+import type { AppBase, CameraComponent } from 'playcanvas';
 import {
     Color,
     Vec4,
@@ -16,6 +16,30 @@ import { describe, expect, it } from 'vitest';
 import type { CameraComponentElement } from '../../../src/components/camera-component';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
+
+/**
+ * Stubs the availability half of XrManager, which is device-driven and never true headlessly.
+ * `supported` is a getter, hence defineProperty rather than assignment.
+ *
+ * @param app - The booted application.
+ * @param available - The session types to report as available.
+ * @returns The types the element asked about, in the order it asked.
+ */
+const stubXr = (app: AppBase, available: string[]) => {
+    const xr = app.xr;
+    if (xr === null) {
+        throw new Error('expected an XrManager on the application');
+    }
+
+    const asked: string[] = [];
+    Object.defineProperty(xr, 'supported', { value: true, configurable: true });
+    xr.isAvailable = (type: string) => {
+        asked.push(type);
+        return available.includes(type);
+    };
+
+    return asked;
+};
 
 const scene = (cameraAttributes = '') =>
     `<pc-entity name="camera"><pc-camera ${cameraAttributes}></pc-camera></pc-entity>`;
@@ -148,22 +172,33 @@ describe('<pc-camera>', () => {
             expect(() => camera.startXr('immersive-vr', 'local-floor')).not.toThrow();
         });
 
+        it('counts either immersive mode as XR being available', async () => {
+            const { app, get } = await bootApp(scene());
+            const camera = get<CameraComponentElement>('pc-camera');
+            stubXr(app, [XRTYPE_AR]);
+
+            expect(camera.isXrAvailable(XRTYPE_AR), 'the mode the device offers').toBe(true);
+            expect(camera.isXrAvailable(XRTYPE_VR), 'the mode it does not').toBe(false);
+
+            // The getter is named for XR, not for VR: one immersive mode is enough for it
+            expect(camera.xrAvailable).toBe(true);
+        });
+
+        it('reports no XR when neither immersive mode is offered', async () => {
+            const { app, get } = await bootApp(scene());
+            const camera = get<CameraComponentElement>('pc-camera');
+            const asked = stubXr(app, []);
+
+            expect(camera.xrAvailable).toBe(false);
+            expect(asked, 'both modes tested before giving up').toEqual([XRTYPE_AR, XRTYPE_VR]);
+        });
+
         it('tests availability for the mode it is asked to start', async () => {
             const { app, get } = await bootApp(scene());
             const camera = get<CameraComponentElement>('pc-camera');
-            const xr = app.xr;
-            if (xr === null) {
-                throw new Error('expected an XrManager on the application');
-            }
 
-            // Availability is device-driven and never true headlessly, so both halves of the check
-            // are stubbed: AR available and VR not, the split an AR-capable phone reports.
-            const asked: string[] = [];
-            Object.defineProperty(xr, 'supported', { value: true, configurable: true });
-            xr.isAvailable = (type: string) => {
-                asked.push(type);
-                return type === XRTYPE_AR;
-            };
+            // AR available and VR not - the split an AR-capable phone reports
+            const asked = stubXr(app, [XRTYPE_AR]);
 
             // Stubbed so the element's decision is what is measured, not a session the null device
             // could never open
@@ -178,9 +213,6 @@ describe('<pc-camera>', () => {
 
             expect(asked, 'each start tests its own mode').toEqual([XRTYPE_AR, XRTYPE_VR]);
             expect(started, 'the available mode starts, the unavailable one does not').toEqual([XRTYPE_AR]);
-
-            // The getter is VR-specific by name and stays that way
-            expect(camera.xrAvailable).toBe(false);
         });
     });
 });

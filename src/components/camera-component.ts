@@ -13,6 +13,7 @@ import {
     TONEMAP_ACES,
     TONEMAP_HEJL,
     TONEMAP_NONE,
+    XRTYPE_AR,
     XRTYPE_VR
 } from 'playcanvas';
 
@@ -118,21 +119,22 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Whether immersive VR is available. {@link startXr} tests the mode it is asked to start,
-     * so starting an AR session does not need this.
-     * @returns Whether immersive VR is available.
+     * Whether either of the immersive modes {@link startXr} can start - AR or VR - is available.
+     * Use {@link isXrAvailable} to test one of them on its own.
+     * @returns Whether immersive AR or VR is available.
      */
     get xrAvailable(): boolean {
-        return this._xrAvailable(XRTYPE_VR);
+        return this.isXrAvailable(XRTYPE_AR) || this.isXrAvailable(XRTYPE_VR);
     }
 
     /**
-     * Whether one immersive XR mode is available on this device.
+     * Whether one immersive XR mode is available on this device. A device can offer AR and not VR,
+     * so gate a mode-specific control on the mode rather than on {@link xrAvailable}.
      *
      * @param type - The XR session type to test.
      * @returns Whether that mode is available.
      */
-    private _xrAvailable(type: string): boolean {
+    isXrAvailable(type: 'immersive-ar' | 'immersive-vr'): boolean {
         const xrManager = this.component?.system.app.xr;
         return Boolean(xrManager?.supported && xrManager.isAvailable(type));
     }
@@ -146,9 +148,9 @@ class CameraComponentElement extends ComponentElement {
         type: 'immersive-ar' | 'immersive-vr',
         space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer'
     ) {
-        // Gated on the mode being started rather than on VR: a device can offer AR and not
-        // VR, and such a device would otherwise refuse an AR session it can serve
-        if (this.component && this._xrAvailable(type)) {
+        // Gated on the mode being started, not on XR in general: a device that offers only
+        // one of the two would otherwise accept a session it cannot serve
+        if (this.component && this.isXrAvailable(type)) {
             this.component.startXr(type, space, {
                 callback: (err: any) => {
                     if (err) console.error(`WebXR ${type} failed to start: ${err.message}`);
