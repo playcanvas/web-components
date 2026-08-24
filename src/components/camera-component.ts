@@ -54,9 +54,11 @@ class CameraComponentElement extends ComponentElement {
 
     private _clearColorBuffer = true;
 
+    private _clearDepth = 1;
+
     private _clearDepthBuffer = true;
 
-    private _clearStencilBuffer = false;
+    private _clearStencilBuffer = true;
 
     private _cullFaces = true;
 
@@ -95,6 +97,7 @@ class CameraComponentElement extends ComponentElement {
         return {
             clearColor: this._clearColor,
             clearColorBuffer: this._clearColorBuffer,
+            clearDepth: this._clearDepth,
             clearDepthBuffer: this._clearDepthBuffer,
             clearStencilBuffer: this._clearStencilBuffer,
             cullFaces: this._cullFaces,
@@ -114,9 +117,24 @@ class CameraComponentElement extends ComponentElement {
         };
     }
 
-    get xrAvailable() {
+    /**
+     * Whether immersive VR is available. {@link startXr} tests the mode it is asked to start,
+     * so starting an AR session does not need this.
+     * @returns Whether immersive VR is available.
+     */
+    get xrAvailable(): boolean {
+        return this._xrAvailable(XRTYPE_VR);
+    }
+
+    /**
+     * Whether one immersive XR mode is available on this device.
+     *
+     * @param type - The XR session type to test.
+     * @returns Whether that mode is available.
+     */
+    private _xrAvailable(type: string): boolean {
         const xrManager = this.component?.system.app.xr;
-        return xrManager && xrManager.supported && xrManager.isAvailable(XRTYPE_VR);
+        return Boolean(xrManager?.supported && xrManager.isAvailable(type));
     }
 
     /**
@@ -128,10 +146,12 @@ class CameraComponentElement extends ComponentElement {
         type: 'immersive-ar' | 'immersive-vr',
         space: 'bounded-floor' | 'local' | 'local-floor' | 'unbounded' | 'viewer'
     ) {
-        if (this.component && this.xrAvailable) {
+        // Gated on the mode being started rather than on VR: a device can offer AR and not
+        // VR, and such a device would otherwise refuse an AR session it can serve
+        if (this.component && this._xrAvailable(type)) {
             this.component.startXr(type, space, {
                 callback: (err: any) => {
-                    if (err) console.error(`WebXR Immersive VR failed to start: ${err.message}`);
+                    if (err) console.error(`WebXR ${type} failed to start: ${err.message}`);
                 }
             });
         }
@@ -190,6 +210,25 @@ class CameraComponentElement extends ComponentElement {
      */
     get clearColorBuffer(): boolean {
         return this._clearColorBuffer;
+    }
+
+    /**
+     * Sets the depth value the depth buffer is cleared to. Defaults to 1.
+     * @param value - The clear depth value.
+     */
+    set clearDepth(value: number) {
+        this._clearDepth = value;
+        if (this.component) {
+            this.component.clearDepth = value;
+        }
+    }
+
+    /**
+     * Gets the depth value the depth buffer is cleared to.
+     * @returns The clear depth value.
+     */
+    get clearDepth(): number {
+        return this._clearDepth;
     }
 
     /**
@@ -502,6 +541,7 @@ class CameraComponentElement extends ComponentElement {
             ...super.observedAttributes,
             'clear-color',
             'clear-color-buffer',
+            'clear-depth',
             'clear-depth-buffer',
             'clear-stencil-buffer',
             'cull-faces',
@@ -531,11 +571,14 @@ class CameraComponentElement extends ComponentElement {
             case 'clear-color-buffer':
                 this.clearColorBuffer = parseBool(newValue, true);
                 break;
+            case 'clear-depth':
+                this.clearDepth = parseNumber(newValue, 1, name);
+                break;
             case 'clear-depth-buffer':
                 this.clearDepthBuffer = parseBool(newValue, true);
                 break;
             case 'clear-stencil-buffer':
-                this.clearStencilBuffer = parseBool(newValue, false);
+                this.clearStencilBuffer = parseBool(newValue, true);
                 break;
             case 'cull-faces':
                 this.cullFaces = parseBool(newValue, true);
