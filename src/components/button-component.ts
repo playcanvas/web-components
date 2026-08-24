@@ -19,9 +19,10 @@ const transitionModes = new Map<'tint' | 'sprite', number>([
  *
  * Engine component: {@link ButtonComponent} (`button`).
  *
- * @summary The `<pc-button>` element makes its entity respond to pointer input, tinting or swapping
- * its image as the pointer hovers, presses and releases it. The entity also needs a `<pc-element>`
- * with `use-input` set. Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ * @elementSummary The `<pc-button>` element makes its entity respond to pointer input, tinting or
+ * swapping its image as the pointer hovers, presses and releases it. The entity also needs a
+ * `<pc-element>` with `use-input` set. Must be a child of a `<pc-entity>`, `<pc-model>` or
+ * `<pc-node>`.
  *
  * @category Components
  */

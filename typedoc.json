@@ -11,6 +11,7 @@
         "@defaultValue",
         "@deprecated",
         "@document",
+        "@elementSummary",
         "@example",
         "@expandType",
         "@extends",
@@ -101,6 +102,22 @@
         "Forum": "https://forum.playcanvas.com/",
         "GitHub": "https://github.com/playcanvas/web-components"
     },
+    "notRenderedTags": [
+        "@showCategories",
+        "@showGroups",
+        "@hideCategories",
+        "@hideGroups",
+        "@disableGroups",
+        "@expand",
+        "@preventExpand",
+        "@expandType",
+        "@summary",
+        "@group",
+        "@groupDescription",
+        "@category",
+        "@categoryDescription",
+        "@elementSummary"
+    ],
     "sidebarLinks": {
         "Home": "/"
     },

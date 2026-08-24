@@ -22,7 +22,7 @@ import { AnimComponentElement } from './anim-component';
  * named; in a multi-track source the track named `name` is chosen, falling back to the first
  * with a warning. The element becomes ready once its resolved track is assigned.
  *
- * @summary The `<pc-anim-clip>` element declares one named animation clip on its parent
+ * @elementSummary The `<pc-anim-clip>` element declares one named animation clip on its parent
  * `<pc-anim>`, taken from the `asset` it names or, without one, from the enclosing `<pc-model>`'s
  * own animations. Must be a direct child of `<pc-anim>`.
  *

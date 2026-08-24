@@ -3,6 +3,7 @@ import { customElementVsCodePlugin } from 'custom-element-vs-code-integration';
 
 import { attributesFromCallbackPlugin } from './utils/cem/attributes-plugin.mjs';
 import { manifestCleanupPlugin } from './utils/cem/cleanup-plugin.mjs';
+import { elementSummaryPlugin } from './utils/cem/summary-plugin.mjs';
 
 /**
  * The element's page in the User Manual, which both editors surface as a link at the foot of the
@@ -32,13 +33,16 @@ export default {
     plugins: [
         // Derives attribute metadata from each element's attributeChangedCallback
         attributesFromCallbackPlugin(),
+
+        // Publishes each element's `@elementSummary` as its `summary`
+        elementSummaryPlugin(),
         manifestCleanupPlugin(),
 
         // Editor integrations, generated from the manifest above. Both describe an element with
         // its `summary` where it has one, falling back to its `description` - which is why every
-        // element carries an `@summary`: the description is the class reference ("The XElement
-        // interface provides properties and methods for manipulating ..."), and what an author
-        // hovering a tag in HTML needs is a description of the element.
+        // element carries an `@elementSummary`: the description is the class reference ("The
+        // XElement interface provides properties and methods for manipulating ..."), and what an
+        // author hovering a tag in HTML needs is a description of the element.
         //
         // Methods are hidden from both for the same reason. They are the element's JavaScript
         // surface, documented in the API reference the tooltip links to, and listing them puts

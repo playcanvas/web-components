@@ -173,7 +173,7 @@ const processBufferView = (
  * Apart from `lazy` and the texture options, these attributes are read once when the asset is
  * created, so changing them later has no effect.
  *
- * @summary The `<pc-asset>` element declares an asset for the application to load — a model,
+ * @elementSummary The `<pc-asset>` element declares an asset for the application to load — a model,
  * texture, font, sound, script or JSON file — under an `id` that other elements reference. Must be
  * a direct child of `<pc-app>`.
  *

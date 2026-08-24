@@ -17,7 +17,7 @@ import { AsyncElement } from './async-element';
  * A `<pc-wasm>` without a `name` warns and never becomes ready; a containing `<pc-app>` still
  * boots.
  *
- * @summary The `<pc-wasm>` element loads a WebAssembly module the engine needs before the
+ * @elementSummary The `<pc-wasm>` element loads a WebAssembly module the engine needs before the
  * application starts — `Ammo` for physics, `Basis` or `DracoDecoderModule` for compressed assets.
  * Must be a direct child of `<pc-app>`.
  *

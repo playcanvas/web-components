@@ -19,9 +19,9 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link ElementComponent} (`element`).
  *
- * @summary The `<pc-element>` element gives its entity a 2D UI rectangle inside a `<pc-screen>`
- * hierarchy, drawing an image, a line of text or nothing (`type="image"`, `"text"` or `"group"`).
- * Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ * @elementSummary The `<pc-element>` element gives its entity a 2D UI rectangle inside a
+ * `<pc-screen>` hierarchy, drawing an image, a line of text or nothing (`type="image"`, `"text"` or
+ * `"group"`). Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *
  * @category Components
  */

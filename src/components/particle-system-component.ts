@@ -12,9 +12,9 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link ParticleSystemComponent} (`particlesystem`).
  *
- * @summary The `<pc-particle-system>` element emits particles from its entity, with attributes for
- * the emitter's shape, rate, lifetime, textures and blending. Must be a child of a `<pc-entity>`,
- * `<pc-model>` or `<pc-node>`.
+ * @elementSummary The `<pc-particle-system>` element emits particles from its entity, with
+ * attributes for the emitter's shape, rate, lifetime, textures and blending. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *
  * @category Components
  */

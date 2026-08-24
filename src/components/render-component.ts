@@ -17,10 +17,10 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link RenderComponent} (`render`).
  *
- * @summary The `<pc-render>` element renders one of the engine's built-in primitives at its entity
- * — box, sphere, capsule, cone, cylinder or plane — shaded by the `<pc-material>` its `material`
- * attribute names. For glTF content, use `<pc-model>` instead. Must be a child of a `<pc-entity>`,
- * `<pc-model>` or `<pc-node>`.
+ * @elementSummary The `<pc-render>` element renders one of the engine's built-in primitives at its
+ * entity — box, sphere, capsule, cone, cylinder or plane — shaded by the `<pc-material>` its
+ * `material` attribute names. For glTF content, use `<pc-model>` instead. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *
  * @category Components
  */

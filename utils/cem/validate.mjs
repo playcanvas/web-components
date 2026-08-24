@@ -398,7 +398,7 @@ if (manifest) {
         // The opening is pinned to the voice the browsers' own HTML data uses ("The h1 element
         // represents a section heading"), which is the register the tooltip sits in.
         check((declaration.summary ?? '').startsWith(`The \`<${tag}>\` element`),
-            `${tag} has no element-voice @summary, so its tooltip would describe the class: ${JSON.stringify((declaration.summary ?? '').slice(0, 120))}`);
+            `${tag} has no element-voice @elementSummary, so its tooltip would describe the class: ${JSON.stringify((declaration.summary ?? '').slice(0, 120))}`);
 
         for (const item of declaration.attributes ?? []) {
             check(Boolean(item.type?.text), `${tag}[${item.name}] has no type`);

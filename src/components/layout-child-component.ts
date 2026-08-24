@@ -12,7 +12,7 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link LayoutChildComponent} (`layoutchild`).
  *
- * @summary The `<pc-layout-child>` element controls how its entity is sized by the
+ * @elementSummary The `<pc-layout-child>` element controls how its entity is sized by the
  * `<pc-layout-group>` above it, through minimum and maximum sizes and fit proportions. Must be a
  * child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *

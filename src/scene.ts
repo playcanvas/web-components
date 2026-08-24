@@ -10,8 +10,8 @@ import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
  * The SceneElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
  *
- * @summary The `<pc-scene>` element holds the entity hierarchy the application renders, along with
- * the scene-wide fog and gravity settings. Must be a direct child of `<pc-app>`.
+ * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
+ * along with the scene-wide fog and gravity settings. Must be a direct child of `<pc-app>`.
  */
 class SceneElement extends AsyncElement {
     /**

@@ -18,9 +18,9 @@ const orientations = new Map<'horizontal' | 'vertical', number>([
  *
  * Engine component: {@link ScrollbarComponent} (`scrollbar`).
  *
- * @summary The `<pc-scrollbar>` element gives its entity a draggable handle reporting a position
- * from 0 to 1, which a `<pc-scroll-view>` references to scroll its content. Must be a child of a
- * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ * @elementSummary The `<pc-scrollbar>` element gives its entity a draggable handle reporting a
+ * position from 0 to 1, which a `<pc-scroll-view>` references to scroll its content. Must be a
+ * child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *
  * @category Components
  */

@@ -143,9 +143,9 @@ type TextureSlot =
  * The two aliases are documented here rather than on an accessor, because they resolve to the
  * `gloss` properties and would otherwise inherit gloss's description - which reads inverted.
  *
- * @summary The `<pc-material>` element defines a physically based material, which `<pc-render>`
- * elements apply by naming its `id`. It is metal/rough by default, with `metalness` starting at 0.
- * Must be a direct child of `<pc-app>`.
+ * @elementSummary The `<pc-material>` element defines a physically based material, which
+ * `<pc-render>` elements apply by naming its `id`. It is metal/rough by default, with `metalness`
+ * starting at 0. Must be a direct child of `<pc-app>`.
  *
  * @attribute {number} roughness - The roughness of the material, from 0 (shiny) to 1 (rough). An
  * alias for `gloss` that also inverts it, so do not combine it with the `gloss` attributes.
