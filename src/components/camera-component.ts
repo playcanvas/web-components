@@ -43,6 +43,10 @@ const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2
  *
  * Engine component: {@link CameraComponent} (`camera`).
  *
+ * @summary The `<pc-camera>` element renders the scene from its entity's transform, with attributes
+ * for the projection, field of view, clip planes, clear color and tonemapping. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class CameraComponentElement extends ComponentElement {

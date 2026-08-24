@@ -12,6 +12,10 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link SoundComponent} (`sound`).
  *
+ * @summary The `<pc-sound>` element holds the `<pc-sound-slot>` children that play sounds at its
+ * entity, along with the positional audio settings they share. Must be a child of a `<pc-entity>`,
+ * `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class SoundComponentElement extends ComponentElement {

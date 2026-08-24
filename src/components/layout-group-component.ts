@@ -34,6 +34,10 @@ const fittings = new Map<'none' | 'stretch' | 'shrink' | 'both', number>([
  *
  * Engine component: {@link LayoutGroupComponent} (`layoutgroup`).
  *
+ * @summary The `<pc-layout-group>` element arranges its entity's children in a row or column, with
+ * spacing, padding, alignment and fitting. Must be a child of a `<pc-entity>`, `<pc-model>` or
+ * `<pc-node>`.
+ *
  * @category Components
  */
 class LayoutGroupComponentElement extends ComponentElement {

@@ -112,6 +112,10 @@ const ensureBaseStyles = () => {
  * tracked live via a ResizeObserver — so the element can be embedded at any size, resized by
  * its container, or made fullscreen with ordinary CSS such as `width: 100vw; height: 100dvh`.
  *
+ * @summary The `<pc-app>` element creates a PlayCanvas application and the canvas it renders into,
+ * and is the root of every scene. It holds the `<pc-asset>`, `<pc-material>`, `<pc-wasm>` and
+ * `<pc-scene>` elements, and the page's CSS sizes it, as it would a `<video>`.
+ *
  * @fires {ProgressEvent} progress - Fired while the application preloads its assets. `loaded` and
  * `total` are asset counts, not bytes, and an asset that fails to load still counts as loaded.
  * Fired at least once per boot, and the final event always has `loaded` equal to `total`. Does

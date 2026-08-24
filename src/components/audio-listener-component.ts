@@ -10,6 +10,10 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link AudioListenerComponent} (`audiolistener`).
  *
+ * @summary The `<pc-audio-listener>` element makes its entity the point from which positional
+ * sounds are heard, typically the entity holding the `<pc-camera>`. Must be a child of a
+ * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class AudioListenerComponentElement extends ComponentElement {

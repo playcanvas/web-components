@@ -125,6 +125,11 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * intersects the model's geometry, exactly as for `<pc-entity>` — a hit on a content node that no
  * `pc-node` fronts resolves to this element.
  *
+ * @summary The `<pc-model>` element instantiates a 3D model from a container asset (typically a
+ * GLB) beneath an entity of its own, so the element's transform and tags place the instance in the
+ * scene. Its `<pc-node>` children override what the asset authored. Place it in the `<pc-scene>`,
+ * or nest it under a `<pc-entity>`, another `<pc-model>` or a `<pc-node>`.
+ *
  * @attribute {boolean} enabled - The enabled state of the model.
  * @attribute {string} name - The name of the model.
  * @attribute {string} position - The position of the model.

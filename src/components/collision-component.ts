@@ -19,6 +19,10 @@ import { ComponentElement } from './component';
  *
  * Engine component: {@link CollisionComponent} (`collision`).
  *
+ * @summary The `<pc-collision>` element gives its entity a collision shape — a box, sphere,
+ * capsule, cone, cylinder or mesh — for the physics simulation to collide against. Pair it with a
+ * `<pc-rigid-body>`. Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class CollisionComponentElement extends ComponentElement {

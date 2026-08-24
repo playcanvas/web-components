@@ -31,6 +31,10 @@ const visibilities = new Map<'always' | 'when-required', number>([
  *
  * Engine component: {@link ScrollViewComponent} (`scrollview`).
  *
+ * @summary The `<pc-scroll-view>` element scrolls a larger content entity within a clipped viewport
+ * at its entity, optionally driven by the `<pc-scrollbar>` elements it references. Must be a child
+ * of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @category Components
  */
 class ScrollViewComponentElement extends ComponentElement {

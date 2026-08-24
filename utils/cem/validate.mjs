@@ -36,6 +36,14 @@ const readJson = (name) => {
 
 const manifest = readJson('custom-elements.json');
 
+/**
+ * Each element's summary, as the manifest carries it. The editor integrations open an element's
+ * tooltip with it, so the checks on their generated files compare against this.
+ *
+ * @type {Map<string, string>}
+ */
+const summaries = new Map();
+
 if (manifest) {
     check(Boolean(manifest.schemaVersion), 'manifest is missing schemaVersion');
     check((manifest.modules ?? []).length > 0, 'manifest has no modules');
@@ -46,6 +54,7 @@ if (manifest) {
         for (const declaration of module.declarations ?? []) {
             if (declaration.tagName) {
                 elements.set(declaration.tagName, declaration);
+                summaries.set(declaration.tagName, declaration.summary ?? '');
             }
         }
     }
@@ -382,6 +391,15 @@ if (manifest) {
 
     // Global invariants
     for (const [tag, declaration] of elements) {
+        // Every element needs a summary, because that is what the editor integrations describe a
+        // tag with. Without one they fall back to the description, which is the class reference
+        // ("The XElement interface provides properties and methods for manipulating ...") - true
+        // of the JavaScript class, and not what an author hovering a tag in HTML is asking about.
+        // The opening is pinned to the voice the browsers' own HTML data uses ("The h1 element
+        // represents a section heading"), which is the register the tooltip sits in.
+        check((declaration.summary ?? '').startsWith(`The \`<${tag}>\` element`),
+            `${tag} has no element-voice @summary, so its tooltip would describe the class: ${JSON.stringify((declaration.summary ?? '').slice(0, 120))}`);
+
         for (const item of declaration.attributes ?? []) {
             check(Boolean(item.type?.text), `${tag}[${item.name}] has no type`);
 
@@ -433,19 +451,47 @@ if (vsCode) {
     check(tonemap?.values?.length === 7,
         `VS Code custom data should offer 7 values for pc-camera[tonemap], found ${tonemap?.values?.length}`);
 
+    const tooltip = tag => (typeof tag.description === 'string' ? tag.description : tag.description?.value ?? '');
+
     // A `---` directly below a paragraph is markdown for "make that paragraph a heading", which
     // would render the last paragraph of the tooltip at heading size
-    const setext = (vsCode.tags ?? [])
-        .filter(tag => /[^\n]\n---/.test(typeof tag.description === 'string' ? tag.description : tag.description?.value ?? ''))
-        .map(tag => tag.name);
+    const setext = (vsCode.tags ?? []).filter(tag => /[^\n]\n---/.test(tooltip(tag))).map(tag => tag.name);
     check(setext.length === 0,
         `${setext.length} VS Code tooltip(s) would render a paragraph as a heading: ${setext.join(', ')}`);
+
+    // The tooltip an author sees while writing HTML opens with the element's summary, links to the
+    // element's page, and leaves the JavaScript surface to the API reference. Each of the three is
+    // one plugin option away from regressing, and all three regress silently - the file is still
+    // valid, it just answers a question nobody asked.
+    for (const tag of vsCode.tags ?? []) {
+        const text = tooltip(tag);
+        const summary = summaries.get(tag.name);
+        check(Boolean(summary) && text.startsWith(summary),
+            `the VS Code tooltip for ${tag.name} does not open with its summary: ${JSON.stringify(text.slice(0, 120))}`);
+        check(!text.includes('Methods:'),
+            `the VS Code tooltip for ${tag.name} lists methods, which belong to the API reference`);
+        const url = tag.references?.[0]?.url;
+        check(url === `https://developer.playcanvas.com/user-manual/web-components/tags/${tag.name}/`,
+            `the VS Code tooltip for ${tag.name} does not reference its User Manual page: ${JSON.stringify(url)}`);
+    }
 }
 
 const webTypes = readJson('web-types.json');
 if (webTypes) {
     const elements = webTypes.contributions?.html?.elements ?? [];
     check(elements.length === TAGS.length, `web-types has ${elements.length} elements, expected ${TAGS.length}`);
+
+    // The same three properties as the VS Code tooltip above, in the shape JetBrains IDEs read
+    for (const element of elements) {
+        const text = element.description ?? '';
+        const summary = summaries.get(element.name);
+        check(Boolean(summary) && text.startsWith(summary),
+            `the web-types description for ${element.name} does not open with its summary: ${JSON.stringify(text.slice(0, 120))}`);
+        check(!text.includes('Methods:'),
+            `the web-types description for ${element.name} lists methods, which belong to the API reference`);
+        check(element['doc-url'] === `https://developer.playcanvas.com/user-manual/web-components/tags/${element.name}/`,
+            `the web-types entry for ${element.name} does not link its User Manual page: ${JSON.stringify(element['doc-url'])}`);
+    }
 }
 
 if (failures.length > 0) {

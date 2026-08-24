@@ -29,6 +29,10 @@ import { parseBool } from '../parse';
  * The element becomes ready once its script instance has been created by the parent
  * `<pc-script>` element.
  *
+ * @summary The `<pc-script-instance>` element attaches one script class, named by `name`, to the
+ * entity of its parent `<pc-script>`. Its other attributes set script attributes of the same name,
+ * and `attributes` takes a JSON object instead. Must be a direct child of `<pc-script>`.
+ *
  * @fires {CustomEvent} scriptattributeschange - Fired when the script's attributes change. The
  * `detail` carries the new `attributes` object. Bubbles.
  * @fires {CustomEvent} scriptenablechange - Fired when the script's enabled state changes. The

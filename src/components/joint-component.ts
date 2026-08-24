@@ -27,6 +27,10 @@ export type MotionMode = 'locked' | 'limited' | 'free';
  * a rigid body component; leaving `entity-b` empty constrains `entity-a` to a fixed point in world
  * space. The underlying engine component is in alpha, so its API may change.
  *
+ * @summary The `<pc-joint>` element constrains two rigid bodies to each other — a hinged door, a
+ * swinging chain, a sliding drawer. Its entity's transform is the joint frame, and `entity-a` and
+ * `entity-b` name the bodies. Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ *
  * @fires {CustomEvent} break - Fired when the impulse on the joint exceeds `break-impulse` and the
  * constraint breaks. A broken joint no longer constrains its bodies; calling `refreshFrames()` on
  * the underlying component re-attaches it. Bubbles and is composed.

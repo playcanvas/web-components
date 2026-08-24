@@ -15,6 +15,11 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  * them, registered either with {@link EventTarget.addEventListener} or with the matching inline `onpointer*`
  * attribute.
  *
+ * @summary The `<pc-entity>` element creates an entity: a named, transformable node of the scene
+ * hierarchy, and the host for component elements such as `<pc-camera>`, `<pc-light>` and
+ * `<pc-render>`. Place it in the `<pc-scene>`, or nest it under another `<pc-entity>`, a
+ * `<pc-model>` or a `<pc-node>` to parent it there.
+ *
  * @attribute {boolean} enabled - The enabled state of the entity.
  * @attribute {string} name - The name of the entity.
  * @attribute {string} position - The position of the entity.
