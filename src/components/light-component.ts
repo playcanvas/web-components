@@ -46,6 +46,10 @@ const shadowTypes = new Map<
  * @category Components
  */
 class LightComponentElement extends ComponentElement {
+    private _cascadeBlend = 0;
+
+    private _cascadeDistribution = 0.5;
+
     private _castShadows = false;
 
     private _color = new Color(1, 1, 1);
@@ -55,6 +59,8 @@ class LightComponentElement extends ComponentElement {
     private _intensity = 1;
 
     private _normalOffsetBias = 0;
+
+    private _numCascades = 1;
 
     private _outerConeAngle = 45;
 
@@ -100,11 +106,14 @@ class LightComponentElement extends ComponentElement {
 
     protected getInitialComponentData() {
         return {
+            cascadeBlend: this._cascadeBlend,
+            cascadeDistribution: this._cascadeDistribution,
             castShadows: this._castShadows,
             color: this._color,
             innerConeAngle: this._innerConeAngle,
             intensity: this._intensity,
             normalOffsetBias: this._normalOffsetBias,
+            numCascades: this._numCascades,
             outerConeAngle: this._outerConeAngle,
             penumbraFalloff: this._penumbraFalloff,
             penumbraSize: this._penumbraSize,
@@ -128,6 +137,51 @@ class LightComponentElement extends ComponentElement {
      */
     get component(): LightComponent {
         return super.component as LightComponent;
+    }
+
+    /**
+     * Sets the fraction of each shadow cascade that is blended into the next one, from 0 (no
+     * blending) to 1, which applies only to `directional` lights with `num-cascades` greater than
+     * 1. Defaults to 0.
+     * @param value - The cascade blend factor.
+     */
+    set cascadeBlend(value: number) {
+        this._cascadeBlend = value;
+        if (this.component) {
+            this.component.cascadeBlend = value;
+        }
+    }
+
+    /**
+     * Gets the cascade blend factor of the light, from 0 (no blending) to 1, which applies only to
+     * `directional` lights with `num-cascades` greater than 1.
+     * @returns The cascade blend factor.
+     */
+    get cascadeBlend() {
+        return this._cascadeBlend;
+    }
+
+    /**
+     * Sets the distribution of the camera frustum split between shadow cascades, from 0 (linear
+     * split) to 1 (logarithmic split, concentrating shadow resolution near the camera), which
+     * applies only to `directional` lights with `num-cascades` greater than 1. Defaults to 0.5.
+     * @param value - The cascade distribution.
+     */
+    set cascadeDistribution(value: number) {
+        this._cascadeDistribution = value;
+        if (this.component) {
+            this.component.cascadeDistribution = value;
+        }
+    }
+
+    /**
+     * Gets the cascade distribution of the light, from 0 (linear split) to 1 (logarithmic split,
+     * concentrating shadow resolution near the camera), which applies only to `directional` lights
+     * with `num-cascades` greater than 1.
+     * @returns The cascade distribution.
+     */
+    get cascadeDistribution() {
+        return this._cascadeDistribution;
     }
 
     /**
@@ -223,6 +277,27 @@ class LightComponentElement extends ComponentElement {
      */
     get normalOffsetBias() {
         return this._normalOffsetBias;
+    }
+
+    /**
+     * Sets the number of shadow cascades of the light, an integer from 1 (no cascades) to 4, which
+     * applies only to `directional` lights. Defaults to 1.
+     * @param value - The number of shadow cascades.
+     */
+    set numCascades(value: number) {
+        this._numCascades = value;
+        if (this.component) {
+            this.component.numCascades = value;
+        }
+    }
+
+    /**
+     * Gets the number of shadow cascades of the light, an integer from 1 (no cascades) to 4, which
+     * applies only to `directional` lights.
+     * @returns The number of shadow cascades.
+     */
+    get numCascades() {
+        return this._numCascades;
     }
 
     /**
@@ -516,11 +591,14 @@ class LightComponentElement extends ComponentElement {
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
+            'cascade-blend',
+            'cascade-distribution',
             'cast-shadows',
             'color',
             'inner-cone-angle',
             'intensity',
             'normal-offset-bias',
+            'num-cascades',
             'outer-cone-angle',
             'penumbra-falloff',
             'penumbra-size',
@@ -542,6 +620,12 @@ class LightComponentElement extends ComponentElement {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
+            case 'cascade-blend':
+                this.cascadeBlend = parseNumber(newValue, 0, name);
+                break;
+            case 'cascade-distribution':
+                this.cascadeDistribution = parseNumber(newValue, 0.5, name);
+                break;
             case 'cast-shadows':
                 this.castShadows = parseBool(newValue, false);
                 break;
@@ -556,6 +640,9 @@ class LightComponentElement extends ComponentElement {
                 break;
             case 'normal-offset-bias':
                 this.normalOffsetBias = parseNumber(newValue, 0, name);
+                break;
+            case 'num-cascades':
+                this.numCascades = parseNumber(newValue, 1, name);
                 break;
             case 'outer-cone-angle':
                 this.outerConeAngle = parseNumber(newValue, 45, name);

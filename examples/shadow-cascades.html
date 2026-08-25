@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Shadow Cascades</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Cascade panel. Glass recipe copied from example.css's .example-button, applied
+               once to the panel; sits bottom-left because js/example.mjs owns bottom-right. */
+            .shadow-panel {
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                align-items: center;
+                gap: 6px 10px;
+                box-sizing: border-box;
+                width: min(330px, calc(100vw - 32px));
+                padding: 12px 14px;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font: 600 12px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            @supports not (backdrop-filter: blur(12px)) {
+                .shadow-panel {
+                    background-color: rgba(18, 18, 18, 0.88);
+                }
+            }
+
+            .shadow-panel label {
+                display: contents;
+                cursor: pointer;
+            }
+
+            /* Grayed out while num-cascades is 1, the value at which the engine ignores them */
+            .shadow-panel label.inert {
+                color: rgba(255, 255, 255, 0.4);
+                cursor: default;
+            }
+
+            .shadow-panel select {
+                grid-column: 2 / 4;
+                height: 32px;
+                padding: 0 26px 0 10px;
+                border: 0;
+                border-radius: 6px;
+                background-color: rgba(255, 255, 255, 0.08);
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 7px center;
+                background-size: 12px;
+                color: inherit;
+                font: inherit;
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+            }
+
+            .shadow-panel select:hover {
+                background-color: rgba(255, 255, 255, 0.14);
+            }
+
+            /* The popup list is drawn by the OS, so it needs its own colors */
+            .shadow-panel select option {
+                background: #1b1b1b;
+                color: #fff;
+            }
+
+            .shadow-panel input[type="range"] {
+                width: 100%;
+                height: 24px;
+                margin: 0;
+                accent-color: #f60;
+                cursor: pointer;
+            }
+
+            .shadow-panel input[type="range"]:disabled {
+                accent-color: rgba(255, 255, 255, 0.25);
+                cursor: default;
+            }
+
+            .shadow-panel select:focus-visible,
+            .shadow-panel input[type="range"]:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: 2px;
+            }
+
+            .shadow-value {
+                min-width: 52px;
+                font: 600 11px/1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            .panel-caption {
+                grid-column: 1 / 4;
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 11px;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            /* One segment per cascade, sized by the slice of view distance it covers.
+               The engine has no cascade debug view, so this is the only way to see the
+               split distances the sliders are actually moving. */
+            .split-bar {
+                display: flex;
+                grid-column: 1 / 4;
+                gap: 2px;
+                height: 26px;
+                margin-bottom: 4px;
+            }
+
+            .split-seg {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                min-width: 0;
+                padding-right: 5px;
+                border-radius: 3px;
+                background-color: rgba(255, 102, 0, var(--tint));
+                color: rgba(255, 255, 255, 0.9);
+                font: 600 10px/1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+                overflow: hidden;
+                white-space: nowrap;
+            }
+
+            .shadow-panel .hint {
+                grid-column: 1 / 4;
+                margin: 2px 0 0;
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 11px;
+                font-weight: 400;
+                line-height: 1.35;
+            }
+
+            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
+            @media (max-width: 720px) {
+                .shadow-panel {
+                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/fonts/arial.json" type="font" id="arial-font"></pc-asset>
+            <pc-asset src="assets/skies/dry-lake-bed-2k.hdr" id="sky"></pc-asset>
+            <pc-asset src="assets/models/desert-ruins.glb" id="ruins"></pc-asset>
+            <!-- The sky is loaded for its lighting only - drawn as a skybox it would have to be
+                 bright enough to wash the sun's shadows out, so the backdrop is the camera's
+                 clear color instead and the haze blends the horizon into it. -->
+            <pc-scene fog="exp2" fog-color="#e8c79b" fog-density="0.0018">
+                <pc-sky asset="sky" lighting type="none" intensity="0.3"></pc-sky>
+                <!-- Camera (with XR support) at the near end of the causeway. near-clip and
+                     far-clip are read by the panel below to plot the splits, so they are set
+                     explicitly here. The rig itself stays at the origin, which puts you on the
+                     paving at ground level in XR rather than at the desk-view height above it. -->
+                <pc-entity name="camera-root">
+                    <pc-entity name="camera" position="8 13 46">
+                        <pc-camera near-clip="0.5" far-clip="600" fov="48" tonemap="aces"
+                                   clear-color="#e8c79b"></pc-camera>
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
+                                                focus-point="0 6 -85"
+                                                move-speed="16"
+                                                move-fast-speed="48"
+                                                pitch-range="-40 18"
+                                                zoom-range="1 400"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                    <pc-script>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
+                            "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
+                            "fontAsset": "asset:arial-font"
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- A late-afternoon sun raking across the ruins, so shadows run for tens of
+                     meters - exactly the case a single shadow map cannot resolve. A positive
+                     pitch would tip the light up into the sky, hence the negative angle. -->
+                <pc-entity name="sun" rotation="-32 228 0">
+                    <pc-light id="sun-light"
+                              color="#ffd9a8"
+                              intensity="4.5"
+                              cast-shadows
+                              num-cascades="4"
+                              cascade-distribution="0.5"
+                              cascade-blend="0.06"
+                              shadow-distance="250"
+                              shadow-resolution="2048"
+                              shadow-bias="0.05"
+                              normal-offset-bias="0.15"></pc-light>
+                </pc-entity>
+                <pc-model name="ruins" asset="ruins"></pc-model>
+            </pc-scene>
+        </pc-app>
+        <!-- No control shares an id with an entity name: entity: references resolve
+             document-wide, and an id match wins over an entity-name match -->
+        <div class="shadow-panel">
+            <span class="panel-caption">Cascade split distances (m)</span>
+            <div class="split-bar" id="split-bar"></div>
+            <label>Cascades
+                <input id="cascades" type="range" min="1" max="4" step="1">
+                <span class="shadow-value" id="cascades-value"></span>
+            </label>
+            <label id="distribution-row">Distribution
+                <input id="distribution" type="range" min="0" max="1" step="0.01">
+                <span class="shadow-value" id="distribution-value"></span>
+            </label>
+            <label id="blend-row">Blend
+                <input id="blend" type="range" min="0" max="0.2" step="0.01">
+                <span class="shadow-value" id="blend-value"></span>
+            </label>
+            <label>Distance
+                <input id="distance" type="range" min="50" max="400" step="10">
+                <span class="shadow-value" id="distance-value"></span>
+            </label>
+            <label>Resolution
+                <select id="resolution">
+                    <option value="512">512</option>
+                    <option value="1024">1024</option>
+                    <option value="2048">2048</option>
+                </select>
+            </label>
+            <p class="hint">Resolution is the whole cascade atlas, so four cascades each get a
+                quarter of it. Fly with W/A/S/D to watch the splits follow the camera.</p>
+        </div>
+        <script type="module">
+            const light = document.getElementById('sun-light');
+            const camera = document.querySelector('pc-camera');
+            const bar = document.getElementById('split-bar');
+            const resolution = document.getElementById('resolution');
+            const rows = {
+                distribution: document.getElementById('distribution-row'),
+                blend: document.getElementById('blend-row')
+            };
+
+            // Each control owns one attribute on <pc-light>; its initial position comes from the
+            // markup, so the scene declaration stays the single source of truth
+            const sliders = [
+                { input: 'cascades', attribute: 'num-cascades', unit: v => `${v}` },
+                { input: 'distribution', attribute: 'cascade-distribution', unit: v => v.toFixed(2) },
+                { input: 'blend', attribute: 'cascade-blend', unit: v => v.toFixed(2) },
+                { input: 'distance', attribute: 'shadow-distance', unit: v => `${v} m` }
+            ].map(({ input, ...rest }) => ({
+                input: document.getElementById(input),
+                value: document.getElementById(`${input}-value`),
+                ...rest
+            }));
+
+            const attr = name => parseFloat(light.getAttribute(name));
+
+            /**
+             * The renderer's own split maths: each cascade boundary is a lerp between a linear and
+             * a logarithmic division of the shadowed range, biased by cascade-distribution.
+             */
+            const splitDistances = () => {
+                const count = attr('num-cascades');
+                const near = parseFloat(camera.getAttribute('near-clip'));
+                const far = Math.min(parseFloat(camera.getAttribute('far-clip')), attr('shadow-distance'));
+                const distribution = attr('cascade-distribution');
+                const out = [];
+                for (let i = 1; i < count; i++) {
+                    const fraction = i / count;
+                    const linear = near + (far - near) * fraction;
+                    const logarithmic = near * (far / near) ** fraction;
+                    out.push(linear + (logarithmic - linear) * distribution);
+                }
+                out.push(far);
+                return { near, far, splits: out };
+            };
+
+            const updateBar = () => {
+                const { near, far, splits } = splitDistances();
+                bar.replaceChildren(...splits.map((end, i) => {
+                    const seg = document.createElement('span');
+                    seg.className = 'split-seg';
+                    seg.style.flexBasis = `${((end - (i ? splits[i - 1] : near)) / (far - near)) * 100}%`;
+                    seg.style.setProperty('--tint', `${0.85 - i * 0.17}`);
+                    seg.textContent = Math.round(end);
+                    return seg;
+                }));
+                // Distribution and blend do nothing until there is more than one cascade
+                const single = splits.length === 1;
+                for (const [name, row] of Object.entries(rows)) {
+                    row.classList.toggle('inert', single);
+                    document.getElementById(name).disabled = single;
+                }
+            };
+
+            for (const slider of sliders) {
+                slider.input.value = light.getAttribute(slider.attribute);
+                slider.value.textContent = slider.unit(slider.input.valueAsNumber);
+
+                slider.input.addEventListener('input', () => {
+                    light.setAttribute(slider.attribute, slider.input.value);
+                    slider.value.textContent = slider.unit(slider.input.valueAsNumber);
+                    updateBar();
+                });
+            }
+
+            resolution.value = light.getAttribute('shadow-resolution');
+            resolution.addEventListener('change', () => {
+                light.setAttribute('shadow-resolution', resolution.value);
+            });
+
+            updateBar();
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
