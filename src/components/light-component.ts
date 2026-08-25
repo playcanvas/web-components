@@ -54,15 +54,15 @@ class LightComponentElement extends ComponentElement {
 
     private _intensity = 1;
 
-    private _normalOffsetBias = 0.05;
+    private _normalOffsetBias = 0;
 
     private _outerConeAngle = 45;
 
     private _range = 10;
 
-    private _shadowBias = 0.2;
+    private _shadowBias = 0.05;
 
-    private _shadowDistance = 16;
+    private _shadowDistance = 40;
 
     private _shadowIntensity = 1;
 
@@ -81,7 +81,7 @@ class LightComponentElement extends ComponentElement {
 
     private _type: 'directional' | 'omni' | 'spot' = 'directional';
 
-    private _vsmBias = 0.01;
+    private _vsmBias = 0.0025;
 
     private _vsmBlurSize = 11;
 
@@ -115,7 +115,7 @@ class LightComponentElement extends ComponentElement {
             shadowIntensity: this._shadowIntensity,
             shadowResolution: this._shadowResolution,
             shadowSamples: this._shadowSamples,
-            shadowType: shadowTypes.get(this._shadowType),
+            shadowType: shadowTypes.get(this._shadowType) ?? SHADOW_PCF3_32F,
             type: this._type,
             vsmBias: this._vsmBias,
             vsmBlurSize: this._vsmBlurSize
@@ -516,10 +516,10 @@ class LightComponentElement extends ComponentElement {
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
-            'color',
             'cast-shadows',
-            'intensity',
+            'color',
             'inner-cone-angle',
+            'intensity',
             'normal-offset-bias',
             'outer-cone-angle',
             'penumbra-falloff',
@@ -542,11 +542,11 @@ class LightComponentElement extends ComponentElement {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'color':
-                this.color = parseColor(newValue, Color.WHITE, name);
-                break;
             case 'cast-shadows':
                 this.castShadows = parseBool(newValue, false);
+                break;
+            case 'color':
+                this.color = parseColor(newValue, Color.WHITE, name);
                 break;
             case 'inner-cone-angle':
                 this.innerConeAngle = parseNumber(newValue, 40, name);
@@ -555,7 +555,7 @@ class LightComponentElement extends ComponentElement {
                 this.intensity = parseNumber(newValue, 1, name);
                 break;
             case 'normal-offset-bias':
-                this.normalOffsetBias = parseNumber(newValue, 0.05, name);
+                this.normalOffsetBias = parseNumber(newValue, 0, name);
                 break;
             case 'outer-cone-angle':
                 this.outerConeAngle = parseNumber(newValue, 45, name);
@@ -570,19 +570,19 @@ class LightComponentElement extends ComponentElement {
                 this.range = parseNumber(newValue, 10, name);
                 break;
             case 'shadow-bias':
-                this.shadowBias = parseNumber(newValue, 0.2, name);
-                break;
-            case 'shadow-distance':
-                this.shadowDistance = parseNumber(newValue, 16, name);
+                this.shadowBias = parseNumber(newValue, 0.05, name);
                 break;
             case 'shadow-blocker-samples':
                 this.shadowBlockerSamples = parseNumber(newValue, 16, name);
                 break;
-            case 'shadow-resolution':
-                this.shadowResolution = parseNumber(newValue, 1024, name);
+            case 'shadow-distance':
+                this.shadowDistance = parseNumber(newValue, 40, name);
                 break;
             case 'shadow-intensity':
                 this.shadowIntensity = parseNumber(newValue, 1, name);
+                break;
+            case 'shadow-resolution':
+                this.shadowResolution = parseNumber(newValue, 1024, name);
                 break;
             case 'shadow-samples':
                 this.shadowSamples = parseNumber(newValue, 16, name);
@@ -594,7 +594,7 @@ class LightComponentElement extends ComponentElement {
                 this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
                 break;
             case 'vsm-bias':
-                this.vsmBias = parseNumber(newValue, 0.01, name);
+                this.vsmBias = parseNumber(newValue, 0.0025, name);
                 break;
             case 'vsm-blur-size':
                 this.vsmBlurSize = parseNumber(newValue, 11, name);
