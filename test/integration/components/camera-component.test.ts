@@ -177,8 +177,8 @@ describe('<pc-camera>', () => {
             const camera = get<CameraComponentElement>('pc-camera');
             stubXr(app, [XRTYPE_AR]);
 
-            expect(camera.isXrAvailable(XRTYPE_AR), 'the mode the device offers').toBe(true);
-            expect(camera.isXrAvailable(XRTYPE_VR), 'the mode it does not').toBe(false);
+            expect(camera.arAvailable, 'the mode the device offers').toBe(true);
+            expect(camera.vrAvailable, 'the mode it does not').toBe(false);
 
             // The getter is named for XR, not for VR: one immersive mode is enough for it
             expect(camera.xrAvailable).toBe(true);

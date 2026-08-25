@@ -333,7 +333,7 @@ if (manifest) {
         ['pc-anim', ['clips', 'component', 'pause', 'play', 'transition', ...ASYNC_MEMBERS]],
         ['pc-app', ['app', 'elementFromEntity', 'loadProgress', ...ASYNC_MEMBERS]],
         ['pc-asset', ['asset', 'get', ...ASYNC_MEMBERS]],
-        ['pc-camera', ['component', 'endXr', 'isXrAvailable', 'startXr', 'xrAvailable', ...ASYNC_MEMBERS]],
+        ['pc-camera', ['arAvailable', 'component', 'endXr', 'startXr', 'vrAvailable', 'xrAvailable', ...ASYNC_MEMBERS]],
         ['pc-entity', ['addEventListener', 'entity', 'removeEventListener', ...ASYNC_MEMBERS]],
         // roughness and roughnessMap are the alias accessors: their attributes resolve to the
         // gloss fields, so no attribute claims them as its backing member

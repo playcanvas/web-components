@@ -119,22 +119,39 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Whether either of the immersive modes {@link startXr} can start - AR or VR - is available.
-     * Use {@link isXrAvailable} to test one of them on its own.
-     * @returns Whether immersive AR or VR is available.
+     * Whether immersive AR is available. A device can offer AR and not VR, so gate an
+     * AR-specific control on this rather than on {@link xrAvailable}.
+     * @returns Whether immersive AR is available.
      */
-    get xrAvailable(): boolean {
-        return this.isXrAvailable(XRTYPE_AR) || this.isXrAvailable(XRTYPE_VR);
+    get arAvailable(): boolean {
+        return this._available(XRTYPE_AR);
     }
 
     /**
-     * Whether one immersive XR mode is available on this device. A device can offer AR and not VR,
-     * so gate a mode-specific control on the mode rather than on {@link xrAvailable}.
+     * Whether immersive VR is available. A device can offer VR and not AR, so gate a
+     * VR-specific control on this rather than on {@link xrAvailable}.
+     * @returns Whether immersive VR is available.
+     */
+    get vrAvailable(): boolean {
+        return this._available(XRTYPE_VR);
+    }
+
+    /**
+     * Whether either of the immersive modes {@link startXr} can start is available. Enough to
+     * decide whether to offer XR at all; not enough to pick a mode.
+     * @returns Whether immersive AR or VR is available.
+     */
+    get xrAvailable(): boolean {
+        return this.arAvailable || this.vrAvailable;
+    }
+
+    /**
+     * Whether one XR session type is available on this device.
      *
      * @param type - The XR session type to test.
-     * @returns Whether that mode is available.
+     * @returns Whether that type is available.
      */
-    isXrAvailable(type: 'immersive-ar' | 'immersive-vr'): boolean {
+    private _available(type: string): boolean {
         const xrManager = this.component?.system.app.xr;
         return Boolean(xrManager?.supported && xrManager.isAvailable(type));
     }
@@ -150,7 +167,7 @@ class CameraComponentElement extends ComponentElement {
     ) {
         // Gated on the mode being started, not on XR in general: a device that offers only
         // one of the two would otherwise accept a session it cannot serve
-        if (this.component && this.isXrAvailable(type)) {
+        if (this.component && this._available(type)) {
             this.component.startXr(type, space, {
                 callback: (err: any) => {
                     if (err) console.error(`WebXR ${type} failed to start: ${err.message}`);
