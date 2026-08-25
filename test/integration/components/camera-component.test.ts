@@ -165,32 +165,33 @@ describe('<pc-camera>', () => {
             const camera = get<CameraComponentElement>('pc-camera');
 
             // The null device backs no XR session, so this is what every headless caller sees
-            expect(camera.xrAvailable).toBe(false);
+            expect(camera.arAvailable).toBe(false);
+            expect(camera.vrAvailable).toBe(false);
 
             // Nothing to end, and asking for either must not throw
             expect(() => camera.endXr()).not.toThrow();
             expect(() => camera.startXr('immersive-vr', 'local-floor')).not.toThrow();
         });
 
-        it('counts either immersive mode as XR being available', async () => {
+        it('reports each mode on its own', async () => {
             const { app, get } = await bootApp(scene());
             const camera = get<CameraComponentElement>('pc-camera');
-            stubXr(app, [XRTYPE_AR]);
+            const asked = stubXr(app, [XRTYPE_AR]);
 
+            // The split an AR-capable phone reports, and the reason there is a getter per mode
             expect(camera.arAvailable, 'the mode the device offers').toBe(true);
             expect(camera.vrAvailable, 'the mode it does not').toBe(false);
-
-            // The getter is named for XR, not for VR: one immersive mode is enough for it
-            expect(camera.xrAvailable).toBe(true);
+            expect(asked, 'each getter tests only its own mode').toEqual([XRTYPE_AR, XRTYPE_VR]);
         });
 
-        it('reports no XR when neither immersive mode is offered', async () => {
+        it('reports neither mode when the device offers none', async () => {
             const { app, get } = await bootApp(scene());
             const camera = get<CameraComponentElement>('pc-camera');
-            const asked = stubXr(app, []);
+            stubXr(app, []);
 
-            expect(camera.xrAvailable).toBe(false);
-            expect(asked, 'both modes tested before giving up').toEqual([XRTYPE_AR, XRTYPE_VR]);
+            // Distinct from the headless case above: XR is supported here, the modes are not
+            expect(camera.arAvailable).toBe(false);
+            expect(camera.vrAvailable).toBe(false);
         });
 
         it('tests availability for the mode it is asked to start', async () => {

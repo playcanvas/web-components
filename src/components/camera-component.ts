@@ -119,8 +119,8 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Whether immersive AR is available. A device can offer AR and not VR, so gate an
-     * AR-specific control on this rather than on {@link xrAvailable}.
+     * Whether immersive AR is available. Independent of {@link vrAvailable}: a device can offer
+     * either mode without the other.
      * @returns Whether immersive AR is available.
      */
     get arAvailable(): boolean {
@@ -128,21 +128,12 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Whether immersive VR is available. A device can offer VR and not AR, so gate a
-     * VR-specific control on this rather than on {@link xrAvailable}.
+     * Whether immersive VR is available. Independent of {@link arAvailable}: a device can offer
+     * either mode without the other.
      * @returns Whether immersive VR is available.
      */
     get vrAvailable(): boolean {
         return this._available(XRTYPE_VR);
-    }
-
-    /**
-     * Whether either of the immersive modes {@link startXr} can start is available. Enough to
-     * decide whether to offer XR at all; not enough to pick a mode.
-     * @returns Whether immersive AR or VR is available.
-     */
-    get xrAvailable(): boolean {
-        return this.arAvailable || this.vrAvailable;
     }
 
     /**
