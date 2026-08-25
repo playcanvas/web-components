@@ -25,8 +25,6 @@ import { AnimComponentElement } from './anim-component';
  * @elementSummary The `<pc-anim-clip>` element declares one named animation clip on its parent
  * `<pc-anim>`, taken from the `asset` it names or, without one, from the enclosing `<pc-model>`'s
  * own animations. Must be a direct child of `<pc-anim>`.
- *
- * @category Components
  */
 class AnimClipElement extends AsyncElement {
     /**
