@@ -165,6 +165,11 @@
         <pc-app>
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-navigation.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-session.mjs"></pc-asset>
+            <pc-asset src="assets/fonts/arial.json" type="font" id="arial-font"></pc-asset>
             <pc-asset src="assets/skies/dry-lake-bed-2k.hdr" id="sky"></pc-asset>
             <pc-asset src="assets/models/desert-ruins.glb" id="ruins"></pc-asset>
             <!-- The sky is loaded for its lighting only - drawn as a skybox it would have to be
@@ -172,18 +177,31 @@
                  clear color instead and the haze blends the horizon into it. -->
             <pc-scene fog="exp2" fog-color="#e8c79b" fog-density="0.0018">
                 <pc-sky asset="sky" lighting type="none" intensity="0.3"></pc-sky>
-                <!-- Camera at the near end of the causeway. near-clip and far-clip are read by
-                     the panel below to plot the splits, so they are set explicitly here. -->
-                <pc-entity name="camera" position="8 13 46">
-                    <pc-camera near-clip="0.5" far-clip="600" fov="48" tonemap="aces"
-                               clear-color="#e8c79b"></pc-camera>
+                <!-- Camera (with XR support) at the near end of the causeway. near-clip and
+                     far-clip are read by the panel below to plot the splits, so they are set
+                     explicitly here. The rig itself stays at the origin, which puts you on the
+                     paving at ground level in XR rather than at the desk-view height above it. -->
+                <pc-entity name="camera-root">
+                    <pc-entity name="camera" position="8 13 46">
+                        <pc-camera near-clip="0.5" far-clip="600" fov="48" tonemap="aces"
+                                   clear-color="#e8c79b"></pc-camera>
+                        <pc-script>
+                            <pc-script-instance name="cameraControls"
+                                                focus-point="0 6 -85"
+                                                move-speed="16"
+                                                move-fast-speed="48"
+                                                pitch-range="-40 18"
+                                                zoom-range="1 400"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
                     <pc-script>
-                        <pc-script-instance name="cameraControls"
-                                            focus-point="0 6 -85"
-                                            move-speed="16"
-                                            move-fast-speed="48"
-                                            pitch-range="-40 18"
-                                            zoom-range="1 400"></pc-script-instance>
+                        <pc-script-instance name="xrControllers"></pc-script-instance>
+                        <pc-script-instance name="xrMenu" attributes='{
+                            "menuItems": [{"label": "Exit XR", "eventName": "xr:end"}],
+                            "fontAsset": "asset:arial-font"
+                        }'></pc-script-instance>
+                        <pc-script-instance name="xrNavigation"></pc-script-instance>
+                        <pc-script-instance name="xrSession"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
                 <!-- A late-afternoon sun raking across the ruins, so shadows run for tens of
