@@ -21,11 +21,14 @@ const engineValue = (component: LightComponent, property: string) =>
  * which is what `matches a light the engine built itself` below now holds them to.
  */
 const cases: [attribute: string, property: string, value: string, expected: unknown, restored: unknown][] = [
+    ['cascade-blend', 'cascadeBlend', '0.1', 0.1, 0],
+    ['cascade-distribution', 'cascadeDistribution', '0.7', 0.7, 0.5],
     ['cast-shadows', 'castShadows', '', true, false],
     ['color', 'color', '1 0 0', new Color(1, 0, 0), new Color(1, 1, 1)],
     ['inner-cone-angle', 'innerConeAngle', '20', 20, 40],
     ['intensity', 'intensity', '2', 2, 1],
     ['normal-offset-bias', 'normalOffsetBias', '0.1', 0.1, 0],
+    ['num-cascades', 'numCascades', '4', 4, 1],
     ['outer-cone-angle', 'outerConeAngle', '30', 30, 45],
     ['penumbra-falloff', 'penumbraFalloff', '5', 5, 1],
     ['penumbra-size', 'penumbraSize', '0.5', 0.5, 1],
