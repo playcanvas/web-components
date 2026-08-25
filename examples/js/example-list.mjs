@@ -47,6 +47,7 @@ export const examples = [
     { name: 'Basic Shapes', path: 'basic-shapes.html', category: 'Graphics' },
     { name: 'Basic Particles', path: 'basic-particles.html', category: 'Graphics' },
     { name: 'GLB Loader', path: 'glb-loader.html', category: 'Graphics' },
+    { name: 'Shadow Cascades', path: 'shadow-cascades.html', category: 'Graphics' },
     { name: 'Video Texture', path: 'video-texture.html', category: 'Graphics' },
     { name: 'Video Recorder', path: 'video-recorder.html', category: 'Graphics' },
     // Animation
