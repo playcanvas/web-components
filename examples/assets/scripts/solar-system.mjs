@@ -131,12 +131,14 @@ export class TourStop extends Script {
      */
     radius = 1;
 }
-
 /**
- * Drives the camera along a line of tour stops — the children of a target entity, in order,
- * plus a final overview pose. The page reports a fractional stop index by firing a 'tour:t'
- * event on the application (typically mapped from scroll position) and the camera chases it
- * with frame-rate independent damping, framing each stop off-center on alternating sides.
+ * Drives the camera as a probe flying the line of tour stops — the children of a target
+ * entity, in order, plus a final overview pose. The page reports a fractional stop index by
+ * firing a 'tour:t' event on the application (typically mapped from scroll position) and the
+ * camera follows it directly, so the shot is a function of the scroll rather than of elapsed
+ * time. The stops are not framings cut between but points on one continuous trajectory: the
+ * probe coasts down the line of subjects, passing each at that stop's framing distance, and
+ * keeps the subject it is passing in shot until the pass is over before slewing to the next.
  */
 export class PlanetTour extends Script {
     static scriptName = 'planetTour';
@@ -150,7 +152,7 @@ export class PlanetTour extends Script {
     planets = null;
 
     /**
-     * The camera distance from each stop, as a multiple of the stop's radius.
+     * The distance the probe passes each stop at, as a multiple of the stop radius.
      *
      * @attribute
      * @type {number}
@@ -159,7 +161,7 @@ export class PlanetTour extends Script {
 
     /**
      * The lateral framing offset, as a fraction of the half viewport width. Stops alternate
-     * sides, and the offset fades out on portrait aspect ratios to center the subject.
+     * sides, and the offset gives way to `rise` on portrait aspect ratios.
      *
      * @attribute
      * @type {number}
@@ -167,29 +169,44 @@ export class PlanetTour extends Script {
     side = 0.35;
 
     /**
-     * The camera height above each stop, as a fraction of the camera distance.
+     * The vertical framing offset, as a fraction of the half viewport height. The portrait
+     * counterpart of `side`: where a landscape viewport seats the narrative beside the
+     * subject, a portrait one stacks it below, so the subject has to lift clear of it.
      *
      * @attribute
      * @type {number}
      */
-    lift = 0.12;
+    rise = 0.6;
 
     /**
-     * The exponential rate at which the camera chases the requested stop index.
+     * The exponential smoothing applied to the reported stop index, in seconds. The camera is
+     * a function of scroll position, so smoothing here is pure lag - keep it short enough to
+     * merely absorb the discrete steps of a mouse wheel, or 0 to track the scroll exactly.
      *
      * @attribute
      * @type {number}
      */
-    damping = 5;
+    smoothing = 0.04;
 
     /**
-     * The fraction of each segment spent holding on its stop before and after the transit,
-     * so a subject stays framed while its narrative is in view. Must be below 0.5.
+     * The ease applied across each pass, as a power. 1 coasts at a constant rate; much above
+     * that and the pass becomes a hold and a lurch. Keep it close to 1 and let the flattened
+     * ends do no more than take the edge off the swing through closest approach.
      *
      * @attribute
      * @type {number}
      */
-    dwell = 0.18;
+    ease = 1.4;
+
+    /**
+     * The fraction of a segment spent slewing from one subject to the next, centered on the
+     * midpoint between them. Smaller values hold a subject in shot for longer - ideally for as
+     * long as its narrative is on screen - at the cost of a faster pan between subjects.
+     *
+     * @attribute
+     * @type {number}
+     */
+    track = 0.4;
 
     /**
      * The idle drift amplitude multiplier. Set to 0 to disable drift.
@@ -221,12 +238,12 @@ export class PlanetTour extends Script {
         this._time = 0;
         this._stops = null;
 
-        this._posA = new Vec3();
-        this._posB = new Vec3();
-        this._lookA = new Vec3();
-        this._lookB = new Vec3();
         this._position = new Vec3();
         this._look = new Vec3();
+        this._subject = new Vec3();
+        this._forward = new Vec3();
+        this._right = new Vec3();
+        this._up = new Vec3();
 
         this.app.on('tour:t', (t) => {
             this._target = t;
@@ -270,40 +287,85 @@ export class PlanetTour extends Script {
     }
 
     /**
-     * Computes the camera pose for a stop. Regular stops frame their subject at a distance
-     * proportional to its radius, biased sideways so the subject composes off-center; the
-     * overview stop uses its explicit position and target.
+     * The distance the probe passes a stop at. Dividing by the viewport fit holds the subject
+     * to the same share of the frame on a narrow viewport as on a wide one. The overview stop
+     * has no subject, and so no standoff.
      *
      * @param {number} index - The stop index.
+     * @returns {number} The standoff distance.
+     */
+    _standoff(index) {
+        const { width, height } = this.app.graphicsDevice;
+        const fit = Math.min(1, width / Math.max(1, height));
+        return ((this._stops[index].radius ?? 0) * this.frame) / fit;
+    }
+
+    /**
+     * Eases progress across one segment. Barely off linear: just enough flattening at the ends
+     * to blunt the angular swing through a closest approach, while leaving the pass a coast.
+     *
+     * @param {number} u - The progress across the segment, 0 to 1.
+     * @returns {number} The eased progress.
+     */
+    _ease(u) {
+        return u < 0.5 ?
+            0.5 * (2 * u) ** this.ease :
+            1 - 0.5 * (2 - 2 * u) ** this.ease;
+    }
+
+    /**
+     * Computes the probe pose partway from one stop to the next. The probe coasts along the
+     * line joining the two subjects, and its standoff from that line changes only while it is
+     * slewing between them, never during a pass. The look target holds on the subject being
+     * passed and slews to the next across the middle of the segment, so each subject is
+     * watched through its whole pass - closing, abeam, then receding - and its closest
+     * approach can only fall on that subject's own stop.
+     *
+     * The subjects are strung along the world Y axis, so the standoff is taken along Z: the
+     * probe flies the line from the same side throughout.
+     *
+     * @param {number} index - The stop being passed.
+     * @param {number} u - The progress towards the next stop, 0 to 1.
      * @param {Vec3} position - The vector to receive the camera position.
      * @param {Vec3} look - The vector to receive the look target.
      */
-    _stopPose(index, position, look) {
-        const stop = this._stops[index];
-        if (stop.target) {
-            position.copy(stop.position);
-            look.copy(stop.target);
-            return;
-        }
+    _flyby(index, u, position, look) {
+        const a = this._stops[index];
+        const b = this._stops[index + 1];
 
+        // The slew from one subject to the next, held off until the pass of the first is over
+        const slew = math.clamp((u - 0.5) / Math.max(0.0001, this.track) + 0.5, 0, 1);
+        const hand = slew * slew * (3 - 2 * slew);
+        this._subject.lerp(a.position, b.position, hand);
+
+        // Coast along the line joining the two subjects, changing standoff only while slewing
+        // between them. Holding it steady through a pass leaves the separation along the line
+        // as the only thing changing, so the subject in shot closes and then recedes evenly
+        // however different the two framing distances are
+        position.lerp(a.position, b.position, this._ease(u));
+        position.z += math.lerp(this._standoff(index), this._standoff(index + 1), hand);
+
+        // Offset the look target in the camera's own frame rather than along world axes. A
+        // tracking shot swings through steep angles as a subject goes by, and a world-space
+        // offset would slide the subject around the frame as it did so
         const { width, height } = this.app.graphicsDevice;
         const aspect = width / Math.max(1, height);
-        const fit = Math.min(1, aspect);
-        const distance = (stop.radius * this.frame) / fit;
-
-        position.set(stop.position.x, stop.position.y + distance * this.lift, stop.position.z + distance);
-
-        // Bias the look target so the subject composes off-center: sideways on landscape
-        // (alternating sides per stop) and upward on portrait, where the narrative sits
-        // below the subject instead of beside it
-        const halfHeight = Math.tan(this.entity.camera.fov * 0.5 * math.DEG_TO_RAD) * distance;
-        const halfWidth = halfHeight * aspect;
         const ramp = math.clamp((aspect - 0.9) / 0.4, 0, 1);
+        const halfHeight = Math.tan(this.entity.camera.fov * 0.5 * math.DEG_TO_RAD) *
+            position.distance(this._subject);
         const sign = index % 2 === 0 ? 1 : -1;
+
+        this._forward.sub2(this._subject, position).normalize();
+        this._right.cross(this._forward, Vec3.UP).normalize();
+        this._up.cross(this._right, this._forward);
+
+        // Sides alternate per stop, so the bias hands over with the look target
+        const dx = -math.lerp(sign, -sign, hand) * this.side * halfHeight * aspect * ramp;
+        const dy = -this.rise * halfHeight * (1 - ramp);
         look.set(
-            stop.position.x - sign * this.side * halfWidth * ramp,
-            stop.position.y - 0.3 * halfHeight * (1 - ramp),
-            stop.position.z
+            this._subject.x + this._right.x * dx + this._up.x * dy,
+            this._subject.y + this._right.y * dx + this._up.y * dy,
+            this._subject.z + this._right.z * dx + this._up.z * dy
         );
     }
 
@@ -317,25 +379,26 @@ export class PlanetTour extends Script {
         }
         const count = this._stops.length;
 
-        // Chase the requested stop index with frame-rate independent damping
-        this._t += (this._target - this._t) * (1 - Math.exp(-this.damping * dt));
+        // Track the reported stop index. Every term below is a function of that index, so
+        // the shot is tied to the scroll and this smoothing is the only lag in the chain
+        this._t = this.smoothing > 0 ?
+            this._t + (this._target - this._t) * (1 - Math.exp(-dt / this.smoothing)) :
+            this._target;
         this._time += dt;
 
-        // Blend the camera pose between the two neighboring stops. The blend holds on each
-        // stop for the dwell fraction at both ends of the segment (keeping the subject
-        // framed while its narrative is read) and eases through the transit between them
         const t = math.clamp(this._t, 0, count - 1);
         const index = Math.max(0, Math.min(Math.floor(t), count - 2));
-        const next = Math.min(index + 1, count - 1);
-        const span = Math.max(0.0001, 1 - 2 * this.dwell);
-        let blend = math.clamp((t - index - this.dwell) / span, 0, 1);
-        blend = blend * blend * (3 - 2 * blend);
+        const u = math.clamp(t - index, 0, 1);
+        const overview = this._stops[index + 1].target;
 
-        this._stopPose(index, this._posA, this._lookA);
-        this._stopPose(next, this._posB, this._lookB);
-
-        this._position.lerp(this._posA, this._posB, blend);
-        this._look.lerp(this._lookA, this._lookB, blend);
+        // The overview stop has no subject to fly past, so the closing segment holds the probe
+        // at its last closest approach and blends from there into the explicit overview pose
+        this._flyby(index, overview ? 0 : u, this._position, this._look);
+        if (overview) {
+            const e = this._ease(u);
+            this._position.lerp(this._position, this._stops[index + 1].position, e);
+            this._look.lerp(this._look, overview, e);
+        }
 
         // A gentle idle drift, scaled to the current viewing distance
         const sway = this._position.distance(this._look) * 0.02 * this.drift;
