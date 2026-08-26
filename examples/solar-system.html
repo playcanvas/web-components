@@ -543,16 +543,17 @@
             <!-- Scene -->
             <pc-scene>
                 <!-- Camera -->
-                <pc-entity name="camera" position="0 7.6 63">
+                <pc-entity name="camera" position="0 0 63">
                     <pc-camera clear-color="0 0 0 0" fov="35" near-clip="0.5" far-clip="1500" tonemap="neutral"></pc-camera>
                     <pc-script>
                         <pc-script-instance name="planetTour"
                                             planets="entity:planets"
                                             frame="7"
                                             side="0.35"
-                                            lift="0.12"
-                                            damping="5"
-                                            dwell="0.3"
+                                            rise="0.6"
+                                            smoothing="0.04"
+                                            ease="1.4"
+                                            track="0.4"
                                             drift="1"
                                             overview-position="7 -250 22"
                                             overview-target="-20 -150 0"></pc-script-instance>
@@ -808,11 +809,12 @@
                 { element: document.getElementById('stars-near'), factor: 0.12, density: 55, alpha: 0.85 }
             ];
 
-            // A snappier camera and no idle drift under reduced motion - runtime changes to
-            // pc-script-instance attributes are applied live to the script instance
+            // Lock the camera to the scroll position and drop the idle drift under reduced
+            // motion - runtime changes to pc-script-instance attributes are applied live to
+            // the script instance
             if (reducedMotion) {
                 const tour = document.querySelector('pc-script-instance[name="planetTour"]');
-                tour.setAttribute('damping', '30');
+                tour.setAttribute('smoothing', '0');
                 tour.setAttribute('drift', '0');
             }
 
@@ -878,23 +880,30 @@
             // ---- scroll to tour progress ----
 
             let app = null;
-            let tops = [];
+            let anchors = [];
             let tourProgress = 0;
 
+            // The scroll offset at which each section's copy sits vertically centered in the
+            // viewport. That is the moment the camera should reach the matching tour stop, so
+            // the closest approach of each fly-by lands on the copy describing it
             const measure = () => {
-                tops = sections.map((section) => section.offsetTop);
+                anchors = sections.map((section) => {
+                    const box = section.querySelector('.copy') || section;
+                    const rect = box.getBoundingClientRect();
+                    return rect.top + window.scrollY + rect.height / 2 - window.innerHeight / 2;
+                });
             };
 
-            // Piecewise map of scroll position to a fractional stop index: section i aligned
-            // with the viewport top means the camera has settled at stop i
+            // Piecewise map of scroll position to a fractional stop index, keyed on those
+            // anchors: scrolling from one to the next drives one whole tour segment
             const computeT = () => {
                 const y = window.scrollY;
-                let i = sections.length - 1;
-                while (i > 0 && y < tops[i]) i--;
-                const start = tops[i];
-                const end = i + 1 < tops.length ? tops[i + 1] : start + sections[i].offsetHeight;
+                let i = anchors.length - 1;
+                while (i > 0 && y < anchors[i]) i--;
+                const start = anchors[i];
+                const end = i + 1 < anchors.length ? anchors[i + 1] : start + 1;
                 const f = end > start ? (y - start) / (end - start) : 0;
-                return Math.max(0, Math.min(sections.length - 1, i + f));
+                return Math.max(0, Math.min(anchors.length - 1, i + f));
             };
 
             const onScroll = () => {
