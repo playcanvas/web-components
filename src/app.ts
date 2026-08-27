@@ -96,6 +96,12 @@ const canvasEventsFor: Record<(typeof SYNTHESIZED_EVENTS)[number], readonly stri
 };
 
 /**
+ * How long after a click a further click on the same target still raises the click count that
+ * `detail` carries, approximating the platform's double-click time.
+ */
+const CLICK_CHAIN_MS = 500;
+
+/**
  * Finds the nearest common inclusive ancestor of two picked nodes - the node a click belongs to
  * when the press and the release picked different geometry, exactly as the DOM assigns a click
  * whose down and up have different targets.
@@ -239,6 +245,12 @@ class AppElement extends AsyncElement {
 
     /** Whether any element in the tree listens for click. Maintained by _syncCanvasListeners. */
     private _clickListened = false;
+
+    /**
+     * The previous click's target, time and count, for chaining successive clicks into the
+     * click count that `detail` carries. `null` until a click has fired.
+     */
+    private _lastClick: { element: EntityBaseElement; time: number; count: number } | null = null;
 
     private _app: AppBase | null = null;
 
@@ -677,6 +689,7 @@ class AppElement extends AsyncElement {
         };
         this._downPicks.clear();
         this._clickListened = false;
+        this._lastClick = null;
     }
 
     /**
@@ -946,7 +959,21 @@ class AppElement extends AsyncElement {
 
         const clickElement = this._elementWithListener(commonAncestor(downNode, node), 'click');
         if (clickElement) {
-            clickElement.dispatchEvent(new PointerEvent('click', event));
+            const click = new PointerEvent('click', event);
+
+            // The init above copied pointerup's `detail`, which the Pointer Events spec fixes
+            // at 0 - but click is exempt: its detail is the click count, chained here as the
+            // platform chains it (same target, within the double-click window). Overridden
+            // with defineProperty because an event instance used as an init dict cannot have
+            // single fields replaced.
+            const time = performance.now();
+            const last = this._lastClick;
+            const count =
+                last && last.element === clickElement && time - last.time <= CLICK_CHAIN_MS ? last.count + 1 : 1;
+            this._lastClick = { element: clickElement, time, count };
+            Object.defineProperty(click, 'detail', { value: count });
+
+            clickElement.dispatchEvent(click);
         }
     }
 

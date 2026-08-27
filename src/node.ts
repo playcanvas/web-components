@@ -202,7 +202,8 @@ const levenshtein = (a: string, b: string): number => {
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the node.
  * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
  * over the node. A press and release that picked different entities fires on their nearest
- * common ancestor instead, as in the DOM.
+ * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
+ * arrives as a click whose `detail` is 2.
  */
 class NodeElement extends EntityBaseElement {
     private _name = '';

@@ -601,6 +601,65 @@ describe('pc-app pointer picking', () => {
             expect(bClick).toHaveBeenCalledTimes(1);
         });
 
+        it('carries the click count in detail, chained within the double-click window', async () => {
+            // pointerup's own detail is fixed at 0 by the Pointer Events spec, but click is
+            // exempt: its detail is the click count, which consumers read for double-click
+            // detection - and to tell pointer clicks from keyboard activations, whose detail
+            // really is 0.
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            stubPicker(appElement, [
+                [hit(entity)], [hit(entity)],
+                [hit(entity)], [hit(entity)],
+                [hit(entity)], [hit(entity)]
+            ]);
+            const nowSpy = vi.spyOn(performance, 'now');
+
+            const clickAt = async (time: number) => {
+                nowSpy.mockReturnValue(time);
+                canvas.dispatchEvent(down());
+                await flush();
+                canvas.dispatchEvent(up());
+                await flush();
+            };
+
+            await clickAt(1000); // a first click
+            await clickAt(1200); // 200ms later: chains
+            await clickAt(2000); // 800ms later: the window has passed
+
+            const details = spies.click.mock.calls.map((call) => (call[0] as PointerEvent).detail);
+            expect(details).toEqual([1, 2, 1]);
+        });
+
+        it('resets the click count when the target changes', async () => {
+            const { appElement, all } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="a"></pc-entity>
+                <pc-entity name="b"></pc-entity>
+            `);
+            const [a, b] = [all<EntityElement>('pc-entity')[1], all<EntityElement>('pc-entity')[2]];
+            const aClick = vi.fn();
+            const bClick = vi.fn();
+            a.addEventListener('click', aClick);
+            b.addEventListener('click', bClick);
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(a.entity!)], [hit(a.entity!)], [hit(b.entity!)], [hit(b.entity!)]]);
+            const nowSpy = vi.spyOn(performance, 'now');
+
+            const clickAt = async (time: number) => {
+                nowSpy.mockReturnValue(time);
+                canvas.dispatchEvent(down());
+                await flush();
+                canvas.dispatchEvent(up());
+                await flush();
+            };
+
+            await clickAt(1000);
+            await clickAt(1100); // within the window, but a different target
+
+            expect((aClick.mock.calls[0][0] as PointerEvent).detail).toBe(1);
+            expect((bClick.mock.calls[0][0] as PointerEvent).detail, 'a new target starts a new count').toBe(1);
+        });
+
         it('the inline onclick attribute alone attaches the canvas listeners', async () => {
             // The browser compiles inline handlers itself, so the attribute must feed the same
             // lazy canvas attach as addEventListener - jsdom never runs the handler, but the

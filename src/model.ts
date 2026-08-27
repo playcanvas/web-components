@@ -152,7 +152,8 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the model.
  * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
  * over the model. A press and release that picked different entities fires on their nearest
- * common ancestor instead, as in the DOM.
+ * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
+ * arrives as a click whose `detail` is 2.
  * @fires {Event} load - Fired each time a container asset finishes instantiating, including
  * re-instantiation after `asset` changes. Does not bubble — listen on this element, or use a
  * capture-phase listener on an ancestor.
