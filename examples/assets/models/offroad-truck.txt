@@ -1,0 +1,15 @@
+Warthog - Standard edition by McCarthy3D on Sketchfab:
+
+https://sketchfab.com/3d-models/warthog-standard-edition-e2d23c845eb34df2a286915890bb621a
+
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+
+Changes made for this example: the mounted turret and the imported ground plane were
+removed, the four wheels and the eight suspension parts were separated onto their own
+pivots - each arm onto the lateral axis it really hinges about, at the chassis end of its
+run - the body was joined into a single mesh, the model was scaled to 5.2 m long and
+turned to face -Z, and the tire and interior materials were made opaque (their alpha
+channels were fully opaque already, so blending them only cost depth writes). The geometry
+was Draco compressed, and the textures were encoded to KTX2 with Basis ETC1S
+supercompression and full mipmap chains: 2048x2048 for the body and tires, 1024x1024 for
+the interior and glass.

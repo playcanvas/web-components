@@ -59,6 +59,7 @@ export const examples = [
     { name: 'Physics Cluster', path: 'physics-cluster.html', category: 'Physics' },
     { name: 'Physics Joints', path: 'physics-joints.html', category: 'Physics' },
     { name: 'Ragdoll', path: 'ragdoll.html', category: 'Physics' },
+    { name: 'Vehicle Physics', path: 'vehicle-physics.html', category: 'Physics' },
     // Sound
     { name: 'Basic Sound', path: 'basic-sound.html', category: 'Sound' },
     { name: 'Positional Sound', path: 'positional-sound.html', category: 'Sound' },
