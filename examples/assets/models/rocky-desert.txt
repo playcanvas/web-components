@@ -1,0 +1,14 @@
+Rocky Desert - Terrain by artfromheath on Sketchfab:
+
+https://sketchfab.com/3d-models/rocky-desert-terrain-0abbd5ee9c404913bc815b7d59a505e3
+
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+
+Changes made for this example: the three mesh chunks the conversion had split the surface
+into were joined, and the duplicate vertices along their seams were welded - 190,843 down
+to 160,801, which is exactly the 401x401 grid the terrain was built on, leaving only the
+1,600 edges of its outer rim as boundary. No vertex was moved: the surface is centered by
+a translation on the scene root instead, which leaves it 600 m square about the origin
+with its lowest point on the ground plane, so the relief is the artist's throughout. The
+geometry was Draco compressed, and the 4096x4096 texture was encoded to KTX2 with Basis
+ETC1S supercompression and a full mipmap chain.

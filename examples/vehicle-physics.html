@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Vehicle Physics</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Instrument cluster, in the same dark glass as the example buttons */
+            .cluster {
+                position: absolute;
+                bottom: max(16px, env(safe-area-inset-bottom));
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 14px;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font-family: system-ui, sans-serif;
+                font-variant-numeric: tabular-nums;
+                pointer-events: none;
+            }
+
+            /* Rev counter. Idle sits at the left edge, so the bar only moves once the engine
+               pulls, and it tips into the accent over the shift-up point. */
+            .cluster .revs {
+                height: 3px;
+                border-radius: 2px;
+                background-color: rgba(255, 255, 255, 0.12);
+            }
+
+            .cluster .revs span {
+                display: block;
+                width: 0;
+                height: 100%;
+                border-radius: 2px;
+                background-color: rgba(255, 255, 255, 0.85);
+                transition: width 0.06s linear, background-color 0.15s;
+            }
+
+            .cluster .revs span.redline {
+                background-color: #ff8533;
+            }
+
+            .cluster .dials {
+                display: flex;
+                align-items: baseline;
+                gap: 12px;
+                margin-top: 8px;
+            }
+
+            .cluster .speed {
+                font-size: 32px;
+                font-weight: 600;
+                line-height: 1;
+            }
+
+            .cluster .minor {
+                margin-left: 5px;
+                font-size: 12px;
+                font-weight: 400;
+                opacity: 0.55;
+            }
+
+            /* One box per ratio the script holds, reverse first, so a fifth ratio in the markup
+               becomes a fifth box on its own */
+            .cluster .gearbox {
+                display: flex;
+                gap: 4px;
+                margin-left: auto;
+                align-self: center;
+            }
+
+            .cluster .gearbox span {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-sizing: border-box;
+                width: 24px;
+                height: 24px;
+                padding-bottom: 2px;
+                border-radius: 5px;
+                background-color: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.45);
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .cluster .gearbox span.engaged {
+                background-color: rgba(255, 255, 255, 0.9);
+                color: #121212;
+            }
+
+            /* The engaged box fades mid-change, otherwise the one moment the readout looks stuck */
+            .cluster .gearbox.shifting span.engaged {
+                background-color: rgba(255, 255, 255, 0.3);
+                color: rgba(255, 255, 255, 0.55);
+            }
+
+            .cluster .keys {
+                display: block;
+                margin-top: 8px;
+                font-size: 11px;
+                opacity: 0.5;
+            }
+
+            /* Touch controls, for devices whose main pointer is a finger. Anything with a mouse has
+               a keyboard, so they stay out of the way there. */
+            .touch {
+                display: none;
+            }
+
+            @media (pointer: coarse) {
+                /* Clear of the bottom of the screen by the height of the shell's own controls,
+                   which sit in that right corner - a thumb reaching for the throttle would
+                   otherwise land on the view-source button. */
+                .touch {
+                    display: flex;
+                    position: absolute;
+                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 56px);
+                    left: max(16px, env(safe-area-inset-left));
+                    right: max(16px, env(safe-area-inset-right));
+                    justify-content: space-between;
+                }
+
+                /* The readout would sit under a thumb down there, and the key hints are moot */
+                .cluster {
+                    bottom: auto;
+                    top: max(16px, env(safe-area-inset-top));
+                }
+
+                /* Reset gives up the top row, which the readout needs in full - side by side the
+                   two are wider than a phone. The bottom left corner is the one spot left: the
+                   shell's own controls hold the right of that row, and the pads sit above it. */
+                .example-button-container.top-right {
+                    top: auto;
+                    right: auto;
+                    bottom: max(16px, env(safe-area-inset-bottom));
+                    left: max(16px, env(safe-area-inset-left));
+                }
+
+                .cluster .keys {
+                    display: none;
+                }
+
+                /* Speed, revs and five gear boxes do not fit across a phone - the rev number is
+                   the one the bar above it already tells you, so it goes rather than wrapping. */
+                .cluster .dials > .minor {
+                    display: none;
+                }
+            }
+
+            .touch .pad {
+                display: flex;
+                gap: 10px;
+            }
+
+            .touch button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 60px;
+                height: 60px;
+                padding: 0;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 8px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                touch-action: none;
+            }
+
+            /* Drawn rather than typed. Each shape is centered on its viewBox, so the marks sit in
+               the middle of the button whatever a platform's fonts would have done with an arrow -
+               and some render those code points as emoji. currentColor carries the lit state. */
+            .touch button svg {
+                width: 22px;
+                height: 22px;
+                fill: currentColor;
+            }
+
+            /* Lit from the same state that drives the wheels, not from :active, so what you see is
+               what the vehicle was actually told */
+            .touch button.on {
+                background-color: rgba(255, 255, 255, 0.9);
+                color: #121212;
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Wasm Modules -->
+            <pc-wasm name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-wasm>
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
+            <!-- Assets -->
+            <pc-asset src="assets/scripts/vehicle.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/chase-camera.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/sky/procedural-sky.mjs"></pc-asset>
+            <pc-asset src="assets/models/offroad-truck.glb" id="truck"></pc-asset>
+            <pc-asset src="assets/models/rocky-desert.glb" id="terrain"></pc-asset>
+            <!-- The procedural sky below draws the sky, lights the scene from it and aims the sun,
+                 so one elevation sets the time of day. Its radiance is real HDR, which clips
+                 without pulling exposure back. -->
+            <pc-scene exposure="0.38" fog="exp2" fog-color="#d1dbe3" fog-density="0.0035">
+                <!-- The chase script places the camera, so this position only frames the first shot. -->
+                <pc-entity name="camera" position="0 5 12">
+                    <pc-camera clear-color="#d1dbe3" tonemap="neutral" far-clip="600" fov="60"></pc-camera>
+                    <pc-script>
+                        <!-- Slow to come round on purpose: the lag swings the truck side-on in a turn. -->
+                        <pc-script-instance name="chaseCamera" target="entity:vehicle"
+                                            distance="8.5" height="2.9" aim="1.5"
+                                            turn-rate="2.2" rate="9"
+                                            pullback="3.5" pullback-at="70"
+                                            clearance="1.4"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- The sky aims and tints this light, so what is authored here is the daytime peak
+                     and the shadow quality. cascade-distribution biases texels towards the nearest
+                     cascade, where the truck is, and cascade-blend hides the seam where each
+                     cascade's softness changes. The bias pair is tied to shadow-distance. -->
+                <pc-entity name="sun">
+                    <pc-light intensity="6"
+                              cast-shadows
+                              shadow-type="pcf5-32f"
+                              num-cascades="4"
+                              cascade-distribution="0.7"
+                              cascade-blend="0.12"
+                              shadow-distance="320"
+                              shadow-resolution="2048"
+                              shadow-bias="0.05"
+                              normal-offset-bias="0.12"></pc-light>
+                </pc-entity>
+                <!-- Mid morning, sun in the south east. Turbidity and rayleigh are the haze and the
+                     blueness: a dry sky is clearer and bluer than a humid one. -->
+                <pc-entity name="sky">
+                    <pc-script>
+                        <pc-script-instance name="proceduralSky"
+                                            sun-light="entity:sun"
+                                            elevation="34" azimuth="135"
+                                            turbidity="3" rayleigh="2.2"
+                                            mie-coefficient="0.005" mie-directional-g="0.8"
+                                            luminance="1"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- The chassis is an ordinary dynamic body; the wheels carry no collision of their
+                     own because the script casts a ray for each one. It measures the wheel mounts in
+                     this entity's frame, so the entity must be unscaled.
+
+                     The spawn is a measured shelf - 1.4% grade, nothing over 5% within 12 m - with
+                     500 m of gentle ground ahead of it. Somewhere level is worth picking on purpose,
+                     because a locked wheel stops a wheel turning and not a car sliding: park across
+                     a slope and the truck creeps off down it before you have touched a key. -->
+                <pc-entity name="vehicle" position="240 1.6 -240" rotation="0 180 0">
+                    <!-- Center of mass is the origin of a body's shape, so a single box would put the
+                         mass 1.45 m up on a 2.1 m track and the truck would go over at the sight of a
+                         slope. The compound keeps the mass at the origin with the box up at the
+                         bodywork. -->
+                    <pc-collision type="compound"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="2200" friction="0.4"></pc-rigid-body>
+                    <pc-entity name="hull-collider" position="0 0.55 0">
+                        <pc-collision half-extents="0.95 0.7 2.45"></pc-collision>
+                    </pc-entity>
+                    <pc-script>
+                        <!-- Top speed is not set anywhere: it is max-rpm in the tallest gear. -->
+                        <pc-script-instance name="vehicle"
+                                            max-torque="520" idle-rpm="800" peak-torque-rpm="1700" max-rpm="4200"
+                                            final-drive="7" reverse-gear="3.2"
+                                            shift-up-rpm="3900" shift-down-rpm="1900" shift-time="0.22"
+                                            max-steer-angle="30" high-speed-lock="0.4" high-speed-lock-at="80"
+                                            max-brake-force="6500" handbrake-force="14000"
+                                            attributes='{"gears": [3.6, 2.2, 1.5, 1.1]}'></pc-script-instance>
+                        <pc-script-instance name="vehicleInput"></pc-script-instance>
+                    </pc-script>
+                    <!-- Each wheel is a node of the model, so the script reads the hub off the node
+                         the artist placed and no geometry is authored here. linkage swings the
+                         suspension arm and coilover with the wheel's travel. -->
+                    <pc-model asset="truck" position="0 0.55 0">
+                        <pc-node name="wheel_front_left">
+                            <pc-script>
+                                <pc-script-instance name="vehicleWheel" radius="0.572" grip="2.7" roll-influence="0.08" track-offset="0.18"
+                                                    suspension-rest-length="0.45" max-suspension-travel="0.35"
+                                                    steer-factor="1" drive-factor="1" brake-factor="1"
+                                                    linkage-axis="vec3:1 0 0"
+                                                    linkage="arm_front_left spring_front_left"></pc-script-instance>
+                            </pc-script>
+                        </pc-node>
+                        <pc-node name="wheel_front_right">
+                            <pc-script>
+                                <pc-script-instance name="vehicleWheel" radius="0.572" grip="2.7" roll-influence="0.08" track-offset="0.18"
+                                                    suspension-rest-length="0.45" max-suspension-travel="0.35"
+                                                    steer-factor="1" drive-factor="1" brake-factor="1"
+                                                    linkage-axis="vec3:1 0 0"
+                                                    linkage="arm_front_right spring_front_right"></pc-script-instance>
+                            </pc-script>
+                        </pc-node>
+                        <pc-node name="wheel_rear_left">
+                            <pc-script>
+                                <pc-script-instance name="vehicleWheel" radius="0.630" grip="2.7" roll-influence="0.08" track-offset="0.18"
+                                                    suspension-rest-length="0.45" max-suspension-travel="0.35"
+                                                    drive-factor="1" brake-factor="0.7" handbrake-factor="1"
+                                                    linkage-axis="vec3:1 0 0"
+                                                    linkage="arm_rear_left spring_rear_left"></pc-script-instance>
+                            </pc-script>
+                        </pc-node>
+                        <pc-node name="wheel_rear_right">
+                            <pc-script>
+                                <pc-script-instance name="vehicleWheel" radius="0.630" grip="2.7" roll-influence="0.08" track-offset="0.18"
+                                                    suspension-rest-length="0.45" max-suspension-travel="0.35"
+                                                    drive-factor="1" brake-factor="0.7" handbrake-factor="1"
+                                                    linkage-axis="vec3:1 0 0"
+                                                    linkage="arm_rear_right spring_rear_right"></pc-script-instance>
+                            </pc-script>
+                        </pc-node>
+                    </pc-model>
+                </pc-entity>
+                <!-- A triangle mesh is tested one triangle at a time, so it can be this large without
+                     costing accuracy - Bullet's convex ray cast loses precision with the size of the
+                     shape tested, and over a kilometer-wide box the wheels shiver. The collider goes
+                     on the bound node because a mesh needs a render component, which the <pc-model>
+                     host does not carry. -->
+                <pc-model asset="terrain">
+                    <pc-node name="terrain">
+                        <pc-collision type="mesh"></pc-collision>
+                        <pc-rigid-body friction="1"></pc-rigid-body>
+                    </pc-node>
+                </pc-model>
+                <!-- Collision-only walls around the terrain: no render component, so there is
+                     nothing to draw. The terrain is 600 m square about the origin, and each wall
+                     is over-long by its own thickness so the corners close.
+
+                     They reach far higher than anything could drive, which is deliberate: the chase
+                     camera keeps itself above the ground by casting down from overhead, and a wall
+                     whose top it can start above is a wall it will stand on. Kept above that start
+                     height, the cast begins inside the wall, passes through, and finds the ground. -->
+                <pc-entity name="walls">
+                    <pc-entity name="wall-west" position="-300 190 0">
+                        <pc-collision half-extents="2 210 302"></pc-collision>
+                        <pc-rigid-body></pc-rigid-body>
+                    </pc-entity>
+                    <pc-entity name="wall-east" position="300 190 0">
+                        <pc-collision half-extents="2 210 302"></pc-collision>
+                        <pc-rigid-body></pc-rigid-body>
+                    </pc-entity>
+                    <pc-entity name="wall-north" position="0 190 -300">
+                        <pc-collision half-extents="302 210 2"></pc-collision>
+                        <pc-rigid-body></pc-rigid-body>
+                    </pc-entity>
+                    <pc-entity name="wall-south" position="0 190 300">
+                        <pc-collision half-extents="302 210 2"></pc-collision>
+                        <pc-rigid-body></pc-rigid-body>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="cluster">
+            <div class="revs"><span id="revs"></span></div>
+            <div class="dials">
+                <span class="speed"><span id="speed">0</span><span class="minor">km/h</span></span>
+                <span class="minor"><span id="rpm">800</span> rpm</span>
+                <div class="gearbox" id="gearbox"></div>
+            </div>
+            <span class="keys">WASD or arrows to drive &middot; space to handbrake &middot; R to reset</span>
+        </div>
+        <div class="touch">
+            <div class="pad">
+                <button data-steer="-1" aria-label="Steer left">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5 7 12l10 7z"/></svg>
+                </button>
+                <button data-steer="1" aria-label="Steer right">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5l10 7-10 7z"/></svg>
+                </button>
+            </div>
+            <div class="pad">
+                <button data-handbrake="1" aria-label="Handbrake">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6h3v4.5h4V6h3v12h-3v-4.5h-4V18H7z"/></svg>
+                </button>
+                <button data-throttle="-1" aria-label="Brake and reverse">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17 5 7h14z"/></svg>
+                </button>
+                <button data-throttle="1" aria-label="Accelerate">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7l7 10H5z"/></svg>
+                </button>
+            </div>
+        </div>
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            // Named, because the truck is a <pc-model> too and the first match is not this one.
+            await whenReady('pc-model[asset="terrain"]');
+
+            // A landscape is seen at a grazing angle, the one case mipmapping handles worst, and
+            // nothing in the glTF says how its textures should be filtered.
+            const terrain = document.querySelector('pc-node[name="terrain"]').entity;
+            const anisotropy = Math.min(8, app.graphicsDevice.maxAnisotropy);
+            for (const instance of terrain.render.meshInstances) {
+                for (const slot of ['diffuseMap', 'normalMap', 'glossMap', 'aoMap']) {
+                    if (instance.material[slot]) {
+                        instance.material[slot].anisotropy = anisotropy;
+                    }
+                }
+                instance.material.update();
+            }
+
+            const vehicle = document.querySelector('pc-entity[name="vehicle"]');
+            const speed = document.getElementById('speed');
+            const rpm = document.getElementById('rpm');
+            const revs = document.getElementById('revs');
+            const gearbox = document.getElementById('gearbox');
+            let boxes = [];
+
+            // Each button holds one input down for as long as a finger is on it, by setting the
+            // field the vehicle's input script reads - the keys and the pads are merged there, so
+            // neither has to know about the other. Pointer events rather than touch ones, so a pen
+            // or a mouse on a touchscreen works the same. Sliding off a button releases it:
+            // without that, the release lands on whatever is under the finger instead and the
+            // input would stay on. A press and a slide can both report the release, so the lit
+            // class doubles as the state and a repeat is ignored.
+            for (const button of document.querySelectorAll('.touch button')) {
+                const [[field, value]] = Object.entries(button.dataset);
+                const set = on => (event) => {
+                    event.preventDefault();
+                    if (button.classList.contains('on') === on) {
+                        return;
+                    }
+                    button.classList.toggle('on', on);
+                    const input = vehicle.entity?.script?.vehicleInput;
+                    if (input) {
+                        input[field] = on ? Number(value) : 0;
+                    }
+                };
+                button.addEventListener('pointerdown', set(true));
+                button.addEventListener('pointerup', set(false));
+                button.addEventListener('pointercancel', set(false));
+                button.addEventListener('pointerleave', set(false));
+            }
+
+            // Holding a button down is how you drive, and a long press is also how a browser is
+            // asked for a context menu - so it opens one over the controls mid-corner. Suppressed
+            // on the pads alone, which do not exist outside a touch device, so a right click
+            // anywhere else on the page still behaves.
+            document.querySelector('.touch').addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+            });
+
+            app.on('update', () => {
+                const script = vehicle.entity?.script?.vehicle;
+                if (!script) {
+                    return;
+                }
+                if (boxes.length === 0) {
+                    boxes = ['R', ...script.gears.map((ratio, index) => index + 1)].map((label) => {
+                        const box = document.createElement('span');
+                        box.textContent = label;
+                        gearbox.appendChild(box);
+                        return box;
+                    });
+                }
+                speed.textContent = Math.abs(Math.round(script.speed));
+                rpm.textContent = Math.round(script.rpm);
+
+                // Reverse takes the first box, which leaves each forward gear on its own number
+                const engaged = script.gear < 0 ? 0 : script.gear;
+                boxes.forEach((box, index) => box.classList.toggle('engaged', index === engaged));
+                gearbox.classList.toggle('shifting', script.shifting);
+
+                // The bar spans idle to the limiter, and where those sit is the script's to say
+                const revved = (script.rpm - script.idleRpm) / (script.maxRpm - script.idleRpm);
+                revs.style.width = `${Math.min(Math.max(revved, 0), 1) * 100}%`;
+                revs.classList.toggle('redline', script.rpm >= script.shiftUpRpm);
+            });
+
+            const container = document.createElement('div');
+            container.classList.add('example-button-container', 'top-right');
+
+            const button = document.createElement('button');
+            button.textContent = 'Reset';
+            button.classList.add('example-button');
+            button.addEventListener('click', () => app.fire('vehicle:reset'));
+            container.appendChild(button);
+
+            document.body.appendChild(container);
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
