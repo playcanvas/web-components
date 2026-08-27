@@ -58,6 +58,7 @@ class ExampleBrowser {
         this.setupSearch();
         this.setupTitleBar();
         this.setupKeyboard();
+        this.setupFocus();
         this.setupMobileMenu();
         this.loadInitialExample();
     }
@@ -310,6 +311,25 @@ class ExampleBrowser {
         this.noResults.hidden = visible > 0;
         this.searchCount.textContent = q === '' ? '' : `${visible}/${this.entries.length}`;
         this.updatePrevNextState();
+    }
+
+    setupFocus() {
+        // An example hears the keyboard only while the iframe holds focus, and the shell hears
+        // the shortcuts below only while it does - the two cannot both have the arrow keys. So
+        // focus follows the pointer: whatever you are pointing at is what you are typing at.
+        // Without this, an example that reads keys does nothing until it is clicked, which reads
+        // as a broken demo rather than an unfocused frame.
+        this.frame.addEventListener('pointerenter', () => {
+            // Crossing the viewport on the way somewhere else must not swallow the rest of a
+            // search query, so a search in progress keeps the keys.
+            if (document.activeElement !== this.searchInput) {
+                this.frame.contentWindow.focus();
+            }
+        });
+
+        this.frame.addEventListener('pointerleave', () => {
+            this.frame.blur();
+        });
     }
 
     setupKeyboard() {
