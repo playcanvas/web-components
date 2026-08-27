@@ -1,6 +1,6 @@
 import { Vec3 } from 'playcanvas';
 
-import { POINTER_ATTRIBUTES } from './entity-base';
+import { EVENT_ATTRIBUTES } from './entity-base';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
@@ -12,8 +12,8 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  *
  * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
  * intersects this entity's geometry. They are only generated while the entity has a listener for
- * them, registered either with {@link EventTarget.addEventListener} or with the matching inline `onpointer*`
- * attribute.
+ * them, registered either with {@link EventTarget.addEventListener} or with the matching inline
+ * attribute (`onpointerdown`, `onclick`, ...).
  *
  * @elementSummary The `<pc-entity>` element creates an entity: a named, transformable node of the
  * scene hierarchy, and the host for component elements such as `<pc-camera>`, `<pc-light>` and
@@ -33,11 +33,16 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  * entity.
  * @attribute {string} onpointerup - Script to run when a pointer button is released over the
  * entity.
+ * @attribute {string} onclick - Script to run when the entity is clicked: a primary pointer
+ * button pressed and then released over it.
  * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the entity.
  * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the entity.
  * @fires {PointerEvent} pointermove - Fired when the pointer moves over the entity.
  * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the entity.
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the entity.
+ * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
+ * over the entity. A press and release that picked different entities fires on their nearest
+ * common ancestor instead, as in the DOM.
  */
 class EntityElement extends EntityOwnerElement {
     connectedCallback() {
@@ -77,7 +82,7 @@ class EntityElement extends EntityOwnerElement {
     }
 
     static get observedAttributes() {
-        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...POINTER_ATTRIBUTES];
+        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...EVENT_ATTRIBUTES];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -105,6 +110,7 @@ class EntityElement extends EntityOwnerElement {
             case 'onpointerdown':
             case 'onpointerup':
             case 'onpointermove':
+            case 'onclick':
                 this._updateInlineHandler(name, newValue);
                 break;
         }

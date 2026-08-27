@@ -264,15 +264,15 @@ if (manifest) {
 
     check(events('pc-joint').includes('break'), "pc-joint is missing the 'break' event");
 
-    const pointerEvents = ['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup'];
+    const synthesizedEvents = ['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup', 'click'];
     for (const tag of ENTITY_TAGS) {
-        for (const name of pointerEvents) {
+        for (const name of synthesizedEvents) {
             check(events(tag).includes(name), `${tag} is missing the '${name}' event`);
         }
     }
-    const strayPointerEvents = pointerEvents.filter(name => events('pc-app').includes(name));
-    check(strayPointerEvents.length === 0,
-        `pc-app should not declare pointer events: ${strayPointerEvents.join(', ')}`);
+    const straySynthesizedEvents = synthesizedEvents.filter(name => events('pc-app').includes(name));
+    check(straySynthesizedEvents.length === 0,
+        `pc-app should not declare synthesized events: ${straySynthesizedEvents.join(', ')}`);
 
     // Loading events are leaf-declared (ProgressEvent/ErrorEvent dispatches, not CustomEvent), so
     // they exercise the analyzer's non-CustomEvent detection - and must not leak onto other tags
@@ -310,10 +310,10 @@ if (manifest) {
     }
 
     // Over-filtering, part 1: every attribute's backing accessor is still a member. pc-entity's
-    // onpointer* attributes are exempt - they are handled by a dispatch helper rather than by
-    // accessors, so the fieldName the attributes plugin falls back to names a member that has
-    // never existed.
-    const PHANTOM_FIELDS = new Set(pointerEvents.map(name => `on${name}`));
+    // onpointer*/onclick attributes are exempt - they are handled by a dispatch helper rather
+    // than by accessors, so the fieldName the attributes plugin falls back to names a member
+    // that has never existed.
+    const PHANTOM_FIELDS = new Set(synthesizedEvents.map(name => `on${name}`));
     for (const [tag, declaration] of elements) {
         const members = new Set((declaration.members ?? []).map(member => member.name));
         for (const item of declaration.attributes ?? []) {
