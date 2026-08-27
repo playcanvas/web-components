@@ -11,9 +11,15 @@ import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
  * {@link HTMLElement} interface.
  *
  * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
- * along with the scene-wide fog and gravity settings. Must be a direct child of `<pc-app>`.
+ * along with the scene-wide fog, exposure and gravity settings. Must be a direct child of
+ * `<pc-app>`.
  */
 class SceneElement extends AsyncElement {
+    /**
+     * The exposure of the scene.
+     */
+    private _exposure = 1;
+
     /**
      * The fog type of the scene.
      */
@@ -96,6 +102,8 @@ class SceneElement extends AsyncElement {
 
     private _updateSceneSettings() {
         if (this._scene) {
+            this._scene.exposure = this._exposure;
+
             this._scene.fog.type = this._fog;
             this._scene.fog.color = this._fogColor;
             this._scene.fog.density = this._fogDensity;
@@ -115,6 +123,26 @@ class SceneElement extends AsyncElement {
      */
     private _applyGravity(value: Vec3) {
         this.closestApp?.app?.systems.rigidbody?.gravity.copy(value);
+    }
+
+    /**
+     * Sets the exposure of the scene, which tweaks the overall brightness of the rendered image.
+     * Ignored if the scene is using physical units. Defaults to 1.
+     * @param value - The exposure.
+     */
+    set exposure(value: number) {
+        this._exposure = value;
+        if (this.scene) {
+            this.scene.exposure = value;
+        }
+    }
+
+    /**
+     * Gets the exposure of the scene.
+     * @returns The exposure.
+     */
+    get exposure() {
+        return this._exposure;
     }
 
     /**
@@ -233,11 +261,14 @@ class SceneElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['fog', 'fog-color', 'fog-density', 'fog-start', 'fog-end', 'gravity'];
+        return ['exposure', 'fog', 'fog-color', 'fog-density', 'fog-start', 'fog-end', 'gravity'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
+            case 'exposure':
+                this.exposure = parseNumber(newValue, 1, name);
+                break;
             case 'fog':
                 this.fog = parseEnum(newValue, ['none', 'linear', 'exp', 'exp2'], 'none', name);
                 break;

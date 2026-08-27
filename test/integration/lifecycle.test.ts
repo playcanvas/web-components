@@ -149,7 +149,7 @@ describe('<pc-app> lifecycle', () => {
     it('re-boots a removed pc-app when it is re-added within the same task', async () => {
         const handle = await bootApp(`
             ${MODEL_ASSET_TAG}
-            <pc-scene fog="linear"></pc-scene>
+            <pc-scene fog="linear" exposure="0.5"></pc-scene>
             <pc-entity name="e">
                 <pc-camera></pc-camera>
                 <pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound>
@@ -205,6 +205,7 @@ describe('<pc-app> lifecycle', () => {
         const sceneElement = get<SceneElement>('pc-scene');
         expect(sceneElement.scene).toBe(app!.scene);
         expect(app!.scene.fog.type).toBe('linear');
+        expect(app!.scene.exposure).toBe(0.5);
 
         expect(uncaught.seen).toEqual([]);
     });
