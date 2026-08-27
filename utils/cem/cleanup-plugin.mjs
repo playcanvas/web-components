@@ -10,9 +10,9 @@
  *   is not public API is dropped here.
  * - `src/entity.ts` dispatches internal wiring events with computed names (`` `${type}:connect` ``)
  *   that cannot be resolved statically, so whatever the analyzer makes of them is dropped.
- * - `src/app.ts` dispatches the pointer events *onto* `<pc-entity>` elements rather than onto
- *   itself, so they belong to `EntityElement` (where they are declared with `@fires`), not to
- *   `AppElement`.
+ * - `src/app.ts` dispatches the pointer and click events *onto* `<pc-entity>` elements rather
+ *   than onto itself, so they belong to `EntityElement` (where they are declared with `@fires`),
+ *   not to `AppElement`.
  * - Attributes and events declared on the `AsyncElement` and `ComponentElement` base classes are
  *   copied onto the elements that inherit them, marked with `inheritedFrom`. Without this, an
  *   element like `<pc-audio-listener>` would appear to have no attributes at all, when in fact it
@@ -24,7 +24,7 @@
  */
 
 /** Events dispatched by `AppElement` but targeted at `EntityElement`. */
-const POINTER_EVENTS = new Set(['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup']);
+const SYNTHESIZED_EVENTS = new Set(['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup', 'click']);
 
 const byName = (a, b) => a.name.localeCompare(b.name);
 
@@ -164,10 +164,10 @@ export const manifestCleanupPlugin = () => ({
                 continue;
             }
 
-            // Drop computed event names, and pointer events attributed to the wrong class
+            // Drop computed event names, and synthesized events attributed to the wrong class
             declaration.events = declaration.events.filter(event => event.name &&
                 !/[`$:]/.test(event.name) &&
-                !(declaration.name === 'AppElement' && POINTER_EVENTS.has(event.name)));
+                !(declaration.name === 'AppElement' && SYNTHESIZED_EVENTS.has(event.name)));
 
             // An event may be found both by `@fires` and by its `dispatchEvent` call - prefer the
             // documented one

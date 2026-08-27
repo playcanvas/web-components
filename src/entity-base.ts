@@ -4,17 +4,28 @@ import type { AppElement } from './app';
 import { AsyncElement } from './async-element';
 
 /**
- * The attribute names of the inline `onpointer*` event handlers, shared by every element that
- * fronts an engine entity. Spread into `observedAttributes` by subclasses.
+ * The event types the containing `<pc-app>` synthesizes on entity-fronting elements via picking:
+ * the `pointer*` events, plus `click` — which concludes a primary-button press and release, and
+ * is delivered as a `PointerEvent` exactly as modern browsers deliver native clicks.
  * @internal
  */
-export const POINTER_ATTRIBUTES = [
-    'onpointerenter',
-    'onpointerleave',
-    'onpointerdown',
-    'onpointerup',
-    'onpointermove'
+export const SYNTHESIZED_EVENTS = [
+    'pointerenter',
+    'pointerleave',
+    'pointerdown',
+    'pointerup',
+    'pointermove',
+    'click'
 ] as const;
+
+const SYNTHESIZED_EVENT_SET: ReadonlySet<string> = new Set(SYNTHESIZED_EVENTS);
+
+/**
+ * The attribute names of the inline event handlers (`onpointerdown`, `onclick`, ...), shared by
+ * every element that fronts an engine entity. Spread into `observedAttributes` by subclasses.
+ * @internal
+ */
+export const EVENT_ATTRIBUTES = SYNTHESIZED_EVENTS.map((type) => `on${type}`);
 
 /**
  * The base class for elements that front an engine {@link Entity}: `<pc-entity>` and
@@ -34,12 +45,13 @@ class EntityBaseElement extends AsyncElement {
     protected _appElement: AppElement | null = null;
 
     /**
-     * The pointer event listeners for the entity.
+     * The event listeners registered on the element, by type.
      */
     private _listeners: Record<string, EventListener[]> = {};
 
     /**
-     * The event types for which an inline `onpointer*` attribute is currently present.
+     * The event types for which an inline handler attribute (`onpointerdown`, `onclick`, ...)
+     * is currently present.
      */
     private _inlineHandlerTypes = new Set<string>();
 
@@ -75,7 +87,7 @@ class EntityBaseElement extends AsyncElement {
     }
 
     /**
-     * Tracks whether an inline `onpointer*` attribute is present. The browser itself compiles and
+     * Tracks whether an inline handler attribute is present. The browser itself compiles and
      * runs these attributes — they are standard `GlobalEventHandlers`, so setting one replaces
      * the previous handler and removing it removes the handler, exactly like `onclick` on any
      * HTML element. But because they bypass {@link EventTarget.addEventListener}, the connect/disconnect
@@ -105,7 +117,7 @@ class EntityBaseElement extends AsyncElement {
         }
         this._listeners[type].push(listener);
         super.addEventListener(type, listener, options);
-        if (type.startsWith('pointer')) {
+        if (SYNTHESIZED_EVENT_SET.has(type)) {
             this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
         }
     }
@@ -115,15 +127,15 @@ class EntityBaseElement extends AsyncElement {
             this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
         }
         super.removeEventListener(type, listener, options);
-        if (type.startsWith('pointer')) {
+        if (SYNTHESIZED_EVENT_SET.has(type)) {
             this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
         }
     }
 
     /**
      * Whether the element has a listener for an event type, registered either with
-     * {@link EventTarget.addEventListener} or with the matching inline `onpointer*` attribute. Read by the
-     * containing `<pc-app>` element to gate pointer event synthesis.
+     * {@link EventTarget.addEventListener} or with the matching inline handler attribute. Read by the
+     * containing `<pc-app>` element to gate event synthesis.
      *
      * @param type - The event type.
      * @returns Whether a listener is registered.

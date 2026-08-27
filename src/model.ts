@@ -2,7 +2,7 @@ import type { ContainerResource, Entity, EventHandle } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
 import { useAsset } from './asset';
-import { POINTER_ATTRIBUTES } from './entity-base';
+import { EVENT_ATTRIBUTES } from './entity-base';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
@@ -143,11 +143,17 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * model.
  * @attribute {string} onpointerup - Script to run when a pointer button is released over the
  * model.
+ * @attribute {string} onclick - Script to run when the model is clicked: a primary pointer
+ * button pressed and then released over it.
  * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the model.
  * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the model.
  * @fires {PointerEvent} pointermove - Fired when the pointer moves over the model.
  * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the model.
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the model.
+ * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
+ * over the model. A press and release that picked different entities fires on their nearest
+ * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
+ * arrives as a click whose `detail` is 2.
  * @fires {Event} load - Fired each time a container asset finishes instantiating, including
  * re-instantiation after `asset` changes. Does not bubble — listen on this element, or use a
  * capture-phase listener on an ancestor.
@@ -435,7 +441,7 @@ class ModelElement extends EntityOwnerElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...POINTER_ATTRIBUTES];
+        return ['asset', 'enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...EVENT_ATTRIBUTES];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -466,6 +472,7 @@ class ModelElement extends EntityOwnerElement {
             case 'onpointerdown':
             case 'onpointerup':
             case 'onpointermove':
+            case 'onclick':
                 this._updateInlineHandler(name, newValue);
                 break;
         }

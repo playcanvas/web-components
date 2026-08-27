@@ -2,7 +2,7 @@ import type { Entity, EventHandle, GraphNode, Material, MeshInstance, Quat, Rend
 import { Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './components/component';
-import { EntityBaseElement, POINTER_ATTRIBUTES } from './entity-base';
+import { EntityBaseElement, EVENT_ATTRIBUTES } from './entity-base';
 import { buildDescendantEntities } from './entity-owner';
 import type { EntityOwnerElement } from './entity-owner';
 import { MaterialElement } from './material';
@@ -193,11 +193,17 @@ const levenshtein = (a: string, b: string): number => {
  * node.
  * @attribute {string} onpointerup - Script to run when a pointer button is released over the
  * node.
+ * @attribute {string} onclick - Script to run when the node is clicked: a primary pointer
+ * button pressed and then released over it.
  * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the node.
  * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the node.
  * @fires {PointerEvent} pointermove - Fired when the pointer moves over the node.
  * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the node.
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the node.
+ * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
+ * over the node. A press and release that picked different entities fires on their nearest
+ * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
+ * arrives as a click whose `detail` is 2.
  */
 class NodeElement extends EntityBaseElement {
     private _name = '';
@@ -933,7 +939,7 @@ class NodeElement extends EntityBaseElement {
             'rotation',
             'scale',
             'tags',
-            ...POINTER_ATTRIBUTES
+            ...EVENT_ATTRIBUTES
         ];
     }
 
@@ -982,6 +988,7 @@ class NodeElement extends EntityBaseElement {
             case 'onpointerdown':
             case 'onpointerup':
             case 'onpointermove':
+            case 'onclick':
                 this._updateInlineHandler(name, newValue);
                 break;
         }

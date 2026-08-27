@@ -39,10 +39,11 @@ describe('customElements registration', () => {
         expect(document.createElement(tag)).toBeInstanceOf(EntityBaseElement);
     });
 
-    it.for(ENTITY_TAGS)('%s observes the onpointer* attributes', (tag) => {
+    it.for(ENTITY_TAGS)('%s observes the inline event handler attributes', (tag) => {
         const observed = (customElements.get(tag) as unknown as { observedAttributes?: string[] })?.observedAttributes;
         expect(observed).toContain('onpointerdown');
         expect(observed).toContain('onpointerenter');
+        expect(observed).toContain('onclick');
     });
 
     it.for(COMPONENT_TAGS)('%s inherits the enabled attribute from ComponentElement', (tag) => {

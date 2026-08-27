@@ -394,6 +394,293 @@ describe('pc-app pointer picking', () => {
         expect(spy).toHaveBeenCalledTimes(1);
     });
 
+    it('keeps a shared canvas listener while another event type still needs it', async () => {
+        // enter, leave and move all ride one canvas pointermove listener. Removing the tree's
+        // last pointerenter listener used to detach that shared listener even though a
+        // pointermove listener still needed it - the detach must recount by canvas listener,
+        // not by event type.
+        const { appElement, canvas, element, entity, spies } = await bootTarget();
+        const moveSpy = vi.fn();
+        element.addEventListener('pointermove', moveSpy);
+        element.removeEventListener('pointerenter', spies.pointerenter);
+        stubPicker(appElement, [[hit(entity)]]);
+
+        canvas.dispatchEvent(move(400, 300));
+        await flush();
+
+        expect(moveSpy, 'the move listener still rides the shared canvas listener').toHaveBeenCalledTimes(1);
+    });
+
+    describe('click', () => {
+        /**
+         * Boots a camera plus one target entity with click, pointerdown and pointerup spies -
+         * the three events a press/release sequence can produce.
+         *
+         * @returns The booted handle plus the element, its entity, the canvas and the spies.
+         */
+        const bootClickTarget = async () => {
+            const handle = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `);
+            const element = handle.get<EntityElement>('pc-entity[name="target"]');
+            const spies = { click: vi.fn(), pointerdown: vi.fn(), pointerup: vi.fn() };
+            Object.entries(spies).forEach(([type, spy]) => element.addEventListener(type, spy));
+
+            const canvas = handle.appElement.querySelector('canvas');
+            if (!canvas) throw new Error('bootClickTarget: pc-app created no canvas');
+
+            return { ...handle, element, entity: element.entity!, spies, canvas };
+        };
+
+        const down = (options: PointerEventInit = {}) =>
+            new PointerEvent('pointerdown', { clientX: 400, clientY: 300, ...options });
+        const up = (options: PointerEventInit = {}) =>
+            new PointerEvent('pointerup', { clientX: 400, clientY: 300, ...options });
+
+        it('dispatches click after pointerup when the press and release pick the same entity', async () => {
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            stubPicker(appElement, [[hit(entity)], [hit(entity)]]);
+
+            canvas.dispatchEvent(down());
+            await flush();
+            canvas.dispatchEvent(up());
+            await flush();
+
+            expect(spies.click).toHaveBeenCalledTimes(1);
+            expect(spies.click.mock.invocationCallOrder[0], 'click concludes the release')
+                .toBeGreaterThan(spies.pointerup.mock.invocationCallOrder[0]);
+            const event = spies.click.mock.calls[0][0] as PointerEvent;
+            expect(event.type).toBe('click');
+            expect(event.clientX, 'the release event supplies the click detail').toBe(400);
+        });
+
+        it('synthesizes click for an element whose only listener is click', async () => {
+            // click alone must attach the pointerdown/pointerup canvas listeners it rides on.
+            const { appElement, get } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `);
+            const element = get<EntityElement>('pc-entity[name="target"]');
+            const spy = vi.fn();
+            element.addEventListener('click', spy);
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(element.entity!)], [hit(element.entity!)]]);
+
+            canvas.dispatchEvent(down());
+            await flush();
+            canvas.dispatchEvent(up());
+            await flush();
+
+            expect(spy).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not dispatch click when the press and release pick different entities', async () => {
+            const { appElement, all } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="a"></pc-entity>
+                <pc-entity name="b"></pc-entity>
+            `);
+            const [a, b] = [all<EntityElement>('pc-entity')[1], all<EntityElement>('pc-entity')[2]];
+            const aClick = vi.fn();
+            const bClick = vi.fn();
+            a.addEventListener('click', aClick);
+            b.addEventListener('click', bClick);
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(a.entity!)], [hit(b.entity!)]]);
+
+            canvas.dispatchEvent(down());
+            await flush();
+            canvas.dispatchEvent(up());
+            await flush();
+
+            expect(aClick, 'the press target alone gets no click').not.toHaveBeenCalled();
+            expect(bClick, 'the release target alone gets no click').not.toHaveBeenCalled();
+        });
+
+        it('dispatches click on the nearest common ancestor of the press and release picks', async () => {
+            // The DOM assigns a click whose down and up have different targets to their nearest
+            // common inclusive ancestor - a press on one child released over its sibling clicks
+            // the parent.
+            const { appElement, get } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="parent">
+                    <pc-entity name="a"></pc-entity>
+                    <pc-entity name="b"></pc-entity>
+                </pc-entity>
+            `);
+            const parent = get<EntityElement>('pc-entity[name="parent"]');
+            const a = get<EntityElement>('pc-entity[name="a"]');
+            const b = get<EntityElement>('pc-entity[name="b"]');
+            const spy = vi.fn();
+            parent.addEventListener('click', spy);
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(a.entity!)], [hit(b.entity!)]]);
+
+            canvas.dispatchEvent(down());
+            await flush();
+            canvas.dispatchEvent(up());
+            await flush();
+
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(spy.mock.calls[0][0].target, 'the click targets the ancestor element').toBe(parent);
+        });
+
+        it('does not dispatch click for a non-primary button', async () => {
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            stubPicker(appElement, [[hit(entity)], [hit(entity)]]);
+
+            canvas.dispatchEvent(down({ button: 2 }));
+            await flush();
+            canvas.dispatchEvent(up({ button: 2 }));
+            await flush();
+
+            expect(spies.pointerdown, 'down and up still fire for secondary buttons').toHaveBeenCalledTimes(1);
+            expect(spies.pointerup).toHaveBeenCalledTimes(1);
+            expect(spies.click).not.toHaveBeenCalled();
+        });
+
+        it('does not dispatch click when the browser cancels the press', async () => {
+            // A pointercancel (a touch claimed by scrolling, say) means the release can never
+            // conclude the press.
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            stubPicker(appElement, [[hit(entity)], [hit(entity)]]);
+
+            canvas.dispatchEvent(down());
+            await flush();
+            canvas.dispatchEvent(new PointerEvent('pointercancel'));
+            canvas.dispatchEvent(up());
+            await flush();
+
+            expect(spies.pointerup).toHaveBeenCalledTimes(1);
+            expect(spies.click).not.toHaveBeenCalled();
+        });
+
+        it('concludes a click whose press pick resolves after the release pick', async () => {
+            // Picks resolve in GPU order, not event order: a quick tap can deliver the release
+            // pick first. The click must wait for the press pick rather than dropping the press.
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            const pressPick = deferred<ReturnType<typeof hit>[]>();
+            const releasePick = deferred<ReturnType<typeof hit>[]>();
+            stubPicker(appElement, [pressPick.promise, releasePick.promise]);
+
+            canvas.dispatchEvent(down());
+            canvas.dispatchEvent(up());
+
+            releasePick.resolve([hit(entity)]);
+            await flush();
+            expect(spies.pointerup).toHaveBeenCalledTimes(1);
+            expect(spies.click, 'the press pick is still in flight').not.toHaveBeenCalled();
+
+            pressPick.resolve([hit(entity)]);
+            await flush();
+            expect(spies.click).toHaveBeenCalledTimes(1);
+        });
+
+        it('tracks presses per pointer', async () => {
+            const { appElement, all } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="a"></pc-entity>
+                <pc-entity name="b"></pc-entity>
+            `);
+            const [a, b] = [all<EntityElement>('pc-entity')[1], all<EntityElement>('pc-entity')[2]];
+            const aClick = vi.fn();
+            const bClick = vi.fn();
+            a.addEventListener('click', aClick);
+            b.addEventListener('click', bClick);
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(a.entity!)], [hit(b.entity!)], [hit(b.entity!)], [hit(a.entity!)]]);
+
+            canvas.dispatchEvent(down({ pointerId: 1 }));
+            canvas.dispatchEvent(down({ pointerId: 2 }));
+            canvas.dispatchEvent(up({ pointerId: 2 }));
+            canvas.dispatchEvent(up({ pointerId: 1 }));
+            await flush();
+
+            expect(aClick).toHaveBeenCalledTimes(1);
+            expect(bClick).toHaveBeenCalledTimes(1);
+        });
+
+        it('carries the click count in detail, chained within the double-click window', async () => {
+            // pointerup's own detail is fixed at 0 by the Pointer Events spec, but click is
+            // exempt: its detail is the click count, which consumers read for double-click
+            // detection - and to tell pointer clicks from keyboard activations, whose detail
+            // really is 0.
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            stubPicker(appElement, [
+                [hit(entity)], [hit(entity)],
+                [hit(entity)], [hit(entity)],
+                [hit(entity)], [hit(entity)]
+            ]);
+            const nowSpy = vi.spyOn(performance, 'now');
+
+            const clickAt = async (time: number) => {
+                nowSpy.mockReturnValue(time);
+                canvas.dispatchEvent(down());
+                await flush();
+                canvas.dispatchEvent(up());
+                await flush();
+            };
+
+            await clickAt(1000); // a first click
+            await clickAt(1200); // 200ms later: chains
+            await clickAt(2000); // 800ms later: the window has passed
+
+            const details = spies.click.mock.calls.map((call) => (call[0] as PointerEvent).detail);
+            expect(details).toEqual([1, 2, 1]);
+        });
+
+        it('resets the click count when the target changes', async () => {
+            const { appElement, all } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="a"></pc-entity>
+                <pc-entity name="b"></pc-entity>
+            `);
+            const [a, b] = [all<EntityElement>('pc-entity')[1], all<EntityElement>('pc-entity')[2]];
+            const aClick = vi.fn();
+            const bClick = vi.fn();
+            a.addEventListener('click', aClick);
+            b.addEventListener('click', bClick);
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(a.entity!)], [hit(a.entity!)], [hit(b.entity!)], [hit(b.entity!)]]);
+            const nowSpy = vi.spyOn(performance, 'now');
+
+            const clickAt = async (time: number) => {
+                nowSpy.mockReturnValue(time);
+                canvas.dispatchEvent(down());
+                await flush();
+                canvas.dispatchEvent(up());
+                await flush();
+            };
+
+            await clickAt(1000);
+            await clickAt(1100); // within the window, but a different target
+
+            expect((aClick.mock.calls[0][0] as PointerEvent).detail).toBe(1);
+            expect((bClick.mock.calls[0][0] as PointerEvent).detail, 'a new target starts a new count').toBe(1);
+        });
+
+        it('the inline onclick attribute alone attaches the canvas listeners', async () => {
+            // The browser compiles inline handlers itself, so the attribute must feed the same
+            // lazy canvas attach as addEventListener - jsdom never runs the handler, but the
+            // wiring it triggers is observable.
+            const { appElement, get } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `);
+            const element = get<EntityElement>('pc-entity[name="target"]');
+            const canvas = appElement.querySelector('canvas')!;
+            const attach = vi.spyOn(canvas, 'addEventListener');
+
+            element.setAttribute('onclick', 'void 0');
+
+            const attached = attach.mock.calls.map((call) => call[0]);
+            expect(attached).toContain('pointerdown');
+            expect(attached).toContain('pointerup');
+            expect(attached).toContain('pointercancel');
+        });
+    });
+
     describe('multi-camera', () => {
         /**
          * Boots two cameras and a listening target. jsdom gives the canvas no CSS box, so unless
