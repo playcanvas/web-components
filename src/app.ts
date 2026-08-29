@@ -252,6 +252,18 @@ class AppElement extends AsyncElement {
      */
     private _lastClick: { element: EntityBaseElement; time: number; count: number } | null = null;
 
+    /**
+     * Serializes dispatch of the discrete synthesized events - pointerdown, pointerup and click.
+     * Their picks start eagerly and resolve in GPU order, not canvas-event order, so each canvas
+     * handler appends its dispatch work here and the chain replays it in event order: a slow
+     * press pick must not deliver its pointerdown after the gesture's own pointerup, and two
+     * clicks in flight at once must not conclude in reverse. Hover needs no chain - a stale move
+     * pick is simply discarded via {@link _pickToken}, because dropping is fine for moves but
+     * not for discrete events. Replaced on teardown, so a pick that never resolves (a lost
+     * device) cannot stall the dispatches of a later boot.
+     */
+    private _dispatchChain: Promise<void> = Promise.resolve();
+
     private _app: AppBase | null = null;
 
     private _loadProgress = 0;
@@ -648,10 +660,11 @@ class AppElement extends AsyncElement {
         const { width, height } = this.app!.graphicsDevice;
         this._picker = new Picker(this.app!, width, height);
 
-        // Create bound handlers but don't attach them yet. The handlers pick asynchronously, so
-        // each is wrapped to discard the promise - a listener must not return one, and nothing
-        // awaits the result.
-        const listener = (handler: (event: PointerEvent) => Promise<void>): EventListener => {
+        // Create bound handlers but don't attach them yet. The move handler picks and dispatches
+        // asynchronously, so it is wrapped to discard the promise - a listener must not return
+        // one, and nothing awaits the result. Down and up return nothing: they start their pick
+        // and queue its dispatch on the ordering chain before returning.
+        const listener = (handler: (event: PointerEvent) => void | Promise<void>): EventListener => {
             return (event: Event) => {
                 handler.call(this, event as PointerEvent);
             };
@@ -690,6 +703,11 @@ class AppElement extends AsyncElement {
         this._downPicks.clear();
         this._clickListened = false;
         this._lastClick = null;
+
+        // Steps still queued on the chain guard themselves against this teardown; replacing the
+        // chain is what keeps a pick that never resolves (a lost device) from wedging it, so the
+        // dispatches of a later boot never queue behind the hung step.
+        this._dispatchChain = Promise.resolve();
     }
 
     /**
@@ -912,9 +930,26 @@ class AppElement extends AsyncElement {
         }
     }
 
-    private async _onPointerDown(event: PointerEvent) {
+    /**
+     * Appends a dispatch step to {@link _dispatchChain}. Must be called synchronously from the
+     * canvas event handler: it is the order of appends that carries canvas-event order, so an
+     * append placed after an await would serialize in pick-resolution order - the disorder the
+     * chain exists to prevent. A step that rejects (a failed pick) is reported and released, so
+     * the steps queued behind it still dispatch.
+     *
+     * @param step - The dispatch work to run once every earlier step has finished.
+     */
+    private _chainDispatch(step: () => Promise<void>) {
+        this._dispatchChain = this._dispatchChain.then(step).catch((error) => {
+            console.error(error);
+        });
+    }
+
+    private _onPointerDown(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
+        // The pick starts now, so overlapping gestures still overlap their GPU readbacks - only
+        // the dispatch of the results is serialized.
         const pick = this._pickNode(event);
 
         // A click concludes on the matching pointerup, which needs to know what the press
@@ -925,16 +960,18 @@ class AppElement extends AsyncElement {
             this._downPicks.set(event.pointerId, pick);
         }
 
-        const node = await pick;
-        if (!this._picker) return; // the element disconnected while the pick was in flight
+        this._chainDispatch(async () => {
+            const node = await pick;
+            if (!this._picker) return; // the element disconnected while the pick was in flight
 
-        const entityElement = this._elementWithListener(node, 'pointerdown');
-        if (entityElement) {
-            entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
-        }
+            const entityElement = this._elementWithListener(node, 'pointerdown');
+            if (entityElement) {
+                entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
+            }
+        });
     }
 
-    private async _onPointerUp(event: PointerEvent) {
+    private _onPointerUp(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
         // The press pick this release may conclude as a click. Claimed synchronously, so the
@@ -942,39 +979,50 @@ class AppElement extends AsyncElement {
         const downPick = this._downPicks.get(event.pointerId);
         this._downPicks.delete(event.pointerId);
 
-        const node = await this._pickNode(event);
-        if (!this._picker) return; // the element disconnected while the pick was in flight
+        const pick = this._pickNode(event);
 
-        const entityElement = this._elementWithListener(node, 'pointerup');
-        if (entityElement) {
-            entityElement.dispatchEvent(new PointerEvent('pointerup', event));
-        }
+        this._chainDispatch(async () => {
+            const node = await pick;
+            if (!this._picker) return; // the element disconnected while the pick was in flight
+
+            const entityElement = this._elementWithListener(node, 'pointerup');
+            if (entityElement) {
+                entityElement.dispatchEvent(new PointerEvent('pointerup', event));
+            }
+        });
 
         // A click fires where the DOM fires it: at the nearest common inclusive ancestor of
-        // what the press and the release picked, for the primary button only. The press pick
-        // may still be in flight - a quick tap resolves in pick order, not event order.
+        // what the press and the release picked, for the primary button only. Appended after
+        // the release's own step, so it dispatches after the pointerup that concludes it.
         if (!downPick || event.button !== 0) return;
-        const downNode = await downPick;
-        if (!this._picker) return;
 
-        const clickElement = this._elementWithListener(commonAncestor(downNode, node), 'click');
-        if (clickElement) {
-            const click = new PointerEvent('click', event);
+        this._chainDispatch(async () => {
+            // Both picks have settled: the press's and the release's own steps awaited them
+            // earlier in the chain. A rejected pick was reported by whichever of those steps
+            // awaited it, and here just means no click can conclude.
+            const picked = await Promise.all([downPick, pick]).catch(() => null);
+            if (!picked || !this._picker) return;
 
-            // The init above copied pointerup's `detail`, which the Pointer Events spec fixes
-            // at 0 - but click is exempt: its detail is the click count, chained here as the
-            // platform chains it (same target, within the double-click window). Overridden
-            // with defineProperty because an event instance used as an init dict cannot have
-            // single fields replaced.
-            const time = performance.now();
-            const last = this._lastClick;
-            const count =
-                last && last.element === clickElement && time - last.time <= CLICK_CHAIN_MS ? last.count + 1 : 1;
-            this._lastClick = { element: clickElement, time, count };
-            Object.defineProperty(click, 'detail', { value: count });
+            const [downNode, upNode] = picked;
+            const clickElement = this._elementWithListener(commonAncestor(downNode, upNode), 'click');
+            if (clickElement) {
+                const click = new PointerEvent('click', event);
 
-            clickElement.dispatchEvent(click);
-        }
+                // The init above copied pointerup's `detail`, which the Pointer Events spec fixes
+                // at 0 - but click is exempt: its detail is the click count, chained here as the
+                // platform chains it (same target, within the double-click window). Overridden
+                // with defineProperty because an event instance used as an init dict cannot have
+                // single fields replaced.
+                const time = performance.now();
+                const last = this._lastClick;
+                const count =
+                    last && last.element === clickElement && time - last.time <= CLICK_CHAIN_MS ? last.count + 1 : 1;
+                this._lastClick = { element: clickElement, time, count };
+                Object.defineProperty(click, 'detail', { value: count });
+
+                clickElement.dispatchEvent(click);
+            }
+        });
     }
 
     /**
