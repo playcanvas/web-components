@@ -1,7 +1,7 @@
-import type { JointComponent } from 'playcanvas';
+import type { Entity, JointComponent } from 'playcanvas';
 import { Vec2, Vec3 } from 'playcanvas';
 
-import { getEntity, parseBool, parseEnum, parseNumber, parseVec2, parseVec3 } from '../parse';
+import { findEntityElement, getEntity, parseBool, parseEnum, parseNumber, parseVec2, parseVec3 } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -210,8 +210,8 @@ class JointComponentElement extends ComponentElement {
             breakImpulse: this._breakImpulse,
             enableCollision: this._enableCollision,
             enableLimits: this._enableLimits,
-            entityA: getEntity(this._entityA),
-            entityB: getEntity(this._entityB),
+            entityA: this._resolveEntity('entity-a', this._entityA),
+            entityB: this._resolveEntity('entity-b', this._entityB),
             limits: this._limits,
             linearDamping: this._linearDamping,
             linearEquilibrium: this._linearEquilibrium,
@@ -233,6 +233,38 @@ class JointComponentElement extends ComponentElement {
 
     private _onBreak() {
         this.dispatchEvent(new CustomEvent('break', { bubbles: true, composed: true }));
+    }
+
+    /**
+     * Resolves an `entity-a`/`entity-b` reference, warning when a non-empty one does not name a
+     * live entity - otherwise the joint silently creates no constraint. The message separates the
+     * two causes because their fixes differ: nothing matching is usually a typo, while an element
+     * matching without an entity is usually timing (a `pc-node` whose asset has not loaded).
+     *
+     * An empty reference stays silent: on `entity-b` it is the documented world-space case, and on
+     * either it is the transient state of a reference yet to be assigned.
+     *
+     * @param attribute - The attribute being resolved, for the message.
+     * @param ref - The reference to resolve.
+     * @returns The resolved entity, or `null`.
+     */
+    private _resolveEntity(attribute: string, ref: string): Entity | null {
+        if (!ref) {
+            return null;
+        }
+
+        const entity = getEntity(ref);
+        if (!entity) {
+            const element = findEntityElement(ref);
+            const cause = element
+                ? `<${element.tagName.toLowerCase()}> matches it but is not backing an entity yet`
+                : 'nothing in the document matches it';
+            console.warn(
+                `pc-joint could not resolve ${attribute} '${ref}' - ${cause} - constraint not created. ` +
+                    `Assign ${attribute} again once the entity exists.`
+            );
+        }
+        return entity;
     }
 
     protected initComponent() {
@@ -497,13 +529,14 @@ class JointComponentElement extends ComponentElement {
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` providing
      * the first constrained body. The reference resolves when it is set, so an entity created
-     * later is picked up by setting the attribute again.
+     * later is picked up by setting the attribute again. A non-empty reference that does not
+     * resolve warns, naming which of the two causes it hit.
      * @param value - The first body's entity reference.
      */
     set entityA(value: string) {
         this._entityA = value;
         if (this.component) {
-            this.component.entityA = getEntity(value);
+            this.component.entityA = this._resolveEntity('entity-a', value);
         }
     }
 
@@ -519,13 +552,14 @@ class JointComponentElement extends ComponentElement {
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` providing
      * the second constrained body, or empty to constrain the first body to a fixed point in world
      * space. The reference resolves when it is set, so an entity created later is picked up by
-     * setting the attribute again.
+     * setting the attribute again. A non-empty reference that does not resolve warns; an empty one
+     * is the documented world-space case and stays silent.
      * @param value - The second body's entity reference.
      */
     set entityB(value: string) {
         this._entityB = value;
         if (this.component) {
-            this.component.entityB = getEntity(value);
+            this.component.entityB = this._resolveEntity('entity-b', value);
         }
     }
 
