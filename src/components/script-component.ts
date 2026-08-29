@@ -3,6 +3,7 @@ import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset';
 import {
+    findEntityElement,
     getEntity,
     parseBool,
     parseColor,
@@ -11,7 +12,8 @@ import {
     parseQuat,
     parseVec2,
     parseVec3,
-    parseVec4
+    parseVec4,
+    unresolvedCause
 } from '../parse';
 
 import { ComponentElement } from './component';
@@ -129,7 +131,8 @@ const assetConversion: Conversion = (rest, raw) => {
 
 /**
  * Resolves an `entity:` prefix to the Entity backing a `pc-entity` element. The reference can be a
- * CSS selector, an element id or an entity name.
+ * CSS selector, an element id or an entity name. The failure warning names which of the three
+ * causes ({@link unresolvedCause}) it hit.
  * @param rest - The entity reference.
  * @param raw - The raw value, returned unchanged when the reference does not resolve.
  * @returns The entity, or `raw`.
@@ -139,7 +142,7 @@ const entityConversion: Conversion = (rest, raw) => {
     if (entity) {
         return entity;
     }
-    console.warn(`Unable to resolve '${raw}' in script attributes - no pc-entity found matching '${rest}'.`);
+    console.warn(`Unable to resolve '${raw}' in script attributes - ${unresolvedCause(findEntityElement(rest))}.`);
     return raw;
 };
 

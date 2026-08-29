@@ -25,13 +25,19 @@ const ASSETS = `
     <pc-asset id="m2" type="container" src="${containerSrc('content-root-b')}"></pc-asset>
 `;
 
-/** A script with two declared-state channels: an attributes-JSON number and a per-property string. */
+/**
+ * A script with two declared-state channels - an attributes-JSON number and a per-property
+ * string - plus an untyped target for reference conversions (a per-property string takes its
+ * value verbatim, so `entity:` references arrive through the attributes JSON).
+ */
 class Probe extends Script {
     static scriptName = 'probe';
 
     speed = 1;
 
     label = '';
+
+    target: unknown = null;
 }
 
 /**
@@ -128,5 +134,55 @@ describe('<pc-script>', () => {
         expect(scriptsReady, 'pc-script re-announced').toBe(1);
         expect(scriptReady, 'pc-script-instance did not').toBe(0);
         expect(uncaught.seen).toEqual([]);
+    });
+
+    describe('entity: references', () => {
+        /**
+         * Boots an app with the probe registered and its target carrying an `entity:` reference
+         * through the attributes JSON, plus any extra markup the reference may target. Inserted
+         * at runtime like bootProbe, because the probe must be registered before the script
+         * element creates its instance.
+         *
+         * @param reference - The `entity:`-prefixed target value.
+         * @param extra - Markup for the reference to target.
+         * @returns The booted handle plus the script instance.
+         */
+        const bootReference = async (reference: string, extra = '') => {
+            const handle = await bootApp(extra);
+            handle.app.scripts.add(Probe);
+
+            const host = document.createElement('pc-entity');
+            host.innerHTML = `<pc-script><pc-script-instance name="probe" attributes='{"target": "${reference}"}'></pc-script-instance></pc-script>`;
+            handle.appElement.appendChild(host);
+
+            const scriptElement = host.querySelector<ScriptInstanceElement>('pc-script-instance')!;
+            await readyWithin(scriptElement);
+            return { ...handle, script: scriptElement.script as Probe };
+        };
+
+        it('resolves an entity: reference to the live entity', async () => {
+            const { app, script } = await bootReference(
+                'entity:target-id',
+                '<pc-entity id="target-id" name="target"></pc-entity>'
+            );
+
+            expect(script.target).toBe(app.root.findByName('target'));
+        });
+
+        it('warns and keeps the raw value when nothing matches the reference', async () => {
+            const { script } = await bootReference('entity:#nope');
+
+            warnings.expect("Unable to resolve 'entity:#nope' in script attributes - nothing in the document matches it");
+            expect(script.target).toBe('entity:#nope');
+        });
+
+        it('warns with the wrong-target cause when the match cannot back an entity', async () => {
+            const { script } = await bootReference('entity:#plain', '<div id="plain"></div>');
+
+            warnings.expect(
+                "Unable to resolve 'entity:#plain' in script attributes - <div> matches it but cannot back an entity."
+            );
+            expect(script.target).toBe('entity:#plain');
+        });
     });
 });

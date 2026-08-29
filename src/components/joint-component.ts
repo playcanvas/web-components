@@ -1,7 +1,7 @@
-import type { Entity, JointComponent } from 'playcanvas';
+import type { JointComponent } from 'playcanvas';
 import { Vec2, Vec3 } from 'playcanvas';
 
-import { findEntityElement, getEntity, parseBool, parseEnum, parseNumber, parseVec2, parseVec3 } from '../parse';
+import { parseBool, parseEnum, parseNumber, parseVec2, parseVec3, resolveEntity } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -210,8 +210,8 @@ class JointComponentElement extends ComponentElement {
             breakImpulse: this._breakImpulse,
             enableCollision: this._enableCollision,
             enableLimits: this._enableLimits,
-            entityA: this._resolveEntity('entity-a', this._entityA),
-            entityB: this._resolveEntity('entity-b', this._entityB),
+            entityA: resolveEntity(this._entityA, 'pc-joint', 'entity-a', 'constraint not created'),
+            entityB: resolveEntity(this._entityB, 'pc-joint', 'entity-b', 'constraint not created'),
             limits: this._limits,
             linearDamping: this._linearDamping,
             linearEquilibrium: this._linearEquilibrium,
@@ -233,38 +233,6 @@ class JointComponentElement extends ComponentElement {
 
     private _onBreak() {
         this.dispatchEvent(new CustomEvent('break', { bubbles: true, composed: true }));
-    }
-
-    /**
-     * Resolves an `entity-a`/`entity-b` reference, warning when a non-empty one does not name a
-     * live entity - otherwise the joint silently creates no constraint. The message separates the
-     * two causes because their fixes differ: nothing matching is usually a typo, while an element
-     * matching without an entity is usually timing (a `pc-node` whose asset has not loaded).
-     *
-     * An empty reference stays silent: on `entity-b` it is the documented world-space case, and on
-     * either it is the transient state of a reference yet to be assigned.
-     *
-     * @param attribute - The attribute being resolved, for the message.
-     * @param ref - The reference to resolve.
-     * @returns The resolved entity, or `null`.
-     */
-    private _resolveEntity(attribute: string, ref: string): Entity | null {
-        if (!ref) {
-            return null;
-        }
-
-        const entity = getEntity(ref);
-        if (!entity) {
-            const element = findEntityElement(ref);
-            const cause = element
-                ? `<${element.tagName.toLowerCase()}> matches it but is not backing an entity yet`
-                : 'nothing in the document matches it';
-            console.warn(
-                `pc-joint could not resolve ${attribute} '${ref}' - ${cause} - constraint not created. ` +
-                    `Assign ${attribute} again once the entity exists.`
-            );
-        }
-        return entity;
     }
 
     protected initComponent() {
@@ -536,7 +504,7 @@ class JointComponentElement extends ComponentElement {
     set entityA(value: string) {
         this._entityA = value;
         if (this.component) {
-            this.component.entityA = this._resolveEntity('entity-a', value);
+            this.component.entityA = resolveEntity(value, 'pc-joint', 'entity-a', 'constraint not created');
         }
     }
 
@@ -559,7 +527,7 @@ class JointComponentElement extends ComponentElement {
     set entityB(value: string) {
         this._entityB = value;
         if (this.component) {
-            this.component.entityB = this._resolveEntity('entity-b', value);
+            this.component.entityB = resolveEntity(value, 'pc-joint', 'entity-b', 'constraint not created');
         }
     }
 

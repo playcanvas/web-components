@@ -14,8 +14,8 @@
  *
  * `findEntityElement` and `getEntity` are the exceptions: they resolve a reference against the
  * document rather than parsing a literal, and return `null` instead of falling back to a default.
- * They also do not warn - what an unresolved reference means depends on the element holding it, so
- * reporting it is left to the caller.
+ * They also do not warn - what an unresolved reference means depends on the element holding it -
+ * so elements report through `resolveEntity`, which takes that meaning as parameters.
  */
 
 import type { Entity } from 'playcanvas';
@@ -326,12 +326,27 @@ export const parseVec4 = <T extends Vec4 | null>(
 };
 
 /**
+ * Runs querySelector, absorbing the SyntaxError an unparseable selector throws - references are
+ * arbitrary author text, so a lookup must fail to `null`, never throw.
+ *
+ * @param selector - The selector to query.
+ * @returns The matched element, or `null`.
+ */
+const query = (selector: string): Element | null => {
+    try {
+        return document.querySelector(selector);
+    } catch {
+        return null;
+    }
+};
+
+/**
  * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
  * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare entity name.
  *
- * Separate from {@link getEntity} so a caller reporting a failure can tell the two causes apart:
- * nothing in the document matches the reference, or something matches but is not backing an
- * entity (yet, or ever).
+ * Separate from {@link getEntity} so a caller reporting a failure can tell the causes apart
+ * ({@link unresolvedCause} words them): nothing in the document matches the reference, or
+ * something matches but is not backing an entity (yet, or ever).
  *
  * @param ref - The reference string to resolve.
  * @returns The matched element, or `null`.
@@ -342,18 +357,15 @@ export const findEntityElement = (ref: string): Element | null => {
         return null;
     }
 
-    let element: Element | null = null;
-
     // Try the reference as a CSS selector. An invalid selector (e.g. a bare name containing
-    // spaces) throws, in which case we fall back to id/name lookups below.
-    try {
-        element = document.querySelector(ref);
-    } catch {
-        element = null;
-    }
+    // spaces) falls through to the id/name lookups below.
+    let element = query(ref);
 
     if (!element) {
-        element = document.getElementById(ref) ?? document.querySelector(`pc-entity[name="${ref}"]`);
+        // The name lands inside a quoted CSS string, so its quotes and backslashes are escaped -
+        // a name like `say "hi"` must resolve, not turn the lookup into a SyntaxError.
+        element =
+            document.getElementById(ref) ?? query(`pc-entity[name="${ref.replace(/["\\]/g, '\\$&')}"]`);
     }
 
     return element;
@@ -370,4 +382,61 @@ export const findEntityElement = (ref: string): Element | null => {
  */
 export const getEntity = (ref: string): Entity | null => {
     return (findEntityElement(ref) as { entity?: Entity } | null)?.entity ?? null;
+};
+
+/**
+ * Describes why a non-empty reference did not resolve, for a warning. Three causes, because they
+ * have three different fixes: nothing matches (usually a typo), the matched element is not backing
+ * an entity yet (usually timing - a `pc-node` whose asset has not loaded - so resolving again
+ * later can work), or the matched element can never back one (the reference points at the wrong
+ * element, so only correcting it can). Capability is the `entity` accessor every entity-backing
+ * element inherits from EntityBaseElement.
+ *
+ * @param element - The element the reference matched, or `null` when nothing did.
+ * @returns The cause, phrased to follow `could not resolve ... -`.
+ * @internal
+ */
+export const unresolvedCause = (element: Element | null): string => {
+    if (!element) {
+        return 'nothing in the document matches it';
+    }
+    const tag = `<${element.tagName.toLowerCase()}>`;
+    return 'entity' in element
+        ? `${tag} matches it but is not backing an entity yet`
+        : `${tag} matches it but cannot back an entity`;
+};
+
+/**
+ * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element, warning when
+ * a non-empty reference does not resolve - otherwise the reference fails silently, invisible
+ * except through the behavior it should have driven. The message names which of the three causes
+ * ({@link unresolvedCause}) it hit, and advises reassigning later only when that can work.
+ *
+ * An empty reference stays silent: it is the unset state of an optional attribute, and on some
+ * elements (`pc-joint` `entity-b`, `pc-button` `image`) a documented value of its own.
+ *
+ * @param ref - The reference string to resolve.
+ * @param tag - The resolving element's tag name, for the message.
+ * @param attribute - The attribute being resolved, for the message.
+ * @param consequence - What the unresolved reference means for the element, for the message.
+ * @returns The resolved entity, or `null`.
+ * @internal
+ */
+export const resolveEntity = (ref: string, tag: string, attribute: string, consequence: string): Entity | null => {
+    if (!ref) {
+        return null;
+    }
+
+    const entity = getEntity(ref);
+    if (!entity) {
+        const element = findEntityElement(ref);
+        const advice =
+            element && !('entity' in element)
+                ? `Point ${attribute} at a pc-entity instead.`
+                : `Assign ${attribute} again once the entity exists.`;
+        console.warn(
+            `${tag} could not resolve ${attribute} '${ref}' - ${unresolvedCause(element)} - ${consequence}. ${advice}`
+        );
+    }
+    return entity;
 };
