@@ -1,7 +1,7 @@
 import type { ScrollbarComponent } from 'playcanvas';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from 'playcanvas';
 
-import { getEntity, parseEnum, parseNumber } from '../parse';
+import { parseEnum, parseNumber, resolveEntity } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -45,7 +45,7 @@ class ScrollbarComponentElement extends ComponentElement {
             handleSize: this._handleSize
         };
 
-        const handle = getEntity(this._handle);
+        const handle = resolveEntity(this._handle, 'pc-scrollbar', 'handle', 'reference ignored');
         if (handle) {
             data.handleEntity = handle;
         }
@@ -121,14 +121,16 @@ class ScrollbarComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * scrollbar handle.
+     * scrollbar handle. A non-empty reference that does not resolve warns and is ignored.
      * @param value - The handle entity reference.
      */
     set handle(value: string) {
         this._handle = value;
-        const entity = getEntity(value);
-        if (this.component && entity) {
-            this.component.handleEntity = entity;
+        if (this.component) {
+            const entity = resolveEntity(value, 'pc-scrollbar', 'handle', 'reference ignored');
+            if (entity) {
+                this.component.handleEntity = entity;
+            }
         }
     }
 

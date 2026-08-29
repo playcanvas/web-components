@@ -8,7 +8,7 @@ import {
     Vec2
 } from 'playcanvas';
 
-import { getEntity, parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
+import { parseBool, parseEnum, parseNumber, parseVec2, resolveEntity } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -82,22 +82,32 @@ class ScrollViewComponentElement extends ComponentElement {
             verticalScrollbarVisibility: visibilities.get(this._verticalScrollbarVisibility)
         };
 
-        const viewport = getEntity(this._viewport);
+        const viewport = resolveEntity(this._viewport, 'pc-scroll-view', 'viewport', 'reference ignored');
         if (viewport) {
             data.viewportEntity = viewport;
         }
 
-        const content = getEntity(this._content);
+        const content = resolveEntity(this._content, 'pc-scroll-view', 'content', 'reference ignored');
         if (content) {
             data.contentEntity = content;
         }
 
-        const horizontalScrollbar = getEntity(this._horizontalScrollbar);
+        const horizontalScrollbar = resolveEntity(
+            this._horizontalScrollbar,
+            'pc-scroll-view',
+            'horizontal-scrollbar',
+            'reference ignored'
+        );
         if (horizontalScrollbar) {
             data.horizontalScrollbarEntity = horizontalScrollbar;
         }
 
-        const verticalScrollbar = getEntity(this._verticalScrollbar);
+        const verticalScrollbar = resolveEntity(
+            this._verticalScrollbar,
+            'pc-scroll-view',
+            'vertical-scrollbar',
+            'reference ignored'
+        );
         if (verticalScrollbar) {
             data.verticalScrollbarEntity = verticalScrollbar;
         }
@@ -295,14 +305,17 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * viewport, which clips the content to the scroll view's bounds.
+     * viewport, which clips the content to the scroll view's bounds. A non-empty reference that
+     * does not resolve warns and is ignored.
      * @param value - The viewport entity reference.
      */
     set viewport(value: string) {
         this._viewport = value;
-        const entity = getEntity(value);
-        if (this.component && entity) {
-            this.component.viewportEntity = entity;
+        if (this.component) {
+            const entity = resolveEntity(value, 'pc-scroll-view', 'viewport', 'reference ignored');
+            if (entity) {
+                this.component.viewportEntity = entity;
+            }
         }
     }
 
@@ -316,14 +329,17 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * content, which is moved as the scroll view is scrolled.
+     * content, which is moved as the scroll view is scrolled. A non-empty reference that does not
+     * resolve warns and is ignored.
      * @param value - The content entity reference.
      */
     set content(value: string) {
         this._content = value;
-        const entity = getEntity(value);
-        if (this.component && entity) {
-            this.component.contentEntity = entity;
+        if (this.component) {
+            const entity = resolveEntity(value, 'pc-scroll-view', 'content', 'reference ignored');
+            if (entity) {
+                this.component.contentEntity = entity;
+            }
         }
     }
 
@@ -337,14 +353,17 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` containing
-     * the horizontal `<pc-scrollbar>`.
+     * the horizontal `<pc-scrollbar>`. A non-empty reference that does not resolve warns and is
+     * ignored.
      * @param value - The horizontal scrollbar entity reference.
      */
     set horizontalScrollbar(value: string) {
         this._horizontalScrollbar = value;
-        const entity = getEntity(value);
-        if (this.component && entity) {
-            this.component.horizontalScrollbarEntity = entity;
+        if (this.component) {
+            const entity = resolveEntity(value, 'pc-scroll-view', 'horizontal-scrollbar', 'reference ignored');
+            if (entity) {
+                this.component.horizontalScrollbarEntity = entity;
+            }
         }
     }
 
@@ -358,14 +377,17 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` containing
-     * the vertical `<pc-scrollbar>`.
+     * the vertical `<pc-scrollbar>`. A non-empty reference that does not resolve warns and is
+     * ignored.
      * @param value - The vertical scrollbar entity reference.
      */
     set verticalScrollbar(value: string) {
         this._verticalScrollbar = value;
-        const entity = getEntity(value);
-        if (this.component && entity) {
-            this.component.verticalScrollbarEntity = entity;
+        if (this.component) {
+            const entity = resolveEntity(value, 'pc-scroll-view', 'vertical-scrollbar', 'reference ignored');
+            if (entity) {
+                this.component.verticalScrollbarEntity = entity;
+            }
         }
     }
 

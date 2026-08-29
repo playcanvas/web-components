@@ -2,7 +2,7 @@ import type { ButtonComponent } from 'playcanvas';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Color, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset';
-import { getEntity, parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec4, resolveEntity } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -76,7 +76,9 @@ class ButtonComponentElement extends ComponentElement {
 
         // The image entity defaults to the button's own entity (which carries the image element)
         // when no explicit reference is provided.
-        const imageEntity = this._image ? getEntity(this._image) : this.closestEntity?.entity;
+        const imageEntity = this._image
+            ? resolveEntity(this._image, 'pc-button', 'image', 'reference ignored')
+            : this.closestEntity?.entity;
         if (imageEntity) {
             data.imageEntity = imageEntity;
         }
@@ -130,14 +132,16 @@ class ButtonComponentElement extends ComponentElement {
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` whose image
      * element is used for visual transitions. Defaults to the button's own entity — inside a
      * `<pc-model>`, that is the model's host entity, so supply an explicit reference to target a
-     * UI entity instead.
+     * UI entity instead. A non-empty reference that does not resolve warns and is ignored.
      * @param value - The image entity reference.
      */
     set image(value: string) {
         this._image = value;
-        const entity = getEntity(value);
-        if (this.component && entity) {
-            this.component.imageEntity = entity;
+        if (this.component) {
+            const entity = resolveEntity(value, 'pc-button', 'image', 'reference ignored');
+            if (entity) {
+                this.component.imageEntity = entity;
+            }
         }
     }
 

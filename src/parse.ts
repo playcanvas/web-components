@@ -14,8 +14,8 @@
  *
  * `findEntityElement` and `getEntity` are the exceptions: they resolve a reference against the
  * document rather than parsing a literal, and return `null` instead of falling back to a default.
- * They also do not warn - what an unresolved reference means depends on the element holding it, so
- * reporting it is left to the caller.
+ * They also do not warn - what an unresolved reference means depends on the element holding it -
+ * so elements report through `resolveEntity`, which takes that meaning as parameters.
  */
 
 import type { Entity } from 'playcanvas';
@@ -370,4 +370,40 @@ export const findEntityElement = (ref: string): Element | null => {
  */
 export const getEntity = (ref: string): Entity | null => {
     return (findEntityElement(ref) as { entity?: Entity } | null)?.entity ?? null;
+};
+
+/**
+ * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element, warning when
+ * a non-empty reference does not resolve - otherwise the reference fails silently, invisible
+ * except through the behavior it should have driven. The message separates the two causes because
+ * their fixes differ: nothing matching is usually a typo, while an element matching without an
+ * entity is usually timing (a `pc-node` whose asset has not loaded).
+ *
+ * An empty reference stays silent: it is the unset state of an optional attribute, and on some
+ * elements (`pc-joint` `entity-b`, `pc-button` `image`) a documented value of its own.
+ *
+ * @param ref - The reference string to resolve.
+ * @param tag - The resolving element's tag name, for the message.
+ * @param attribute - The attribute being resolved, for the message.
+ * @param consequence - What the unresolved reference means for the element, for the message.
+ * @returns The resolved entity, or `null`.
+ * @internal
+ */
+export const resolveEntity = (ref: string, tag: string, attribute: string, consequence: string): Entity | null => {
+    if (!ref) {
+        return null;
+    }
+
+    const entity = getEntity(ref);
+    if (!entity) {
+        const element = findEntityElement(ref);
+        const cause = element
+            ? `<${element.tagName.toLowerCase()}> matches it but is not backing an entity yet`
+            : 'nothing in the document matches it';
+        console.warn(
+            `${tag} could not resolve ${attribute} '${ref}' - ${cause} - ${consequence}. ` +
+                `Assign ${attribute} again once the entity exists.`
+        );
+    }
+    return entity;
 };

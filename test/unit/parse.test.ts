@@ -20,7 +20,7 @@ import { useGuard } from '../helpers/guard';
  * sees, and because the interpolated default is rendered by the engine's own toString():
  * Vec2 '[x, y]', Vec3 '[x, y, z]', Vec4 and Quat '[x, y, z, w]', Color '#rrggbb'.
  *
- * getEntity() is the one export that touches the DOM, so it is covered by
+ * getEntity(), findEntityElement() and resolveEntity() touch the DOM, so they are covered by
  * test/integration/get-entity.test.ts rather than here.
  */
 describe('parse', () => {

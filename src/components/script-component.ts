@@ -3,6 +3,7 @@ import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset';
 import {
+    findEntityElement,
     getEntity,
     parseBool,
     parseColor,
@@ -129,7 +130,9 @@ const assetConversion: Conversion = (rest, raw) => {
 
 /**
  * Resolves an `entity:` prefix to the Entity backing a `pc-entity` element. The reference can be a
- * CSS selector, an element id or an entity name.
+ * CSS selector, an element id or an entity name. The failure warning separates the two causes,
+ * because their fixes differ: nothing matching is usually a typo, while an element matching
+ * without an entity is usually timing (a `pc-node` whose asset has not loaded).
  * @param rest - The entity reference.
  * @param raw - The raw value, returned unchanged when the reference does not resolve.
  * @returns The entity, or `raw`.
@@ -139,7 +142,11 @@ const entityConversion: Conversion = (rest, raw) => {
     if (entity) {
         return entity;
     }
-    console.warn(`Unable to resolve '${raw}' in script attributes - no pc-entity found matching '${rest}'.`);
+    const element = findEntityElement(rest);
+    const cause = element
+        ? `<${element.tagName.toLowerCase()}> matches it but is not backing an entity yet`
+        : 'nothing in the document matches it';
+    console.warn(`Unable to resolve '${raw}' in script attributes - ${cause}.`);
     return raw;
 };
 
