@@ -4,8 +4,9 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AppElement } from '../../src/app';
 import type { CameraComponentElement } from '../../src/components/camera-component';
 import type { EntityElement } from '../../src/entity';
-import { bootApp } from '../helpers/app';
+import { bootApp, settle } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
+import { readyWithin } from '../helpers/ready';
 
 /**
  * A stand-in for a node inside a model's instantiated hierarchy. Element resolution matches
@@ -95,7 +96,7 @@ const CONTAINER_SRC = `data:application/json,${encodeURIComponent(JSON.stringify
 }))}`;
 
 describe('pc-app pointer picking', () => {
-    useGuard();
+    const { errors } = useGuard();
 
     /**
      * Boots one pc-entity with pointer listeners attached, which is also what makes pc-app attach
@@ -558,7 +559,7 @@ describe('pc-app pointer picking', () => {
 
         it('concludes a click whose press pick resolves after the release pick', async () => {
             // Picks resolve in GPU order, not event order: a quick tap can deliver the release
-            // pick first. The click must wait for the press pick rather than dropping the press.
+            // pick first. The gesture must still deliver as pointerdown, pointerup, click.
             const { appElement, canvas, entity, spies } = await bootClickTarget();
             const pressPick = deferred<ReturnType<typeof hit>[]>();
             const releasePick = deferred<ReturnType<typeof hit>[]>();
@@ -569,11 +570,108 @@ describe('pc-app pointer picking', () => {
 
             releasePick.resolve([hit(entity)]);
             await flush();
-            expect(spies.pointerup).toHaveBeenCalledTimes(1);
+            expect(spies.pointerup, 'the release dispatch waits for the press dispatch').not.toHaveBeenCalled();
             expect(spies.click, 'the press pick is still in flight').not.toHaveBeenCalled();
 
             pressPick.resolve([hit(entity)]);
             await flush();
+            expect(spies.pointerdown).toHaveBeenCalledTimes(1);
+            expect(spies.pointerup).toHaveBeenCalledTimes(1);
+            expect(spies.click).toHaveBeenCalledTimes(1);
+            expect(spies.pointerdown.mock.invocationCallOrder[0], 'the gesture delivers in event order')
+                .toBeLessThan(spies.pointerup.mock.invocationCallOrder[0]);
+            expect(spies.pointerup.mock.invocationCallOrder[0])
+                .toBeLessThan(spies.click.mock.invocationCallOrder[0]);
+        });
+
+        it('dispatches overlapping clicks in gesture order even when the later picks resolve first', async () => {
+            // Two press/release pairs in flight at once: if the second gesture's picks resolve
+            // first, its click used to dispatch first, applying the clicks in reverse.
+            const { appElement, all } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="a"></pc-entity>
+                <pc-entity name="b"></pc-entity>
+            `);
+            const [a, b] = [all<EntityElement>('pc-entity')[1], all<EntityElement>('pc-entity')[2]];
+            const aClick = vi.fn();
+            const bClick = vi.fn();
+            a.addEventListener('click', aClick);
+            b.addEventListener('click', bClick);
+            const canvas = appElement.querySelector('canvas')!;
+            const picks = Array.from({ length: 4 }, () => deferred<ReturnType<typeof hit>[]>());
+            stubPicker(appElement, picks.map((pick) => pick.promise));
+
+            // Gesture 1 presses and releases on a, gesture 2 on b - all four picks still pending.
+            canvas.dispatchEvent(down());
+            canvas.dispatchEvent(up());
+            canvas.dispatchEvent(down());
+            canvas.dispatchEvent(up());
+
+            // The second gesture's picks resolve first.
+            picks[2].resolve([hit(b.entity!)]);
+            picks[3].resolve([hit(b.entity!)]);
+            await flush();
+            expect(bClick, "the second click waits behind the first gesture's dispatches").not.toHaveBeenCalled();
+
+            picks[0].resolve([hit(a.entity!)]);
+            picks[1].resolve([hit(a.entity!)]);
+            await flush();
+
+            expect(aClick).toHaveBeenCalledTimes(1);
+            expect(bClick).toHaveBeenCalledTimes(1);
+            expect(aClick.mock.invocationCallOrder[0], 'the clicks conclude in gesture order').toBeLessThan(
+                bClick.mock.invocationCallOrder[0]
+            );
+        });
+
+        it('keeps dispatching after a pick that rejects', async () => {
+            // A failed read back is reported and released - it must not sever the chain and
+            // swallow every dispatch queued behind it.
+            const { appElement, canvas, entity, spies } = await bootClickTarget();
+            stubPicker(appElement, [
+                Promise.reject(new Error('read back failed')), // press 1
+                [hit(entity)], // release 1
+                [hit(entity)], // press 2
+                [hit(entity)] // release 2
+            ]);
+
+            canvas.dispatchEvent(down());
+            canvas.dispatchEvent(up());
+            canvas.dispatchEvent(down());
+            canvas.dispatchEvent(up());
+            await flush();
+
+            errors.expect('read back failed');
+            expect(spies.pointerdown, 'the failed press dispatches nothing').toHaveBeenCalledTimes(1);
+            expect(spies.pointerup, 'both releases still dispatch').toHaveBeenCalledTimes(2);
+            expect(spies.click, 'only the second gesture concludes').toHaveBeenCalledTimes(1);
+        });
+
+        it('a pick that never resolves does not stall the dispatches of a later boot', async () => {
+            // A read back can pend forever (a lost device), wedging the chain. Teardown replaces
+            // it, so a re-inserted element dispatches afresh.
+            const { appElement, container, canvas, element, spies } = await bootClickTarget();
+            stubPicker(appElement, [deferred<ReturnType<typeof hit>[]>().promise]); // never resolves
+
+            canvas.dispatchEvent(down()); // wedges the first boot's chain
+
+            appElement.remove();
+            container.appendChild(appElement);
+            await readyWithin(appElement);
+            await settle(container);
+            appElement.app!.autoRender = false;
+
+            // The re-boot created a new canvas and new entities; the listeners carried over
+            const rebootedCanvas = appElement.querySelector('canvas');
+            if (!rebootedCanvas) throw new Error('the re-booted pc-app created no canvas');
+            stubPicker(appElement, [[hit(element.entity!)], [hit(element.entity!)]]);
+
+            rebootedCanvas.dispatchEvent(down());
+            rebootedCanvas.dispatchEvent(up());
+            await flush();
+
+            expect(spies.pointerdown, 'the re-booted chain dispatches immediately').toHaveBeenCalledTimes(1);
+            expect(spies.pointerup).toHaveBeenCalledTimes(1);
             expect(spies.click).toHaveBeenCalledTimes(1);
         });
 
