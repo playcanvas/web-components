@@ -326,18 +326,6 @@ export const parseVec4 = <T extends Vec4 | null>(
 };
 
 /**
- * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
- * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare entity name.
- *
- * Separate from {@link getEntity} so a caller reporting a failure can tell the two causes apart:
- * nothing in the document matches the reference, or something matches but is not backing an
- * entity (yet, or ever).
- *
- * @param ref - The reference string to resolve.
- * @returns The matched element, or `null`.
- * @internal
- */
-/**
  * Runs querySelector, absorbing the SyntaxError an unparseable selector throws - references are
  * arbitrary author text, so a lookup must fail to `null`, never throw.
  *
@@ -352,6 +340,18 @@ const query = (selector: string): Element | null => {
     }
 };
 
+/**
+ * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
+ * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare entity name.
+ *
+ * Separate from {@link getEntity} so a caller reporting a failure can tell the causes apart
+ * ({@link unresolvedCause} words them): nothing in the document matches the reference, or
+ * something matches but is not backing an entity (yet, or ever).
+ *
+ * @param ref - The reference string to resolve.
+ * @returns The matched element, or `null`.
+ * @internal
+ */
 export const findEntityElement = (ref: string): Element | null => {
     if (!ref) {
         return null;
