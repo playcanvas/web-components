@@ -72,6 +72,11 @@ describe('entity references', () => {
             `);
             expect(getEntity('target')).toBe(app.root.findByName('ById'));
         });
+
+        it('resolves a name containing a quote through the escaped fallback selector', async () => {
+            const { app } = await bootApp(`<pc-entity name='say "hi"'></pc-entity>`);
+            expect(getEntity('say "hi"')).toBe(app.root.findByName('say "hi"'));
+        });
     });
 
     describe('resolveEntity', () => {
@@ -96,10 +101,47 @@ describe('entity references', () => {
             );
         });
 
-        it('warns with the timing cause when the match is not backing an entity', async () => {
+        it('warns with the timing cause when the matched element is not backing an entity yet', async () => {
+            await bootApp(markup);
+
+            // A misplaced pc-entity never creates an entity - to the resolver, the same state a
+            // pc-node presents until its container asset loads: entity-capable, but backing
+            // nothing. Placed outside the pc-app so the state holds at the moment of resolution.
+            const pending = document.createElement('pc-entity');
+            pending.id = 'pending';
+            document.body.appendChild(pending);
+            try {
+                warnings.expect('pc-entity must be a descendant of pc-app - entity not created');
+
+                expect(resolveEntity('#pending', 'pc-test', 'target', 'reference ignored')).toBeNull();
+                warnings.expect(
+                    "pc-test could not resolve target '#pending' - <pc-entity> matches it but is not backing " +
+                        'an entity yet - reference ignored. Assign target again once the entity exists.'
+                );
+            } finally {
+                pending.remove();
+            }
+        });
+
+        it('warns with the wrong-target cause and advice when the match cannot back an entity', async () => {
             await bootApp('<div id="plain"></div>');
             expect(resolveEntity('#plain', 'pc-test', 'target', 'reference ignored')).toBeNull();
-            warnings.expect("pc-test could not resolve target '#plain' - <div> matches it but is not backing an entity yet");
+            warnings.expect(
+                "pc-test could not resolve target '#plain' - <div> matches it but cannot back an entity - " +
+                    'reference ignored. Point target at a pc-entity instead.'
+            );
+        });
+
+        it('warns rather than throwing for a reference the fallback selector cannot parse', async () => {
+            await bootApp(markup);
+
+            // A quote is escaped into the name selector; a newline cannot be, and must be
+            // absorbed - the null-and-warn contract holds for arbitrary references
+            expect(resolveEntity('bad"name', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            warnings.expect(`pc-test could not resolve target 'bad"name' - nothing in the document matches it`);
+
+            expect(resolveEntity('bad\nname', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            warnings.expect("pc-test could not resolve target 'bad\nname' - nothing in the document matches it");
         });
     });
 });

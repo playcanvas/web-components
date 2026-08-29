@@ -12,19 +12,24 @@ import { useGuard } from '../../helpers/guard';
 describe('<pc-scroll-view>', () => {
     const { warnings } = useGuard();
 
-    it('resolves the viewport and content references', async () => {
+    it('resolves all four entity references', async () => {
         const { app, get } = await bootApp(`
             <pc-entity name="sv">
-                <pc-scroll-view viewport="viewport-id" content="content-id"></pc-scroll-view>
+                <pc-scroll-view viewport="viewport-id" content="content-id"
+                    horizontal-scrollbar="h-scrollbar-id" vertical-scrollbar="v-scrollbar-id"></pc-scroll-view>
                 <pc-entity id="viewport-id" name="viewport">
                     <pc-entity id="content-id" name="content"></pc-entity>
                 </pc-entity>
+                <pc-entity id="h-scrollbar-id" name="h-scrollbar"></pc-entity>
+                <pc-entity id="v-scrollbar-id" name="v-scrollbar"></pc-entity>
             </pc-entity>
         `);
         const scrollView = get<ScrollViewComponentElement>('pc-scroll-view');
 
         expect(scrollView.component.viewportEntity).toBe(app.root.findByName('viewport'));
         expect(scrollView.component.contentEntity).toBe(app.root.findByName('content'));
+        expect(scrollView.component.horizontalScrollbarEntity).toBe(app.root.findByName('h-scrollbar'));
+        expect(scrollView.component.verticalScrollbarEntity).toBe(app.root.findByName('v-scrollbar'));
     });
 
     it('warns once per unresolved reference, naming each attribute', async () => {

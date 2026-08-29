@@ -224,13 +224,16 @@ describe('<pc-joint>', () => {
             expect(joint.component.entityA).toBeNull();
         });
 
-        it('warns differently when a reference matches an element backing no entity', async () => {
-            // Pointing at the wrong element resolves to something, so it needs its own diagnosis:
-            // the reference is fine and the target is the problem
+        it('warns differently when a reference matches an element that cannot back an entity', async () => {
+            // Pointing at the wrong element resolves to something, so it needs its own diagnosis -
+            // and unlike the timing case, assigning again cannot fix it, so the advice differs too
             const { get } = await bootApp(`<div id="not-an-entity"></div>${scene('entity-a="#not-an-entity"')}`);
             const joint = get<JointComponentElement>('pc-joint');
 
-            warnings.expect('<div> matches it but is not backing an entity yet');
+            warnings.expect(
+                '<div> matches it but cannot back an entity - constraint not created. ' +
+                    'Point entity-a at a pc-entity instead.'
+            );
             expect(joint.component.entityA).toBeNull();
         });
 

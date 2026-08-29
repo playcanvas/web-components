@@ -176,11 +176,11 @@ describe('<pc-script>', () => {
             expect(script.target).toBe('entity:#nope');
         });
 
-        it('warns with the timing cause when the match is not backing an entity', async () => {
+        it('warns with the wrong-target cause when the match cannot back an entity', async () => {
             const { script } = await bootReference('entity:#plain', '<div id="plain"></div>');
 
             warnings.expect(
-                "Unable to resolve 'entity:#plain' in script attributes - <div> matches it but is not backing an entity yet"
+                "Unable to resolve 'entity:#plain' in script attributes - <div> matches it but cannot back an entity."
             );
             expect(script.target).toBe('entity:#plain');
         });
