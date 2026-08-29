@@ -559,9 +559,7 @@ describe('pc-app pointer picking', () => {
 
         it('concludes a click whose press pick resolves after the release pick', async () => {
             // Picks resolve in GPU order, not event order: a quick tap can deliver the release
-            // pick first. The dispatch chain holds the release's dispatch behind the press's, so
-            // the gesture still delivers as pointerdown, pointerup, click - and the click waits
-            // for the press pick rather than dropping the press.
+            // pick first. The gesture must still deliver as pointerdown, pointerup, click.
             const { appElement, canvas, entity, spies } = await bootClickTarget();
             const pressPick = deferred<ReturnType<typeof hit>[]>();
             const releasePick = deferred<ReturnType<typeof hit>[]>();
@@ -587,10 +585,8 @@ describe('pc-app pointer picking', () => {
         });
 
         it('dispatches overlapping clicks in gesture order even when the later picks resolve first', async () => {
-            // Two press/release pairs in flight at once (touch spam, a GPU hitch): if the second
-            // gesture's picks resolve first, its click used to dispatch first - a click-to-select
-            // handler applied the clicks in reverse and ended up selecting the FIRST object
-            // clicked.
+            // Two press/release pairs in flight at once: if the second gesture's picks resolve
+            // first, its click used to dispatch first, applying the clicks in reverse.
             const { appElement, all } = await bootApp(`
                 <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
                 <pc-entity name="a"></pc-entity>
@@ -629,9 +625,8 @@ describe('pc-app pointer picking', () => {
         });
 
         it('keeps dispatching after a pick that rejects', async () => {
-            // A read back can fail outright (a device lost mid-read). The failed step is reported
-            // and released - it must not sever the chain and silently swallow every dispatch
-            // queued behind it.
+            // A failed read back is reported and released - it must not sever the chain and
+            // swallow every dispatch queued behind it.
             const { appElement, canvas, entity, spies } = await bootClickTarget();
             stubPicker(appElement, [
                 Promise.reject(new Error('read back failed')), // press 1
@@ -653,10 +648,8 @@ describe('pc-app pointer picking', () => {
         });
 
         it('a pick that never resolves does not stall the dispatches of a later boot', async () => {
-            // A lost device can leave a read back pending forever, wedging the dispatch chain
-            // behind it. Teardown replaces the chain, so removing and re-inserting the element -
-            // the documented recovery path - dispatches afresh rather than queueing behind the
-            // hung pick.
+            // A read back can pend forever (a lost device), wedging the chain. Teardown replaces
+            // it, so a re-inserted element dispatches afresh.
             const { appElement, container, canvas, element, spies } = await bootClickTarget();
             stubPicker(appElement, [deferred<ReturnType<typeof hit>[]>().promise]); // never resolves
 
@@ -668,8 +661,7 @@ describe('pc-app pointer picking', () => {
             await settle(container);
             appElement.app!.autoRender = false;
 
-            // The re-boot created a new canvas and new entities; the element and its listeners
-            // carried over.
+            // The re-boot created a new canvas and new entities; the listeners carried over
             const rebootedCanvas = appElement.querySelector('canvas');
             if (!rebootedCanvas) throw new Error('the re-booted pc-app created no canvas');
             stubPicker(appElement, [[hit(element.entity!)], [hit(element.entity!)]]);

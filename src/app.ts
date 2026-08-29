@@ -253,14 +253,9 @@ class AppElement extends AsyncElement {
     private _lastClick: { element: EntityBaseElement; time: number; count: number } | null = null;
 
     /**
-     * Serializes dispatch of the discrete synthesized events - pointerdown, pointerup and click.
-     * Their picks start eagerly and resolve in GPU order, not canvas-event order, so each canvas
-     * handler appends its dispatch work here and the chain replays it in event order: a slow
-     * press pick must not deliver its pointerdown after the gesture's own pointerup, and two
-     * clicks in flight at once must not conclude in reverse. Hover needs no chain - a stale move
-     * pick is simply discarded via {@link _pickToken}, because dropping is fine for moves but
-     * not for discrete events. Replaced on teardown, so a pick that never resolves (a lost
-     * device) cannot stall the dispatches of a later boot.
+     * Serializes dispatch of the discrete synthesized events (pointerdown, pointerup, click),
+     * whose picks resolve in GPU order, not canvas-event order. Replaced on teardown, so a pick
+     * that never resolves cannot stall the dispatches of a later boot.
      */
     private _dispatchChain: Promise<void> = Promise.resolve();
 
@@ -660,10 +655,8 @@ class AppElement extends AsyncElement {
         const { width, height } = this.app!.graphicsDevice;
         this._picker = new Picker(this.app!, width, height);
 
-        // Create bound handlers but don't attach them yet. The move handler picks and dispatches
-        // asynchronously, so it is wrapped to discard the promise - a listener must not return
-        // one, and nothing awaits the result. Down and up return nothing: they start their pick
-        // and queue its dispatch on the ordering chain before returning.
+        // Create bound handlers but don't attach them yet. The move handler is async, so it is
+        // wrapped to discard the promise - a listener must not return one.
         const listener = (handler: (event: PointerEvent) => void | Promise<void>): EventListener => {
             return (event: Event) => {
                 handler.call(this, event as PointerEvent);
@@ -704,9 +697,7 @@ class AppElement extends AsyncElement {
         this._clickListened = false;
         this._lastClick = null;
 
-        // Steps still queued on the chain guard themselves against this teardown; replacing the
-        // chain is what keeps a pick that never resolves (a lost device) from wedging it, so the
-        // dispatches of a later boot never queue behind the hung step.
+        // Replace the chain: a pick that never resolves must not stall a later boot's dispatches
         this._dispatchChain = Promise.resolve();
     }
 
@@ -932,10 +923,8 @@ class AppElement extends AsyncElement {
 
     /**
      * Appends a dispatch step to {@link _dispatchChain}. Must be called synchronously from the
-     * canvas event handler: it is the order of appends that carries canvas-event order, so an
-     * append placed after an await would serialize in pick-resolution order - the disorder the
-     * chain exists to prevent. A step that rejects (a failed pick) is reported and released, so
-     * the steps queued behind it still dispatch.
+     * canvas event handler - the order of appends is what carries canvas-event order. A step
+     * that rejects is reported and released, so the steps queued behind it still dispatch.
      *
      * @param step - The dispatch work to run once every earlier step has finished.
      */
@@ -948,8 +937,7 @@ class AppElement extends AsyncElement {
     private _onPointerDown(event: PointerEvent) {
         if (!this._picker || !this.app) return;
 
-        // The pick starts now, so overlapping gestures still overlap their GPU readbacks - only
-        // the dispatch of the results is serialized.
+        // Picks stay concurrent - only the dispatch of the results is serialized
         const pick = this._pickNode(event);
 
         // A click concludes on the matching pointerup, which needs to know what the press
@@ -997,9 +985,8 @@ class AppElement extends AsyncElement {
         if (!downPick || event.button !== 0) return;
 
         this._chainDispatch(async () => {
-            // Both picks have settled: the press's and the release's own steps awaited them
-            // earlier in the chain. A rejected pick was reported by whichever of those steps
-            // awaited it, and here just means no click can conclude.
+            // A rejected pick was already reported by the press or release step that awaited it;
+            // here it just means no click can conclude.
             const picked = await Promise.all([downPick, pick]).catch(() => null);
             if (!picked || !this._picker) return;
 
