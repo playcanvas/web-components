@@ -1,4 +1,4 @@
-import { Quat, Script, Vec2, Vec3 } from 'playcanvas';
+import { Script, Vec2, Vec3 } from 'playcanvas';
 
 /**
  * Lobs a steady barrage of wieners at the user's head. Works in MediaPipe's camera space, as
@@ -11,16 +11,17 @@ import { Quat, Script, Vec2, Vec3 } from 'playcanvas';
  * for both), so a throw leaves the hand brisk but arrives gently - a toss, not a fastball. An
  * invisible physics proxy for the head (see the example markup) bounces them away.
  *
- * Each wiener bends like the real, raw thing: it is a chain of six capsule rigid bodies linked
- * by 6dof joints whose angular springs pull it back straight, and the model is a skinned mesh
- * whose six bones ride the segment bodies one to one. With five flex points along the length,
- * an impact folds the chain around whatever it hit in a smooth curve and the springs wobble it
- * straight again - no scripted deformation, just physics.
+ * Each wiener bends like the real, raw thing: the model's six skin bones each carry a capsule
+ * rigid body, linked by 6dof joints whose angular springs pull the chain back straight. Physics
+ * drives the bones, so the skinned mesh follows with no scripted deformation - with five flex
+ * points along the length, an impact folds the chain around whatever it hit in a smooth curve
+ * and the springs wobble it straight again.
  *
- * The chain itself is markup: `template` names a `<template>` holding one wiener, its segments
- * and joints wired by bare entity names, which resolve within each clone - one template, many
- * wieners. This script clones it per throw, scales the clone to its own random size, launches
- * the bodies once the components report ready, and rides the skin on them.
+ * The whole wiener is markup: `template` names a `<template>` whose root `pc-model` instantiates
+ * the skinned mesh while `pc-node` children decorate its bones with the bodies and joints, wired
+ * by bare names that resolve within each clone - one template, many wieners. This script clones
+ * it per throw, scales the clone to its own random size, and launches the bodies once the
+ * clone's components report ready.
  *
  * Throwing runs while a face is tracked (`face:found`/`face:lost`), which the `?sim` and
  * no-camera fallback modes of the face tracking script also report.
@@ -58,9 +59,9 @@ export class WienerStorm extends Script {
     target = null;
 
     /**
-     * A CSS selector for the `<template>` holding one wiener: a single root `pc-entity` (the
-     * scope its bare-name joint references resolve within) carrying the capsule segments and
-     * flex joints, authored in the model's meters.
+     * A CSS selector for the `<template>` holding one wiener: a single root `pc-model` (the
+     * scope its bare-name joint references resolve within) whose `pc-node` children decorate the
+     * skin bones with capsule bodies and flex joints, authored in the model's meters.
      * @type {string}
      * @attribute
      */
@@ -228,9 +229,6 @@ export class WienerStorm extends Script {
     /** @private */
     _tmpVec2 = new Vec3();
 
-    /** @private */
-    _tmpQuat = new Quat();
-
     initialize() {
         this._destroyPromise = new Promise((resolve) => {
             this._resolveDestroyed = resolve;
@@ -313,20 +311,10 @@ export class WienerStorm extends Script {
             }
         }
 
-        // Ride the skin bones on the physics segments and retire spent wieners
+        // Retire spent wieners - the skin needs no per-frame help, its bones are the bodies
         for (let i = this._live.length - 1; i >= 0; i--) {
             const wiener = this._live[i];
             wiener.age += dt;
-
-            for (let b = 0; b < wiener.bones.length; b++) {
-                const segment = wiener.segments[b];
-                const bone = wiener.bones[b];
-                const rot = segment.getRotation();
-                rot.transformVector(wiener.posOffsets[b], this._tmpVec).add(segment.getPosition());
-                this._tmpQuat.mul2(rot, wiener.rotOffsets[b]);
-                bone.setPosition(this._tmpVec);
-                bone.setRotation(this._tmpQuat);
-            }
 
             if (wiener.age > this.lifetime || wiener.segments[2].getPosition().y < -160) {
                 if (!wiener.hitHead) this.app.fire('wiener:missed');
@@ -397,19 +385,15 @@ export class WienerStorm extends Script {
         const scale = 0.9 + Math.random() * 0.22;
         const k = this.modelScale * scale;
 
-        // One wiener from the template. The root entity holds the whole wiener for lifecycle
-        // and scope - the segment bodies fly in world space regardless of their parent.
+        // One wiener from the template. The root pc-model holds the whole wiener for lifecycle
+        // and scope - the bone bodies fly in world space regardless of their parent.
         const clone = template.content.cloneNode(true);
-        const element = clone.querySelector('pc-entity');
+        const element = clone.querySelector('pc-model');
         if (!element) return;
 
-        // The template is authored in the model's meters: scale every position and capsule to
-        // this wiener's size in scene units before the clone upgrades, and stamp the dynamics
-        // that derive from script attributes.
-        for (const part of element.querySelectorAll('pc-entity')) {
-            const [x, y, z] = part.getAttribute('position').split(/\s+/).map(Number);
-            part.setAttribute('position', `${x * k} ${y * k} ${z * k}`);
-        }
+        // The model's scale carries the bone spread and the joint anchors, but physics ignores
+        // entity scale, so the capsules are sized to this wiener in scene units before the clone
+        // upgrades - along with the dynamics that derive from script attributes.
         for (const collision of element.querySelectorAll('pc-collision')) {
             collision.setAttribute('radius', Number(collision.getAttribute('radius')) * k);
             collision.setAttribute('height', Number(collision.getAttribute('height')) * k);
@@ -427,14 +411,16 @@ export class WienerStorm extends Script {
             'rotation',
             `${Math.random() * 360} ${Math.random() * 360} ${Math.random() * 360}`
         );
+        element.setAttribute('scale', `${k} ${k} ${k}`);
 
         // Pending until the launch commits, so teardown can find a half-initialized clone
         this._pending.add(element);
         this._spawnRoot.appendChild(clone);
 
-        // The entities exist as soon as appendChild returns; the components attach microtasks
-        // later. Raced against destruction, because a removed element's ready() never settles.
-        const parts = [...element.querySelectorAll('pc-collision, pc-rigid-body, pc-joint')];
+        // The model instantiates and its nodes bind behind element readiness; the components
+        // attach microtasks after that. Raced against destruction, because a removed element's
+        // ready() never settles.
+        const parts = [element, ...element.querySelectorAll('pc-collision, pc-rigid-body, pc-joint')];
         await Promise.race([Promise.all(parts.map(part => part.ready())), this._destroyPromise]);
 
         if (this._destroyed || !element.isConnected) {
@@ -446,10 +432,7 @@ export class WienerStorm extends Script {
         try {
             const wiener = {
                 element: element,
-                segments: [...element.querySelectorAll('pc-entity[name^="seg-"]')].map(seg => seg.entity),
-                bones: [],
-                posOffsets: [],
-                rotOffsets: [],
+                segments: [...element.querySelectorAll('pc-node')].map(node => node.entity),
                 age: 0,
                 hitHead: false
             };
@@ -477,24 +460,6 @@ export class WienerStorm extends Script {
                 }
             }
 
-            // The skinned model rides along: each bone copies its segment body every frame,
-            // through the offsets between them captured at this rest pose
-            const containerEntity = element.entity;
-            const model = this.wienerAsset.resource.instantiateRenderEntity();
-            model.setLocalScale(k, k, k);
-            containerEntity.addChild(model);
-
-            for (let b = 0; b < wiener.segments.length; b++) {
-                const segment = wiener.segments[b];
-                const bone = model.findByName(`B${b}`);
-                const invRot = this._tmpQuat.copy(segment.getRotation()).invert();
-                wiener.bones.push(bone);
-                wiener.posOffsets.push(
-                    invRot.transformVector(new Vec3().sub2(bone.getPosition(), segment.getPosition()))
-                );
-                wiener.rotOffsets.push(new Quat().mul2(invRot, bone.getRotation()));
-            }
-
             // Throw the chain as one rigid motion: a shared tumble plus the velocity that
             // tumble adds at each segment's offset from the middle
             const omega = new Vec3(
@@ -502,7 +467,7 @@ export class WienerStorm extends Script {
                 Math.random() * 2 - 1,
                 Math.random() * 2 - 1
             ).normalize().mulScalar(2 + Math.random() * 2.5);
-            const mid = this._tmpVec2.copy(containerEntity.getPosition());
+            const mid = this._tmpVec2.copy(element.entity.getPosition());
             for (const segment of wiener.segments) {
                 const arm = this._tmpVec.sub2(segment.getPosition(), mid);
                 const spin = new Vec3().cross(omega, arm);
