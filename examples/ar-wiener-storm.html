@@ -262,11 +262,64 @@
                 <!-- The wiener cannon -->
                 <pc-entity name="wiener-storm">
                     <pc-script>
-                        <pc-script-instance name="wienerStorm" wiener-asset="asset:wiener" target="entity:head-proxy" rate="2.5"></pc-script-instance>
+                        <pc-script-instance name="wienerStorm" wiener-asset="asset:wiener" target="entity:head-proxy" rate="2.5" template="#wiener-template"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
             </pc-scene>
         </pc-app>
+
+        <!-- One wiener: six capsule bodies linked by five 6dof flex joints whose angular
+             springs pull it back straight - a raw wiener is floppy, not a rag. Authored in
+             the model's meters; the cannon scales each clone to its own size in scene
+             units. The joints reference the segments by bare name, and names resolve
+             against the nearest enclosing entity first - so every clone's joints bind that
+             clone's own segments, which is what lets one template spawn many wieners. The
+             single root pc-entity is what keeps the names self-contained. -->
+        <template id="wiener-template">
+            <pc-entity name="wiener">
+                <pc-entity name="seg-0" position="0 -0.0575 0">
+                    <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
+                </pc-entity>
+                <pc-entity name="seg-1" position="0 -0.0345 0">
+                    <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
+                </pc-entity>
+                <pc-entity name="seg-2" position="0 -0.0115 0">
+                    <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
+                </pc-entity>
+                <pc-entity name="seg-3" position="0 0.0115 0">
+                    <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
+                </pc-entity>
+                <pc-entity name="seg-4" position="0 0.0345 0">
+                    <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
+                </pc-entity>
+                <pc-entity name="seg-5" position="0 0.0575 0">
+                    <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
+                </pc-entity>
+                <!-- Bending swings about each junction's local X and Z, twisting about Y.
+                     Five joints share the total fold, and twist is nearly locked. -->
+                <pc-entity name="flex-0" position="0 -0.046 0">
+                    <pc-joint type="6dof" entity-a="seg-0" entity-b="seg-1" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                </pc-entity>
+                <pc-entity name="flex-1" position="0 -0.023 0">
+                    <pc-joint type="6dof" entity-a="seg-1" entity-b="seg-2" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                </pc-entity>
+                <pc-entity name="flex-2" position="0 0 0">
+                    <pc-joint type="6dof" entity-a="seg-2" entity-b="seg-3" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                </pc-entity>
+                <pc-entity name="flex-3" position="0 0.023 0">
+                    <pc-joint type="6dof" entity-a="seg-3" entity-b="seg-4" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                </pc-entity>
+                <pc-entity name="flex-4" position="0 0.046 0">
+                    <pc-joint type="6dof" entity-a="seg-4" entity-b="seg-5" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                </pc-entity>
+            </pc-entity>
+        </template>
 
         <script>
             // In ?sim mode the synthetic head pose replaces the webcam entirely - remove
