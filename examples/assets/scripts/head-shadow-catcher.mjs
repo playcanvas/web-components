@@ -134,7 +134,8 @@ export class HeadShadowCatcher extends Script {
             light.layers = light.layers.concat(layer.id);
         }
 
-        const material = this.debug ? this._createDebugMaterial() : this._createCatcherMaterial();
+        const material = this.debug ?
+            this._createDebugMaterial() : this._createCatcherMaterial(lights.length > 0);
         this._material = material;
         this._layer = layer;
 
@@ -187,10 +188,13 @@ export class HeadShadowCatcher extends Script {
      * turns it into premultiplied black with the shadow in alpha. With premultiplied blending
      * the canvas gains alpha (and no color) where the shadow falls, darkening the video behind
      * it. Everywhere the shadow does not fall the alpha stays 0 and the catcher is invisible.
+     * @param {boolean} hasLight - Whether a shadow-casting directional light joined the catcher
+     * layer. Without one the shader has no light uniforms to gate by (and nothing accumulates
+     * a shadow), so the light-dependent part of the override is dropped to keep it compiling.
      * @returns {StandardMaterial} The material.
      * @private
      */
-    _createCatcherMaterial() {
+    _createCatcherMaterial(hasLight) {
         const material = new StandardMaterial();
         material.shadowCatcher = true;
         material.blendType = BLEND_PREMULTIPLIED;
@@ -208,12 +212,16 @@ export class HeadShadowCatcher extends Script {
         // side of the head. The gate assumes the catcher's light is in slot 0, which holds
         // here because only shadow-casting directional lights join the catcher layer.
         material.shaderChunksVersion = CHUNKS_VERSION;
+        const facingGlsl = hasLight ?
+            'clamp(dot(litArgs_worldNormal, -light0_direction), 0.0, 1.0)' : '1.0';
+        const facingWgsl = hasLight ?
+            'clamp(dot(litArgs_worldNormal, -uniform.light0_direction), 0.0, 1.0)' : '1.0';
         material.getShaderChunks(SHADERLANGUAGE_GLSL).set('outlineOutputPS', `
-            float catcherFacing = clamp(dot(litArgs_worldNormal, -light0_direction), 0.0, 1.0);
+            float catcherFacing = ${facingGlsl};
             gl_FragColor = vec4(0.0, 0.0, 0.0, (1.0 - dShadowCatcher) * litArgs_opacity * catcherFacing);
         `);
         material.getShaderChunks(SHADERLANGUAGE_WGSL).set('outlineOutputPS', `
-            let catcherFacing = clamp(dot(litArgs_worldNormal, -uniform.light0_direction), 0.0, 1.0);
+            let catcherFacing = ${facingWgsl};
             output.color = vec4f(0.0, 0.0, 0.0, (1.0 - dShadowCatcher) * litArgs_opacity * catcherFacing);
         `);
 

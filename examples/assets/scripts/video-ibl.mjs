@@ -51,8 +51,8 @@ export class VideoIbl extends Script {
     mirror = true;
 
     /**
-     * The rotation of the panorama in degrees, for nudging where the observed band sits if
-     * directional reflections matter.
+     * The rotation of the panorama in degrees, for nudging the observed band away from the
+     * camera's view direction if directional reflections matter.
      * @type {number}
      * @attribute
      */
@@ -141,11 +141,13 @@ export class VideoIbl extends Script {
             this._canvas.width = width;
             this._canvas.height = height;
             this._ctx = this._canvas.getContext('2d', { willReadFrequently: false });
+            // Mipmaps matter: with them the cubemap projection samples each texel once,
+            // without them it falls back to 1024 samples per texel
             this._texture = new Texture(this.app.graphicsDevice, {
                 name: 'video-ibl-equirect',
                 width: width,
                 height: height,
-                mipmaps: false
+                mipmaps: true
             });
         }
 
@@ -158,12 +160,18 @@ export class VideoIbl extends Script {
 
         // The whole sphere gets the stretched frame - the low-frequency average from every
         // direction - and the band the camera actually observes gets the frame at its true
-        // extent, roughly placed, so bright regions pull reflections the right way
+        // extent, so bright regions pull reflections from the right way. The camera looks
+        // down -Z, which the engine's equirect mapping puts at the panorama seam (u = 0),
+        // so the band is drawn wrapping across both edges.
         ctx.drawImage(this._source, 0, 0, width, height);
         const bandW = Math.round(width * BAND_WIDTH);
         const bandH = Math.round(height * BAND_HEIGHT);
-        const bandX = Math.round(width * (0.5 + this.rotation / 360) - bandW / 2);
-        ctx.drawImage(this._source, bandX, Math.round((height - bandH) / 2), bandW, bandH);
+        const bandY = Math.round((height - bandH) / 2);
+        const seam = ((this.rotation / 360) % 1 + 1) % 1;
+        const bandX = Math.round(seam * width - bandW / 2);
+        ctx.drawImage(this._source, bandX - width, bandY, bandW, bandH);
+        ctx.drawImage(this._source, bandX, bandY, bandW, bandH);
+        ctx.drawImage(this._source, bandX + width, bandY, bandW, bandH);
         ctx.restore();
 
         this._texture.setSource(this._canvas);
@@ -171,7 +179,15 @@ export class VideoIbl extends Script {
             target: this._lightingSource,
             size: 64
         });
-        this._atlas = EnvLighting.generateAtlas(this._lightingSource, { target: this._atlas });
+        // A small atlas with modest sample counts: the source is tiny and low-frequency,
+        // and the engine's 512px/1024-sample defaults would burn tens of milliseconds of
+        // GPU time per rebuild for detail that does not exist
+        this._atlas = EnvLighting.generateAtlas(this._lightingSource, {
+            target: this._atlas,
+            size: 128,
+            numReflectionSamples: 64,
+            numAmbientSamples: 256
+        });
 
         if (!this._active) {
             this._active = true;
