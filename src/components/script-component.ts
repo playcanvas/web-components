@@ -109,10 +109,11 @@ const camelToKebab = (name: string): string => {
 
 /**
  * A conversion applied to a script attribute value carrying an explicit type prefix. Receives the
- * text after the prefix plus the raw value, and returns the raw value (having warned) when it
- * cannot resolve or parse it — callers rely on that identity to tell failure from success.
+ * text after the prefix, the raw value, and the element the value is declared under — which
+ * scopes entity references — and returns the raw value (having warned) when it cannot resolve or
+ * parse it — callers rely on that identity to tell failure from success.
  */
-type Conversion = (rest: string, raw: string) => any;
+type Conversion = (rest: string, raw: string, from: Element) => any;
 
 /**
  * Resolves an `asset:` prefix to the Asset created by the `pc-asset` element with that id.
@@ -131,18 +132,22 @@ const assetConversion: Conversion = (rest, raw) => {
 
 /**
  * Resolves an `entity:` prefix to the Entity backing a `pc-entity` element. The reference can be a
- * CSS selector, an element id or an entity name. The failure warning names which of the three
- * causes ({@link unresolvedCause}) it hit.
+ * CSS selector, an element id or an entity name — an exact entity name resolves against the
+ * nearest enclosing entity first, then outward, then the document. The failure warning names
+ * which of the three causes ({@link unresolvedCause}) it hit.
  * @param rest - The entity reference.
  * @param raw - The raw value, returned unchanged when the reference does not resolve.
+ * @param from - The element the value is declared under, which scopes the reference.
  * @returns The entity, or `raw`.
  */
-const entityConversion: Conversion = (rest, raw) => {
-    const entity = getEntity(rest);
+const entityConversion: Conversion = (rest, raw, from) => {
+    const entity = getEntity(rest, from);
     if (entity) {
         return entity;
     }
-    console.warn(`Unable to resolve '${raw}' in script attributes - ${unresolvedCause(findEntityElement(rest))}.`);
+    console.warn(
+        `Unable to resolve '${raw}' in script attributes - ${unresolvedCause(findEntityElement(rest, from))}.`
+    );
     return raw;
 };
 
@@ -302,7 +307,8 @@ class ScriptComponentElement extends ComponentElement {
      * Recursively converts raw attribute data into proper PlayCanvas types. Supported conversions:
      * - "asset:id" → the Asset created by the `pc-asset` element with that id
      * - "entity:ref" → the Entity backing a `pc-entity` element. The reference can be a CSS
-     *   selector, an element id or an entity name.
+     *   selector, an element id or an entity name; an exact entity name resolves against this
+     *   element's nearest enclosing entity first, then outward, then the document.
      * - "vec2:1 2" → new Vec2(1, 2)
      * - "vec3:1 2 3" → new Vec3(1, 2, 3)
      * - "vec4:1 2 3 4" → new Vec4(1, 2, 3, 4)
@@ -316,7 +322,7 @@ class ScriptComponentElement extends ComponentElement {
     private convertAttributes(item: any): any {
         if (typeof item === 'string') {
             const match = matchConversion(item);
-            return match ? match.convert(match.rest, item) : item;
+            return match ? match.convert(match.rest, item, this) : item;
         }
 
         if (Array.isArray(item)) {

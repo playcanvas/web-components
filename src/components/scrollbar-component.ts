@@ -45,7 +45,7 @@ class ScrollbarComponentElement extends ComponentElement {
             handleSize: this._handleSize
         };
 
-        const handle = resolveEntity(this._handle, 'pc-scrollbar', 'handle', 'reference ignored');
+        const handle = resolveEntity(this._handle, this, 'handle', 'reference ignored');
         if (handle) {
             data.handleEntity = handle;
         }
@@ -121,13 +121,15 @@ class ScrollbarComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * scrollbar handle. A non-empty reference that does not resolve warns and is ignored.
+     * scrollbar handle. An exact entity name resolves against the nearest enclosing entity first,
+     * then outward, then the document. A non-empty reference that does not resolve warns and is
+     * ignored.
      * @param value - The handle entity reference.
      */
     set handle(value: string) {
         this._handle = value;
         if (this.component) {
-            const entity = resolveEntity(value, 'pc-scrollbar', 'handle', 'reference ignored');
+            const entity = resolveEntity(value, this, 'handle', 'reference ignored');
             if (entity) {
                 this.component.handleEntity = entity;
             }

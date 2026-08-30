@@ -25,7 +25,10 @@ export type MotionMode = 'locked' | 'limited' | 'free';
  * primary axis: a hinge rotates about it, a slider translates along it and a ball joint twists
  * about it. The constrained bodies are referenced by `entity-a` and `entity-b`, both of which need
  * a rigid body component; leaving `entity-b` empty constrains `entity-a` to a fixed point in world
- * space. The underlying engine component is in alpha, so its API may change.
+ * space. An exact entity-name reference resolves against the nearest enclosing entity first, then
+ * outward through the entity hierarchy, then the document — so a `<template>` prefab with one root
+ * `<pc-entity>` can wire its joints by name and stay self-contained when cloned. The underlying
+ * engine component is in alpha, so its API may change.
  *
  * @elementSummary The `<pc-joint>` element constrains two rigid bodies to each other — a hinged
  * door, a swinging chain, a sliding drawer. Its entity's transform is the joint frame, and
@@ -210,8 +213,8 @@ class JointComponentElement extends ComponentElement {
             breakImpulse: this._breakImpulse,
             enableCollision: this._enableCollision,
             enableLimits: this._enableLimits,
-            entityA: resolveEntity(this._entityA, 'pc-joint', 'entity-a', 'constraint not created'),
-            entityB: resolveEntity(this._entityB, 'pc-joint', 'entity-b', 'constraint not created'),
+            entityA: resolveEntity(this._entityA, this, 'entity-a', 'constraint not created'),
+            entityB: resolveEntity(this._entityB, this, 'entity-b', 'constraint not created'),
             limits: this._limits,
             linearDamping: this._linearDamping,
             linearEquilibrium: this._linearEquilibrium,
@@ -496,15 +499,16 @@ class JointComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` providing
-     * the first constrained body. The reference resolves when it is set, so an entity created
-     * later is picked up by setting the attribute again. A non-empty reference that does not
-     * resolve warns, naming which of the two causes it hit.
+     * the first constrained body. An exact entity name resolves against the nearest enclosing
+     * entity first, then outward, then the document. The reference resolves when it is set, so an
+     * entity created later is picked up by setting the attribute again. A non-empty reference
+     * that does not resolve warns, naming which of the two causes it hit.
      * @param value - The first body's entity reference.
      */
     set entityA(value: string) {
         this._entityA = value;
         if (this.component) {
-            this.component.entityA = resolveEntity(value, 'pc-joint', 'entity-a', 'constraint not created');
+            this.component.entityA = resolveEntity(value, this, 'entity-a', 'constraint not created');
         }
     }
 
@@ -519,15 +523,16 @@ class JointComponentElement extends ComponentElement {
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` providing
      * the second constrained body, or empty to constrain the first body to a fixed point in world
-     * space. The reference resolves when it is set, so an entity created later is picked up by
-     * setting the attribute again. A non-empty reference that does not resolve warns; an empty one
-     * is the documented world-space case and stays silent.
+     * space. An exact entity name resolves against the nearest enclosing entity first, then
+     * outward, then the document. The reference resolves when it is set, so an entity created
+     * later is picked up by setting the attribute again. A non-empty reference that does not
+     * resolve warns; an empty one is the documented world-space case and stays silent.
      * @param value - The second body's entity reference.
      */
     set entityB(value: string) {
         this._entityB = value;
         if (this.component) {
-            this.component.entityB = resolveEntity(value, 'pc-joint', 'entity-b', 'constraint not created');
+            this.component.entityB = resolveEntity(value, this, 'entity-b', 'constraint not created');
         }
     }
 
