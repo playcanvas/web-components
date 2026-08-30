@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - AR Wiener Storm</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@mediapipe/tasks-vision": "../node_modules/@mediapipe/tasks-vision/vision_bundle.mjs",
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            :root {
+                --font: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+                --hud-bg: rgba(26, 13, 4, 0.55);
+                --hud-border: rgba(245, 179, 1, 0.28);
+                --hud-ink: #fff6e6;
+                --mustard: #f5b301;
+                --ketchup: #d92b2b;
+            }
+
+            /* Status banner */
+            #status {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 18px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 999px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 14px;
+                letter-spacing: 0.02em;
+                white-space: nowrap;
+                transition: opacity 0.35s ease, transform 0.35s ease;
+            }
+            #status.hidden {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-8px);
+            }
+            .status-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: var(--mustard);
+                animation: pulse 1.2s ease-in-out infinite;
+            }
+            #status.error .status-dot {
+                background: var(--ketchup);
+                animation: none;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+
+            /* Dignity meter */
+            #dignity {
+                position: fixed;
+                bottom: max(26px, env(safe-area-inset-bottom));
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 5px;
+                padding: 12px 20px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 16px;
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                opacity: 0;
+                transition: opacity 0.35s ease;
+                pointer-events: none;
+            }
+            #dignity.active {
+                opacity: 1;
+            }
+            #dignity .dignity-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            #dignity .label {
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.18em;
+                color: var(--mustard);
+            }
+            #dignity.gone .label {
+                color: var(--ketchup);
+            }
+            #dignity .meter {
+                width: 170px;
+                height: 10px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.12);
+                overflow: hidden;
+            }
+            #dignity-fill {
+                height: 100%;
+                width: 100%;
+                border-radius: inherit;
+                /* pinned to the track so the revealed end reddens as dignity drains */
+                background: linear-gradient(90deg, var(--ketchup), #e88a1d 45%, var(--mustard) 75%, #ffd75e);
+                background-size: 170px 100%;
+                background-repeat: no-repeat;
+                transition: width 0.25s ease;
+            }
+            #dignity .value {
+                min-width: 3.4em;
+                font-size: 15px;
+                font-weight: 700;
+                text-align: right;
+                font-variant-numeric: tabular-nums;
+            }
+            #dignity.gone .value {
+                color: var(--ketchup);
+            }
+            #dignity .endured {
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.16em;
+                color: rgba(255, 246, 230, 0.55);
+            }
+            #dignity.bump {
+                animation: hit-pop 0.35s ease;
+            }
+            @keyframes hit-pop {
+                30% {
+                    transform: translateX(-50%) scale(1.1);
+                    border-color: var(--ketchup);
+                    box-shadow: 0 0 24px rgba(217, 43, 43, 0.5);
+                }
+            }
+
+            /* The announcer */
+            #quip {
+                position: fixed;
+                bottom: calc(max(26px, env(safe-area-inset-bottom)) + 84px);
+                left: 50%;
+                transform: translate(-50%, 10px);
+                z-index: 10;
+                max-width: min(80vw, 30rem);
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 15px;
+                font-style: italic;
+                text-align: center;
+                text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
+                opacity: 0;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+                pointer-events: none;
+            }
+            #quip.show {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                #dignity.bump {
+                    animation: none;
+                }
+                #quip {
+                    transition: opacity 0.3s ease;
+                    transform: translate(-50%, 0);
+                }
+            }
+
+            /* Badge shown when running the synthetic ?sim preview */
+            #sim-badge {
+                position: fixed;
+                top: max(18px, env(safe-area-inset-top));
+                left: 18px;
+                z-index: 10;
+                display: none;
+                padding: 6px 12px;
+                background: var(--hud-bg);
+                border: 1px solid var(--hud-border);
+                border-radius: 8px;
+                color: var(--hud-ink);
+                font-family: var(--font);
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.14em;
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Wasm Modules -->
+            <pc-wasm name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-wasm>
+            <!-- Assets -->
+            <pc-asset src="assets/scripts/camera-feed.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/tracked-head.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/video-ibl.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/head-shadow-catcher.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/wiener-storm.mjs"></pc-asset>
+            <pc-asset src="assets/models/wiener.glb" id="wiener"></pc-asset>
+            <pc-asset src="assets/models/canonical-head.glb" id="head"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="sky"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky (lighting only), kept low so it never drowns the key light -->
+                <pc-sky asset="sky" type="none" lighting intensity="0.45"></pc-sky>
+                <!-- Camera, pinned at the origin of MediaPipe's camera space: the tracked
+                     head moves instead, so wieners in flight can be dodged -->
+                <pc-entity name="camera">
+                    <pc-camera clear-color="0 0 0 0" fov="63" tonemap="aces"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="cameraFeed"></pc-script-instance>
+                        <pc-script-instance name="trackedHead" head="entity:head-root"></pc-script-instance>
+                        <!-- Once the camera is live, the room lights the wieners -->
+                        <pc-script-instance name="videoIbl" intensity="0.5"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Warm key (casts the shadows) and cool fill. Lights emit along their
+                     entity's -Y, so the angles were read back from lookAt + rotateLocal(90,0,0) -->
+                <pc-entity name="key-light" rotation="47 -39 0">
+                    <pc-light type="directional" color="#fff2e0" intensity="1.3" cast-shadows shadow-distance="250" shadow-resolution="2048" shadow-intensity="1" shadow-bias="0.15" normal-offset-bias="0.3"></pc-light>
+                </pc-entity>
+                <pc-entity name="fill-light" rotation="128 38 0">
+                    <pc-light type="directional" color="#bcccdd" intensity="0.3"></pc-light>
+                </pc-entity>
+                <!-- The invisible head, driven by trackedHead: a kinematic capsule the
+                     wieners bounce off, wearing a shadow catcher built from the canonical
+                     face mesh so shadows bend around the features. Check the fit with ?debug -->
+                <pc-entity name="head-root" position="0 0 -45">
+                    <!-- Nudged forward to counter the nose bridge anchor's drift on head turns -->
+                    <pc-entity name="head-proxy" position="0 0 2.5">
+                        <!-- The capsule reaches both the nose and the crown, so hits land
+                             right at the visible surface -->
+                        <pc-collision type="capsule" radius="9" height="27" linear-offset="0 0.5 -1.5"></pc-collision>
+                        <pc-rigid-body type="kinematic" restitution="0.55" friction="0.5"></pc-rigid-body>
+                        <pc-script>
+                            <pc-script-instance name="headShadowCatcher" ellipsoid="false" strength="0.6"></pc-script-instance>
+                        </pc-script>
+                        <!-- Becomes the catcher surface. A child, because entity: references
+                             resolve bare names against pc-entity elements only -->
+                        <pc-model asset="head"></pc-model>
+                    </pc-entity>
+                </pc-entity>
+                <!-- The wiener cannon -->
+                <pc-entity name="wiener-storm">
+                    <pc-script>
+                        <pc-script-instance name="wienerStorm" wiener-asset="asset:wiener" target="entity:head-proxy" rate="2.5"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+
+        <script>
+            // In ?sim mode the synthetic head pose replaces the webcam entirely - remove
+            // the camera feed script before the app boots (this classic script runs at
+            // parse time, ahead of the deferred module scripts) so no camera permission
+            // is ever requested
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('sim')) {
+                document.querySelector('pc-script-instance[name="cameraFeed"]')?.remove();
+            }
+            // ?debug renders the normally invisible head shadow catcher as a plain lit
+            // surface to check its fit (and the shadows landing on it) against the face
+            if (params.has('debug')) {
+                document.querySelector('pc-script-instance[name="headShadowCatcher"]')?.setAttribute('debug', 'true');
+            }
+        </script>
+
+        <!-- HUD -->
+        <div id="status"><span class="status-dot"></span><span id="status-text">Loading face tracker…</span></div>
+        <div id="quip"></div>
+        <div id="dignity">
+            <div class="dignity-row">
+                <span class="label">DIGNITY</span>
+                <div class="meter"><div id="dignity-fill"></div></div>
+                <span class="value" id="dignity-value">100%</span>
+            </div>
+            <div class="endured">WIENERS ENDURED: <span id="endured-count">0</span></div>
+        </div>
+        <div id="sim-badge">SIM</div>
+
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const { app } = await whenReady('pc-app');
+
+            const sim = new URLSearchParams(window.location.search).has('sim');
+            if (sim) document.getElementById('sim-badge').style.display = 'block';
+
+            // Status banner
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('status-text');
+            const setStatus = (text, cls = '') => {
+                statusText.textContent = text;
+                status.className = cls;
+            };
+
+            let cameraError = false;
+
+            app.on('camera:error', () => {
+                if (sim) return;
+                cameraError = true;
+                setStatus('Camera unavailable — previewing without tracking', 'error');
+            });
+
+            app.on('face:ready', () => {
+                if (!cameraError) setStatus('Show your face');
+            });
+
+            // The HUD only matters while there is a face to pelt
+            const dignityPill = document.getElementById('dignity');
+
+            app.on('face:found', () => {
+                dignityPill.classList.add('active');
+                if (!cameraError) status.classList.add('hidden');
+            });
+
+            app.on('face:lost', () => {
+                dignityPill.classList.remove('active');
+                say('The wieners miss you.', 1);
+                if (!cameraError) setStatus('Show your face');
+            });
+
+            // The announcer: one deadpan line at a time, important lines win
+            const quip = document.getElementById('quip');
+            let quipUntil = 0;
+            let quipPriority = 0;
+            let quipTimer = null;
+
+            function say(text, priority = 0) {
+                const now = performance.now();
+                if (now < quipUntil && priority <= quipPriority) return;
+                quipUntil = now + 2600;
+                quipPriority = priority;
+                quip.textContent = text;
+                quip.classList.add('show');
+                clearTimeout(quipTimer);
+                quipTimer = setTimeout(() => {
+                    quip.classList.remove('show');
+                    quipPriority = 0;
+                }, 2200);
+            }
+
+            const pick = lines => lines[Math.floor(Math.random() * lines.length)];
+
+            const HIT_QUIPS = [
+                'Right in the kisser.',
+                'That one had mustard on it.',
+                'The wurst is yet to come.',
+                'A direct hit. Nature is beautiful.',
+                'That’s a lot of wiener.',
+                'Frankly, uncalled for.',
+                'You took that surprisingly well.'
+            ];
+            const HARD_HIT_QUIPS = [
+                'OOF. Right in the dignity.',
+                'That one left a mark.',
+                'A meaty blow.'
+            ];
+            const GONE_QUIPS = [
+                'Dignity: gone. The wieners won.',
+                'Nothing left but shame and mustard.'
+            ];
+
+            // Dignity: drains with every hit, seeps back while you keep dodging
+            const dignityFill = document.getElementById('dignity-fill');
+            const dignityValue = document.getElementById('dignity-value');
+            const enduredCount = document.getElementById('endured-count');
+            let dignity = 100;
+            let gone = false;
+            let endured = 0;
+            let dodgeStreak = 0;
+            let lastHitAt = 0;
+
+            const renderDignity = () => {
+                dignityFill.style.width = `${Math.round(dignity)}%`;
+                dignityValue.textContent = gone ? 'GONE' : `${Math.round(dignity)}%`;
+                dignityPill.classList.toggle('gone', gone);
+            };
+
+            setInterval(() => {
+                const respite = performance.now() - lastHitAt;
+                if (gone && respite > 6000) {
+                    gone = false;
+                    dignity = 20;
+                    say('Dignity partially restored.', 1);
+                    renderDignity();
+                } else if (!gone && dignity < 100 && respite > 2000) {
+                    dignity = Math.min(100, dignity + 0.4);
+                    renderDignity();
+                }
+            }, 200);
+
+            app.on('wiener:missed', () => {
+                dodgeStreak += 1;
+                if (dodgeStreak === 3) say('The wieners respect you now.', 1);
+                else if (dodgeStreak === 6) say('Untouchable. Frankly.', 1);
+                else if (dodgeStreak === 10) say('Not one frank has landed. Statistically improbable.', 1);
+            });
+
+            // The storm escalates quietly - only the announcer lets on
+            const STORM_NAMES = [
+                '', 'Light wiener drizzle', 'Frankfurter front', 'Severe sausage squall',
+                'Major meat monsoon', 'CAT 5 FRANKNADO'
+            ];
+
+            app.on('storm:category', (category) => {
+                if (category > 1) say(`The storm intensifies. ${STORM_NAMES[category] ?? STORM_NAMES[5]}.`, 2);
+            });
+
+            // Hits land with a real wet slap recording. The audio context can only start
+            // from a user gesture, so hits are silent until the first tap.
+            let audio = null;
+            let slapBuffer = null;
+
+            window.addEventListener('pointerdown', () => {
+                audio = audio ?? new AudioContext();
+                audio.resume();
+                fetch('assets/sounds/wiener-slap.mp3')
+                    .then(response => response.arrayBuffer())
+                    .then(data => audio.decodeAudioData(data))
+                    .then((buffer) => {
+                        slapBuffer = buffer;
+                    })
+                    .catch(() => {}); // no sound is an acceptable fallback
+            }, { once: true });
+
+            const slap = (speed) => {
+                if (!audio || audio.state !== 'running' || !slapBuffer) return;
+
+                // How hard it landed, 0 to 1 - gentle grazes stay silent
+                const punch = Math.max(0, Math.min(1, (speed - 40) / 220));
+                if (punch <= 0) return;
+
+                // Slight pitch variation keeps the barrage from sounding machine-gunned
+                const source = audio.createBufferSource();
+                source.buffer = slapBuffer;
+                source.playbackRate.value = 0.92 + Math.random() * 0.18;
+                const gain = audio.createGain();
+                gain.gain.value = 0.1 + punch * 0.45;
+                source.connect(gain).connect(audio.destination);
+                source.start(audio.currentTime);
+            };
+
+            app.on('wiener:hit', (speed) => {
+                endured += 1;
+                enduredCount.textContent = endured;
+                dodgeStreak = 0;
+                lastHitAt = performance.now();
+
+                const punch = Math.max(0, Math.min(1, ((speed ?? 150) - 40) / 220));
+                const before = dignity;
+                dignity = Math.max(0, dignity - (4 + punch * 8));
+
+                if (!gone && dignity <= 0) {
+                    gone = true;
+                    say(pick(GONE_QUIPS), 3);
+                } else if (before > 50 && dignity <= 50) {
+                    say('Half your dignity remains. Choose wisely.', 2);
+                } else if (before > 25 && dignity <= 25) {
+                    say('Dignity reserves critical.', 2);
+                } else if (punch > 0.72) {
+                    say(pick(HARD_HIT_QUIPS), 1);
+                } else if (endured % 4 === 0) {
+                    say(pick(HIT_QUIPS));
+                }
+
+                renderDignity();
+                dignityPill.classList.remove('bump');
+                void dignityPill.offsetWidth; // restart the animation
+                dignityPill.classList.add('bump');
+                slap(speed ?? 150);
+            });
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

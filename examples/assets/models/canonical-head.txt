@@ -1,0 +1,9 @@
+A full head built for this repo's webcam AR examples by extending the canonical face model
+from Google's MediaPipe face geometry module: a cranium ellipsoid whose front is projected
+onto the canonical face mesh (exact facial relief in the interior, easing to the skull near
+the face's rim), authored in canonical face space centimeters with the head at the origin
+facing +Z. Derived from:
+
+https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/modules/face_geometry/data/canonical_face_model.obj
+
+Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0

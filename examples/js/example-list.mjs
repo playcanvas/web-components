@@ -39,6 +39,7 @@ export const examples = [
     { name: 'AR Hand Gestures', path: 'ar-hand-gestures.html', category: 'Webcam AR' },
     { name: 'AR Optic Blast', path: 'ar-optic-blast.html', category: 'Webcam AR' },
     { name: 'AR Sunglasses', path: 'ar-sunglasses.html', category: 'Webcam AR' },
+    { name: 'AR Wiener Storm', path: 'ar-wiener-storm.html', category: 'Webcam AR' },
     { name: 'Head Tracked Window', path: 'head-tracked-window.html', category: 'Webcam AR' },
     // Controls
     { name: 'First Person Teleport', path: 'first-person-teleport.html', category: 'Controls' },

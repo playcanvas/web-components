@@ -207,6 +207,20 @@ export class FaceTracking extends Script {
     /** @private */
     _rotVel = new Vec3();
 
+    /**
+     * The smoothed, prediction-led camera pose in canonical face space - the inverse of the
+     * head pose in camera space. A subclass that clears `_drivesEntityTransform` reads (or
+     * inverts) this instead of the entity transform.
+     * @protected
+     */
+    _pos = new Vec3();
+
+    /**
+     * The rotation of the smoothed camera pose, alongside {@link _pos}.
+     * @protected
+     */
+    _rot = new Quat();
+
     /** @private */
     _predPos = new Vec3();
 
@@ -254,13 +268,13 @@ export class FaceTracking extends Script {
     /** @private */
     _targetRot = new Quat();
 
-    /** @private */
-    _pos = new Vec3();
-
-    /** @private */
-    _rot = new Quat();
-
-    /** @private */
+    /**
+     * The observed nose bridge landmark in normalized video coordinates: the raw and
+     * velocity fields are maintained on every face inference, while `smooth` is advanced by
+     * whoever applies the anchor correction - the base class when it drives the camera, or
+     * a subclass pinning its own transform.
+     * @protected
+     */
     _bridge = {
         raw: { x: 0, y: 0 },
         smooth: { x: 0, y: 0 },
@@ -786,9 +800,10 @@ export class FaceTracking extends Script {
 
     /**
      * Places the camera on a gentle orbit around the head origin, as if the head were
-     * turning in front of the webcam.
+     * turning in front of the webcam. A subclass whose camera is not driven by the base
+     * class overrides this to move whatever it tracks instead.
      * @param {number} t - The animation time in seconds.
-     * @private
+     * @protected
      */
     _orbitCamera(t) {
         const yaw = Math.sin(t * 0.5) * 30 * (Math.PI / 180);

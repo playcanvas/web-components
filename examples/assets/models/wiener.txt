@@ -1,0 +1,7 @@
+Wiener authored in Blender for this example: a bent capsule with organic radius
+variation and dimpled ends, skinned to a six-bone chain (B0-B5) with smooth hat weights so
+physics joints can bend it, wearing a slick raw-pork Principled material (roughness 0.17,
+coat 0.25).
+Authored in meters (0.134 m long, length along +Y).
+
+CC0 / public domain.
