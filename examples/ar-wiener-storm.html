@@ -254,8 +254,8 @@
                         <pc-script>
                             <pc-script-instance name="headShadowCatcher" ellipsoid="false" strength="0.6"></pc-script-instance>
                         </pc-script>
-                        <!-- Becomes the catcher surface. A child, because entity: references
-                             resolve bare names against pc-entity elements only -->
+                        <!-- Becomes the catcher surface. A child, so it rides the tracked
+                             head's transform with the proxy -->
                         <pc-model asset="head"></pc-model>
                     </pc-entity>
                 </pc-entity>

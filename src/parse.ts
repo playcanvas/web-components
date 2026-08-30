@@ -373,21 +373,28 @@ const entityOf = (element: Element | null): Entity | null => {
 };
 
 /**
- * The elements that front an entity and so act as the scopes of the lexical name lookup.
+ * The elements that front an entity: what a bare name can resolve to, and the scopes of the
+ * lexical name lookup.
  */
-const ENTITY_SCOPES = 'pc-entity, pc-model, pc-node';
+const ENTITY_KINDS = ['pc-entity', 'pc-model', 'pc-node'] as const;
+
+/**
+ * The entity-fronting elements as one selector, for the scope walk.
+ */
+const ENTITY_SCOPES = ENTITY_KINDS.join(', ');
 
 /**
  * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
- * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare entity name.
+ * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or the bare name of an entity-fronting
+ * element (`<pc-entity>`, `<pc-model>` or `<pc-node>` — for a node, the glTF node name it binds).
  *
- * When `from` is supplied, an exact entity-name match resolves lexically first: the closest
+ * When `from` is supplied, an exact name match resolves lexically first: the closest
  * entity-fronting ancestor's inclusive subtree, then each outer entity-fronting ancestor, then the
  * containing `<pc-app>`. This is what lets a `<template>` prefab reference its own entities by
  * name — every clone resolves within itself before the document-wide lookup below could reach an
- * earlier clone — provided the prefab has a single root `<pc-entity>` to be the enclosing scope.
+ * earlier clone — provided the prefab has a single entity-fronting root to be the enclosing scope.
  * Otherwise (and as the fallback) the reference is interpreted against the document as a CSS
- * selector, then an element id, then an entity name.
+ * selector, then an element id, then a name.
  *
  * Separate from {@link getEntity} so a caller reporting a failure can tell the causes apart
  * ({@link unresolvedCause} words them): nothing in the document matches the reference, or
@@ -406,7 +413,8 @@ export const findEntityElement = (ref: string, from?: Element): Element | null =
 
     // The name lands inside a quoted CSS string, so its quotes and backslashes are escaped -
     // a name like `say "hi"` must resolve, not turn the lookup into a SyntaxError.
-    const nameSelector = `pc-entity[name="${ref.replace(/["\\]/g, '\\$&')}"]`;
+    const escaped = ref.replace(/["\\]/g, '\\$&');
+    const nameSelector = ENTITY_KINDS.map(kind => `${kind}[name="${escaped}"]`).join(', ');
 
     if (from) {
         let scope = from.parentElement?.closest(ENTITY_SCOPES);
@@ -439,11 +447,12 @@ export const findEntityElement = (ref: string, from?: Element): Element | null =
 };
 
 /**
- * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element. The reference
- * can be a CSS selector (e.g. `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare
- * entity name — an exact entity-name match resolves lexically through the entity hierarchy first
- * when `from` is supplied ({@link findEntityElement} details the order). Returns `null` if no
- * matching element (or backing entity) is found.
+ * Resolves a reference string to the {@link Entity} backing an entity-fronting element
+ * (`<pc-entity>`, `<pc-model>` or `<pc-node>`). The reference can be a CSS selector (e.g.
+ * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare name — an exact name match
+ * resolves lexically through the entity hierarchy first when `from` is supplied
+ * ({@link findEntityElement} details the order). Returns `null` if no matching element (or
+ * backing entity) is found.
  *
  * @param ref - The reference string to resolve.
  * @param from - The element resolving the reference, whose entity-fronting ancestors scope the
@@ -478,7 +487,7 @@ export const unresolvedCause = (element: Element | null): string => {
 };
 
 /**
- * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element, scoped to
+ * Resolves a reference string to the {@link Entity} backing an entity-fronting element, scoped to
  * the resolving element ({@link findEntityElement} details the order) and warning when a
  * non-empty reference does not resolve - otherwise the reference fails silently, invisible
  * except through the behavior it should have driven. The message names which of the three causes

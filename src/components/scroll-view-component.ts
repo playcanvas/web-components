@@ -294,10 +294,10 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * viewport, which clips the content to the scroll view's bounds. An exact entity name resolves
-     * against the nearest enclosing entity first, then outward, then the document. A non-empty
-     * reference that does not resolve warns and is ignored.
+     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
+     * `pc-node`) to the entity used as the viewport, which clips the content to the scroll view's
+     * bounds. An exact name resolves against the nearest enclosing entity first, then outward,
+     * then the document. A non-empty reference that does not resolve warns and is ignored.
      * @param value - The viewport entity reference.
      */
     set viewport(value: string) {
@@ -319,10 +319,10 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * content, which is moved as the scroll view is scrolled. An exact entity name resolves
-     * against the nearest enclosing entity first, then outward, then the document. A non-empty
-     * reference that does not resolve warns and is ignored.
+     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
+     * `pc-node`) to the entity used as the content, which is moved as the scroll view is
+     * scrolled. An exact name resolves against the nearest enclosing entity first, then outward,
+     * then the document. A non-empty reference that does not resolve warns and is ignored.
      * @param value - The content entity reference.
      */
     set content(value: string) {
@@ -344,10 +344,10 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` containing
-     * the horizontal `<pc-scrollbar>`. An exact entity name resolves against the nearest enclosing
-     * entity first, then outward, then the document. A non-empty reference that does not resolve
-     * warns and is ignored.
+     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
+     * `pc-node`) to the entity containing the horizontal `<pc-scrollbar>`. An exact name resolves
+     * against the nearest enclosing entity first, then outward, then the document. A non-empty
+     * reference that does not resolve warns and is ignored.
      * @param value - The horizontal scrollbar entity reference.
      */
     set horizontalScrollbar(value: string) {
@@ -369,10 +369,10 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` containing
-     * the vertical `<pc-scrollbar>`. An exact entity name resolves against the nearest enclosing
-     * entity first, then outward, then the document. A non-empty reference that does not resolve
-     * warns and is ignored.
+     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
+     * `pc-node`) to the entity containing the vertical `<pc-scrollbar>`. An exact name resolves
+     * against the nearest enclosing entity first, then outward, then the document. A non-empty
+     * reference that does not resolve warns and is ignored.
      * @param value - The vertical scrollbar entity reference.
      */
     set verticalScrollbar(value: string) {
