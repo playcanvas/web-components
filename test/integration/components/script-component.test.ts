@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { ScriptComponentElement } from '../../../src/components/script-component';
 import type { ScriptInstanceElement } from '../../../src/components/script-instance';
+import type { EntityElement } from '../../../src/entity';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
 import { readyWithin } from '../../helpers/ready';
@@ -167,6 +168,31 @@ describe('<pc-script>', () => {
             );
 
             expect(script.target).toBe(app.root.findByName('target'));
+        });
+
+        it('resolves an entity: reference against the enclosing scope first', async () => {
+            // A same-named decoy earlier in the document: the reference must resolve to the
+            // host's own child, the rule that lets a cloned template's script attributes point at
+            // sibling entities. Bespoke setup, because the host subtree carries the target.
+            const handle = await bootApp('<pc-entity name="target"></pc-entity>');
+            handle.app.scripts.add(Probe);
+            const decoy = handle.get<EntityElement>('pc-entity[name="target"]');
+
+            const host = document.createElement('pc-entity');
+            host.innerHTML = `
+                <pc-entity name="target"></pc-entity>
+                <pc-script>
+                    <pc-script-instance name="probe" attributes='{"target": "entity:target"}'></pc-script-instance>
+                </pc-script>
+            `;
+            handle.appElement.appendChild(host);
+
+            const scriptElement = host.querySelector<ScriptInstanceElement>('pc-script-instance')!;
+            await readyWithin(scriptElement);
+            const script = scriptElement.script as Probe;
+
+            expect(script.target).toBe(host.querySelector<EntityElement>('pc-entity')!.entity);
+            expect(script.target).not.toBe(decoy.entity);
         });
 
         it('warns and keeps the raw value when nothing matches the reference', async () => {

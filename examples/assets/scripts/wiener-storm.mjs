@@ -1,29 +1,4 @@
-import { Entity, Quat, Script, Vec2, Vec3 } from 'playcanvas';
-
-/** The local Y centers of the six physics segments, one per skin bone, in authored meters. */
-const SEG_CENTERS = [-0.0575, -0.0345, -0.0115, 0.0115, 0.0345, 0.0575];
-
-/** The local Y positions of the five flex joints between them, in authored meters. */
-const JOINT_HEIGHTS = [-0.046, -0.023, 0, 0.023, 0.046];
-
-/** The capsule length of one segment in authored meters (overlapping the neighbors a little). */
-const SEG_HEIGHT = 0.027;
-
-/** The capsule radius of one segment in authored meters. */
-const SEG_RADIUS = 0.0115;
-
-/** How far one flex joint may bend, in degrees. Five joints share the total fold. */
-const BEND_LIMIT = 10;
-
-/** How far one flex joint may twist about the wiener's length, in degrees - a raw wiener
- * flexes but barely twists at all. */
-const TWIST_LIMIT = 1.5;
-
-/** The angular spring stiffness pulling each joint back straight. */
-const BEND_STIFFNESS = 6;
-
-/** The angular spring stiffness resisting twist. */
-const TWIST_STIFFNESS = 8;
+import { Quat, Script, Vec2, Vec3 } from 'playcanvas';
 
 /**
  * Lobs a steady barrage of wieners at the user's head. Works in MediaPipe's camera space, as
@@ -41,6 +16,11 @@ const TWIST_STIFFNESS = 8;
  * whose six bones ride the segment bodies one to one. With five flex points along the length,
  * an impact folds the chain around whatever it hit in a smooth curve and the springs wobble it
  * straight again - no scripted deformation, just physics.
+ *
+ * The chain itself is markup: `template` names a `<template>` holding one wiener, its segments
+ * and joints wired by bare entity names, which resolve within each clone - one template, many
+ * wieners. This script clones it per throw, scales the clone to its own random size, launches
+ * the bodies once the components report ready, and rides the skin on them.
  *
  * Throwing runs while a face is tracked (`face:found`/`face:lost`), which the `?sim` and
  * no-camera fallback modes of the face tracking script also report.
@@ -72,10 +52,19 @@ export class WienerStorm extends Script {
     /**
      * The head proxy entity: throws are aimed at its position at launch, and a wiener
      * colliding with it fires `wiener:hit`.
-     * @type {Entity}
+     * @type {import('playcanvas').Entity}
      * @attribute
      */
     target = null;
+
+    /**
+     * A CSS selector for the `<template>` holding one wiener: a single root `pc-entity` (the
+     * scope its bare-name joint references resolve within) carrying the capsule segments and
+     * flex joints, authored in the model's meters.
+     * @type {string}
+     * @attribute
+     */
+    template = '#wiener-template';
 
     /**
      * The average number of wieners thrown per second at storm category 1. Each category
@@ -187,6 +176,31 @@ export class WienerStorm extends Script {
     /** @private */
     _live = [];
 
+    /**
+     * Cloned wiener elements whose components are still attaching. Tracked so teardown can
+     * remove a clone that has not committed to `_live` yet.
+     * @private
+     */
+    _pending = new Set();
+
+    /**
+     * Resolves when the script is destroyed. Raced against the clone components' readiness,
+     * because a removed element's ready() never settles. A dedicated field: the engine owns
+     * `_destroyed` as the script's boolean destruction flag.
+     * @private
+     */
+    _destroyPromise = null;
+
+    /** @private */
+    _resolveDestroyed = null;
+
+    /**
+     * Where clones are appended: the owning application's `<pc-scene>`, so their entities
+     * parent to the application root and the spawn pose is world space by construction.
+     * @private
+     */
+    _spawnRoot = null;
+
     /** @private */
     _active = false;
 
@@ -218,6 +232,16 @@ export class WienerStorm extends Script {
     _tmpQuat = new Quat();
 
     initialize() {
+        this._destroyPromise = new Promise((resolve) => {
+            this._resolveDestroyed = resolve;
+        });
+
+        // The owning application's DOM, found by which <pc-app> fronts this script's entity -
+        // a page can hold several applications, so the first one is not necessarily ours.
+        const appElement = Array.from(document.querySelectorAll('pc-app'))
+            .find(candidate => candidate.elementFromEntity?.(this.entity));
+        this._spawnRoot = appElement?.querySelector('pc-scene') ?? appElement ?? null;
+
         // The scene is in centimeters, so gravity is in centimeters per second squared
         const gravity = this.app.systems.rigidbody.gravity;
         this._prevGravity.copy(gravity);
@@ -248,8 +272,16 @@ export class WienerStorm extends Script {
         this.on('destroy', () => {
             this.app.off('face:found', onFound);
             this.app.off('face:lost', onLost);
+            // Unblock any throw awaiting its clone's readiness, then take down every clone -
+            // committed or not. Removing the element destroys its entity via the web-components
+            // lifecycle.
+            this._resolveDestroyed();
+            for (const element of this._pending) {
+                element.remove();
+            }
+            this._pending.clear();
             for (const wiener of this._live) {
-                wiener.container.destroy();
+                wiener.element.remove();
             }
             this._live.length = 0;
             this.app.systems.rigidbody.gravity.copy(this._prevGravity);
@@ -298,24 +330,31 @@ export class WienerStorm extends Script {
 
             if (wiener.age > this.lifetime || wiener.segments[2].getPosition().y < -160) {
                 if (!wiener.hitHead) this.app.fire('wiener:missed');
-                wiener.container.destroy();
+                wiener.element.remove();
                 this._live.splice(i, 1);
             }
         }
     }
 
     /**
-     * Spawns one wiener on the frontal hemisphere and throws it at the head.
+     * Spawns one wiener from the template on the frontal hemisphere and throws it at the head.
+     * Async: the clone's components attach microtasks after it is appended, so the launch waits
+     * for them to report ready - still ahead of the next physics step. Fired and forgotten from
+     * update(), guarded against the script being destroyed mid-flight.
      * @private
      */
-    _throw() {
+    async _throw() {
         // An unresolved target reference arrives as a raw string, so guard on the method
-        if (!this.wienerAsset?.resource || !this.target?.getPosition) return;
+        if (!this.wienerAsset?.resource || !this.target?.getPosition || !this._spawnRoot) return;
 
-        while (this._live.length >= this.maxLive) {
+        const template = document.querySelector(this.template);
+        if (!template?.content) return;
+
+        // Pending clones count against the cap so a burst of in-flight throws cannot overshoot it
+        while (this._live.length > 0 && this._live.length + this._pending.size >= this.maxLive) {
             const retired = this._live.shift();
             if (!retired.hitHead) this.app.fire('wiener:missed');
-            retired.container.destroy();
+            retired.element.remove();
         }
 
         // A spawn point on the hemisphere between the head and the screen: +Z is out of
@@ -358,116 +397,126 @@ export class WienerStorm extends Script {
         const scale = 0.9 + Math.random() * 0.22;
         const k = this.modelScale * scale;
 
-        // The container holds the whole wiener for lifecycle only - the segment bodies fly
-        // in world space regardless of their parent
-        const container = new Entity('wiener');
-        container.setPosition(pos);
-        this._tmpQuat.setFromEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
-        container.setRotation(this._tmpQuat);
-        this.app.root.addChild(container);
+        // One wiener from the template. The root entity holds the whole wiener for lifecycle
+        // and scope - the segment bodies fly in world space regardless of their parent.
+        const clone = template.content.cloneNode(true);
+        const element = clone.querySelector('pc-entity');
+        if (!element) return;
 
-        const wiener = {
-            container: container,
-            segments: [],
-            bones: [],
-            posOffsets: [],
-            rotOffsets: [],
-            age: 0,
-            hitHead: false
-        };
-
-        for (const center of SEG_CENTERS) {
-            const segment = new Entity('wiener-segment');
-            segment.setLocalPosition(0, center * k, 0);
-            container.addChild(segment);
-            segment.addComponent('collision', {
-                type: 'capsule',
-                radius: SEG_RADIUS * k,
-                height: SEG_HEIGHT * k
-            });
-            segment.addComponent('rigidbody', {
-                type: 'dynamic',
-                mass: 0.02,
-                restitution: this.restitution,
-                friction: 0.4,
-                // Ammo damping is exponential per second, matching the launch solve
-                linearDamping: 1 - Math.exp(-drag),
-                angularDamping: 0.5
-            });
-
-            segment.collision.on('collisionstart', (result) => {
-                // A settling wiener restarts the contact every micro-bounce, so a direct
-                // hit only counts once per wiener
-                if (!wiener.hitHead && this.target && result.other === this.target) {
-                    wiener.hitHead = true;
-                    // The post-bounce speed is a fine proxy for how hard it landed
-                    this.app.fire('wiener:hit', segment.rigidbody.linearVelocity.length());
-                }
-            });
-
-            wiener.segments.push(segment);
+        // The template is authored in the model's meters: scale every position and capsule to
+        // this wiener's size in scene units before the clone upgrades, and stamp the dynamics
+        // that derive from script attributes.
+        for (const part of element.querySelectorAll('pc-entity')) {
+            const [x, y, z] = part.getAttribute('position').split(/\s+/).map(Number);
+            part.setAttribute('position', `${x * k} ${y * k} ${z * k}`);
+        }
+        for (const collision of element.querySelectorAll('pc-collision')) {
+            collision.setAttribute('radius', Number(collision.getAttribute('radius')) * k);
+            collision.setAttribute('height', Number(collision.getAttribute('height')) * k);
+        }
+        for (const body of element.querySelectorAll('pc-rigid-body')) {
+            body.setAttribute('restitution', this.restitution);
+            // Ammo damping is exponential per second, matching the launch solve
+            body.setAttribute('linear-damping', 1 - Math.exp(-drag));
         }
 
-        // The 6dof joints make the chain flex: bending swings about the local X and Z of
-        // each junction, twisting about Y, and angular springs pull the wiener straight
-        // again - a raw wiener is floppy, not a rag
-        for (let j = 0; j < JOINT_HEIGHTS.length; j++) {
-            const joint = new Entity('wiener-joint');
-            joint.setLocalPosition(0, JOINT_HEIGHTS[j] * k, 0);
-            container.addChild(joint);
-            joint.addComponent('joint', {
-                type: '6dof',
-                entityA: wiener.segments[j],
-                entityB: wiener.segments[j + 1],
-                angularMotionX: 'limited',
-                angularMotionY: 'limited',
-                angularMotionZ: 'limited',
-                angularLimitsX: new Vec2(-BEND_LIMIT, BEND_LIMIT),
-                angularLimitsY: new Vec2(-TWIST_LIMIT, TWIST_LIMIT),
-                angularLimitsZ: new Vec2(-BEND_LIMIT, BEND_LIMIT),
-                angularStiffness: new Vec3(BEND_STIFFNESS, TWIST_STIFFNESS, BEND_STIFFNESS)
-            });
+        // The spawn pose is world space: the clone lands under <pc-scene>, so its entity
+        // parents to the application root
+        element.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+        element.setAttribute(
+            'rotation',
+            `${Math.random() * 360} ${Math.random() * 360} ${Math.random() * 360}`
+        );
 
-            // At Ammo's default stop ERP a hard head impact blows straight through the
-            // limits for a few frames, folding the wiener far past them. Stiffen the
-            // limit correction on every axis, set on the native constraint directly
-            // (2 is BT_CONSTRAINT_STOP_ERP)
-            const constraint = joint.joint.constraint;
-            for (let axis = 0; axis < 6; axis++) {
-                constraint?.setParam(2, 0.8, axis);
+        // Pending until the launch commits, so teardown can find a half-initialized clone
+        this._pending.add(element);
+        this._spawnRoot.appendChild(clone);
+
+        // The entities exist as soon as appendChild returns; the components attach microtasks
+        // later. Raced against destruction, because a removed element's ready() never settles.
+        const parts = [...element.querySelectorAll('pc-collision, pc-rigid-body, pc-joint')];
+        await Promise.race([Promise.all(parts.map(part => part.ready())), this._destroyPromise]);
+
+        if (this._destroyed || !element.isConnected) {
+            this._pending.delete(element);
+            element.remove();
+            return;
+        }
+
+        try {
+            const wiener = {
+                element: element,
+                segments: [...element.querySelectorAll('pc-entity[name^="seg-"]')].map(seg => seg.entity),
+                bones: [],
+                posOffsets: [],
+                rotOffsets: [],
+                age: 0,
+                hitHead: false
+            };
+
+            for (const segment of wiener.segments) {
+                segment.collision.on('collisionstart', (result) => {
+                    // A settling wiener restarts the contact every micro-bounce, so a direct
+                    // hit only counts once per wiener
+                    if (!wiener.hitHead && this.target && result.other === this.target) {
+                        wiener.hitHead = true;
+                        // The post-bounce speed is a fine proxy for how hard it landed
+                        this.app.fire('wiener:hit', segment.rigidbody.linearVelocity.length());
+                    }
+                });
             }
+
+            // At Ammo's default stop ERP a hard head impact blows straight through the joint
+            // limits for a few frames, folding the wiener far past them. Stiffen the limit
+            // correction on every axis, set on the native constraint directly
+            // (2 is BT_CONSTRAINT_STOP_ERP)
+            for (const jointElement of element.querySelectorAll('pc-joint')) {
+                const constraint = jointElement.component.constraint;
+                for (let axis = 0; axis < 6; axis++) {
+                    constraint?.setParam(2, 0.8, axis);
+                }
+            }
+
+            // The skinned model rides along: each bone copies its segment body every frame,
+            // through the offsets between them captured at this rest pose
+            const containerEntity = element.entity;
+            const model = this.wienerAsset.resource.instantiateRenderEntity();
+            model.setLocalScale(k, k, k);
+            containerEntity.addChild(model);
+
+            for (let b = 0; b < wiener.segments.length; b++) {
+                const segment = wiener.segments[b];
+                const bone = model.findByName(`B${b}`);
+                const invRot = this._tmpQuat.copy(segment.getRotation()).invert();
+                wiener.bones.push(bone);
+                wiener.posOffsets.push(
+                    invRot.transformVector(new Vec3().sub2(bone.getPosition(), segment.getPosition()))
+                );
+                wiener.rotOffsets.push(new Quat().mul2(invRot, bone.getRotation()));
+            }
+
+            // Throw the chain as one rigid motion: a shared tumble plus the velocity that
+            // tumble adds at each segment's offset from the middle
+            const omega = new Vec3(
+                Math.random() * 2 - 1,
+                Math.random() * 2 - 1,
+                Math.random() * 2 - 1
+            ).normalize().mulScalar(2 + Math.random() * 2.5);
+            const mid = this._tmpVec2.copy(containerEntity.getPosition());
+            for (const segment of wiener.segments) {
+                const arm = this._tmpVec.sub2(segment.getPosition(), mid);
+                const spin = new Vec3().cross(omega, arm);
+                segment.rigidbody.linearVelocity = spin.add(velocity);
+                segment.rigidbody.angularVelocity = omega;
+            }
+
+            this._pending.delete(element);
+            this._live.push(wiener);
+        } catch (error) {
+            // A half-initialized clone must never survive untracked
+            this._pending.delete(element);
+            element.remove();
+            console.warn(`wienerStorm failed to launch a wiener: ${error}`);
         }
-
-        // The skinned model rides along: each bone copies its segment body every frame,
-        // through the offsets between them captured at this rest pose
-        const model = this.wienerAsset.resource.instantiateRenderEntity();
-        model.setLocalScale(k, k, k);
-        container.addChild(model);
-
-        for (let b = 0; b < wiener.segments.length; b++) {
-            const segment = wiener.segments[b];
-            const bone = model.findByName(`B${b}`);
-            const invRot = this._tmpQuat.copy(segment.getRotation()).invert();
-            wiener.bones.push(bone);
-            wiener.posOffsets.push(invRot.transformVector(new Vec3().sub2(bone.getPosition(), segment.getPosition())));
-            wiener.rotOffsets.push(new Quat().mul2(invRot, bone.getRotation()));
-        }
-
-        // Throw the chain as one rigid motion: a shared tumble plus the velocity that
-        // tumble adds at each segment's offset from the middle
-        const omega = new Vec3(
-            Math.random() * 2 - 1,
-            Math.random() * 2 - 1,
-            Math.random() * 2 - 1
-        ).normalize().mulScalar(2 + Math.random() * 2.5);
-        const mid = this._tmpVec2.copy(container.getPosition());
-        for (const segment of wiener.segments) {
-            const arm = this._tmpVec.sub2(segment.getPosition(), mid);
-            const spin = new Vec3().cross(omega, arm);
-            segment.rigidbody.linearVelocity = spin.add(velocity);
-            segment.rigidbody.angularVelocity = omega;
-        }
-
-        this._live.push(wiener);
     }
 }

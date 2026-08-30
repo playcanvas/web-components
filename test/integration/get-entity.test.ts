@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { EntityElement } from '../../src/entity';
 import { getEntity, resolveEntity } from '../../src/parse';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
@@ -80,21 +81,25 @@ describe('entity references', () => {
     });
 
     describe('resolveEntity', () => {
+        // A disconnected caller has no enclosing scopes, so resolution stays document-wide - the
+        // path these messages were pinned against. Its tag names the warning.
+        const caller = () => document.createElement('pc-test');
+
         it('returns the entity silently when the reference resolves', async () => {
             const { app } = await bootApp(markup);
-            expect(resolveEntity('#cube-id', 'pc-test', 'target', 'reference ignored')).toBe(
+            expect(resolveEntity('#cube-id', caller(), 'target', 'reference ignored')).toBe(
                 app.root.findByName('Cube')
             );
         });
 
         it('returns null silently for an empty reference', async () => {
             await bootApp(markup);
-            expect(resolveEntity('', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            expect(resolveEntity('', caller(), 'target', 'reference ignored')).toBeNull();
         });
 
         it('warns with the caller-supplied meaning when nothing matches', async () => {
             await bootApp(markup);
-            expect(resolveEntity('#nope', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            expect(resolveEntity('#nope', caller(), 'target', 'reference ignored')).toBeNull();
             warnings.expect(
                 "pc-test could not resolve target '#nope' - nothing in the document matches it - " +
                     'reference ignored. Assign target again once the entity exists.'
@@ -113,7 +118,7 @@ describe('entity references', () => {
             try {
                 warnings.expect('pc-entity must be a descendant of pc-app - entity not created');
 
-                expect(resolveEntity('#pending', 'pc-test', 'target', 'reference ignored')).toBeNull();
+                expect(resolveEntity('#pending', caller(), 'target', 'reference ignored')).toBeNull();
                 warnings.expect(
                     "pc-test could not resolve target '#pending' - <pc-entity> matches it but is not backing " +
                         'an entity yet - reference ignored. Assign target again once the entity exists.'
@@ -125,7 +130,7 @@ describe('entity references', () => {
 
         it('warns with the wrong-target cause and advice when the match cannot back an entity', async () => {
             await bootApp('<div id="plain"></div>');
-            expect(resolveEntity('#plain', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            expect(resolveEntity('#plain', caller(), 'target', 'reference ignored')).toBeNull();
             warnings.expect(
                 "pc-test could not resolve target '#plain' - <div> matches it but cannot back an entity - " +
                     'reference ignored. Point target at a pc-entity instead.'
@@ -137,11 +142,153 @@ describe('entity references', () => {
 
             // A quote is escaped into the name selector; a newline cannot be, and must be
             // absorbed - the null-and-warn contract holds for arbitrary references
-            expect(resolveEntity('bad"name', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            expect(resolveEntity('bad"name', caller(), 'target', 'reference ignored')).toBeNull();
             warnings.expect(`pc-test could not resolve target 'bad"name' - nothing in the document matches it`);
 
-            expect(resolveEntity('bad\nname', 'pc-test', 'target', 'reference ignored')).toBeNull();
+            expect(resolveEntity('bad\nname', caller(), 'target', 'reference ignored')).toBeNull();
             warnings.expect("pc-test could not resolve target 'bad\nname' - nothing in the document matches it");
+        });
+    });
+
+    describe('scoped resolution', () => {
+        /**
+         * Two same-named subtrees, with the <pc-test> probe (an unregistered element - inert, and
+         * its tag names resolveEntity's messages) inside the second: an exact entity-name match
+         * must resolve through the probe's enclosing entities, never first-in-document. This is
+         * what lets a cloned <template> prefab reference its own entities.
+         */
+        const DUPLICATES = `
+            <pc-entity name="first">
+                <pc-entity name="dup"></pc-entity>
+            </pc-entity>
+            <pc-entity name="second">
+                <pc-entity name="dup"></pc-entity>
+                <pc-test></pc-test>
+            </pc-entity>
+        `;
+
+        it('resolves a duplicated bare name to the nearest enclosing entity scope', async () => {
+            const { get } = await bootApp(DUPLICATES);
+            const near = get<EntityElement>('pc-entity[name="second"] > pc-entity[name="dup"]');
+
+            expect(getEntity('dup', get('pc-test')), 'scoped, the enclosing subtree wins').toBe(near.entity);
+
+            const far = get<EntityElement>('pc-entity[name="first"] > pc-entity[name="dup"]');
+            expect(getEntity('dup'), 'unscoped, document order still wins').toBe(far.entity);
+        });
+
+        it('resolves the enclosing entity itself, so a clone can name its own root', async () => {
+            const { get } = await bootApp(`
+                <pc-entity name="chassis"></pc-entity>
+                <pc-entity id="own" name="chassis"><pc-test></pc-test></pc-entity>
+            `);
+
+            expect(getEntity('chassis', get('pc-test'))).toBe(get<EntityElement>('#own').entity);
+        });
+
+        it('climbs past the entity chain to the containing application before the document', async () => {
+            const { app, get } = await bootApp(`
+                <pc-entity name="roof"></pc-entity>
+                <pc-entity name="host"><pc-test></pc-test></pc-entity>
+            `);
+
+            // A same-named pc-entity outside the application, placed ahead of it in document
+            // order. It backs no entity (and warns so), which is what tells the two paths apart:
+            // the application scope resolves the live entity, while the document-wide name lookup
+            // finds the entity-less outsider first and yields nothing.
+            const outside = document.createElement('pc-entity');
+            outside.setAttribute('name', 'roof');
+            document.body.insertBefore(outside, document.body.firstChild);
+            try {
+                warnings.expect("pc-entity 'roof' must be a descendant of pc-app - entity not created");
+
+                expect(getEntity('roof', get('pc-test'))).toBe(app.root.findByName('roof'));
+                expect(getEntity('roof')).toBeNull();
+            } finally {
+                outside.remove();
+            }
+        });
+
+        it('prefers an in-scope entity name over a document id match', async () => {
+            const { app, get } = await bootApp(`<pc-entity id="dup" name="ById"></pc-entity>${DUPLICATES}`);
+            const near = get<EntityElement>('pc-entity[name="second"] > pc-entity[name="dup"]');
+
+            // Unscoped, the id lookup wins (pinned above); scoped, the lexical name phase runs
+            // first, so a page-level id cannot shadow a prefab's internal wiring.
+            expect(getEntity('dup')).toBe(app.root.findByName('ById'));
+            expect(getEntity('dup', get('pc-test'))).toBe(near.entity);
+        });
+
+        it('resolves selector and id references document-wide from inside a scope', async () => {
+            const { get } = await bootApp(`
+                <pc-entity name="first">
+                    <pc-entity id="first-dup" name="dup"></pc-entity>
+                </pc-entity>
+                <pc-entity name="second">
+                    <pc-entity name="dup"></pc-entity>
+                    <pc-test></pc-test>
+                </pc-entity>
+            `);
+            const far = get<EntityElement>('#first-dup');
+
+            // No entity is *named* the reference text, so the lexical phase misses and the
+            // document resolver interprets the reference - selectors and ids keep their
+            // document-wide meaning even from inside a scope.
+            expect(getEntity('pc-entity[name="dup"]', get('pc-test'))).toBe(far.entity);
+            expect(getEntity('#first-dup', get('pc-test'))).toBe(far.entity);
+        });
+
+        it('does not skip a nearer name match that backs no entity yet', async () => {
+            const { get } = await bootApp(`
+                <pc-entity name="dup"></pc-entity>
+                <pc-entity name="outer">
+                    <pc-entity id="near" name="dup"></pc-entity>
+                    <pc-test></pc-test>
+                </pc-entity>
+            `);
+
+            // The nearest name match is what the author meant: with its entity destroyed it
+            // reports the timing cause rather than silently deferring to the farther live one.
+            get<EntityElement>('#near').entity!.destroy();
+
+            expect(resolveEntity('dup', get('pc-test'), 'target', 'reference ignored')).toBeNull();
+            warnings.expect(
+                "pc-test could not resolve target 'dup' - <pc-entity> matches it but is not backing " +
+                    'an entity yet - reference ignored. Assign target again once the entity exists.'
+            );
+        });
+
+        it('falls back to the document when nothing in scope matches', async () => {
+            const { app, get } = await bootApp(`
+                <pc-entity id="cube-id" name="Cube"></pc-entity>
+                <pc-entity name="host"><pc-test></pc-test></pc-entity>
+            `);
+            const cube = app.root.findByName('Cube');
+
+            expect(getEntity('#cube-id', get('pc-test')), 'a connected caller').toBe(cube);
+            expect(getEntity('cube-id', document.createElement('div')), 'a disconnected one').toBe(cube);
+        });
+
+        it('warns without throwing for a reference no CSS string can express, from inside a scope', async () => {
+            const { get } = await bootApp('<pc-entity name="host"><pc-test></pc-test></pc-entity>');
+
+            // Quote/backslash escaping cannot express a newline, so every scope's lookup must
+            // absorb the invalid selector rather than throw.
+            expect(resolveEntity('bad\nname', get('pc-test'), 'target', 'reference ignored')).toBeNull();
+            warnings.expect("pc-test could not resolve target 'bad\nname' - nothing in the document matches it");
+        });
+
+        it('resolves a name the scoped selector must escape', async () => {
+            const { get } = await bootApp(`
+                <pc-entity name="host">
+                    <pc-entity name="pc-entity["></pc-entity>
+                    <pc-test></pc-test>
+                </pc-entity>
+            `);
+
+            expect(getEntity('pc-entity[', get('pc-test'))).toBe(
+                get<EntityElement>('pc-entity[name="pc-entity["]').entity
+            );
         });
     });
 });

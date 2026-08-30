@@ -82,32 +82,22 @@ class ScrollViewComponentElement extends ComponentElement {
             verticalScrollbarVisibility: visibilities.get(this._verticalScrollbarVisibility)
         };
 
-        const viewport = resolveEntity(this._viewport, 'pc-scroll-view', 'viewport', 'reference ignored');
+        const viewport = resolveEntity(this._viewport, this, 'viewport', 'reference ignored');
         if (viewport) {
             data.viewportEntity = viewport;
         }
 
-        const content = resolveEntity(this._content, 'pc-scroll-view', 'content', 'reference ignored');
+        const content = resolveEntity(this._content, this, 'content', 'reference ignored');
         if (content) {
             data.contentEntity = content;
         }
 
-        const horizontalScrollbar = resolveEntity(
-            this._horizontalScrollbar,
-            'pc-scroll-view',
-            'horizontal-scrollbar',
-            'reference ignored'
-        );
+        const horizontalScrollbar = resolveEntity(this._horizontalScrollbar, this, 'horizontal-scrollbar', 'reference ignored');
         if (horizontalScrollbar) {
             data.horizontalScrollbarEntity = horizontalScrollbar;
         }
 
-        const verticalScrollbar = resolveEntity(
-            this._verticalScrollbar,
-            'pc-scroll-view',
-            'vertical-scrollbar',
-            'reference ignored'
-        );
+        const verticalScrollbar = resolveEntity(this._verticalScrollbar, this, 'vertical-scrollbar', 'reference ignored');
         if (verticalScrollbar) {
             data.verticalScrollbarEntity = verticalScrollbar;
         }
@@ -305,14 +295,15 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * viewport, which clips the content to the scroll view's bounds. A non-empty reference that
-     * does not resolve warns and is ignored.
+     * viewport, which clips the content to the scroll view's bounds. An exact entity name resolves
+     * against the nearest enclosing entity first, then outward, then the document. A non-empty
+     * reference that does not resolve warns and is ignored.
      * @param value - The viewport entity reference.
      */
     set viewport(value: string) {
         this._viewport = value;
         if (this.component) {
-            const entity = resolveEntity(value, 'pc-scroll-view', 'viewport', 'reference ignored');
+            const entity = resolveEntity(value, this, 'viewport', 'reference ignored');
             if (entity) {
                 this.component.viewportEntity = entity;
             }
@@ -329,14 +320,15 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` used as the
-     * content, which is moved as the scroll view is scrolled. A non-empty reference that does not
-     * resolve warns and is ignored.
+     * content, which is moved as the scroll view is scrolled. An exact entity name resolves
+     * against the nearest enclosing entity first, then outward, then the document. A non-empty
+     * reference that does not resolve warns and is ignored.
      * @param value - The content entity reference.
      */
     set content(value: string) {
         this._content = value;
         if (this.component) {
-            const entity = resolveEntity(value, 'pc-scroll-view', 'content', 'reference ignored');
+            const entity = resolveEntity(value, this, 'content', 'reference ignored');
             if (entity) {
                 this.component.contentEntity = entity;
             }
@@ -353,14 +345,15 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` containing
-     * the horizontal `<pc-scrollbar>`. A non-empty reference that does not resolve warns and is
-     * ignored.
+     * the horizontal `<pc-scrollbar>`. An exact entity name resolves against the nearest enclosing
+     * entity first, then outward, then the document. A non-empty reference that does not resolve
+     * warns and is ignored.
      * @param value - The horizontal scrollbar entity reference.
      */
     set horizontalScrollbar(value: string) {
         this._horizontalScrollbar = value;
         if (this.component) {
-            const entity = resolveEntity(value, 'pc-scroll-view', 'horizontal-scrollbar', 'reference ignored');
+            const entity = resolveEntity(value, this, 'horizontal-scrollbar', 'reference ignored');
             if (entity) {
                 this.component.horizontalScrollbarEntity = entity;
             }
@@ -377,14 +370,15 @@ class ScrollViewComponentElement extends ComponentElement {
 
     /**
      * Sets the reference (CSS selector, element id or entity name) to the `<pc-entity>` containing
-     * the vertical `<pc-scrollbar>`. A non-empty reference that does not resolve warns and is
-     * ignored.
+     * the vertical `<pc-scrollbar>`. An exact entity name resolves against the nearest enclosing
+     * entity first, then outward, then the document. A non-empty reference that does not resolve
+     * warns and is ignored.
      * @param value - The vertical scrollbar entity reference.
      */
     set verticalScrollbar(value: string) {
         this._verticalScrollbar = value;
         if (this.component) {
-            const entity = resolveEntity(value, 'pc-scroll-view', 'vertical-scrollbar', 'reference ignored');
+            const entity = resolveEntity(value, this, 'vertical-scrollbar', 'reference ignored');
             if (entity) {
                 this.component.verticalScrollbarEntity = entity;
             }

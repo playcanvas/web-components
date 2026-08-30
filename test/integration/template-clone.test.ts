@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { AppElement } from '../../src/app';
 import type { AssetElement } from '../../src/asset';
+import type { JointComponentElement } from '../../src/components/joint-component';
 import type { EntityElement } from '../../src/entity';
 import type { MaterialElement } from '../../src/material';
 import type { ModelElement } from '../../src/model';
@@ -26,6 +27,24 @@ const ENTRY_TEMPLATE = `
                 <pc-render type="sphere"></pc-render>
             </pc-entity>
             <pc-entity name="Button"></pc-entity>
+        </pc-entity>
+    </template>
+`;
+
+/**
+ * A prefab wired by bare entity names — the shape scoped resolution exists for. The joint sits
+ * before the entities it references, so each clone also pins forward references within itself,
+ * and the single root `<pc-entity>` is the documented requirement for a self-contained prefab:
+ * it is the enclosing scope the names resolve through.
+ */
+const CHAIN_TEMPLATE = `
+    <template id="chain">
+        <pc-entity name="Link">
+            <pc-entity name="Frame">
+                <pc-joint entity-a="Anchor" entity-b="Bob"></pc-joint>
+            </pc-entity>
+            <pc-entity name="Anchor"><pc-rigid-body></pc-rigid-body></pc-entity>
+            <pc-entity name="Bob"><pc-rigid-body type="dynamic"></pc-rigid-body></pc-entity>
         </pc-entity>
     </template>
 `;
@@ -127,6 +146,35 @@ describe('a <template>-cloned subtree', () => {
         await settle(container);
         expect(entry.entity!.render, "the outer entity's component was added").toBeTruthy();
         expect(label.entity!.render, "a nested entity's component was added too").toBeTruthy();
+
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('resolves entity references inside a cloned subtree to that clone, not an earlier one', async () => {
+        const { get, container } = await bootApp(`<pc-entity name="Content"></pc-entity>${CHAIN_TEMPLATE}`);
+        const content = get<EntityElement>('pc-entity[name="Content"]');
+        const template = get<HTMLTemplateElement>('template');
+
+        content.appendChild(template.content.cloneNode(true));
+        content.appendChild(template.content.cloneNode(true));
+        await settle(container);
+
+        // Every clone's joint binds that clone's own bodies. The guard fails this test if any
+        // reference warned on the way.
+        const links = Array.from(content.querySelectorAll<EntityElement>(':scope > pc-entity'));
+        expect(links).toHaveLength(2);
+        for (const link of links) {
+            const joint = link.querySelector<JointComponentElement>('pc-joint')!;
+            expect(joint.component.entityA).toBe(link.querySelector<EntityElement>('pc-entity[name="Anchor"]')!.entity);
+            expect(joint.component.entityB).toBe(link.querySelector<EntityElement>('pc-entity[name="Bob"]')!.entity);
+        }
+
+        // The decisive half: the second clone did not bind the first clone's entities, which is
+        // what a document-wide lookup produces - it finds the first instance in document order.
+        const [first, second] = links;
+        expect(second.querySelector<JointComponentElement>('pc-joint')!.component.entityA).not.toBe(
+            first.querySelector<EntityElement>('pc-entity[name="Anchor"]')!.entity
+        );
 
         expect(uncaught.seen).toEqual([]);
     });

@@ -3,6 +3,7 @@ import { Vec2, Vec3 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { JointComponentElement } from '../../../src/components/joint-component';
+import type { EntityElement } from '../../../src/entity';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
 
@@ -181,6 +182,28 @@ describe('<pc-joint>', () => {
 
             expect(component.entityA).toBe(app.root.findByName('bob'));
             expect(component.entityB).toBe(app.root.findByName('anchor'));
+        });
+
+        it('resolves a duplicated name to the nearest enclosing match', async () => {
+            // A decoy body with the same name earlier in the document: the reference must resolve
+            // through the joint's enclosing entities, not first-in-document - the rule that makes
+            // a cloned template's joints bind their own clone.
+            const { get } = await bootApp(`
+                <pc-entity name="anchor"><pc-rigid-body></pc-rigid-body></pc-entity>
+                <pc-entity name="assembly">
+                    <pc-entity id="near-anchor" name="anchor"><pc-rigid-body></pc-rigid-body></pc-entity>
+                    <pc-entity name="frame"><pc-joint entity-a="anchor"></pc-joint></pc-entity>
+                </pc-entity>
+            `);
+            const joint = get<JointComponentElement>('pc-joint');
+            const near = get<EntityElement>('#near-anchor');
+
+            expect(joint.component.entityA, 'resolved at creation').toBe(near.entity);
+
+            // And again through the setter path on reassignment
+            joint.setAttribute('entity-a', '');
+            joint.setAttribute('entity-a', 'anchor');
+            expect(joint.component.entityA, 'resolved on reassignment').toBe(near.entity);
         });
 
         it('retargets a body when the attribute changes at runtime', async () => {

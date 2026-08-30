@@ -12,10 +12,12 @@
  * - `parseBool` and `parseTags` take no attribute name, because every value is valid for them and
  *   so they never warn.
  *
- * `findEntityElement` and `getEntity` are the exceptions: they resolve a reference against the
- * document rather than parsing a literal, and return `null` instead of falling back to a default.
- * They also do not warn - what an unresolved reference means depends on the element holding it -
- * so elements report through `resolveEntity`, which takes that meaning as parameters.
+ * `findEntityElement` and `getEntity` are the exceptions: they resolve a reference rather than
+ * parsing a literal, and return `null` instead of falling back to a default. An exact entity-name
+ * match resolves lexically through the entity hierarchy first; otherwise the reference is
+ * interpreted against the document as a CSS selector, element id or entity name. They also do not
+ * warn - what an unresolved reference means depends on the element holding it - so elements
+ * report through `resolveEntity`, which takes that meaning as parameters.
  */
 
 import type { Entity } from 'playcanvas';
@@ -341,20 +343,88 @@ const query = (selector: string): Element | null => {
 };
 
 /**
+ * Runs a lookup against one scope, checking the scope element itself before its subtree — a
+ * reference deep in a cloned prefab must be able to name the prefab's root. Absorbs the
+ * SyntaxError of an invalid selector like {@link query}: escaping quotes and backslashes does not
+ * make arbitrary text a valid CSS string (a reference containing a newline still throws), so a
+ * lookup must fail to `null`, never throw.
+ *
+ * @param scope - The element whose inclusive subtree to search.
+ * @param selector - The selector to query.
+ * @returns The matched element, or `null`.
+ */
+const queryScope = (scope: Element, selector: string): Element | null => {
+    try {
+        return scope.matches(selector) ? scope : scope.querySelector(selector);
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * Reads the entity a resolved element is backing, through the `entity` accessor every
+ * entity-fronting element exposes. `null` for no element, and for an element backing nothing.
+ *
+ * @param element - The element to read, or `null`.
+ * @returns The backing entity, or `null`.
+ */
+const entityOf = (element: Element | null): Entity | null => {
+    return (element as { entity?: Entity } | null)?.entity ?? null;
+};
+
+/**
+ * The elements that front an entity and so act as the scopes of the lexical name lookup.
+ */
+const ENTITY_SCOPES = 'pc-entity, pc-model, pc-node';
+
+/**
  * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
  * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare entity name.
+ *
+ * When `from` is supplied, an exact entity-name match resolves lexically first: the closest
+ * entity-fronting ancestor's inclusive subtree, then each outer entity-fronting ancestor, then the
+ * containing `<pc-app>`. This is what lets a `<template>` prefab reference its own entities by
+ * name — every clone resolves within itself before the document-wide lookup below could reach an
+ * earlier clone — provided the prefab has a single root `<pc-entity>` to be the enclosing scope.
+ * Otherwise (and as the fallback) the reference is interpreted against the document as a CSS
+ * selector, then an element id, then an entity name.
  *
  * Separate from {@link getEntity} so a caller reporting a failure can tell the causes apart
  * ({@link unresolvedCause} words them): nothing in the document matches the reference, or
  * something matches but is not backing an entity (yet, or ever).
  *
  * @param ref - The reference string to resolve.
+ * @param from - The element resolving the reference, whose entity-fronting ancestors scope the
+ * name lookup. Omitted, the lookup is document-wide only.
  * @returns The matched element, or `null`.
  * @internal
  */
-export const findEntityElement = (ref: string): Element | null => {
+export const findEntityElement = (ref: string, from?: Element): Element | null => {
     if (!ref) {
         return null;
+    }
+
+    // The name lands inside a quoted CSS string, so its quotes and backslashes are escaped -
+    // a name like `say "hi"` must resolve, not turn the lookup into a SyntaxError.
+    const nameSelector = `pc-entity[name="${ref.replace(/["\\]/g, '\\$&')}"]`;
+
+    if (from) {
+        let scope = from.parentElement?.closest(ENTITY_SCOPES);
+        while (scope) {
+            const element = queryScope(scope, nameSelector);
+            if (element) {
+                return element;
+            }
+            scope = scope.parentElement?.closest(ENTITY_SCOPES);
+        }
+
+        const app = from.parentElement?.closest('pc-app');
+        if (app) {
+            const element = queryScope(app, nameSelector);
+            if (element) {
+                return element;
+            }
+        }
     }
 
     // Try the reference as a CSS selector. An invalid selector (e.g. a bare name containing
@@ -362,10 +432,7 @@ export const findEntityElement = (ref: string): Element | null => {
     let element = query(ref);
 
     if (!element) {
-        // The name lands inside a quoted CSS string, so its quotes and backslashes are escaped -
-        // a name like `say "hi"` must resolve, not turn the lookup into a SyntaxError.
-        element =
-            document.getElementById(ref) ?? query(`pc-entity[name="${ref.replace(/["\\]/g, '\\$&')}"]`);
+        element = document.getElementById(ref) ?? query(nameSelector);
     }
 
     return element;
@@ -374,14 +441,18 @@ export const findEntityElement = (ref: string): Element | null => {
 /**
  * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element. The reference
  * can be a CSS selector (e.g. `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare
- * entity name. Returns `null` if no matching element (or backing entity) is found.
+ * entity name — an exact entity-name match resolves lexically through the entity hierarchy first
+ * when `from` is supplied ({@link findEntityElement} details the order). Returns `null` if no
+ * matching element (or backing entity) is found.
  *
  * @param ref - The reference string to resolve.
+ * @param from - The element resolving the reference, whose entity-fronting ancestors scope the
+ * name lookup. Omitted, the lookup is document-wide only.
  * @returns The resolved entity, or `null`.
  * @internal
  */
-export const getEntity = (ref: string): Entity | null => {
-    return (findEntityElement(ref) as { entity?: Entity } | null)?.entity ?? null;
+export const getEntity = (ref: string, from?: Element): Entity | null => {
+    return entityOf(findEntityElement(ref, from));
 };
 
 /**
@@ -407,8 +478,9 @@ export const unresolvedCause = (element: Element | null): string => {
 };
 
 /**
- * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element, warning when
- * a non-empty reference does not resolve - otherwise the reference fails silently, invisible
+ * Resolves a reference string to the {@link Entity} backing a `<pc-entity>` element, scoped to
+ * the resolving element ({@link findEntityElement} details the order) and warning when a
+ * non-empty reference does not resolve - otherwise the reference fails silently, invisible
  * except through the behavior it should have driven. The message names which of the three causes
  * ({@link unresolvedCause}) it hit, and advises reassigning later only when that can work.
  *
@@ -416,26 +488,26 @@ export const unresolvedCause = (element: Element | null): string => {
  * elements (`pc-joint` `entity-b`, `pc-button` `image`) a documented value of its own.
  *
  * @param ref - The reference string to resolve.
- * @param tag - The resolving element's tag name, for the message.
+ * @param from - The element resolving the reference; scopes the lookup and names the message.
  * @param attribute - The attribute being resolved, for the message.
  * @param consequence - What the unresolved reference means for the element, for the message.
  * @returns The resolved entity, or `null`.
  * @internal
  */
-export const resolveEntity = (ref: string, tag: string, attribute: string, consequence: string): Entity | null => {
+export const resolveEntity = (ref: string, from: Element, attribute: string, consequence: string): Entity | null => {
     if (!ref) {
         return null;
     }
 
-    const entity = getEntity(ref);
+    const element = findEntityElement(ref, from);
+    const entity = entityOf(element);
     if (!entity) {
-        const element = findEntityElement(ref);
         const advice =
             element && !('entity' in element)
                 ? `Point ${attribute} at a pc-entity instead.`
                 : `Assign ${attribute} again once the entity exists.`;
         console.warn(
-            `${tag} could not resolve ${attribute} '${ref}' - ${unresolvedCause(element)} - ${consequence}. ${advice}`
+            `${from.tagName.toLowerCase()} could not resolve ${attribute} '${ref}' - ${unresolvedCause(element)} - ${consequence}. ${advice}`
         );
     }
     return entity;
