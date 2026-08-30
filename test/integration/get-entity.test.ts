@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import type { EntityElement } from '../../src/entity';
+import type { ModelElement } from '../../src/model';
+import type { NodeElement } from '../../src/node';
 import { getEntity, resolveEntity } from '../../src/parse';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
+
+/** A meshless glTF with a single named node, for the `<pc-model>`/`<pc-node>` name cases. */
+const STAGE_SRC = `data:application/json,${encodeURIComponent(
+    JSON.stringify({
+        asset: { version: '2.0' },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'Podium' }]
+    })
+)}`;
 
 /**
  * getEntity and resolveEntity resolve references against the DOM (through findEntityElement), so
@@ -78,6 +90,20 @@ describe('entity references', () => {
             const { app } = await bootApp(`<pc-entity name='say "hi"'></pc-entity>`);
             expect(getEntity('say "hi"')).toBe(app.root.findByName('say "hi"'));
         });
+
+        it('resolves the name of a pc-model and of a bound pc-node', async () => {
+            const { get } = await bootApp(`
+                <pc-asset id="stage" type="container" src="${STAGE_SRC}"></pc-asset>
+                <pc-model name="Rig" asset="stage">
+                    <pc-node name="Podium"></pc-node>
+                </pc-model>
+            `);
+
+            // Names resolve to any entity-fronting element, not just pc-entity - what lets a
+            // joint reference a model's own skeleton nodes by name.
+            expect(getEntity('Rig')).toBe(get<ModelElement>('pc-model').entity);
+            expect(getEntity('Podium')).toBe(get<NodeElement>('pc-node').entity);
+        });
     });
 
     describe('resolveEntity', () => {
@@ -135,6 +161,31 @@ describe('entity references', () => {
                 "pc-test could not resolve target '#plain' - <div> matches it but cannot back an entity - " +
                     'reference ignored. Point target at a pc-entity instead.'
             );
+        });
+
+        it('warns with the timing cause for a pc-node matched by name before it binds', async () => {
+            const { get } = await bootApp(`
+                <pc-asset id="stage" type="container" src="${STAGE_SRC}"></pc-asset>
+                <pc-model asset="stage"></pc-model>
+            `);
+
+            // A node name the model does not contain: the element exists but never backs an
+            // entity - to a name reference, the same state a pc-node presents until its
+            // container asset loads.
+            const ghost = document.createElement('pc-node');
+            ghost.setAttribute('name', 'Ghost');
+            get<ModelElement>('pc-model').appendChild(ghost);
+            try {
+                warnings.expect("pc-node 'Ghost' not found in");
+
+                expect(resolveEntity('Ghost', caller(), 'target', 'reference ignored')).toBeNull();
+                warnings.expect(
+                    "pc-test could not resolve target 'Ghost' - <pc-node> matches it but is not backing " +
+                        'an entity yet - reference ignored. Assign target again once the entity exists.'
+                );
+            } finally {
+                ghost.remove();
+            }
         });
 
         it('warns rather than throwing for a reference the fallback selector cannot parse', async () => {
@@ -276,6 +327,22 @@ describe('entity references', () => {
             // absorb the invalid selector rather than throw.
             expect(resolveEntity('bad\nname', get('pc-test'), 'target', 'reference ignored')).toBeNull();
             warnings.expect("pc-test could not resolve target 'bad\nname' - nothing in the document matches it");
+        });
+
+        it('scopes a name to a nearer pc-node ahead of a farther pc-entity', async () => {
+            const { get } = await bootApp(`
+                <pc-asset id="stage" type="container" src="${STAGE_SRC}"></pc-asset>
+                <pc-entity name="Podium"></pc-entity>
+                <pc-model asset="stage">
+                    <pc-node name="Podium"></pc-node>
+                    <pc-test></pc-test>
+                </pc-model>
+            `);
+
+            // Every entity-fronting kind participates in the lexical phase: from inside the
+            // model, its own node wins over the document-first pc-entity.
+            expect(getEntity('Podium', get('pc-test'))).toBe(get<NodeElement>('pc-node').entity);
+            expect(getEntity('Podium')).toBe(get<EntityElement>('pc-entity[name="Podium"]').entity);
         });
 
         it('resolves a name the scoped selector must escape', async () => {

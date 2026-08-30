@@ -131,10 +131,10 @@ const assetConversion: Conversion = (rest, raw) => {
 };
 
 /**
- * Resolves an `entity:` prefix to the Entity backing a `pc-entity` element. The reference can be a
- * CSS selector, an element id or an entity name — an exact entity name resolves against the
- * nearest enclosing entity first, then outward, then the document. The failure warning names
- * which of the three causes ({@link unresolvedCause}) it hit.
+ * Resolves an `entity:` prefix to the Entity backing a `pc-entity`, `pc-model` or `pc-node`
+ * element. The reference can be a CSS selector, an element id or a name — an exact name resolves
+ * against the nearest enclosing entity first, then outward, then the document. The failure
+ * warning names which of the three causes ({@link unresolvedCause}) it hit.
  * @param rest - The entity reference.
  * @param raw - The raw value, returned unchanged when the reference does not resolve.
  * @param from - The element the value is declared under, which scopes the reference.
@@ -306,9 +306,9 @@ class ScriptComponentElement extends ComponentElement {
     /**
      * Recursively converts raw attribute data into proper PlayCanvas types. Supported conversions:
      * - "asset:id" → the Asset created by the `pc-asset` element with that id
-     * - "entity:ref" → the Entity backing a `pc-entity` element. The reference can be a CSS
-     *   selector, an element id or an entity name; an exact entity name resolves against this
-     *   element's nearest enclosing entity first, then outward, then the document.
+     * - "entity:ref" → the Entity backing a `pc-entity`, `pc-model` or `pc-node` element. The
+     *   reference can be a CSS selector, an element id or a name; an exact name resolves against
+     *   this element's nearest enclosing entity first, then outward, then the document.
      * - "vec2:1 2" → new Vec2(1, 2)
      * - "vec3:1 2 3" → new Vec3(1, 2, 3)
      * - "vec4:1 2 3 4" → new Vec4(1, 2, 3, 4)

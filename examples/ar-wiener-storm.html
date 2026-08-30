@@ -153,36 +153,9 @@
                 }
             }
 
-            /* The announcer */
-            #quip {
-                position: fixed;
-                bottom: calc(max(26px, env(safe-area-inset-bottom)) + 84px);
-                left: 50%;
-                transform: translate(-50%, 10px);
-                z-index: 10;
-                max-width: min(80vw, 30rem);
-                color: var(--hud-ink);
-                font-family: var(--font);
-                font-size: 15px;
-                font-style: italic;
-                text-align: center;
-                text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
-                opacity: 0;
-                transition: opacity 0.3s ease, transform 0.3s ease;
-                pointer-events: none;
-            }
-            #quip.show {
-                opacity: 1;
-                transform: translate(-50%, 0);
-            }
-
             @media (prefers-reduced-motion: reduce) {
                 #dignity.bump {
                     animation: none;
-                }
-                #quip {
-                    transition: opacity 0.3s ease;
-                    transform: translate(-50%, 0);
                 }
             }
 
@@ -218,6 +191,7 @@
             <pc-asset src="assets/models/wiener.glb" id="wiener"></pc-asset>
             <pc-asset src="assets/models/canonical-head.glb" id="head"></pc-asset>
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="sky"></pc-asset>
+            <pc-asset src="assets/sounds/wiener-slap.mp3" id="slap"></pc-asset>
             <!-- Scene -->
             <pc-scene>
                 <!-- Sky (lighting only), kept low so it never drowns the key light -->
@@ -254,13 +228,18 @@
                         <pc-script>
                             <pc-script-instance name="headShadowCatcher" ellipsoid="false" strength="0.6"></pc-script-instance>
                         </pc-script>
-                        <!-- Becomes the catcher surface. A child, because entity: references
-                             resolve bare names against pc-entity elements only -->
+                        <!-- Becomes the catcher surface. A child, so it rides the tracked
+                             head's transform with the proxy -->
                         <pc-model asset="head"></pc-model>
                     </pc-entity>
                 </pc-entity>
-                <!-- The wiener cannon -->
+                <!-- The wiener cannon. Hits land with a real wet slap recording: a
+                     non-positional slot, replayed per hit with the pitch and volume set to
+                     how hard it landed -->
                 <pc-entity name="wiener-storm">
+                    <pc-sound positional="false">
+                        <pc-sound-slot name="slap" asset="slap" overlap></pc-sound-slot>
+                    </pc-sound>
                     <pc-script>
                         <pc-script-instance name="wienerStorm" wiener-asset="asset:wiener" target="entity:head-proxy" rate="2.5" template="#wiener-template"></pc-script-instance>
                     </pc-script>
@@ -268,57 +247,60 @@
             </pc-scene>
         </pc-app>
 
-        <!-- One wiener: six capsule bodies linked by five 6dof flex joints whose angular
-             springs pull it back straight - a raw wiener is floppy, not a rag. Authored in
-             the model's meters; the cannon scales each clone to its own size in scene
-             units. The joints reference the segments by bare name, and names resolve
-             against the nearest enclosing entity first - so every clone's joints bind that
-             clone's own segments, which is what lets one template spawn many wieners. The
-             single root pc-entity is what keeps the names self-contained. -->
+        <!-- One wiener: the model's own B0-B5 skin bones, each decorated with a capsule
+             body, linked by five 6dof flex joints whose angular springs pull the chain
+             back straight - a raw wiener is floppy, not a rag. Physics drives the bones,
+             so the skinned mesh follows with no scripting. Each joint anchors on a small
+             entity at the junction between its bones (half the 0.023 bone spacing, in
+             bone-local meters - the model's scale carries it). Bones and joints are wired
+             by bare name, and names resolve against the nearest enclosing entity first -
+             so every clone's joints bind that clone's own bones, which is what lets one
+             template spawn many wieners. The single entity-fronting root (the pc-model)
+             is what keeps the names self-contained. -->
         <template id="wiener-template">
-            <pc-entity name="wiener">
-                <pc-entity name="seg-0" position="0 -0.0575 0">
+            <pc-model asset="wiener">
+                <pc-node name="B0">
                     <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
                     <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
-                </pc-entity>
-                <pc-entity name="seg-1" position="0 -0.0345 0">
+                    <!-- Bending swings about each junction's local X and Z, twisting about
+                         Y. Five joints share the total fold, and twist is nearly locked. -->
+                    <pc-entity name="flex-0" position="0 0.0115 0">
+                        <pc-joint type="6dof" entity-a="B0" entity-b="B1" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                    </pc-entity>
+                </pc-node>
+                <pc-node name="B1">
                     <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
                     <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
-                </pc-entity>
-                <pc-entity name="seg-2" position="0 -0.0115 0">
+                    <pc-entity name="flex-1" position="0 0.0115 0">
+                        <pc-joint type="6dof" entity-a="B1" entity-b="B2" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                    </pc-entity>
+                </pc-node>
+                <pc-node name="B2">
                     <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
                     <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
-                </pc-entity>
-                <pc-entity name="seg-3" position="0 0.0115 0">
+                    <pc-entity name="flex-2" position="0 0.0115 0">
+                        <pc-joint type="6dof" entity-a="B2" entity-b="B3" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                    </pc-entity>
+                </pc-node>
+                <pc-node name="B3">
                     <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
                     <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
-                </pc-entity>
-                <pc-entity name="seg-4" position="0 0.0345 0">
+                    <pc-entity name="flex-3" position="0 0.0115 0">
+                        <pc-joint type="6dof" entity-a="B3" entity-b="B4" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                    </pc-entity>
+                </pc-node>
+                <pc-node name="B4">
                     <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
                     <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
-                </pc-entity>
-                <pc-entity name="seg-5" position="0 0.0575 0">
+                    <pc-entity name="flex-4" position="0 0.0115 0">
+                        <pc-joint type="6dof" entity-a="B4" entity-b="B5" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
+                    </pc-entity>
+                </pc-node>
+                <pc-node name="B5">
                     <pc-collision type="capsule" radius="0.0115" height="0.027"></pc-collision>
                     <pc-rigid-body type="dynamic" mass="0.02" friction="0.4" angular-damping="0.5"></pc-rigid-body>
-                </pc-entity>
-                <!-- Bending swings about each junction's local X and Z, twisting about Y.
-                     Five joints share the total fold, and twist is nearly locked. -->
-                <pc-entity name="flex-0" position="0 -0.046 0">
-                    <pc-joint type="6dof" entity-a="seg-0" entity-b="seg-1" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
-                </pc-entity>
-                <pc-entity name="flex-1" position="0 -0.023 0">
-                    <pc-joint type="6dof" entity-a="seg-1" entity-b="seg-2" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
-                </pc-entity>
-                <pc-entity name="flex-2" position="0 0 0">
-                    <pc-joint type="6dof" entity-a="seg-2" entity-b="seg-3" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
-                </pc-entity>
-                <pc-entity name="flex-3" position="0 0.023 0">
-                    <pc-joint type="6dof" entity-a="seg-3" entity-b="seg-4" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
-                </pc-entity>
-                <pc-entity name="flex-4" position="0 0.046 0">
-                    <pc-joint type="6dof" entity-a="seg-4" entity-b="seg-5" angular-motion-x="limited" angular-motion-y="limited" angular-motion-z="limited" angular-limits-x="-10 10" angular-limits-y="-1.5 1.5" angular-limits-z="-10 10" angular-stiffness="6 8 6"></pc-joint>
-                </pc-entity>
-            </pc-entity>
+                </pc-node>
+            </pc-model>
         </template>
 
         <script>
@@ -339,7 +321,6 @@
 
         <!-- HUD -->
         <div id="status"><span class="status-dot"></span><span id="status-text">Loading face tracker…</span></div>
-        <div id="quip"></div>
         <div id="dignity">
             <div class="dignity-row">
                 <span class="label">DIGNITY</span>
@@ -388,50 +369,8 @@
 
             app.on('face:lost', () => {
                 dignityPill.classList.remove('active');
-                say('The wieners miss you.', 1);
                 if (!cameraError) setStatus('Show your face');
             });
-
-            // The announcer: one deadpan line at a time, important lines win
-            const quip = document.getElementById('quip');
-            let quipUntil = 0;
-            let quipPriority = 0;
-            let quipTimer = null;
-
-            function say(text, priority = 0) {
-                const now = performance.now();
-                if (now < quipUntil && priority <= quipPriority) return;
-                quipUntil = now + 2600;
-                quipPriority = priority;
-                quip.textContent = text;
-                quip.classList.add('show');
-                clearTimeout(quipTimer);
-                quipTimer = setTimeout(() => {
-                    quip.classList.remove('show');
-                    quipPriority = 0;
-                }, 2200);
-            }
-
-            const pick = lines => lines[Math.floor(Math.random() * lines.length)];
-
-            const HIT_QUIPS = [
-                'Right in the kisser.',
-                'That one had mustard on it.',
-                'The wurst is yet to come.',
-                'A direct hit. Nature is beautiful.',
-                'That’s a lot of wiener.',
-                'Frankly, uncalled for.',
-                'You took that surprisingly well.'
-            ];
-            const HARD_HIT_QUIPS = [
-                'OOF. Right in the dignity.',
-                'That one left a mark.',
-                'A meaty blow.'
-            ];
-            const GONE_QUIPS = [
-                'Dignity: gone. The wieners won.',
-                'Nothing left but shame and mustard.'
-            ];
 
             // Dignity: drains with every hit, seeps back while you keep dodging
             const dignityFill = document.getElementById('dignity-fill');
@@ -440,7 +379,6 @@
             let dignity = 100;
             let gone = false;
             let endured = 0;
-            let dodgeStreak = 0;
             let lastHitAt = 0;
 
             const renderDignity = () => {
@@ -454,7 +392,6 @@
                 if (gone && respite > 6000) {
                     gone = false;
                     dignity = 20;
-                    say('Dignity partially restored.', 1);
                     renderDignity();
                 } else if (!gone && dignity < 100 && respite > 2000) {
                     dignity = Math.min(100, dignity + 0.4);
@@ -462,78 +399,37 @@
                 }
             }, 200);
 
-            app.on('wiener:missed', () => {
-                dodgeStreak += 1;
-                if (dodgeStreak === 3) say('The wieners respect you now.', 1);
-                else if (dodgeStreak === 6) say('Untouchable. Frankly.', 1);
-                else if (dodgeStreak === 10) say('Not one frank has landed. Statistically improbable.', 1);
-            });
-
-            // The storm escalates quietly - only the announcer lets on
-            const STORM_NAMES = [
-                '', 'Light wiener drizzle', 'Frankfurter front', 'Severe sausage squall',
-                'Major meat monsoon', 'CAT 5 FRANKNADO'
-            ];
-
-            app.on('storm:category', (category) => {
-                if (category > 1) say(`The storm intensifies. ${STORM_NAMES[category] ?? STORM_NAMES[5]}.`, 2);
-            });
-
-            // Hits land with a real wet slap recording. The audio context can only start
-            // from a user gesture, so hits are silent until the first tap.
-            let audio = null;
-            let slapBuffer = null;
-
-            window.addEventListener('pointerdown', () => {
-                audio = audio ?? new AudioContext();
-                audio.resume();
-                fetch('assets/sounds/wiener-slap.mp3')
-                    .then(response => response.arrayBuffer())
-                    .then(data => audio.decodeAudioData(data))
-                    .then((buffer) => {
-                        slapBuffer = buffer;
-                    })
-                    .catch(() => {}); // no sound is an acceptable fallback
-            }, { once: true });
+            // The slap slot declared on the cannon entity. The engine resumes its audio
+            // context on the first user gesture, so hits are silent until the first tap.
+            const slapSlot = document.querySelector('pc-sound-slot[name="slap"]');
 
             const slap = (speed) => {
-                if (!audio || audio.state !== 'running' || !slapBuffer) return;
+                const slot = slapSlot?.soundSlot;
+                if (!slot) return;
 
                 // How hard it landed, 0 to 1 - gentle grazes stay silent
                 const punch = Math.max(0, Math.min(1, (speed - 40) / 220));
                 if (punch <= 0) return;
 
-                // Slight pitch variation keeps the barrage from sounding machine-gunned
-                const source = audio.createBufferSource();
-                source.buffer = slapBuffer;
-                source.playbackRate.value = 0.92 + Math.random() * 0.18;
-                const gain = audio.createGain();
-                gain.gain.value = 0.1 + punch * 0.45;
-                source.connect(gain).connect(audio.destination);
-                source.start(audio.currentTime);
+                // Per-instance pitch and volume, so a new slap never bends the tail of one
+                // still playing. Slight pitch variation keeps the barrage from sounding
+                // machine-gunned.
+                const instance = slot.play();
+                if (instance) {
+                    instance.pitch = 0.92 + Math.random() * 0.18;
+                    instance.volume = 0.1 + punch * 0.45;
+                }
             };
 
             app.on('wiener:hit', (speed) => {
                 endured += 1;
                 enduredCount.textContent = endured;
-                dodgeStreak = 0;
                 lastHitAt = performance.now();
 
                 const punch = Math.max(0, Math.min(1, ((speed ?? 150) - 40) / 220));
-                const before = dignity;
                 dignity = Math.max(0, dignity - (4 + punch * 8));
-
-                if (!gone && dignity <= 0) {
+                if (dignity <= 0) {
                     gone = true;
-                    say(pick(GONE_QUIPS), 3);
-                } else if (before > 50 && dignity <= 50) {
-                    say('Half your dignity remains. Choose wisely.', 2);
-                } else if (before > 25 && dignity <= 25) {
-                    say('Dignity reserves critical.', 2);
-                } else if (punch > 0.72) {
-                    say(pick(HARD_HIT_QUIPS), 1);
-                } else if (endured % 4 === 0) {
-                    say(pick(HIT_QUIPS));
                 }
 
                 renderDignity();

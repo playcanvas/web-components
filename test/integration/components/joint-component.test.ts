@@ -4,8 +4,19 @@ import { describe, expect, it } from 'vitest';
 
 import type { JointComponentElement } from '../../../src/components/joint-component';
 import type { EntityElement } from '../../../src/entity';
+import type { NodeElement } from '../../../src/node';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
+
+/** A meshless glTF with a single named node, for the reference-to-a-model-node case. */
+const STAGE_SRC = `data:application/json,${encodeURIComponent(
+    JSON.stringify({
+        asset: { version: '2.0' },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'Podium' }]
+    })
+)}`;
 
 /**
  * Two rigid bodies for the joint to reference. Without Ammo the bodies never simulate and the
@@ -182,6 +193,27 @@ describe('<pc-joint>', () => {
 
             expect(component.entityA).toBe(app.root.findByName('bob'));
             expect(component.entityB).toBe(app.root.findByName('anchor'));
+        });
+
+        it('resolves a reference to a model node by name', async () => {
+            // The ragdoll pattern, by name: a pc-node decorates one of the model's own skeleton
+            // nodes with a body, and a joint nested beneath it references that node. The joint's
+            // children build once the node binds, so the reference resolves against a live
+            // entity - the case that motivated reporting unresolved references in the first
+            // place, now wired without ids.
+            const { get } = await bootApp(`
+                <pc-asset id="stage" type="container" src="${STAGE_SRC}"></pc-asset>
+                <pc-model asset="stage">
+                    <pc-node name="Podium">
+                        <pc-rigid-body></pc-rigid-body>
+                        <pc-entity name="frame"><pc-joint entity-a="Podium"></pc-joint></pc-entity>
+                    </pc-node>
+                </pc-model>
+            `);
+
+            expect(get<JointComponentElement>('pc-joint').component.entityA).toBe(
+                get<NodeElement>('pc-node').entity
+            );
         });
 
         it('resolves a duplicated name to the nearest enclosing match', async () => {
