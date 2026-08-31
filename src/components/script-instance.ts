@@ -33,7 +33,8 @@ import { parseBool } from '../parse';
  *
  * @elementSummary The `<pc-script-instance>` element attaches one script class, named by `name`, to
  * the entity of its parent `<pc-script>`. Its other attributes set script attributes of the same
- * name, and `attributes` takes a JSON object instead. Must be a direct child of `<pc-script>`.
+ * name, and `attributes` takes a JSON object instead. An `entity:` value is an entity name —
+ * write `entity:#id` for an element id. Must be a direct child of `<pc-script>`.
  *
  * @fires {CustomEvent} scriptattributeschange - Fired when the script's attributes change. The
  * `detail` carries the new `attributes` object. Bubbles.
@@ -74,7 +75,10 @@ class ScriptInstanceElement extends AsyncElement {
     }
 
     /**
-     * Gets the attributes of the script.
+     * Gets the attributes of the script as an object whose `asset:`, `entity:`, `vec2:`, `vec3:`,
+     * `vec4:` and `color:` prefixed values are resolved when applied — an `entity:` value being
+     * an entity name (nearest enclosing entity first, then outward, then the document) or a
+     * document-wide `#` selector (`entity:#id`), never a bare element id.
      * @returns The attributes of the script.
      */
     get scriptAttributes(): Record<string, any> {
