@@ -1,4 +1,4 @@
-import { Vec3 } from 'playcanvas';
+import { Entity, Vec3 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AppElement } from '../../src/app';
@@ -122,6 +122,44 @@ describe('<pc-model>', () => {
 
         expect(instantiations, 'the superseded load did not instantiate').toBe(1);
         expect(handle.get('pc-model').contentEntity, 'the surviving load produced the content').toBeTruthy();
+        expect(uncaught.seen).toEqual([]);
+    });
+
+    it('instantiates only the newest asset when a superseded load settles later', async () => {
+        // The model moves from asset A to B while both are still loading, then B settles before
+        // A. Only B may instantiate - A settling afterwards must deliver nothing, or it would
+        // replace B's content with its own.
+        const { app, appElement } = await bootApp(`
+            <pc-asset id="slow-a" type="container" src="slow-a.glb" lazy></pc-asset>
+            <pc-asset id="slow-b" type="container" src="slow-b.glb" lazy></pc-asset>
+        `);
+
+        // Park both loads so the test settles them in a chosen order. Settling a parked load
+        // runs the registry's own completion path, so the asset's real load event fires.
+        const parked = new Map<string, (err: string | null, resource?: unknown) => void>();
+        vi.spyOn(app.loader, 'load').mockImplementation(((
+            url: string,
+            _type: string,
+            callback: (err: string | null, resource?: unknown) => void
+        ) => {
+            parked.set(url, callback);
+        }) as typeof app.loader.load);
+
+        const model = document.createElement('pc-model');
+        model.setAttribute('asset', 'slow-a');
+        appElement.appendChild(model);
+        await vi.waitFor(() => expect(parked.has('slow-a.glb')).toBe(true));
+
+        model.setAttribute('asset', 'slow-b');
+        await vi.waitFor(() => expect(parked.has('slow-b.glb')).toBe(true));
+
+        const container = (name: string) => ({ instantiateRenderEntity: () => new Entity(name, app) });
+        parked.get('slow-b.glb')!(null, container('root-b'));
+        parked.get('slow-a.glb')!(null, container('root-a'));
+
+        expect(model.contentEntity!.name, 'only the newest asset instantiated').toBe('root-b');
+        expect(model.contentEntity!.parent, 'parented beneath the host').toBe(model.entity);
+        await readyWithin(model);
         expect(uncaught.seen).toEqual([]);
     });
 

@@ -1,7 +1,7 @@
-import type { ContainerResource, Entity, EventHandle } from 'playcanvas';
+import type { ContainerResource, Entity } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
-import { useAsset } from './asset';
+import { AssetBinding } from './asset-binding';
 import { EVENT_ATTRIBUTES } from './entity-base';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseBool, parseTags, parseVec3 } from './parse';
@@ -168,20 +168,19 @@ class ModelElement extends EntityOwnerElement {
 
     /**
      * Incremented on every new load, on disconnect, and when the host entity dies, and captured
-     * by a load when it starts. A load that resumes from an await or a load callback abandons
-     * itself if the value has moved on, so a superseded load can neither instantiate a second
-     * content root nor parent one under a host a newer cycle has already replaced.
+     * by a load when it starts. A load that resumes from an await abandons itself if the value
+     * has moved on, so a superseded load can neither instantiate a second content root nor
+     * parent one under a host a newer cycle has already replaced. The asset subscription itself
+     * is guarded by the binding below.
      */
     private _loadGeneration = 0;
 
     /**
-     * The pending asset subscriptions of the current load, if it is waiting for its asset. Held
-     * so that whatever supersedes the load can detach the handlers from the asset, rather than
-     * leave them registered until the asset settles (or forever, if it never does).
+     * The subscription to the current container asset while it is loading. Whatever supersedes
+     * the load — a newer load, a disconnect, the host dying — cancels it, so the asset settling
+     * later cannot deliver to a load that no longer owns the element.
      */
-    private _loadHandle: EventHandle | null = null;
-
-    private _errorHandle: EventHandle | null = null;
+    private _binding = new AssetBinding();
 
     /**
      * The root entity of the instantiated model content, parented beneath the host entity.
@@ -287,7 +286,7 @@ class ModelElement extends EntityOwnerElement {
         // resets the element. The generation guard comes first so a load suspended on an await
         // cannot resume against the torn-down element.
         this._loadGeneration++;
-        this._detachLoadHandlers();
+        this._binding.cancel();
         this._entity?.destroy();
     }
 
@@ -308,16 +307,9 @@ class ModelElement extends EntityOwnerElement {
      */
     protected override _onEntityDestroy(entity: Entity) {
         this._loadGeneration++;
-        this._detachLoadHandlers();
+        this._binding.cancel();
         this._contentEntity = null;
         super._onEntityDestroy(entity);
-    }
-
-    private _detachLoadHandlers() {
-        this._loadHandle?.off();
-        this._loadHandle = null;
-        this._errorHandle?.off();
-        this._errorHandle = null;
     }
 
     /**
@@ -350,7 +342,7 @@ class ModelElement extends EntityOwnerElement {
 
         // Supersede any load already in flight - only the newest load may instantiate
         const generation = ++this._loadGeneration;
-        this._detachLoadHandlers();
+        this._binding.cancel();
 
         // Re-arm readiness so a waiter obtained after an asset change resolves against the new
         // content. A no-op on first connection, where readiness is still pending.
@@ -383,32 +375,11 @@ class ModelElement extends EntityOwnerElement {
             return;
         }
 
-        const asset = useAsset(this._asset);
-        if (!asset) {
-            // A non-empty id that resolves to nothing is a dead end - say so rather than staying
-            // silently pending.
-            console.warn(`pc-model could not find asset '${this._asset}' - model not created`);
-            return;
-        }
-
-        if (asset.loaded) {
-            this._instantiate(asset.resource as ContainerResource);
-        } else {
-            // The generation is re-checked even though a superseded handler is detached: the
-            // detach relies on how the engine's event emitter treats removal, while the check
-            // holds on its own. Whichever of load/error fires first detaches the other.
-            this._loadHandle = asset.once('load', () => {
-                this._detachLoadHandlers();
-                if (generation !== this._loadGeneration) {
-                    return;
-                }
-                this._instantiate(asset.resource as ContainerResource);
-            });
-            this._errorHandle = asset.once('error', (err: string | Error) => {
-                this._detachLoadHandlers();
-                if (generation !== this._loadGeneration) {
-                    return;
-                }
+        // Every path that moves _loadGeneration also rebinds or cancels the binding, so a
+        // delivery below is always current - no generation re-check needed in the callbacks.
+        const asset = this._binding.bind(this._asset, {
+            load: ({ resource }) => this._instantiate(resource as ContainerResource),
+            error: (err) => {
                 // A failed load settles readiness with a null contentEntity, mirroring pc-asset:
                 // readiness means the load settled, not that it succeeded.
                 this.dispatchEvent(
@@ -417,7 +388,12 @@ class ModelElement extends EntityOwnerElement {
                     })
                 );
                 this._onReady();
-            });
+            }
+        });
+        if (!asset) {
+            // A non-empty id that resolves to nothing is a dead end - say so rather than staying
+            // silently pending.
+            console.warn(`pc-model could not find asset '${this._asset}' - model not created`);
         }
     }
 

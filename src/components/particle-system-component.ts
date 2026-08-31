@@ -1,6 +1,7 @@
-import type { ParticleSystemComponent } from 'playcanvas';
+import type { Asset, ParticleSystemComponent } from 'playcanvas';
 
 import { useAsset } from '../asset';
+import { AssetBinding } from '../asset-binding';
 
 import { ComponentElement } from './component';
 
@@ -21,6 +22,14 @@ import { ComponentElement } from './component';
 class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComponent> {
     private _asset = '';
 
+    /**
+     * The subscription to the current config asset while its load is in flight. Rebinding
+     * supersedes it and disconnect cancels it, so a superseded config — an earlier asset that
+     * finishes loading after its replacement, or a callback left behind by a previous
+     * connection — can never configure the component.
+     */
+    private _binding = new AssetBinding();
+
     /** @ignore */
     constructor() {
         super('particlesystem');
@@ -28,20 +37,30 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
 
     protected getInitialComponentData() {
         const asset = useAsset(this._asset);
-        // A lazy config has no resource yet - _loadAsset applies it once the load completes
+        // A lazy config has no resource yet - the config binding applies it once the load
+        // completes
         if (!asset || !asset.resource) {
             return {};
         }
 
-        if ((asset.resource as any).colorMapAsset) {
-            const id = (asset.resource as any).colorMapAsset;
-            const colorMapAsset = useAsset(id)?.id;
-            if (colorMapAsset) {
-                (asset.resource as any).colorMapAsset = colorMapAsset;
-            }
-        }
-
+        this._resolveColorMap(asset.resource);
         return asset.resource;
+    }
+
+    protected initComponent() {
+        // A loaded config already arrived through getInitialComponentData - the binding is only
+        // needed for a load still in flight. Resolution here also starts a lazy config's load.
+        const asset = useAsset(this._asset);
+        if (asset && !asset.loaded) {
+            this._bindConfig();
+        }
+    }
+
+    disconnectedCallback() {
+        // The binding dies with the connection, so a config that finishes loading later cannot
+        // configure the component a reconnection creates - that connection binds afresh.
+        this._binding.cancel();
+        super.disconnectedCallback();
     }
 
     /**
@@ -53,10 +72,27 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
         return super.component;
     }
 
+    /**
+     * Rewrites the config's `colorMapAsset` from the `pc-asset` id it is authored with to the
+     * engine asset id the component resolves, starting the texture's load if it is lazy. The
+     * rewrite is in place, so a config applied again — a host cycle, a reconnection — is already
+     * resolved and passes through unchanged.
+     */
+    private _resolveColorMap(resource: any) {
+        if (resource.colorMapAsset) {
+            const colorMapAsset = useAsset(resource.colorMapAsset)?.id;
+            if (colorMapAsset) {
+                resource.colorMapAsset = colorMapAsset;
+            }
+        }
+    }
+
     private applyConfig(resource: any) {
         if (!this.component) {
             return;
         }
+
+        this._resolveColorMap(resource);
 
         // Set all the config properties on the component
         for (const key in resource) {
@@ -66,21 +102,10 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
         }
     }
 
-    private async _loadAsset() {
-        await this.closestApp?.ready();
-
-        const asset = useAsset(this._asset);
-        if (!asset) {
-            return;
-        }
-
-        if (asset.loaded) {
-            this.applyConfig(asset.resource);
-        } else {
-            asset.once('load', () => {
-                this.applyConfig(asset.resource);
-            });
-        }
+    private _bindConfig() {
+        this._binding.bind(this._asset, {
+            load: (asset: Asset) => this.applyConfig(asset.resource)
+        });
     }
 
     /**
@@ -90,7 +115,7 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
     set asset(value: string) {
         this._asset = value;
         if (this.isConnected) {
-            this._loadAsset();
+            this._bindConfig();
         }
     }
 
