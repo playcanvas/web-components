@@ -93,6 +93,15 @@ export type PointerHost = {
 export class PointerController {
     private _host: PointerHost;
 
+    /**
+     * Incremented by every connect and disconnect. Async work captures the value when it starts
+     * and stops if it has moved on - so a pick or dispatch belonging to an earlier connection
+     * can neither keep reading through its destroyed picker nor deliver into a later
+     * connection. The field null checks alone cannot tell the two apart once a reconnect has
+     * repopulated them.
+     */
+    private _generation = 0;
+
     private _app: AppBase | null = null;
 
     private _canvas: HTMLCanvasElement | null = null;
@@ -153,6 +162,7 @@ export class PointerController {
      * @param canvas - The canvas the application renders into.
      */
     connect(app: AppBase, canvas: HTMLCanvasElement) {
+        this._generation++;
         this._app = app;
         this._canvas = canvas;
 
@@ -183,6 +193,8 @@ export class PointerController {
      * never connected.
      */
     disconnect() {
+        this._generation++;
+
         if (this._canvas) {
             Object.entries(this._pointerHandlers).forEach(([type, handler]) => {
                 if (handler) {
@@ -363,6 +375,7 @@ export class PointerController {
      * @returns The graph node under the pointer, or `null` if nothing was hit.
      */
     private async _pickNode(event: PointerEvent): Promise<GraphNode | null> {
+        const generation = this._generation;
         const app = this._app;
         const picker = this._picker;
         const canvas = this._canvas;
@@ -386,8 +399,9 @@ export class PointerController {
             picker.prepare(camera, app.scene);
             const selection = await picker.getSelectionAsync(x, y);
 
-            // The host may have disconnected while the read back was in flight.
-            if (!this._picker || !this._app) return null;
+            // The host may have disconnected - or disconnected and reconnected - while the read
+            // back was in flight. Either way this pick's connection is gone.
+            if (generation !== this._generation) return null;
 
             if (selection.length > 0) {
                 const item = selection[0];
@@ -408,10 +422,12 @@ export class PointerController {
 
         // Moves arrive faster than a pick resolves, so results can land out of order. Only the
         // newest pick may update the hover state - an older one describes a pointer position the
-        // user has already left.
+        // user has already left, and one from an earlier connection describes a scene that no
+        // longer exists.
+        const generation = this._generation;
         const token = ++this._pickToken;
         const node = await this._pickNode(event);
-        if (token !== this._pickToken || !this._picker) return;
+        if (token !== this._pickToken || generation !== this._generation) return;
 
         // The hovered element is the nearest one up the node's parent chain with a hover
         // listener - the nearest-listener rule down/up use. Dispatch is still gated per event
@@ -453,6 +469,8 @@ export class PointerController {
     private _onPointerDown(event: PointerEvent) {
         if (!this._picker || !this._app) return;
 
+        const generation = this._generation;
+
         // Picks stay concurrent - only the dispatch of the results is serialized
         const pick = this._pickNode(event);
 
@@ -466,7 +484,7 @@ export class PointerController {
 
         this._chainDispatch(async () => {
             const node = await pick;
-            if (!this._picker) return; // the host disconnected while the pick was in flight
+            if (generation !== this._generation) return; // this press's connection is gone
 
             const entityElement = this._elementWithListener(node, 'pointerdown');
             if (entityElement) {
@@ -478,6 +496,8 @@ export class PointerController {
     private _onPointerUp(event: PointerEvent) {
         if (!this._picker || !this._app) return;
 
+        const generation = this._generation;
+
         // The press pick this release may conclude as a click. Claimed synchronously, so the
         // entry is gone before any other event for this pointer can be handled.
         const downPick = this._downPicks.get(event.pointerId);
@@ -487,7 +507,7 @@ export class PointerController {
 
         this._chainDispatch(async () => {
             const node = await pick;
-            if (!this._picker) return; // the host disconnected while the pick was in flight
+            if (generation !== this._generation) return; // this release's connection is gone
 
             const entityElement = this._elementWithListener(node, 'pointerup');
             if (entityElement) {
@@ -504,7 +524,7 @@ export class PointerController {
             // A rejected pick was already reported by the press or release step that awaited it;
             // here it just means no click can conclude.
             const picked = await Promise.all([downPick, pick]).catch(() => null);
-            if (!picked || !this._picker) return;
+            if (!picked || generation !== this._generation) return;
 
             const [downNode, upNode] = picked;
             const clickElement = this._elementWithListener(commonAncestor(downNode, upNode), 'click');
