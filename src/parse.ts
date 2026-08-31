@@ -11,9 +11,6 @@
  *   shared frozen constants (`Vec3.ZERO`, `Color.WHITE`) as defaults.
  * - `parseBool` and `parseTags` take no attribute name, because every value is valid for them and
  *   so they never warn.
- *
- * Entity reference strings are not literals and do not parse here - `entity-reference.ts`
- * resolves them against the DOM.
  */
 
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
