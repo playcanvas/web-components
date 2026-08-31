@@ -2,56 +2,55 @@ import type { Asset, EventHandle } from 'playcanvas';
 
 import { useAsset } from './asset';
 
-// Both declarations are exported inline: stripInternal drops an @internal declaration together
-// with an inline export, but a separate `export { ... }` statement would survive it and leave
-// the emitted .d.ts exporting names that no longer exist.
+// Keep `export` on these declarations. TypeScript removes the declaration and its inline export
+// when `stripInternal` is enabled. A separate `export { ... }` statement would remain in the
+// generated .d.ts file and refer to a declaration that had been removed.
 
 /**
- * How an {@link AssetBinding} delivers its asset's settlement.
+ * Functions called when an {@link AssetBinding} finishes loading an asset or encounters an
+ * error.
  *
  * @internal
  */
 export type AssetBindingCallbacks = {
     /**
-     * Delivers the asset once it holds a resource: synchronously from {@link AssetBinding.bind}
-     * when the asset had already loaded one, otherwise from its `load` event.
+     * Called when the asset has a usable resource. If it was already loaded, this can run before
+     * {@link AssetBinding.bind} returns. Otherwise it runs when the asset fires `load`.
      */
     load: (asset: Asset) => void;
 
     /**
-     * Delivers a failed load — one that fails while subscribed, or one that had already failed
-     * when {@link AssetBinding.bind} ran. Optional — without it, a failure leaves the binding
-     * subscribed, so an asset that is reloaded after an error still delivers.
+     * Called when the asset fails to load, including when it had already failed before
+     * {@link AssetBinding.bind} was called. If this is omitted, the binding keeps waiting so a
+     * later successful reload can still call `load`.
      */
     error?: (err: string | Error) => void;
 };
 
 /**
- * One element's subscription to the settlement of its current asset reference.
+ * Watches the asset currently selected by an element.
  *
- * Every element that consumes an asset asynchronously has the same lifecycle problem: an asset
- * change or a disconnect supersedes a load still in flight, and the superseded load's callback
- * must not act on state it no longer owns. The mechanics of staying safe live here — resolve
- * through {@link useAsset} (which starts a lazy asset's load), deliver an already-loaded asset
- * immediately, otherwise subscribe to settlement, and guarantee that a superseded or cancelled
- * subscription never delivers. What to do with the delivered asset — instantiation, warnings,
- * readiness, resource ownership — stays in the consumer.
+ * An element can change its asset while the old one is still loading, or disconnect before the
+ * load finishes. This class makes sure callbacks from those older loads do nothing. Calling
+ * {@link bind} stops watching the previous asset and starts watching the new one. Calling
+ * {@link cancel} stops watching altogether.
  *
- * An element owns one binding per asset reference for its whole life: `bind` supersedes whatever
- * the binding was waiting for, and `cancel` (typically on disconnect) leaves it waiting for
- * nothing. Because the binding itself is stable, a delivery that synchronously starts another
- * bind cannot orphan the newer subscription — there is no per-load handle for a resumed caller
- * to overwrite.
+ * Asset lookup goes through {@link useAsset}, so selecting a lazy asset starts its load. The
+ * caller still decides what to do with the result, such as creating scene content, reporting an
+ * error, or marking an element ready.
+ *
+ * Reuse one `AssetBinding` for each asset-valued property throughout the element's lifetime. It
+ * is safe for a callback to call `bind` again: the new asset remains active after the callback
+ * returns.
  *
  * @internal
  */
 export class AssetBinding {
     /**
-     * Incremented by every bind and cancel, and captured by a subscription when it is installed.
-     * A callback whose generation has moved on abandons itself without touching the binding —
-     * any handles it would detach belong to the subscription that superseded it. Bind and cancel
-     * already detach superseded handlers; the generation holds on its own, without relying on
-     * how the engine's event emitter treats removal.
+     * Each bind or cancel gets a new number. Event handlers remember the number they were created
+     * with and return if it is no longer current. Old listeners are normally removed as well, but
+     * this check also protects against an event that was already in progress when removal
+     * happened.
      */
     private _generation = 0;
 
@@ -67,8 +66,8 @@ export class AssetBinding {
     }
 
     /**
-     * Cancels the binding: whatever it was waiting for is detached and can no longer deliver.
-     * The binding stays usable — a later {@link bind} starts a new subscription.
+     * Stops watching the current asset and prevents its callbacks from running. The binding can
+     * be used again by calling {@link bind}.
      */
     cancel() {
         this._generation++;
@@ -76,17 +75,18 @@ export class AssetBinding {
     }
 
     /**
-     * Binds to the asset registered under `id`, superseding whatever the binding was waiting
-     * for — even when `id` resolves to nothing, since the element's reference has still moved
-     * on. Resolution starts a lazy asset's load. An asset that has already settled is delivered
-     * before this returns — through `load` when it holds a resource, through `error` when its
-     * load failed; otherwise the binding subscribes to the asset's settlement, detaching its
-     * handlers once either event delivers.
+     * Starts watching the asset registered under `id` and stops watching the previous one. A
+     * missing `id` still clears the previous binding. Looking up a lazy asset starts its load.
+     *
+     * If the asset has already loaded successfully, `load` runs before this method returns. An
+     * earlier failure calls `error` immediately when that callback is provided; without one, the
+     * binding waits for a later successful reload. Assets still loading are watched for the same
+     * two outcomes. Once an event is handled, both listeners are removed.
      *
      * @param id - The `id` of the `<pc-asset>` element to bind to.
-     * @param callbacks - Where settlement is delivered.
-     * @returns The resolved asset, or `undefined` — the caller owns the policy for a reference
-     * that resolves to nothing.
+     * @param callbacks - Functions to call when loading succeeds or fails.
+     * @returns The selected asset, or `undefined` if no asset has this `id`. The caller decides
+     * how to handle a missing asset.
      */
     bind(id: string, callbacks: AssetBindingCallbacks): Asset | undefined {
         const generation = ++this._generation;
@@ -100,13 +100,10 @@ export class AssetBinding {
         const { error } = callbacks;
 
         if (asset.loaded) {
-            // The engine marks a failed load `loaded` too - the flag means settled, not that a
-            // resource arrived. A settled failure must not deliver `load` with an empty
-            // resource: it reports through `error` where requested, and otherwise falls through
-            // to wait for a reload, exactly like a failure that happens while subscribed.
-            // Loosely != null on purpose: `resource` indexes the asset's resources array, so a
-            // failure that never produced one reads `undefined` while an explicit clear writes
-            // `null` - and a falsy-but-real resource (a text asset's '') must still deliver.
+            // PlayCanvas sets `loaded` after both success and failure, so a resource must also be
+            // present before this counts as success. Use `!= null` deliberately: `undefined` and
+            // `null` both mean there is no resource, while a valid resource can still be falsy
+            // (for example, an empty text file produces '').
             if (asset.resource != null) {
                 callbacks.load(asset);
                 return asset;
@@ -117,9 +114,10 @@ export class AssetBinding {
             }
         }
 
-        // Each handler checks its generation before detaching: a stale callback (one the detach
-        // above should already have removed) must not detach the subscription that superseded
-        // it. Whichever of load/error fires first detaches the other.
+        // Old listeners are normally removed by bind or cancel. The number check is a second
+        // safeguard for a late event. Check it before _detach so an old callback cannot remove
+        // the listeners for the current asset. Whichever current event runs first removes both
+        // listeners.
         this._loadHandle = asset.once('load', () => {
             if (generation !== this._generation) {
                 return;
