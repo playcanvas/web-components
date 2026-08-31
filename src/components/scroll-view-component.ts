@@ -8,7 +8,8 @@ import {
     Vec2
 } from 'playcanvas';
 
-import { parseBool, parseEnum, parseNumber, parseVec2, resolveEntity } from '../parse';
+import { resolveEntity } from '../entity-reference';
+import { parseBool, parseEnum, parseNumber, parseVec2 } from '../parse';
 
 import { ComponentElement } from './component';
 

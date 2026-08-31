@@ -25,7 +25,14 @@ export default {
     // None of these files declares an element, so excluding them keeps the manifest to the public
     // element surface. The base classes in async-element.ts and components/component.ts are
     // deliberately included - the elements that extend them inherit their attributes and events.
-    exclude: ['src/asset-binding.ts', 'src/colors.ts', 'src/loading-bar.ts', 'src/parse.ts', 'src/pointer-controller.ts'],
+    exclude: [
+        'src/asset-binding.ts',
+        'src/colors.ts',
+        'src/entity-reference.ts',
+        'src/loading-bar.ts',
+        'src/parse.ts',
+        'src/pointer-controller.ts'
+    ],
 
     // dist is wiped by `prebuild` and shipped via the `files` and `exports` fields, so the
     // generated files can never go stale and never need committing

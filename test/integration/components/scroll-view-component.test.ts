@@ -6,7 +6,7 @@ import { useGuard } from '../../helpers/guard';
 
 /**
  * Only the entity references are covered here. The resolution and reporting contract is shared
- * with every reference-resolving element and pinned once in get-entity.test.ts; these tests pin
+ * with every reference-resolving element and pinned once in entity-reference.test.ts; these tests pin
  * this element's wiring - all four attributes resolve, and each reports under its own name.
  */
 describe('<pc-scroll-view>', () => {

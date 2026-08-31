@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import type { EntityElement } from '../../src/entity';
+import { getEntity, resolveEntity } from '../../src/entity-reference';
 import type { ModelElement } from '../../src/model';
 import type { NodeElement } from '../../src/node';
-import { getEntity, resolveEntity } from '../../src/parse';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 

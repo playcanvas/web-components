@@ -6,7 +6,7 @@ import { useGuard } from '../../helpers/guard';
 
 /**
  * Only the [image] entity reference is covered here. The resolution and reporting contract is
- * shared with every reference-resolving element and pinned once in get-entity.test.ts; these
+ * shared with every reference-resolving element and pinned once in entity-reference.test.ts; these
  * tests pin this element's wiring - which attribute resolves, the own-entity default, and what
  * an unresolved reference leaves behind.
  */

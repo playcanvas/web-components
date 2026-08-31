@@ -1,7 +1,8 @@
 import type { ScrollbarComponent } from 'playcanvas';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from 'playcanvas';
 
-import { parseEnum, parseNumber, resolveEntity } from '../parse';
+import { resolveEntity } from '../entity-reference';
+import { parseEnum, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';
 
