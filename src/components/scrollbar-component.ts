@@ -120,8 +120,8 @@ class ScrollbarComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#id` or
-     * CSS selector) to the entity used as the scrollbar handle. An exact name resolves against the
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity used as the scrollbar handle. An exact name resolves against the
      * nearest enclosing entity first, then outward, then the document. A non-empty reference that
      * does not resolve warns and is ignored.
      * @param value - The handle entity reference.
@@ -137,7 +137,8 @@ class ScrollbarComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the reference to the `<pc-entity>` used as the scrollbar handle.
+     * Gets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity used as the scrollbar handle.
      * @returns The handle entity reference.
      */
     get handle() {

@@ -15,8 +15,9 @@ import { parseBool } from '../parse';
  *   Values are parsed according to the type of the attribute's current value — initially the
  *   script's declared default (numbers, booleans, strings, Vec2/3/4, Color, Quat as Euler
  *   angles) — and the `asset:`/`entity:`/`vec2:`/`vec3:`/`vec4:`/`color:` prefixes may be used
- *   to be explicit. An `entity:` reference naming an exact entity name resolves against the
- *   nearest enclosing entity first, then outward, then the document.
+ *   to be explicit. An `entity:` reference is an entity name — resolved against the nearest
+ *   enclosing entity first, then outward, then the document — or a document-wide `#` selector
+ *   (`entity:#id`); a bare value is always a name, never an element id.
  * - **The `attributes` JSON attribute**: an object supporting nested structures and attribute
  *   names that collide with reserved HTML attribute names (e.g. `title`).
  *
@@ -55,8 +56,9 @@ class ScriptInstanceElement extends AsyncElement {
     /**
      * Sets the attributes of the script as an object. Values are converted with the same rules
      * as the `attributes` attribute: `asset:`/`entity:` references and `vec2:`/`vec3:`/`vec4:`/
-     * `color:` prefixed strings are resolved (an exact entity name against the nearest enclosing
-     * entity first, then outward, then the document), and a plain numeric array is converted to
+     * `color:` prefixed strings are resolved (an entity name against the nearest enclosing
+     * entity first, then outward, then the document — or a document-wide `#` selector; a bare
+     * value is always a name, never an element id), and a plain numeric array is converted to
      * the type of the attribute it targets when that attribute currently holds a Vec2, Vec3,
      * Vec4 or Color.
      * @param value - The attributes of the script.

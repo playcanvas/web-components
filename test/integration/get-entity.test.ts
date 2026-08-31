@@ -38,9 +38,18 @@ describe('entity references', () => {
             expect(getEntity('#cube-id')).toBe(app.root.findByName('Cube'));
         });
 
-        it('resolves an attribute selector', async () => {
-            const { app } = await bootApp(markup);
-            expect(getEntity('pc-entity[name="Cube"]')).toBe(app.root.findByName('Cube'));
+        it('resolves any selector written behind #, not just a bare id', async () => {
+            const { app } = await bootApp('<pc-entity id="wrap"><pc-entity name="inner"></pc-entity></pc-entity>');
+            expect(getEntity('#wrap pc-entity')).toBe(app.root.findByName('inner'));
+        });
+
+        it('never interprets a bare reference as a selector', async () => {
+            await bootApp(markup);
+            // Both are valid selectors that would match - a type selector and an attribute
+            // selector - but a bare reference is a name and nothing else, so neither can be
+            // silently retargeted by elements matching it as a selector.
+            expect(getEntity('pc-entity')).toBeNull();
+            expect(getEntity('pc-entity[name="Cube"]')).toBeNull();
         });
 
         it('does not resolve a bare reference that only matches an element id', async () => {
@@ -143,6 +152,28 @@ describe('entity references', () => {
             );
         });
 
+        it('escapes the suggested #id so it parses as a selector', async () => {
+            // getElementById accepts ids no unescaped selector can express - the suggestion must
+            // be the form that actually works in one
+            await bootApp('<pc-entity id="a:b" name="Colon"></pc-entity>');
+            expect(resolveEntity('a:b', caller(), 'target', 'reference ignored')).toBeNull();
+            warnings.expect(
+                "pc-test could not resolve target 'a:b' - nothing in the document matches it - " +
+                    "reference ignored. A bare reference is a name - write '#a\\:b' to reference " +
+                    'the element with that id.'
+            );
+        });
+
+        it('keeps the generic advice when the same-spelled id is not entity-fronting', async () => {
+            // Suggesting the # form here would only trade this warning for the wrong-target one
+            await bootApp('<div id="plain-block"></div>');
+            expect(resolveEntity('plain-block', caller(), 'target', 'reference ignored')).toBeNull();
+            warnings.expect(
+                "pc-test could not resolve target 'plain-block' - nothing in the document matches it - " +
+                    'reference ignored. Assign target again once the entity exists.'
+            );
+        });
+
         it('warns with the timing cause when the matched element is not backing an entity yet', async () => {
             await bootApp(markup);
 
@@ -170,7 +201,7 @@ describe('entity references', () => {
             expect(resolveEntity('#plain', caller(), 'target', 'reference ignored')).toBeNull();
             warnings.expect(
                 "pc-test could not resolve target '#plain' - <div> matches it but cannot back an entity - " +
-                    'reference ignored. Point target at a pc-entity instead.'
+                    'reference ignored. Point target at a pc-entity, pc-model or pc-node instead.'
             );
         });
 
@@ -282,7 +313,7 @@ describe('entity references', () => {
             expect(getEntity('dup')).toBe(far.entity);
         });
 
-        it('resolves selector and id references document-wide from inside a scope', async () => {
+        it('resolves a # reference document-wide from inside a scope', async () => {
             const { get } = await bootApp(`
                 <pc-entity name="first">
                     <pc-entity id="first-dup" name="dup"></pc-entity>
@@ -294,10 +325,8 @@ describe('entity references', () => {
             `);
             const far = get<EntityElement>('#first-dup');
 
-            // No entity is *named* the reference text, so the lexical phase misses and the
-            // document resolver interprets the reference - selectors and ids keep their
-            // document-wide meaning even from inside a scope.
-            expect(getEntity('pc-entity[name="dup"]', get('pc-test'))).toBe(far.entity);
+            // The '#' form is document-global by definition - a nearer same-named entity does
+            // not enter into it.
             expect(getEntity('#first-dup', get('pc-test'))).toBe(far.entity);
         });
 

@@ -5,6 +5,7 @@ import { useAsset } from '../asset';
 import {
     findEntityElement,
     getEntity,
+    idHint,
     parseBool,
     parseColor,
     parseComponents,
@@ -133,8 +134,8 @@ const assetConversion: Conversion = (rest, raw) => {
 /**
  * Resolves an `entity:` prefix to the Entity backing a `pc-entity`, `pc-model` or `pc-node`
  * element. The reference is a name — resolved against the nearest enclosing entity first, then
- * outward, then the document — or a document-wide `#id` or CSS selector. The failure warning
- * names which of the three causes ({@link unresolvedCause}) it hit.
+ * outward, then the document — or a document-wide `#` selector. The failure warning names which
+ * of the three causes ({@link unresolvedCause}) it hit.
  * @param rest - The entity reference.
  * @param raw - The raw value, returned unchanged when the reference does not resolve.
  * @param from - The element the value is declared under, which scopes the reference.
@@ -146,13 +147,10 @@ const entityConversion: Conversion = (rest, raw, from) => {
         return entity;
     }
     const element = findEntityElement(rest, from);
-    // A bare reference that names nothing but matches an element id was almost certainly meant
-    // as an id - point at the form that expresses it.
-    const hint =
-        !element && !rest.startsWith('#') && document.getElementById(rest)
-            ? ` A bare reference is a name - write 'entity:#${rest}' to reference the element with that id.`
-            : '';
-    console.warn(`Unable to resolve '${raw}' in script attributes - ${unresolvedCause(element)}.${hint}`);
+    const hint = element ? '' : idHint(rest, 'entity:');
+    console.warn(
+        `Unable to resolve '${raw}' in script attributes - ${unresolvedCause(element)}.${hint ? ` ${hint}` : ''}`
+    );
     return raw;
 };
 
@@ -313,7 +311,8 @@ class ScriptComponentElement extends ComponentElement {
      * - "asset:id" → the Asset created by the `pc-asset` element with that id
      * - "entity:ref" → the Entity backing a `pc-entity`, `pc-model` or `pc-node` element. The
      *   reference is a name, resolved against this element's nearest enclosing entity first,
-     *   then outward, then the document — or a document-wide `#id` or CSS selector.
+     *   then outward, then the document — or a document-wide `#` selector (`entity:#id`). A bare
+     *   value is always a name, never an id.
      * - "vec2:1 2" → new Vec2(1, 2)
      * - "vec3:1 2 3" → new Vec3(1, 2, 3)
      * - "vec4:1 2 3 4" → new Vec4(1, 2, 3, 4)
