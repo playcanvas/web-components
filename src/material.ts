@@ -23,10 +23,10 @@ import {
     StandardMaterial,
     Vec2
 } from 'playcanvas';
-import type { EventHandle, Texture } from 'playcanvas';
+import type { Texture } from 'playcanvas';
 
 import type { AppElement } from './app';
-import { useAsset } from './asset';
+import { AssetBinding } from './asset-binding';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2 } from './parse';
 
 /** The blend modes for a material. */
@@ -318,11 +318,12 @@ class MaterialElement extends HTMLElement {
     private _useTonemap = true;
 
     /**
-     * Pending `load` handlers, one per texture slot. A slot's handler is torn down when the slot is
-     * reassigned or the element disconnects, so a late-arriving asset can never write a texture the
-     * element no longer wants.
+     * One asset binding per texture slot, created on first use and kept for the element's
+     * lifetime. A slot's binding is superseded when the slot is reassigned and cancelled when the
+     * element disconnects, so a late-arriving asset can never write a texture the element no
+     * longer wants.
      */
-    private _mapHandles = new Map<TextureSlot, EventHandle>();
+    private _mapBindings = new Map<TextureSlot, AssetBinding>();
 
     private _updateScheduled = false;
 
@@ -461,10 +462,9 @@ class MaterialElement extends HTMLElement {
     }
 
     disconnectedCallback() {
-        for (const handle of this._mapHandles.values()) {
-            handle.off();
+        for (const binding of this._mapBindings.values()) {
+            binding.cancel();
         }
-        this._mapHandles.clear();
 
         if (this.material) {
             this.material.destroy();
@@ -518,16 +518,24 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
-     * Points a texture slot at the resource of a `pc-asset`, waiting for the asset to load when it
-     * has not already. An empty id clears the slot.
+     * Points a texture slot at the resource of a `pc-asset`, waiting for the asset to load when
+     * it has not already. An empty id clears the slot; a slot keeps its current texture while
+     * the new asset loads, and also across a failed load - a later reload can still deliver.
      *
      * @param id - The id of the `pc-asset`, or an empty string to clear the slot.
      * @param slot - The material property to write.
      */
     private _setMap(id: string, slot: TextureSlot) {
-        // Drop any load still pending for this slot - its texture is no longer the one we want
-        this._mapHandles.get(slot)?.off();
-        this._mapHandles.delete(slot);
+        let binding = this._mapBindings.get(slot);
+        if (!binding) {
+            binding = new AssetBinding();
+            this._mapBindings.set(slot, binding);
+        }
+
+        // Drop any load still pending for this slot - its texture is no longer the one we want.
+        // Cancelled here rather than left to the bind below, which the material-less and
+        // clear-slot returns never reach.
+        binding.cancel();
 
         if (!this.material) return;
 
@@ -537,21 +545,9 @@ class MaterialElement extends HTMLElement {
             return;
         }
 
-        const asset = useAsset(id);
-        if (!asset) return;
-
-        if (asset.loaded) {
-            this._applyMap(slot, asset.resource as Texture);
-            return;
-        }
-
-        this._mapHandles.set(
-            slot,
-            asset.once('load', () => {
-                this._mapHandles.delete(slot);
-                this._applyMap(slot, asset.resource as Texture);
-            })
-        );
+        binding.bind(id, {
+            load: (asset) => this._applyMap(slot, asset.resource as Texture)
+        });
     }
 
     /**

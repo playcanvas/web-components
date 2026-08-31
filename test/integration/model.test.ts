@@ -1,4 +1,3 @@
-import type { AppBase } from 'playcanvas';
 import { Entity, Vec3 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -6,6 +5,7 @@ import type { AppElement } from '../../src/app';
 import { bootApp, settle } from '../helpers/app';
 import { mount } from '../helpers/dom';
 import { useGuard } from '../helpers/guard';
+import { parkLoads } from '../helpers/loader';
 import { expectNeverReady, readyWithin } from '../helpers/ready';
 
 
@@ -29,26 +29,6 @@ const GLTF_SRC = containerSrc('model-root');
 const ASSET_TAG = `<pc-asset id="m" type="container" src="${GLTF_SRC}"></pc-asset>`;
 
 const ASSET_TAG_B = `<pc-asset id="m2" type="container" src="${containerSrc('model-root-b')}"></pc-asset>`;
-
-/**
- * Replaces the app's resource loader with one that parks every load until the test settles it,
- * making settlement order (and failure) a test input. Settling a parked load runs the registry's
- * own completion path, so the asset's real `load`/`error` events fire.
- *
- * @param app - The booted application.
- * @returns Parked loads, keyed by the asset's file URL.
- */
-const parkLoads = (app: AppBase) => {
-    const parked = new Map<string, (err: string | null, resource?: unknown) => void>();
-    vi.spyOn(app.loader, 'load').mockImplementation(((
-        url: string,
-        _type: string,
-        callback: (err: string | null, resource?: unknown) => void
-    ) => {
-        parked.set(url, callback);
-    }) as typeof app.loader.load);
-    return parked;
-};
 
 describe('<pc-model>', () => {
     const { errors, uncaught, warnings } = useGuard();

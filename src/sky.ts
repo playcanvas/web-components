@@ -1,8 +1,9 @@
-import type { Asset, EventHandle, Scene, Texture } from 'playcanvas';
+import type { Asset, Scene, Texture } from 'playcanvas';
 import { EnvLighting, LAYERID_SKYBOX, Quat, Vec3 } from 'playcanvas';
 
 import type { AppElement } from './app';
 import { useAsset } from './asset';
+import { AssetBinding } from './asset-binding';
 import { AsyncElement } from './async-element';
 import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
 
@@ -38,17 +39,17 @@ class SkyElement extends AsyncElement {
 
     /**
      * Incremented on every new load and on disconnect, and captured by a load when it starts. A
-     * load that resumes from an await or a load callback abandons itself if the value has moved
-     * on, so a superseded load cannot generate a skybox for a scene it no longer configures.
+     * load that resumes from an await abandons itself if the value has moved on, so a superseded
+     * load cannot generate a skybox for a scene it no longer configures. The asset subscription
+     * itself is guarded by the binding below.
      */
     private _loadGeneration = 0;
 
     /**
-     * The pending asset-load subscription of the current load, if it is waiting for its asset.
-     * Held so that whatever supersedes the load can detach the handler from the asset, rather
-     * than leave it registered until the asset loads (or forever, if it never does).
+     * Watches the current texture asset while it loads. Starting a new load or disconnecting
+     * cancels it, so a superseded texture can never generate the skybox.
      */
-    private _loadHandle: EventHandle | null = null;
+    private _binding = new AssetBinding();
 
     connectedCallback() {
         this._loadSkybox();
@@ -57,15 +58,10 @@ class SkyElement extends AsyncElement {
 
     disconnectedCallback() {
         this._loadGeneration++;
-        this._detachLoadHandler();
+        this._binding.cancel();
         this._unloadSkybox();
         this._appElement = null;
         this._resetReady();
-    }
-
-    private _detachLoadHandler() {
-        this._loadHandle?.off();
-        this._loadHandle = null;
     }
 
     private _generateSkybox(asset: Asset) {
@@ -104,7 +100,7 @@ class SkyElement extends AsyncElement {
     private async _loadSkybox() {
         // Supersede any load already in flight - only the newest load may generate the skybox
         const generation = ++this._loadGeneration;
-        this._detachLoadHandler();
+        this._binding.cancel();
 
         const appElement = await this.closestApp?.ready();
 
@@ -120,27 +116,20 @@ class SkyElement extends AsyncElement {
 
         this._appElement = appElement;
 
-        const asset = useAsset(this._asset);
-        if (!asset) {
+        // The scene is only adopted once the reference resolves: an unresolved id must leave the
+        // scene untouched, or this element's teardown would destroy a skybox it never created.
+        // The bind below repeats the resolution, which useAsset documents as free - it cannot
+        // happen after the bind, because a loaded asset delivers before bind returns and
+        // _generateSkybox needs the scene by then.
+        if (!useAsset(this._asset)) {
             return;
         }
 
         this._scene = app.scene;
 
-        if (asset.loaded) {
-            this._generateSkybox(asset);
-        } else {
-            // The generation is re-checked even though a superseded handler is detached: the
-            // detach relies on how the engine's event emitter treats removal, while the check
-            // holds on its own.
-            this._loadHandle = asset.once('load', () => {
-                this._loadHandle = null;
-                if (generation !== this._loadGeneration) {
-                    return;
-                }
-                this._generateSkybox(asset);
-            });
-        }
+        this._binding.bind(this._asset, {
+            load: (asset) => this._generateSkybox(asset)
+        });
     }
 
     private _unloadSkybox() {

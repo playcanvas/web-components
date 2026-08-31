@@ -1,10 +1,11 @@
-import type { AppBase, Asset } from 'playcanvas';
+import type { Asset } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AssetElement } from '../../../src/asset';
 import type { EntityElement } from '../../../src/entity';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
+import { parkLoads } from '../../helpers/loader';
 import { readyWithin } from '../../helpers/ready';
 
 /**
@@ -25,24 +26,6 @@ const RACE_ASSETS = `
     <pc-asset id="cfg-b" type="json" src="cfg-b.json" lazy></pc-asset>
     <pc-entity name="fx"></pc-entity>
 `;
-
-type LoaderCallback = (err: string | null, resource?: unknown) => void;
-
-/**
- * Replaces the app's resource loader with one that parks every load until the test settles it,
- * making settlement order a test input rather than a network accident. Settling a parked load
- * runs the registry's own completion path, so the asset's real `load`/`error` events fire.
- *
- * @param app - The booted application.
- * @returns Parked loads, keyed by the asset's file URL.
- */
-const parkLoads = (app: AppBase) => {
-    const parked = new Map<string, LoaderCallback>();
-    vi.spyOn(app.loader, 'load').mockImplementation(((url: string, _type: string, callback: LoaderCallback) => {
-        parked.set(url, callback);
-    }) as typeof app.loader.load);
-    return parked;
-};
 
 /**
  * The number of handlers subscribed to one of an asset's events, for asserting that a binding

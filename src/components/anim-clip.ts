@@ -1,7 +1,8 @@
-import type { Asset, EventHandle } from 'playcanvas';
+import type { Asset } from 'playcanvas';
 import { AnimTrack } from 'playcanvas';
 
-import { AssetElement, useAsset } from '../asset';
+import { AssetElement } from '../asset';
+import { AssetBinding } from '../asset-binding';
 import { AsyncElement } from '../async-element';
 import { ModelElement } from '../model';
 import { parseBool, parseNumber } from '../parse';
@@ -40,6 +41,12 @@ class AnimClipElement extends AsyncElement {
     private _asset = '';
 
     /**
+     * Watches the current source asset while it loads. Starting a new resolution or
+     * disconnecting cancels it, so a superseded source can never hand its track to the parent.
+     */
+    private _binding = new AssetBinding();
+
+    /**
      * Incremented on every connect and disconnect, and captured by connectedCallback on entry —
      * a resume from an await abandons itself if the value has moved on, so a stale callback can
      * neither act on a torn-down tree nor register its clip alongside a re-inserted element's
@@ -47,21 +54,13 @@ class AnimClipElement extends AsyncElement {
      */
     private _connectionGeneration = 0;
 
-    private _errorHandle: EventHandle | null = null;
-
     /**
      * Incremented on every track resolution and on disconnect, and captured by a resolution when
-     * it starts. A resolution that resumes from an await or an asset callback abandons itself if
-     * the value has moved on, so a superseded resolution cannot hand a stale track to the parent.
+     * it starts. A resolution that resumes from an await abandons itself if the value has moved
+     * on, so a superseded resolution cannot hand a stale track to the parent. The asset
+     * subscription itself is guarded by the binding above.
      */
     private _loadGeneration = 0;
-
-    /**
-     * The pending asset subscriptions of the current resolution, if it is waiting for its asset.
-     * Held so that whatever supersedes the resolution can detach the handlers from the asset,
-     * rather than leave them registered until the asset settles (or forever, if it never does).
-     */
-    private _loadHandle: EventHandle | null = null;
 
     private _loop = true;
 
@@ -112,7 +111,7 @@ class AnimClipElement extends AsyncElement {
         // Invalidate any connectedCallback or track resolution still suspended on an await
         this._connectionGeneration++;
         this._loadGeneration++;
-        this._detachLoadHandlers();
+        this._binding.cancel();
 
         // Uses the cached parent rather than a fresh lookup, since parentElement is already null
         // by now. The component itself is null if the whole <pc-app> is being torn down —
@@ -133,13 +132,6 @@ class AnimClipElement extends AsyncElement {
         }
 
         return animElement;
-    }
-
-    private _detachLoadHandlers() {
-        this._loadHandle?.off();
-        this._loadHandle = null;
-        this._errorHandle?.off();
-        this._errorHandle = null;
     }
 
     /**
@@ -169,35 +161,20 @@ class AnimClipElement extends AsyncElement {
         this._animElement = animElement;
 
         const generation = ++this._loadGeneration;
-        this._detachLoadHandlers();
+        this._binding.cancel();
 
         if (this._asset) {
-            const asset = useAsset(this._asset);
+            // Every path that moves _loadGeneration also rebinds or cancels the binding, so a
+            // delivery below is always current.
+            const asset = this._binding.bind(this._asset, {
+                load: (loaded) => this._extractTrack(loaded, `asset '${this._asset}'`),
+                error: () => {
+                    this._warnSource(`pc-anim-clip '${this._name}' - asset '${this._asset}' failed to load - clip not assigned`);
+                }
+            });
             if (!asset) {
                 this._warnSource(`pc-anim-clip '${this._name}' could not find asset '${this._asset}' - clip not assigned`);
-                return;
             }
-            if (asset.loaded) {
-                this._extractTrack(asset, `asset '${this._asset}'`);
-                return;
-            }
-            // Whichever of load/error fires first detaches the other. The generation is
-            // re-checked even though a superseded handler is detached: the detach relies on how
-            // the engine's event emitter treats removal, while the check holds on its own.
-            this._loadHandle = asset.once('load', () => {
-                this._detachLoadHandlers();
-                if (generation !== this._loadGeneration) {
-                    return;
-                }
-                this._extractTrack(asset, `asset '${this._asset}'`);
-            });
-            this._errorHandle = asset.once('error', () => {
-                this._detachLoadHandlers();
-                if (generation !== this._loadGeneration) {
-                    return;
-                }
-                this._warnSource(`pc-anim-clip '${this._name}' - asset '${this._asset}' failed to load - clip not assigned`);
-            });
             return;
         }
 
