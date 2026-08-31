@@ -8,6 +8,7 @@ import type { AnimComponentElement } from '../../../src/components/anim-componen
 import type { ModelElement } from '../../../src/model';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
+import { parkLoads } from '../../helpers/loader';
 import { expectNeverReady, readyWithin } from '../../helpers/ready';
 
 /**
@@ -824,6 +825,60 @@ describe('<pc-anim>', () => {
             warnings.expect("pc-anim-clip 'Walk' - an earlier clip already uses this name - clip not assigned");
             expect(anim.clips).toEqual(['Walk']);
             await expectNeverReady(duplicate);
+        });
+    });
+
+    describe('clip source races', () => {
+        it("assigns only the newest source's track when a superseded load settles later", async () => {
+            const { app, get } = await bootApp(`
+                <pc-asset id="clip-a" type="animclip" src="clip-a.json" lazy></pc-asset>
+                <pc-asset id="clip-b" type="animclip" src="clip-b.json" lazy></pc-asset>
+                <pc-entity name="e"><pc-anim activate="false"></pc-anim></pc-entity>
+            `);
+            const parked = parkLoads(app);
+            const anim = get<AnimComponentElement>('pc-anim');
+
+            const clip = document.createElement('pc-anim-clip');
+            clip.setAttribute('name', 'Move');
+            clip.setAttribute('asset', 'clip-a');
+            anim.appendChild(clip);
+            await settleTask();
+            expect(parked.has('clip-a.json'), 'the pending source started its load').toBe(true);
+
+            clip.setAttribute('asset', 'clip-b');
+            expect(parked.has('clip-b.json')).toBe(true);
+
+            // B settles first, then A - the superseded source must not hand over its track
+            const assign = vi.spyOn(anim.component!, 'assignAnimation');
+            parked.get('clip-b.json')!(null, new AnimTrack('TrackB', 1, [], [], []));
+            await readyWithin(clip);
+            const afterB = assign.mock.calls.length;
+            expect(afterB).toBeGreaterThan(0);
+            expect((assign.mock.calls[afterB - 1][1] as AnimTrack).name, 'the newest source supplied the track').toBe('TrackB');
+
+            parked.get('clip-a.json')!(null, new AnimTrack('TrackA', 1, [], [], []));
+            expect(assign.mock.calls.length, 'the superseded source assigned nothing').toBe(afterB);
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('warns without throwing for a source whose load already failed', async () => {
+            const { get } = await bootApp(`
+                <pc-asset id="broken" type="container" src="broken.glb" lazy></pc-asset>
+                <pc-entity name="e"><pc-anim></pc-anim></pc-entity>
+            `);
+            // The failed shape: the engine marks a failed load `loaded` with no resource
+            get<AssetElement>('pc-asset').asset!.loaded = true;
+
+            const anim = get<AnimComponentElement>('pc-anim');
+            const clip = document.createElement('pc-anim-clip');
+            clip.setAttribute('name', 'Walk');
+            clip.setAttribute('asset', 'broken');
+            anim.appendChild(clip);
+            await settleTask();
+
+            warnings.expect("pc-anim-clip 'Walk' - asset 'broken' failed to load - clip not assigned");
+            await expectNeverReady(clip);
+            expect(uncaught.seen).toEqual([]);
         });
     });
 

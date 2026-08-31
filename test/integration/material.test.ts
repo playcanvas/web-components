@@ -201,5 +201,55 @@ describe('<pc-material> integration', () => {
             asset.resource = texture;
             expect(() => asset.fire('load', asset), 'a late load must not touch the torn-down element').not.toThrow();
         });
+
+        it('applies only the newest asset when a superseded map load settles later', async () => {
+            const handle = await bootApp(`
+                <pc-asset id="tex-a" src="tex-a.png" lazy></pc-asset>
+                <pc-asset id="tex-b" src="tex-b.png" lazy></pc-asset>
+                <pc-material id="m" diffuse-map="tex-a"></pc-material>
+            `);
+            const element = handle.get<MaterialElement>('pc-material');
+            const assetA = handle.get<AssetElement>('pc-asset[id="tex-a"]').asset!;
+            const assetB = handle.get<AssetElement>('pc-asset[id="tex-b"]').asset!;
+
+            element.setAttribute('diffuse-map', 'tex-b');
+
+            // B settles first, then A - the superseded texture must not overwrite its replacement
+            const texB = new Texture(handle.app.graphicsDevice, { width: 1, height: 1 });
+            assetB.resource = texB;
+            assetB.fire('load', assetB);
+            const texA = new Texture(handle.app.graphicsDevice, { width: 1, height: 1 });
+            assetA.resource = texA;
+            assetA.fire('load', assetA);
+
+            expect(element.material!.diffuseMap, 'the superseded texture did not apply').toBe(texB);
+        });
+
+        it('keeps the current texture across a map whose load already failed, until a reload delivers', async () => {
+            const handle = await bootApp(`
+                <pc-asset id="tex-a" src="tex-a.png" lazy></pc-asset>
+                <pc-asset id="tex-b" src="tex-b.png" lazy></pc-asset>
+                <pc-material id="m" diffuse-map="tex-a"></pc-material>
+            `);
+            const element = handle.get<MaterialElement>('pc-material');
+            const assetA = handle.get<AssetElement>('pc-asset[id="tex-a"]').asset!;
+            const assetB = handle.get<AssetElement>('pc-asset[id="tex-b"]').asset!;
+
+            const texA = new Texture(handle.app.graphicsDevice, { width: 1, height: 1 });
+            assetA.resource = texA;
+            assetA.fire('load', assetA);
+            expect(element.material!.diffuseMap).toBe(texA);
+
+            // The failed shape: the engine marks a failed load `loaded` with no resource. The
+            // slot holds its current texture, as it does while a working replacement loads.
+            assetB.loaded = true;
+            element.setAttribute('diffuse-map', 'tex-b');
+            expect(element.material!.diffuseMap, 'a failed map keeps the current texture').toBe(texA);
+
+            const texB = new Texture(handle.app.graphicsDevice, { width: 1, height: 1 });
+            assetB.resource = texB;
+            assetB.fire('load', assetB);
+            expect(element.material!.diffuseMap, 'the reload delivered').toBe(texB);
+        });
     });
 });
