@@ -104,6 +104,9 @@ export class AssetBinding {
             // resource arrived. A settled failure must not deliver `load` with an empty
             // resource: it reports through `error` where requested, and otherwise falls through
             // to wait for a reload, exactly like a failure that happens while subscribed.
+            // Loosely != null on purpose: `resource` indexes the asset's resources array, so a
+            // failure that never produced one reads `undefined` while an explicit clear writes
+            // `null` - and a falsy-but-real resource (a text asset's '') must still deliver.
             if (asset.resource != null) {
                 callbacks.load(asset);
                 return asset;
