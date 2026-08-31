@@ -20,7 +20,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class RigidBodyComponentElement extends ComponentElement {
+class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
     /**
      * The angular damping of the rigidbody.
      */
@@ -86,11 +86,12 @@ class RigidBodyComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas rigidbody component.
-     * @returns The rigidbody component.
+     * Gets the underlying PlayCanvas rigidbody component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The rigidbody component, or `null`.
      */
-    get component(): RigidBodyComponent {
-        return super.component as RigidBodyComponent;
+    get component(): RigidBodyComponent | null {
+        return super.component;
     }
 
     set angularDamping(value: number) {

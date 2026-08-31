@@ -24,7 +24,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class RenderComponentElement extends ComponentElement {
+class RenderComponentElement extends ComponentElement<RenderComponent> {
     private _castShadows = true;
 
     private _material = '';
@@ -48,11 +48,12 @@ class RenderComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas render component.
-     * @returns The render component.
+     * Gets the underlying PlayCanvas render component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The render component, or `null`.
      */
-    get component(): RenderComponent {
-        return super.component as RenderComponent;
+    get component(): RenderComponent | null {
+        return super.component;
     }
 
     /**

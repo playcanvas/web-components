@@ -1,7 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import type { Component } from 'playcanvas';
+import { LightComponent } from 'playcanvas';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import type { CameraComponentElement } from '../../../src/components/camera-component';
+import type { ComponentElement } from '../../../src/components/component';
+import type { LightComponentElement } from '../../../src/components/light-component';
 import type { RenderComponentElement } from '../../../src/components/render-component';
+import type { EntityElement } from '../../../src/entity';
 import type { ModelElement } from '../../../src/model';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
@@ -43,7 +48,7 @@ describe('component hosting', () => {
             const render = get<RenderComponentElement>('pc-render');
 
             expect(render.component, 'the component exists').toBeTruthy();
-            expect(render.component.entity, 'on the model host').toBe(model.entity);
+            expect(render.component!.entity, 'on the model host').toBe(model.entity);
             expect(model.entity!.render, 'not on the content root').toBe(render.component);
             expect(model.contentEntity!.render).toBeUndefined();
         });
@@ -53,7 +58,7 @@ describe('component hosting', () => {
             const camera = get<CameraComponentElement>('pc-camera');
 
             expect(camera.component).toBeTruthy();
-            expect(camera.component.entity).toBe(get<ModelElement>('pc-model').entity);
+            expect(camera.component!.entity).toBe(get<ModelElement>('pc-model').entity);
         });
 
         it('attaches after a failed load - readiness means the selection settled', async () => {
@@ -81,13 +86,13 @@ describe('component hosting', () => {
             const { get } = await bootApp(`${ASSETS}<pc-model asset="m"><pc-render type="box"></pc-render></pc-model>`);
             const model = get<ModelElement>('pc-model');
             const render = get<RenderComponentElement>('pc-render');
-            const component = render.component;
+            const component = render.component!;
 
             model.setAttribute('asset', 'm2');
             await readyWithin(model);
 
             expect(render.component, 'the same component instance').toBe(component);
-            expect(render.component.entity, 'still on the surviving host').toBe(model.entity);
+            expect(render.component!.entity, 'still on the surviving host').toBe(model.entity);
             expect(model.contentEntity!.name, 'above the new content').toBe('content-root-b');
         });
 
@@ -100,8 +105,35 @@ describe('component hosting', () => {
                 </pc-model>
             `);
 
-            await readyWithin(get<CameraComponentElement>('pc-camera[id="second"]'));
+            const second = get<CameraComponentElement>('pc-camera[id="second"]');
+            await readyWithin(second);
+            expect(second.component, 'the skipped duplicate stays null').toBeNull();
             warnings.expect("pc-camera 'second' - 'prop' already has a 'camera' component - component not added");
+        });
+    });
+
+    describe('component nullability', () => {
+        it('is null before readiness and after disconnection, and concrete in between', async () => {
+            const { get } = await bootApp('<pc-entity name="host"></pc-entity>');
+            const host = get<EntityElement>('pc-entity');
+
+            const light = document.createElement('pc-light') as LightComponentElement;
+            expect(light.component, 'never connected').toBeNull();
+
+            host.appendChild(light);
+            expect(light.component, 'connected, readiness still pending').toBeNull();
+
+            await readyWithin(light);
+            expect(light.component).toBeInstanceOf(LightComponent);
+            expect(light.component!.entity).toBe(host.entity);
+
+            // The declarations carry the nullability: the concrete engine type on an element,
+            // plain Component on the base class.
+            expectTypeOf(light.component).toEqualTypeOf<LightComponent | null>();
+            expectTypeOf<ComponentElement['component']>().toEqualTypeOf<Component | null>();
+
+            light.remove();
+            expect(light.component, 'disconnection released the component').toBeNull();
         });
     });
 

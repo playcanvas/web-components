@@ -18,7 +18,7 @@ describe('<pc-button>', () => {
             const { app, get } = await bootApp('<pc-entity name="btn"><pc-button></pc-button></pc-entity>');
             const button = get<ButtonComponentElement>('pc-button');
 
-            expect(button.component.imageEntity).toBe(app.root.findByName('btn'));
+            expect(button.component!.imageEntity).toBe(app.root.findByName('btn'));
         });
 
         it('resolves an explicit reference', async () => {
@@ -28,7 +28,7 @@ describe('<pc-button>', () => {
             `);
             const button = get<ButtonComponentElement>('pc-button');
 
-            expect(button.component.imageEntity).toBe(app.root.findByName('target'));
+            expect(button.component!.imageEntity).toBe(app.root.findByName('target'));
         });
 
         it('warns when the reference does not resolve, leaving the image entity unset', async () => {
@@ -36,7 +36,7 @@ describe('<pc-button>', () => {
             const button = get<ButtonComponentElement>('pc-button');
 
             warnings.expect("pc-button could not resolve image '#nope' - nothing in the document matches it - reference ignored");
-            expect(button.component.imageEntity).toBeNull();
+            expect(button.component!.imageEntity).toBeNull();
         });
 
         it('keeps the current image entity when a reassigned reference does not resolve', async () => {
@@ -50,7 +50,7 @@ describe('<pc-button>', () => {
 
             warnings.expect("pc-button could not resolve image '#still-nope'");
             expect(button.image).toBe('#still-nope');
-            expect(button.component.imageEntity).toBe(app.root.findByName('target'));
+            expect(button.component!.imageEntity).toBe(app.root.findByName('target'));
         });
     });
 });

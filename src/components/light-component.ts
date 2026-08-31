@@ -45,7 +45,7 @@ const shadowTypes = new Map<
  *
  * @category Components
  */
-class LightComponentElement extends ComponentElement {
+class LightComponentElement extends ComponentElement<LightComponent> {
     private _cascadeBlend = 0;
 
     private _cascadeDistribution = 0.5;
@@ -132,11 +132,12 @@ class LightComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas light component.
-     * @returns The light component.
+     * Gets the underlying PlayCanvas light component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The light component, or `null`.
      */
-    get component(): LightComponent {
-        return super.component as LightComponent;
+    get component(): LightComponent | null {
+        return super.component;
     }
 
     /**

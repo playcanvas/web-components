@@ -26,7 +26,7 @@ const transitionModes = new Map<'tint' | 'sprite', number>([
  *
  * @category Components
  */
-class ButtonComponentElement extends ComponentElement {
+class ButtonComponentElement extends ComponentElement<ButtonComponent> {
     private _active = true;
 
     private _image = '';
@@ -102,11 +102,12 @@ class ButtonComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas button component.
-     * @returns The button component.
+     * Gets the underlying PlayCanvas button component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The button component, or `null`.
      */
-    get component(): ButtonComponent {
-        return super.component as ButtonComponent;
+    get component(): ButtonComponent | null {
+        return super.component;
     }
 
     /**

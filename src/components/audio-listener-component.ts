@@ -16,18 +16,19 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class AudioListenerComponentElement extends ComponentElement {
+class AudioListenerComponentElement extends ComponentElement<AudioListenerComponent> {
     /** @ignore */
     constructor() {
         super('audiolistener');
     }
 
     /**
-     * Gets the underlying PlayCanvas audio listener component.
-     * @returns The audio listener component.
+     * Gets the underlying PlayCanvas audio listener component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The audio listener component, or `null`.
      */
-    get component(): AudioListenerComponent {
-        return super.component as AudioListenerComponent;
+    get component(): AudioListenerComponent | null {
+        return super.component;
     }
 }
 

@@ -37,7 +37,7 @@ const visibilities = new Map<'always' | 'when-required', number>([
  *
  * @category Components
  */
-class ScrollViewComponentElement extends ComponentElement {
+class ScrollViewComponentElement extends ComponentElement<ScrollViewComponent> {
     private _horizontal = true;
 
     private _vertical = true;
@@ -106,11 +106,12 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas scroll view component.
-     * @returns The scroll view component.
+     * Gets the underlying PlayCanvas scroll view component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The scroll view component, or `null`.
      */
-    get component(): ScrollViewComponent {
-        return super.component as ScrollViewComponent;
+    get component(): ScrollViewComponent | null {
+        return super.component;
     }
 
     /**

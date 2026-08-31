@@ -10,12 +10,12 @@ import { parseBool } from '../parse';
  *
  * @category Components
  */
-class ComponentElement extends AsyncElement {
+class ComponentElement<T extends Component = Component> extends AsyncElement {
     private _componentName: string;
 
     private _enabled = true;
 
-    private _component: Component | null = null;
+    private _component: T | null = null;
 
     private _appElement: AppElement | null = null;
 
@@ -97,7 +97,9 @@ class ComponentElement extends AsyncElement {
             return;
         }
 
-        this._component = entity.addComponent(this._componentName, this.getInitialComponentData());
+        // The name passed by the subclass selects the engine system that creates its T - a
+        // pairing the type system cannot express, so it is asserted this once
+        this._component = entity.addComponent(this._componentName, this.getInitialComponentData()) as T | null;
     }
 
     private async _addComponent() {
@@ -219,7 +221,7 @@ class ComponentElement extends AsyncElement {
      * before accessing it.
      * @returns The component instance, or `null`.
      */
-    get component(): Component | null {
+    get component(): T | null {
         return this._component;
     }
 

@@ -22,7 +22,7 @@ describe('<pc-scrollbar>', () => {
             `);
             const scrollbar = get<ScrollbarComponentElement>('pc-scrollbar');
 
-            expect(scrollbar.component.handleEntity).toBe(app.root.findByName('handle'));
+            expect(scrollbar.component!.handleEntity).toBe(app.root.findByName('handle'));
         });
 
         it('warns when the reference does not resolve, leaving the handle unset', async () => {
@@ -30,7 +30,7 @@ describe('<pc-scrollbar>', () => {
             const scrollbar = get<ScrollbarComponentElement>('pc-scrollbar');
 
             warnings.expect("pc-scrollbar could not resolve handle '#nope' - nothing in the document matches it - reference ignored");
-            expect(scrollbar.component.handleEntity).toBeNull();
+            expect(scrollbar.component!.handleEntity).toBeNull();
         });
 
         it('keeps the current handle when a reassigned reference does not resolve', async () => {
@@ -45,7 +45,7 @@ describe('<pc-scrollbar>', () => {
             scrollbar.setAttribute('handle', '#still-nope');
 
             warnings.expect("pc-scrollbar could not resolve handle '#still-nope'");
-            expect(scrollbar.component.handleEntity).toBe(app.root.findByName('handle'));
+            expect(scrollbar.component!.handleEntity).toBe(app.root.findByName('handle'));
         });
     });
 });

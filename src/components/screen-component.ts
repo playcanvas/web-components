@@ -28,7 +28,7 @@ const scaleModes = new Map<'none' | 'blend', string>([
  *
  * @category Components
  */
-class ScreenComponentElement extends ComponentElement {
+class ScreenComponentElement extends ComponentElement<ScreenComponent> {
     private _screenSpace = false;
 
     private _resolution: Vec2 = new Vec2(640, 320);
@@ -58,11 +58,12 @@ class ScreenComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas screen component.
-     * @returns The screen component.
+     * Gets the underlying PlayCanvas screen component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The screen component, or `null`.
      */
-    get component(): ScreenComponent {
-        return super.component as ScreenComponent;
+    get component(): ScreenComponent | null {
+        return super.component;
     }
 
     set priority(value: number) {

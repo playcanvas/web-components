@@ -18,7 +18,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class SoundComponentElement extends ComponentElement {
+class SoundComponentElement extends ComponentElement<SoundComponent> {
     private _distanceModel: 'exponential' | 'inverse' | 'linear' = 'linear';
 
     private _maxDistance = 10000;
@@ -51,11 +51,12 @@ class SoundComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas sound component.
-     * @returns The sound component.
+     * Gets the underlying PlayCanvas sound component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The sound component, or `null`.
      */
-    get component(): SoundComponent {
-        return super.component as SoundComponent;
+    get component(): SoundComponent | null {
+        return super.component;
     }
 
     /**

@@ -51,7 +51,7 @@ describe('<pc-light>', () => {
     describe('#component', () => {
         it('creates the light component with the engine defaults', async () => {
             const { get } = await bootApp(scene());
-            const component = get<LightComponentElement>('pc-light').component;
+            const component = get<LightComponentElement>('pc-light').component!;
 
             expect(component).toBeDefined();
             expect(component.enabled).toBe(true);
@@ -63,7 +63,7 @@ describe('<pc-light>', () => {
 
         it('matches a light the engine built itself', async () => {
             const { app, get } = await bootApp(scene());
-            const element = get<LightComponentElement>('pc-light').component;
+            const element = get<LightComponentElement>('pc-light').component!;
 
             // Every property the element writes, compared against a component built from no data
             // at all. Catches a default drifting on either side, including the properties the
@@ -86,7 +86,7 @@ describe('<pc-light>', () => {
                 .map(([attribute, , value]) => (value === '' ? attribute : `${attribute}="${value}"`))
                 .join(' ');
             const { get } = await bootApp(scene(markup));
-            const component = get<LightComponentElement>('pc-light').component;
+            const component = get<LightComponentElement>('pc-light').component!;
 
             for (const [attribute, property, , expected] of cases) {
                 expect.soft(engineValue(component, property), attribute).toEqual(expected);
@@ -99,7 +99,7 @@ describe('<pc-light>', () => {
 
             for (const [attribute, property, value, expected] of cases) {
                 light.setAttribute(attribute, value);
-                expect.soft(engineValue(light.component, property), attribute).toEqual(expected);
+                expect.soft(engineValue(light.component!, property), attribute).toEqual(expected);
             }
         });
 
@@ -110,7 +110,7 @@ describe('<pc-light>', () => {
             for (const [attribute, property, value, , restored] of cases) {
                 light.setAttribute(attribute, value);
                 light.removeAttribute(attribute);
-                expect.soft(engineValue(light.component, property), attribute).toEqual(restored);
+                expect.soft(engineValue(light.component!, property), attribute).toEqual(restored);
             }
         });
 
@@ -118,7 +118,7 @@ describe('<pc-light>', () => {
             const { get } = await bootApp(
                 scene('type="area" shadow-type="pcf7-32f" intensity="bright" shadow-bias="soft"')
             );
-            const component = get<LightComponentElement>('pc-light').component;
+            const component = get<LightComponentElement>('pc-light').component!;
 
             warnings.expect(
                 "Invalid value 'area' for attribute 'type'. Valid values: directional, omni, spot. Using 'directional'."
@@ -147,7 +147,7 @@ describe('<pc-light>', () => {
 
             const values = names.map((name) => {
                 light.setAttribute('shadow-type', name);
-                return light.component.shadowType;
+                return light.component!.shadowType;
             });
 
             expect(new Set(values).size, 'each name resolves to its own constant').toBe(names.length);
@@ -165,10 +165,10 @@ describe('<pc-light>', () => {
             // either side shows up here.
             light.setAttribute('shadow-type', 'vsm-32f');
             expect(light.shadowType, 'the element keeps the request').toBe('vsm-32f');
-            expect(light.component.shadowType, '32-bit VSM falls to 16-bit').toBe(SHADOW_VSM_16F);
+            expect(light.component!.shadowType, '32-bit VSM falls to 16-bit').toBe(SHADOW_VSM_16F);
 
             light.setAttribute('shadow-type', 'pcss-32f');
-            expect(light.component.shadowType, 'PCSS falls to PCF3').toBe(SHADOW_PCF3_32F);
+            expect(light.component!.shadowType, 'PCSS falls to PCF3').toBe(SHADOW_PCF3_32F);
         });
     });
 });

@@ -165,14 +165,14 @@ describe('a <template>-cloned subtree', () => {
         expect(links).toHaveLength(2);
         for (const link of links) {
             const joint = link.querySelector<JointComponentElement>('pc-joint')!;
-            expect(joint.component.entityA).toBe(link.querySelector<EntityElement>('pc-entity[name="Anchor"]')!.entity);
-            expect(joint.component.entityB).toBe(link.querySelector<EntityElement>('pc-entity[name="Bob"]')!.entity);
+            expect(joint.component!.entityA).toBe(link.querySelector<EntityElement>('pc-entity[name="Anchor"]')!.entity);
+            expect(joint.component!.entityB).toBe(link.querySelector<EntityElement>('pc-entity[name="Bob"]')!.entity);
         }
 
         // The decisive half: the second clone did not bind the first clone's entities, which is
         // what a document-wide lookup produces - it finds the first instance in document order.
         const [first, second] = links;
-        expect(second.querySelector<JointComponentElement>('pc-joint')!.component.entityA).not.toBe(
+        expect(second.querySelector<JointComponentElement>('pc-joint')!.component!.entityA).not.toBe(
             first.querySelector<EntityElement>('pc-entity[name="Anchor"]')!.entity
         );
 

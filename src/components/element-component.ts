@@ -25,7 +25,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class ElementComponentElement extends ComponentElement {
+class ElementComponentElement extends ComponentElement<ElementComponent> {
     private _anchor: Vec4 = new Vec4(0.5, 0.5, 0.5, 0.5);
 
     private _autoWidth = true;
@@ -158,11 +158,12 @@ class ElementComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas element component.
-     * @returns The element component.
+     * Gets the underlying PlayCanvas element component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The element component, or `null`.
      */
-    get component(): ElementComponent {
-        return super.component as ElementComponent;
+    get component(): ElementComponent | null {
+        return super.component;
     }
 
     /**

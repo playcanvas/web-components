@@ -19,7 +19,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class GSplatComponentElement extends ComponentElement {
+class GSplatComponentElement extends ComponentElement<GSplatComponent> {
     private _asset = '';
 
     private _castShadows = false;
@@ -49,11 +49,12 @@ class GSplatComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas gsplat component.
-     * @returns The gsplat component.
+     * Gets the underlying PlayCanvas gsplat component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The gsplat component, or `null`.
      */
-    get component(): GSplatComponent {
-        return super.component as GSplatComponent;
+    get component(): GSplatComponent | null {
+        return super.component;
     }
 
     /**

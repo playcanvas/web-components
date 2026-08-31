@@ -188,10 +188,10 @@ describe('<pc-app> lifecycle', () => {
         // ...components were re-added to the recreated entity...
         const cameraElement = get<CameraComponentElement>('pc-camera');
         expect(cameraElement.component, 'the camera component is back').toBeTruthy();
-        expect(cameraElement.component.entity).toBe(entityElement.entity);
+        expect(cameraElement.component!.entity).toBe(entityElement.entity);
 
-        const soundsComponent = (get('pc-sound') as { component?: { slots: Record<string, unknown> } }).component;
-        expect(Object.keys(soundsComponent!.slots), 'the sound slot is back').toContain('blip');
+        const soundsComponent = (get('pc-sound') as { component?: { slots: Record<string, unknown> } }).component!;
+        expect(Object.keys(soundsComponent.slots), 'the sound slot is back').toContain('blip');
 
         // ...the model's host was recreated in the new application, re-registered, and its
         // content re-instantiated beneath it...
@@ -239,7 +239,7 @@ describe('<pc-app> lifecycle', () => {
         const cameraElement = handle.get<CameraComponentElement>('pc-camera');
         expect(entityElement.entity).toBeTruthy();
         expect(cameraElement.component).toBeTruthy();
-        expect(cameraElement.component.entity).toBe(entityElement.entity);
+        expect(cameraElement.component!.entity).toBe(entityElement.entity);
 
         expect(uncaught.seen).toEqual([]);
     });

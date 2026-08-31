@@ -55,7 +55,7 @@ type PlaybackState = {
  *
  * @category Components
  */
-class AnimComponentElement extends ComponentElement {
+class AnimComponentElement extends ComponentElement<AnimComponent> {
     /**
      * Whether playback starts automatically once a clip is assigned.
      */
@@ -168,6 +168,9 @@ class AnimComponentElement extends ComponentElement {
      */
     private _applyRootBone() {
         const component = this.component;
+        if (!component) {
+            return;
+        }
 
         // A non-null root this element did not assign came through the engine API. A fresh
         // component starts at null, which is always reclaimable.
@@ -252,7 +255,7 @@ class AnimComponentElement extends ComponentElement {
      * declared `clip` selection can apply before any asset has loaded.
      */
     private _assignClip(clip: AnimClipElement) {
-        this.component.assignAnimation(clip.name, clip._track ?? AnimTrack.EMPTY, undefined, clip.speed, clip.loop);
+        this.component?.assignAnimation(clip.name, clip._track ?? AnimTrack.EMPTY, undefined, clip.speed, clip.loop);
     }
 
     /**
@@ -586,11 +589,12 @@ class AnimComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas anim component.
-     * @returns The anim component.
+     * Gets the underlying PlayCanvas anim component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The anim component, or `null`.
      */
-    get component(): AnimComponent {
-        return super.component as AnimComponent;
+    get component(): AnimComponent | null {
+        return super.component;
     }
 
     /**

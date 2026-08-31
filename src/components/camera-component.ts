@@ -50,7 +50,7 @@ const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2
  *
  * @category Components
  */
-class CameraComponentElement extends ComponentElement {
+class CameraComponentElement extends ComponentElement<CameraComponent> {
     private _clearColor = new Color(0.75, 0.75, 0.75, 1);
 
     private _clearColorBuffer = true;
@@ -177,11 +177,12 @@ class CameraComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas camera component.
-     * @returns The camera component.
+     * Gets the underlying PlayCanvas camera component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The camera component, or `null`.
      */
-    get component(): CameraComponent {
-        return super.component as CameraComponent;
+    get component(): CameraComponent | null {
+        return super.component;
     }
 
     /**

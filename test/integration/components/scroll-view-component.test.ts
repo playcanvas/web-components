@@ -26,10 +26,10 @@ describe('<pc-scroll-view>', () => {
         `);
         const scrollView = get<ScrollViewComponentElement>('pc-scroll-view');
 
-        expect(scrollView.component.viewportEntity).toBe(app.root.findByName('viewport'));
-        expect(scrollView.component.contentEntity).toBe(app.root.findByName('content'));
-        expect(scrollView.component.horizontalScrollbarEntity).toBe(app.root.findByName('h-scrollbar'));
-        expect(scrollView.component.verticalScrollbarEntity).toBe(app.root.findByName('v-scrollbar'));
+        expect(scrollView.component!.viewportEntity).toBe(app.root.findByName('viewport'));
+        expect(scrollView.component!.contentEntity).toBe(app.root.findByName('content'));
+        expect(scrollView.component!.horizontalScrollbarEntity).toBe(app.root.findByName('h-scrollbar'));
+        expect(scrollView.component!.verticalScrollbarEntity).toBe(app.root.findByName('v-scrollbar'));
     });
 
     it('warns once per unresolved reference, naming each attribute', async () => {
@@ -52,7 +52,7 @@ describe('<pc-scroll-view>', () => {
 
         // Unset references are the transient authoring state, not a mistake: the guard fails this
         // test if anything warns
-        expect(scrollView.component.viewportEntity).toBeNull();
-        expect(scrollView.component.contentEntity).toBeNull();
+        expect(scrollView.component!.viewportEntity).toBeNull();
+        expect(scrollView.component!.contentEntity).toBeNull();
     });
 });

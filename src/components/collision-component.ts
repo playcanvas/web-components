@@ -25,7 +25,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class CollisionComponentElement extends ComponentElement {
+class CollisionComponentElement extends ComponentElement<CollisionComponent> {
     private _angularOffset: Quat = new Quat();
 
     private _axis = 1;
@@ -91,11 +91,12 @@ class CollisionComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas collision component.
-     * @returns The collision component.
+     * Gets the underlying PlayCanvas collision component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The collision component, or `null`.
      */
-    get component(): CollisionComponent {
-        return super.component as CollisionComponent;
+    get component(): CollisionComponent | null {
+        return super.component;
     }
 
     set angularOffset(value: Quat) {

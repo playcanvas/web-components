@@ -68,7 +68,7 @@ describe('<pc-anim>', () => {
             // API - deliberately silent, like a pc-sound with no slots
             const { get } = await bootApp('<pc-entity name="e"><pc-anim></pc-anim></pc-entity>');
             const anim = get<AnimComponentElement>('pc-anim');
-            const component = anim.component;
+            const component = anim.component!;
 
             expect(component).toBeDefined();
             expect(component.activate).toBe(true);
@@ -86,8 +86,8 @@ describe('<pc-anim>', () => {
             );
             const anim = get<AnimComponentElement>('pc-anim');
 
-            expect(anim.component.activate).toBe(false);
-            expect(anim.component.speed).toBe(2);
+            expect(anim.component!.activate).toBe(false);
+            expect(anim.component!.speed).toBe(2);
             expect(anim.transitionTime).toBe(0.5);
         });
 
@@ -99,8 +99,8 @@ describe('<pc-anim>', () => {
             anim.setAttribute('speed', '3');
             anim.setAttribute('transition-time', '0.25');
 
-            expect(anim.component.activate).toBe(false);
-            expect(anim.component.speed).toBe(3);
+            expect(anim.component!.activate).toBe(false);
+            expect(anim.component!.speed).toBe(3);
             expect(anim.transitionTime).toBe(0.25);
         });
 
@@ -117,8 +117,8 @@ describe('<pc-anim>', () => {
             anim.removeAttribute('transition-time');
             anim.removeAttribute('clip');
 
-            expect(anim.component.activate).toBe(true);
-            expect(anim.component.speed).toBe(1);
+            expect(anim.component!.activate).toBe(true);
+            expect(anim.component!.speed).toBe(1);
             expect(anim.transitionTime).toBe(0);
             expect(anim.clip).toBe('');
         });
@@ -132,7 +132,7 @@ describe('<pc-anim>', () => {
             warnings.expect("Invalid value 'fast' for attribute 'speed'. Expected a finite number. Using '1'.");
             warnings.expect("Invalid value 'soon' for attribute 'transition-time'. Expected a finite number. Using '0'.");
 
-            expect(anim.component.speed).toBe(1);
+            expect(anim.component!.speed).toBe(1);
             expect(anim.transitionTime).toBe(0);
         });
     });
@@ -146,7 +146,7 @@ describe('<pc-anim>', () => {
             const anim = get<AnimComponentElement>('pc-anim');
 
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
-            expect(anim.component.playing).toBe(true);
+            expect(anim.component!.playing).toBe(true);
 
             expect(bonePosition(app).y).toBe(0);
             step(0.5);
@@ -177,7 +177,7 @@ describe('<pc-anim>', () => {
 
             // The host's readiness cycle owns the refresh; the model-ready listener must not run
             // a second one. Each track resolving exactly once is the observable difference.
-            const assign = vi.spyOn(anim.component, 'assignAnimation');
+            const assign = vi.spyOn(anim.component!, 'assignAnimation');
 
             get<ModelElement>('pc-model').setAttribute('asset', 'm2');
 
@@ -197,7 +197,7 @@ describe('<pc-anim>', () => {
             const anim = get<AnimComponentElement>('pc-anim');
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
             step(0.3);
-            const layer = anim.component.baseLayer!;
+            const layer = anim.component!.baseLayer!;
             expect(layer.activeState).toBe('Run');
             const time = layer.activeStateCurrentTime;
             expect(time).toBeGreaterThan(0);
@@ -205,7 +205,7 @@ describe('<pc-anim>', () => {
             get<ModelElement>('pc-model').setAttribute('asset', 'm2');
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run']));
 
-            const restored = anim.component.baseLayer!;
+            const restored = anim.component!.baseLayer!;
             expect(restored.activeState, 'the surviving selection is restored').toBe('Run');
             // The app ticks on rAF between the capture and this read, so the playhead has moved
             // on a little - but a dropped restore would have reset it to (near) zero.
@@ -225,7 +225,7 @@ describe('<pc-anim>', () => {
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
 
             const model = get<ModelElement>('pc-model');
-            expect(anim.component.entity, 'the component landed on the model host').toBe(model.entity);
+            expect(anim.component!.entity, 'the component landed on the model host').toBe(model.entity);
             expect((app.root.findByName('legacy') as Entity).anim, 'not on the wrapper').toBeUndefined();
 
             step(0.5);
@@ -259,7 +259,7 @@ describe('<pc-anim>', () => {
             const anim = get<AnimComponentElement>('pc-anim');
 
             expect(anim.clips).toEqual(['Walk', 'Run']);
-            expect(anim.component.baseLayer!.activeState === 'Walk' || anim.component.baseLayer!.activeState === 'START').toBe(true);
+            expect(anim.component!.baseLayer!.activeState === 'Walk' || anim.component!.baseLayer!.activeState === 'START').toBe(true);
 
             step(0.5);
             // Walk lifts +Y; Run would push +X
@@ -279,7 +279,7 @@ describe('<pc-anim>', () => {
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
-            expect(anim.component.baseLayer!.activeState).toBe('Run');
+            expect(anim.component!.baseLayer!.activeState).toBe('Run');
             step(0.5);
             // Run is container index 1, so it pushes +X
             expect(bonePosition(app).x).toBeGreaterThan(0);
@@ -324,8 +324,8 @@ describe('<pc-anim>', () => {
             const anim = get<AnimComponentElement>('pc-anim');
             expect(anim.clips).toEqual(['Run']);
 
-            const assign = vi.spyOn(anim.component, 'assignAnimation');
-            const rebind = vi.spyOn(anim.component, 'rebind');
+            const assign = vi.spyOn(anim.component!, 'assignAnimation');
+            const rebind = vi.spyOn(anim.component!, 'rebind');
 
             get<ModelElement>('pc-model').setAttribute('asset', 'm2');
             await readyWithin(get<ModelElement>('pc-model'));
@@ -351,7 +351,7 @@ describe('<pc-anim>', () => {
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             const model = get<ModelElement>('pc-model');
-            expect(anim.component.rootBone, 'the sole sibling model pins the root').toBe(model.entity);
+            expect(anim.component!.rootBone, 'the sole sibling model pins the root').toBe(model.entity);
 
             // A second sibling model leaves no single skeleton to pin - the stale pin must not
             // survive, or curves would keep binding against whichever model happened to be first.
@@ -360,7 +360,7 @@ describe('<pc-anim>', () => {
             model.parentElement!.appendChild(second);
             await readyWithin(second);
 
-            expect(anim.component.rootBone, 'the ambiguous source clears the pin').toBeNull();
+            expect(anim.component!.rootBone, 'the ambiguous source clears the pin').toBeNull();
         });
 
         it('leaves a binding root assigned through the engine API alone', async () => {
@@ -372,15 +372,15 @@ describe('<pc-anim>', () => {
             const anim = get<AnimComponentElement>('pc-anim');
             const model = get<ModelElement>('pc-model');
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk', 'Run', 'Idle']));
-            expect(anim.component.rootBone).toBe(model.entity);
+            expect(anim.component!.rootBone).toBe(model.entity);
 
             const custom = app.root.findByName('holder') as Entity;
-            anim.component.rootBone = custom;
+            anim.component!.rootBone = custom;
 
             model.setAttribute('asset', 'm2');
             await vi.waitFor(() => expect(anim.clips).toEqual(['Jump']));
 
-            expect(anim.component.rootBone, "the user's choice outranks the managed default").toBe(custom);
+            expect(anim.component!.rootBone, "the user's choice outranks the managed default").toBe(custom);
         });
 
         it('resolves animation and animclip typed assets', async () => {
@@ -450,7 +450,7 @@ describe('<pc-anim>', () => {
 
             anim.setAttribute('clip', 'Run');
 
-            expect(anim.component.baseLayer!.activeState).toBe('Run');
+            expect(anim.component!.baseLayer!.activeState).toBe('Run');
             step(0.5);
             expect(bonePosition(app).x).toBeGreaterThan(0);
         });
@@ -463,7 +463,7 @@ describe('<pc-anim>', () => {
             anim.setAttribute('transition-time', '0.5');
             anim.setAttribute('clip', 'Run');
 
-            const layer = anim.component.baseLayer!;
+            const layer = anim.component!.baseLayer!;
             expect(layer.activeState).toBe('Run');
             step(0.1);
             expect(layer.transitioning).toBe(true);
@@ -478,7 +478,7 @@ describe('<pc-anim>', () => {
             anim.setAttribute('clip', 'Nope');
 
             warnings.expect("pc-anim has no clip named 'Nope' - selection unchanged");
-            expect(anim.component.baseLayer!.activeState).not.toBe('Nope');
+            expect(anim.component!.baseLayer!.activeState).not.toBe('Nope');
         });
 
         it('keeps playing when the clip attribute is removed', async () => {
@@ -489,8 +489,8 @@ describe('<pc-anim>', () => {
             anim.removeAttribute('clip');
 
             expect(anim.clip).toBe('');
-            expect(anim.component.playing).toBe(true);
-            expect(anim.component.baseLayer!.activeState).toBe('Run');
+            expect(anim.component!.playing).toBe(true);
+            expect(anim.component!.baseLayer!.activeState).toBe('Run');
         });
 
         it('play and pause freeze and resume the pose', async () => {
@@ -502,7 +502,7 @@ describe('<pc-anim>', () => {
             expect(frozen).toBeGreaterThan(0);
 
             anim.pause();
-            expect(anim.component.playing).toBe(false);
+            expect(anim.component!.playing).toBe(false);
             step(0.25);
             expect(bonePosition(app).y).toBe(frozen);
 
@@ -514,7 +514,7 @@ describe('<pc-anim>', () => {
         it('play(name) hard-cuts, transition(name) cross-fades, unknown names are ignored', async () => {
             const { get, step } = await bootApp(DECLARED);
             const anim = get<AnimComponentElement>('pc-anim');
-            const layer = anim.component.baseLayer!;
+            const layer = anim.component!.baseLayer!;
             step(0.1);
 
             anim.play('Run');
@@ -542,7 +542,7 @@ describe('<pc-anim>', () => {
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
-            expect(anim.component.playing).toBe(false);
+            expect(anim.component!.playing).toBe(false);
             step(0.5);
             expect(bonePosition(app).x).toBe(0);
             expect(bonePosition(app).y).toBe(0);
@@ -572,7 +572,7 @@ describe('<pc-anim>', () => {
             // time entering the clip), so the playhead only reads non-zero from the second on
             step(0.25);
             step(0.25);
-            const layer = anim.component.baseLayer!;
+            const layer = anim.component!.baseLayer!;
             const before = layer.activeStateCurrentTime;
             expect(before).toBeGreaterThan(0);
 
@@ -637,16 +637,16 @@ describe('<pc-anim>', () => {
             step(0.25);
             step(0.25);
             anim.pause();
-            const time = anim.component.baseLayer!.activeStateCurrentTime;
+            const time = anim.component!.baseLayer!.activeStateCurrentTime;
             expect(time).toBeGreaterThan(0);
 
             // Rebuild while paused: remove the inactive clip
             (anim.children[1] as AnimClipElement).remove();
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk']));
 
-            expect(anim.component.playing).toBe(false);
-            expect(anim.component.baseLayer!.activeState).toBe('Walk');
-            expect(anim.component.baseLayer!.activeStateCurrentTime).toBeCloseTo(time, 5);
+            expect(anim.component!.playing).toBe(false);
+            expect(anim.component!.baseLayer!.activeState).toBe('Walk');
+            expect(anim.component!.baseLayer!.activeStateCurrentTime).toBeCloseTo(time, 5);
 
             const held = bonePosition(app).y;
             step(0.25);
@@ -669,13 +669,13 @@ describe('<pc-anim>', () => {
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             step(0.1);
-            expect(anim.component.baseLayer!.activeState).toBe('Walk');
+            expect(anim.component!.baseLayer!.activeState).toBe('Walk');
 
             (anim.children[0] as AnimClipElement).remove();
             await vi.waitFor(() => expect(anim.clips).toEqual(['Run']));
 
             step(0.1);
-            expect(anim.component.baseLayer!.activeState).toBe('Run');
+            expect(anim.component!.baseLayer!.activeState).toBe('Run');
         });
 
         it('renames a clip in place', async () => {
@@ -703,7 +703,7 @@ describe('<pc-anim>', () => {
             const { get, step } = await bootApp(WALK_ONLY);
             const anim = get<AnimComponentElement>('pc-anim');
             const clip = anim.children[0] as AnimClipElement;
-            const layer = anim.component.baseLayer!;
+            const layer = anim.component!.baseLayer!;
             // Two steps: the first tick is consumed by the START transition
             step(0.25);
             step(0.25);
@@ -731,12 +731,12 @@ describe('<pc-anim>', () => {
             step(2);
             step(2);
 
-            const layer = anim.component.baseLayer!;
+            const layer = anim.component!.baseLayer!;
             expect(layer.activeStateCurrentTime).toBe(layer.activeStateDuration);
             expect(bonePosition(app).y).toBeCloseTo(2, 5);
 
             // The engine reports no completion: the state holds and playing stays true
-            expect(anim.component.playing).toBe(true);
+            expect(anim.component!.playing).toBe(true);
             step(2);
             expect(bonePosition(app).y).toBeCloseTo(2, 5);
         });
@@ -757,7 +757,7 @@ describe('<pc-anim>', () => {
             `);
             const anim = get<AnimComponentElement>('pc-anim');
             expect(anim.clips).toEqual(['Run']);
-            const firstComponent = anim.component;
+            const firstComponent = anim.component!;
 
             get<ModelElement>('pc-model').setAttribute('asset', 'm2');
 
