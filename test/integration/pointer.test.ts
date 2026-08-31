@@ -57,7 +57,7 @@ const stubPicker = (
 ) => {
     const calls = { sync: 0, async: 0, cameras: [] as unknown[] };
 
-    (appElement as unknown as { _picker: unknown })._picker = {
+    (appElement as unknown as { _pointer: { _picker: unknown } })._pointer._picker = {
         prepare: (camera: unknown) => {
             calls.cameras.push(camera);
         },

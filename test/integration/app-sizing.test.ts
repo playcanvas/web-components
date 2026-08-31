@@ -49,7 +49,8 @@ describe('<pc-app> sizing', () => {
         vi.stubGlobal('devicePixelRatio', 2);
 
         const { appElement } = await bootApp('', { appAttributes: 'max-pixel-ratio="1"' });
-        const picker = (appElement as unknown as { _picker: { width: number; height: number } })._picker;
+        const picker = (appElement as unknown as { _pointer: { _picker: { width: number; height: number } } })
+            ._pointer._picker;
         expect(picker.width).toBe(800);
         expect(picker.height).toBe(600);
 
