@@ -133,6 +133,30 @@ describe('<pc-particle-system>', () => {
             expect(uncaught.seen).toEqual([]);
         });
 
+        it('survives binding to a config whose load already failed, and applies a later reload', async () => {
+            // The engine marks a failed load `loaded` too, with no resource - binding to one
+            // must not apply the empty resource as a config.
+            const { app, get } = await bootApp(RACE_ASSETS);
+            const parked = parkLoads(app);
+            const assetA = get<AssetElement>('pc-asset[id="cfg-a"]').asset!;
+
+            app.assets.load(assetA);
+            parked.get('cfg-a.json')!('failed to fetch');
+            expect(assetA.loaded, 'a failed load still settles as loaded').toBe(true);
+            expect(assetA.resource ?? null).toBeNull();
+
+            const element = await mountParticleSystem(get('pc-entity'), '');
+            element.setAttribute('asset', 'cfg-a');
+            expect(element.component!.lifetime, 'the failed config did not apply').toBe(DEFAULT_LIFETIME);
+
+            // Without an error callback the binding waits for a reload, exactly as it does for
+            // a failure that happens while subscribed - a retry that succeeds still delivers.
+            app.assets.load(assetA, { force: true });
+            parked.get('cfg-a.json')!(null, { lifetime: 7 });
+            expect(element.component!.lifetime, 'the successful reload applied').toBe(7);
+            expect(uncaught.seen).toEqual([]);
+        });
+
         it('does not let a load from a previous connection configure a reconnected component', async () => {
             const { app, get } = await bootApp(RACE_ASSETS);
             const parked = parkLoads(app);

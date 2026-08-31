@@ -1,3 +1,4 @@
+import type { AppBase } from 'playcanvas';
 import { Entity, Vec3 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -28,6 +29,26 @@ const GLTF_SRC = containerSrc('model-root');
 const ASSET_TAG = `<pc-asset id="m" type="container" src="${GLTF_SRC}"></pc-asset>`;
 
 const ASSET_TAG_B = `<pc-asset id="m2" type="container" src="${containerSrc('model-root-b')}"></pc-asset>`;
+
+/**
+ * Replaces the app's resource loader with one that parks every load until the test settles it,
+ * making settlement order (and failure) a test input. Settling a parked load runs the registry's
+ * own completion path, so the asset's real `load`/`error` events fire.
+ *
+ * @param app - The booted application.
+ * @returns Parked loads, keyed by the asset's file URL.
+ */
+const parkLoads = (app: AppBase) => {
+    const parked = new Map<string, (err: string | null, resource?: unknown) => void>();
+    vi.spyOn(app.loader, 'load').mockImplementation(((
+        url: string,
+        _type: string,
+        callback: (err: string | null, resource?: unknown) => void
+    ) => {
+        parked.set(url, callback);
+    }) as typeof app.loader.load);
+    return parked;
+};
 
 describe('<pc-model>', () => {
     const { errors, uncaught, warnings } = useGuard();
@@ -134,16 +155,7 @@ describe('<pc-model>', () => {
             <pc-asset id="slow-b" type="container" src="slow-b.glb" lazy></pc-asset>
         `);
 
-        // Park both loads so the test settles them in a chosen order. Settling a parked load
-        // runs the registry's own completion path, so the asset's real load event fires.
-        const parked = new Map<string, (err: string | null, resource?: unknown) => void>();
-        vi.spyOn(app.loader, 'load').mockImplementation(((
-            url: string,
-            _type: string,
-            callback: (err: string | null, resource?: unknown) => void
-        ) => {
-            parked.set(url, callback);
-        }) as typeof app.loader.load);
+        const parked = parkLoads(app);
 
         const model = document.createElement('pc-model');
         model.setAttribute('asset', 'slow-a');
@@ -268,6 +280,34 @@ describe('<pc-model>', () => {
 
             // The engine logs the parse failure itself; the event above is the element's channel
             errors.expect(/glb/i);
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('settles with an error when bound to an asset whose load already failed', async () => {
+            // The engine marks a failed load `loaded` too, with no resource. Binding to one must
+            // not instantiate the empty resource - the selection settles through the error path,
+            // exactly as if the failure had happened while the model was waiting.
+            const { app, appElement, get } = await bootApp(
+                '<pc-asset id="broken" type="container" src="broken.glb" lazy></pc-asset>'
+            );
+            const parked = parkLoads(app);
+            const asset = get('pc-asset').asset!;
+
+            app.assets.load(asset);
+            parked.get('broken.glb')!('download failed');
+            expect(asset.loaded, 'a failed load still settles as loaded').toBe(true);
+
+            const model = document.createElement('pc-model');
+            const seen: ErrorEvent[] = [];
+            model.addEventListener('error', (event) => seen.push(event as ErrorEvent));
+            model.setAttribute('asset', 'broken');
+            appElement.appendChild(model);
+
+            await readyWithin(model);
+            expect(model.contentEntity, 'nothing was instantiated from the empty resource').toBeNull();
+            expect(model.entity, 'the host survives').not.toBeNull();
+            expect(seen).toHaveLength(1);
+            expect(seen[0].message).toBe("asset 'broken' failed to load");
             expect(uncaught.seen).toEqual([]);
         });
     });

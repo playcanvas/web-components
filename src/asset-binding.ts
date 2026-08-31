@@ -13,14 +13,15 @@ import { useAsset } from './asset';
  */
 export type AssetBindingCallbacks = {
     /**
-     * Delivers the loaded asset: synchronously from {@link AssetBinding.bind} when the asset has
-     * already loaded, otherwise from its `load` event.
+     * Delivers the asset once it holds a resource: synchronously from {@link AssetBinding.bind}
+     * when the asset had already loaded one, otherwise from its `load` event.
      */
     load: (asset: Asset) => void;
 
     /**
-     * Delivers a failed load. Optional — without it, a failure leaves the binding subscribed, so
-     * an asset that is reloaded after an error still delivers.
+     * Delivers a failed load — one that fails while subscribed, or one that had already failed
+     * when {@link AssetBinding.bind} ran. Optional — without it, a failure leaves the binding
+     * subscribed, so an asset that is reloaded after an error still delivers.
      */
     error?: (err: string | Error) => void;
 };
@@ -77,8 +78,9 @@ export class AssetBinding {
     /**
      * Binds to the asset registered under `id`, superseding whatever the binding was waiting
      * for — even when `id` resolves to nothing, since the element's reference has still moved
-     * on. Resolution starts a lazy asset's load. An already-loaded asset is delivered before
-     * this returns; otherwise the binding subscribes to the asset's settlement, detaching its
+     * on. Resolution starts a lazy asset's load. An asset that has already settled is delivered
+     * before this returns — through `load` when it holds a resource, through `error` when its
+     * load failed; otherwise the binding subscribes to the asset's settlement, detaching its
      * handlers once either event delivers.
      *
      * @param id - The `id` of the `<pc-asset>` element to bind to.
@@ -95,9 +97,21 @@ export class AssetBinding {
             return undefined;
         }
 
+        const { error } = callbacks;
+
         if (asset.loaded) {
-            callbacks.load(asset);
-            return asset;
+            // The engine marks a failed load `loaded` too - the flag means settled, not that a
+            // resource arrived. A settled failure must not deliver `load` with an empty
+            // resource: it reports through `error` where requested, and otherwise falls through
+            // to wait for a reload, exactly like a failure that happens while subscribed.
+            if (asset.resource != null) {
+                callbacks.load(asset);
+                return asset;
+            }
+            if (error) {
+                error(`asset '${id}' failed to load`);
+                return asset;
+            }
         }
 
         // Each handler checks its generation before detaching: a stale callback (one the detach
@@ -111,7 +125,6 @@ export class AssetBinding {
             callbacks.load(asset);
         });
 
-        const { error } = callbacks;
         if (error) {
             this._errorHandle = asset.once('error', (err: string | Error) => {
                 if (generation !== this._generation) {
