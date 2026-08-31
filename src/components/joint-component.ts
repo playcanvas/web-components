@@ -1,7 +1,8 @@
 import type { JointComponent } from 'playcanvas';
 import { Vec2, Vec3 } from 'playcanvas';
 
-import { parseBool, parseEnum, parseNumber, parseVec2, parseVec3, resolveEntity } from '../parse';
+import { resolveEntity } from '../entity-reference';
+import { parseBool, parseEnum, parseNumber, parseVec2, parseVec3 } from '../parse';
 
 import { ComponentElement } from './component';
 

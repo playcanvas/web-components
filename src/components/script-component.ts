@@ -2,10 +2,8 @@ import type { ScriptComponent, Script } from 'playcanvas';
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset';
+import { findEntityElement, getEntity, idHint, unresolvedCause } from '../entity-reference';
 import {
-    findEntityElement,
-    getEntity,
-    idHint,
     parseBool,
     parseColor,
     parseComponents,
@@ -13,8 +11,7 @@ import {
     parseQuat,
     parseVec2,
     parseVec3,
-    parseVec4,
-    unresolvedCause
+    parseVec4
 } from '../parse';
 
 import { ComponentElement } from './component';
