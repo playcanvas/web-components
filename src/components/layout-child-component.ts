@@ -18,7 +18,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class LayoutChildComponentElement extends ComponentElement {
+class LayoutChildComponentElement extends ComponentElement<LayoutChildComponent> {
     private _minWidth = 0;
 
     private _minHeight = 0;
@@ -51,11 +51,12 @@ class LayoutChildComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas layout child component.
-     * @returns The layout child component.
+     * Gets the underlying PlayCanvas layout child component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The layout child component, or `null`.
      */
-    get component(): LayoutChildComponent {
-        return super.component as LayoutChildComponent;
+    get component(): LayoutChildComponent | null {
+        return super.component;
     }
 
     /**

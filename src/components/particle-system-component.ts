@@ -18,7 +18,7 @@ import { ComponentElement } from './component';
  *
  * @category Components
  */
-class ParticleSystemComponentElement extends ComponentElement {
+class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComponent> {
     private _asset = '';
 
     /** @ignore */
@@ -45,11 +45,12 @@ class ParticleSystemComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas particle system component.
-     * @returns The particle system component.
+     * Gets the underlying PlayCanvas particle system component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The particle system component, or `null`.
      */
-    get component(): ParticleSystemComponent {
-        return super.component as ParticleSystemComponent;
+    get component(): ParticleSystemComponent | null {
+        return super.component;
     }
 
     private applyConfig(resource: any) {

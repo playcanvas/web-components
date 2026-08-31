@@ -3,6 +3,7 @@ import { customElementVsCodePlugin } from 'custom-element-vs-code-integration';
 
 import { attributesFromCallbackPlugin } from './utils/cem/attributes-plugin.mjs';
 import { manifestCleanupPlugin } from './utils/cem/cleanup-plugin.mjs';
+import { componentTypePlugin } from './utils/cem/component-type-plugin.mjs';
 import { elementSummaryPlugin } from './utils/cem/summary-plugin.mjs';
 
 /**
@@ -33,6 +34,10 @@ export default {
     plugins: [
         // Derives attribute metadata from each element's attributeChangedCallback
         attributesFromCallbackPlugin(),
+
+        // Restores each element's concrete `component` type, which the analyzer's inheritance
+        // step overwrites with the generic base's literal `T | null`
+        componentTypePlugin(),
 
         // Publishes each element's `@elementSummary` as its `summary`
         elementSummaryPlugin(),

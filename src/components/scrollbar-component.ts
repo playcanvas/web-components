@@ -24,7 +24,7 @@ const orientations = new Map<'horizontal' | 'vertical', number>([
  *
  * @category Components
  */
-class ScrollbarComponentElement extends ComponentElement {
+class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
     private _orientation: 'horizontal' | 'vertical' = 'horizontal';
 
     private _value = 0;
@@ -54,11 +54,12 @@ class ScrollbarComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas scrollbar component.
-     * @returns The scrollbar component.
+     * Gets the underlying PlayCanvas scrollbar component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The scrollbar component, or `null`.
      */
-    get component(): ScrollbarComponent {
-        return super.component as ScrollbarComponent;
+    get component(): ScrollbarComponent | null {
+        return super.component;
     }
 
     /**

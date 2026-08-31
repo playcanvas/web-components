@@ -795,8 +795,8 @@ describe('pc-app pointer picking', () => {
                 <pc-entity name="camB"><pc-camera ${b}></pc-camera></pc-entity>
                 <pc-entity name="target"></pc-entity>
             `);
-            const cameraA = handle.get<CameraComponentElement>('pc-entity[name="camA"] pc-camera').component;
-            const cameraB = handle.get<CameraComponentElement>('pc-entity[name="camB"] pc-camera').component;
+            const cameraA = handle.get<CameraComponentElement>('pc-entity[name="camA"] pc-camera').component!;
+            const cameraB = handle.get<CameraComponentElement>('pc-entity[name="camB"] pc-camera').component!;
             const target = handle.get<EntityElement>('pc-entity[name="target"]');
             const enter = vi.fn();
             target.addEventListener('pointerenter', enter);

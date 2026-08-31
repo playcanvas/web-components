@@ -367,6 +367,21 @@ if (manifest) {
             `${tag} non-attribute members are [${extras.join(', ')}], expected [${expected.join(', ')}]`);
     }
 
+    // The `component` member's concrete type is manufactured by component-type-plugin.mjs: the
+    // analyzer's inheritance step overwrites even an overridden member's type with the base
+    // class's literal text, so without the plugin every element would publish `component:
+    // T | null`. One exact pin, plus the shape across every component element - a regression
+    // here ships a bare type variable to every manifest consumer.
+    const memberType = (tag, name) => (elements.get(tag)?.members ?? [])
+        .find(member => member.name === name)?.type?.text;
+    check(memberType('pc-light', 'component') === 'LightComponent | null',
+        `pc-light.component is typed ${JSON.stringify(memberType('pc-light', 'component'))}, expected "LightComponent | null"`);
+    for (const tag of COMPONENT_TAGS) {
+        const text = memberType(tag, 'component') ?? '';
+        check(/^[A-Z]\w*Component \| null$/.test(text),
+            `${tag}.component is typed ${JSON.stringify(text)}, not a concrete nullable component type`);
+    }
+
     // The base classes and whenReady sit outside the per-tag map, but their surface is
     // inherited by (or waits on) every element, so losing it would break all of them at once
     const classes = new Map();
@@ -385,6 +400,13 @@ if (manifest) {
         check(actual.join() === [...expected].sort().join(),
             `${name} members are [${actual.join(', ')}], expected [${expected.join(', ')}]`);
     }
+
+    // The base class's own `component` entry carries its type-parameter default rather than the
+    // bare `T | null` the analyzer reads from the source
+    const baseComponent = (classes.get('ComponentElement')?.members ?? [])
+        .find(member => member.name === 'component');
+    check(baseComponent?.type?.text === 'Component | null',
+        `ComponentElement.component is typed ${JSON.stringify(baseComponent?.type?.text)}, expected "Component | null"`);
     check((manifest.modules ?? []).some(module => (module.declarations ?? [])
         .some(declaration => declaration.kind === 'function' && declaration.name === 'whenReady')),
     "the manifest lost the 'whenReady' function declaration");

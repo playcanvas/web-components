@@ -45,7 +45,7 @@ export type MotionMode = 'locked' | 'limited' | 'free';
  *
  * @category Components
  */
-class JointComponentElement extends ComponentElement {
+class JointComponentElement extends ComponentElement<JointComponent> {
     /**
      * The spring damping of the joint per angular axis.
      */
@@ -254,11 +254,12 @@ class JointComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas joint component.
-     * @returns The joint component.
+     * Gets the underlying PlayCanvas joint component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The joint component, or `null`.
      */
-    get component(): JointComponent {
-        return super.component as JointComponent;
+    get component(): JointComponent | null {
+        return super.component;
     }
 
     /**

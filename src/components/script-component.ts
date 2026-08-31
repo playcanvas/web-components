@@ -266,7 +266,7 @@ export type ScriptNameChangeEvent = {
  *
  * @category Components
  */
-class ScriptComponentElement extends ComponentElement {
+class ScriptComponentElement extends ComponentElement<ScriptComponent> {
     private observer: MutationObserver;
 
     /** @ignore */
@@ -743,11 +743,12 @@ class ScriptComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas script component.
-     * @returns The script component.
+     * Gets the underlying PlayCanvas script component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The script component, or `null`.
      */
-    get component(): ScriptComponent {
-        return super.component as ScriptComponent;
+    get component(): ScriptComponent | null {
+        return super.component;
     }
 }
 

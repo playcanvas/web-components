@@ -80,7 +80,7 @@ describe('<pc-joint>', () => {
     describe('#component', () => {
         it('creates the joint component with the engine defaults', async () => {
             const { get } = await bootApp(scene());
-            const component = get<JointComponentElement>('pc-joint').component;
+            const component = get<JointComponentElement>('pc-joint').component!;
 
             expect(component).toBeDefined();
 
@@ -103,7 +103,7 @@ describe('<pc-joint>', () => {
                 .map(([attribute, , value]) => (value === '' ? attribute : `${attribute}="${value}"`))
                 .join(' ');
             const { get } = await bootApp(scene(markup));
-            const component = get<JointComponentElement>('pc-joint').component;
+            const component = get<JointComponentElement>('pc-joint').component!;
 
             for (const [attribute, property, , expected] of cases) {
                 expect.soft(engineValue(component, property), attribute).toEqual(expected);
@@ -116,7 +116,7 @@ describe('<pc-joint>', () => {
 
             for (const [attribute, property, value, expected] of cases) {
                 joint.setAttribute(attribute, value);
-                expect.soft(engineValue(joint.component, property), attribute).toEqual(expected);
+                expect.soft(engineValue(joint.component!, property), attribute).toEqual(expected);
             }
         });
 
@@ -127,7 +127,7 @@ describe('<pc-joint>', () => {
             for (const [attribute, property, value, , restored] of cases) {
                 joint.setAttribute(attribute, value);
                 joint.removeAttribute(attribute);
-                expect.soft(engineValue(joint.component, property), attribute).toEqual(restored);
+                expect.soft(engineValue(joint.component!, property), attribute).toEqual(restored);
             }
         });
 
@@ -137,7 +137,7 @@ describe('<pc-joint>', () => {
                     'type="banana" break-impulse="soft" limits="1" linear-stiffness="x y z" linear-motion-y="wobbly"'
                 )
             );
-            const component = get<JointComponentElement>('pc-joint').component;
+            const component = get<JointComponentElement>('pc-joint').component!;
 
             warnings.expect(
                 "Invalid value 'banana' for attribute 'type'. Valid values: fixed, ball, hinge, slider, 6dof. Using 'fixed'."
@@ -166,20 +166,20 @@ describe('<pc-joint>', () => {
             const { get } = await bootApp(scene('type="hinge"'));
             const joint = get<JointComponentElement>('pc-joint');
 
-            expect(joint.component.type).toBe('hinge');
+            expect(joint.component!.type).toBe('hinge');
 
             joint.setAttribute('type', '6dof');
-            expect(joint.component.type).toBe('6dof');
+            expect(joint.component!.type).toBe('6dof');
 
             joint.removeAttribute('type');
-            expect(joint.component.type).toBe('fixed');
+            expect(joint.component!.type).toBe('fixed');
         });
     });
 
     describe('[entity-a] and [entity-b]', () => {
         it('resolves references by entity name and by CSS selector to live entities', async () => {
             const { app, get } = await bootApp(scene('entity-a="bob" entity-b="#anchor-id"'));
-            const component = get<JointComponentElement>('pc-joint').component;
+            const component = get<JointComponentElement>('pc-joint').component!;
 
             expect(component.entityA).toBe(app.root.findByName('bob'));
             expect(component.entityB).toBe(app.root.findByName('anchor'));
@@ -189,7 +189,7 @@ describe('<pc-joint>', () => {
             const { app, get } = await bootApp(
                 `<pc-entity name="frame"><pc-joint entity-a="bob" entity-b="anchor"></pc-joint></pc-entity>${BODIES}`
             );
-            const component = get<JointComponentElement>('pc-joint').component;
+            const component = get<JointComponentElement>('pc-joint').component!;
 
             expect(component.entityA).toBe(app.root.findByName('bob'));
             expect(component.entityB).toBe(app.root.findByName('anchor'));
@@ -211,7 +211,7 @@ describe('<pc-joint>', () => {
                 </pc-model>
             `);
 
-            expect(get<JointComponentElement>('pc-joint').component.entityA).toBe(
+            expect(get<JointComponentElement>('pc-joint').component!.entityA).toBe(
                 get<NodeElement>('pc-node').entity
             );
         });
@@ -230,12 +230,12 @@ describe('<pc-joint>', () => {
             const joint = get<JointComponentElement>('pc-joint');
             const near = get<EntityElement>('#near-anchor');
 
-            expect(joint.component.entityA, 'resolved at creation').toBe(near.entity);
+            expect(joint.component!.entityA, 'resolved at creation').toBe(near.entity);
 
             // And again through the setter path on reassignment
             joint.setAttribute('entity-a', '');
             joint.setAttribute('entity-a', 'anchor');
-            expect(joint.component.entityA, 'resolved on reassignment').toBe(near.entity);
+            expect(joint.component!.entityA, 'resolved on reassignment').toBe(near.entity);
         });
 
         it('retargets a body when the attribute changes at runtime', async () => {
@@ -247,7 +247,7 @@ describe('<pc-joint>', () => {
 
             joint.setAttribute('entity-b', '#post-id');
 
-            expect(joint.component.entityB).toBe(app.root.findByName('post'));
+            expect(joint.component!.entityB).toBe(app.root.findByName('post'));
         });
 
         it('pins the first body to a world point when entity-b is removed', async () => {
@@ -257,7 +257,7 @@ describe('<pc-joint>', () => {
             joint.removeAttribute('entity-b');
 
             expect(joint.entityB).toBe('');
-            expect(joint.component.entityB).toBeNull();
+            expect(joint.component!.entityB).toBeNull();
         });
 
         it('detaches the first body when entity-a is removed', async () => {
@@ -267,7 +267,7 @@ describe('<pc-joint>', () => {
             joint.removeAttribute('entity-a');
 
             expect(joint.entityA).toBe('');
-            expect(joint.component.entityA).toBeNull();
+            expect(joint.component!.entityA).toBeNull();
         });
 
         it('warns when a reference matches nothing in the document', async () => {
@@ -276,7 +276,7 @@ describe('<pc-joint>', () => {
 
             warnings.expect("pc-joint could not resolve entity-a '#nope' - nothing in the document matches it");
             expect(joint.entityA).toBe('#nope');
-            expect(joint.component.entityA).toBeNull();
+            expect(joint.component!.entityA).toBeNull();
         });
 
         it('warns differently when a reference matches an element that cannot back an entity', async () => {
@@ -289,7 +289,7 @@ describe('<pc-joint>', () => {
                 '<div> matches it but cannot back an entity - constraint not created. ' +
                     'Point entity-a at a pc-entity, pc-model or pc-node instead.'
             );
-            expect(joint.component.entityA).toBeNull();
+            expect(joint.component!.entityA).toBeNull();
         });
 
         it('warns again when a reference is reassigned and still does not resolve', async () => {
@@ -299,7 +299,7 @@ describe('<pc-joint>', () => {
             joint.setAttribute('entity-a', '#still-nope');
 
             warnings.expect("pc-joint could not resolve entity-a '#still-nope'");
-            expect(joint.component.entityA).toBeNull();
+            expect(joint.component!.entityA).toBeNull();
         });
 
         it('stays silent for an empty reference, which is the world-space case', async () => {
@@ -310,7 +310,7 @@ describe('<pc-joint>', () => {
             // fails this test if either did.
             joint.setAttribute('entity-b', '');
 
-            expect(joint.component.entityB).toBeNull();
+            expect(joint.component!.entityB).toBeNull();
         });
     });
 
@@ -322,7 +322,7 @@ describe('<pc-joint>', () => {
             const events: Event[] = [];
             container.addEventListener('break', event => events.push(event));
 
-            joint.component.fire('break');
+            joint.component!.fire('break');
 
             expect(events).toHaveLength(1);
             expect(events[0]).toBeInstanceOf(CustomEvent);
@@ -337,8 +337,8 @@ describe('<pc-joint>', () => {
             const events: Event[] = [];
             joint.addEventListener('break', event => events.push(event));
 
-            joint.component.fire('break');
-            joint.component.fire('break');
+            joint.component!.fire('break');
+            joint.component!.fire('break');
 
             expect(events).toHaveLength(2);
         });

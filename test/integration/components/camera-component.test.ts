@@ -88,7 +88,7 @@ describe('<pc-camera>', () => {
     describe('#component', () => {
         it('creates the camera component with the engine defaults', async () => {
             const { get } = await bootApp(scene());
-            const component = get<CameraComponentElement>('pc-camera').component;
+            const component = get<CameraComponentElement>('pc-camera').component!;
 
             expect(component).toBeDefined();
             expect(component.enabled).toBe(true);
@@ -105,7 +105,7 @@ describe('<pc-camera>', () => {
                 .map(([attribute, , value]) => (value === '' ? attribute : `${attribute}="${value}"`))
                 .join(' ');
             const { get } = await bootApp(scene(markup));
-            const component = get<CameraComponentElement>('pc-camera').component;
+            const component = get<CameraComponentElement>('pc-camera').component!;
 
             for (const [attribute, property, , expected] of cases) {
                 expect.soft(engineValue(component, property), attribute).toEqual(expected);
@@ -118,7 +118,7 @@ describe('<pc-camera>', () => {
 
             for (const [attribute, property, value, expected] of cases) {
                 camera.setAttribute(attribute, value);
-                expect.soft(engineValue(camera.component, property), attribute).toEqual(expected);
+                expect.soft(engineValue(camera.component!, property), attribute).toEqual(expected);
             }
         });
 
@@ -129,7 +129,7 @@ describe('<pc-camera>', () => {
             for (const [attribute, property, value, , restored] of cases) {
                 camera.setAttribute(attribute, value);
                 camera.removeAttribute(attribute);
-                expect.soft(engineValue(camera.component, property), attribute).toEqual(restored);
+                expect.soft(engineValue(camera.component!, property), attribute).toEqual(restored);
             }
         });
 
@@ -137,7 +137,7 @@ describe('<pc-camera>', () => {
             const { get } = await bootApp(
                 scene('fov="wide" projection="isometric" tonemap="reinhard" rect="0 0" clear-depth="near"')
             );
-            const component = get<CameraComponentElement>('pc-camera').component;
+            const component = get<CameraComponentElement>('pc-camera').component!;
 
             warnings.expect("Invalid value 'wide' for attribute 'fov'. Expected a finite number. Using '45'.");
             warnings.expect(
@@ -204,7 +204,7 @@ describe('<pc-camera>', () => {
             // Stubbed so the element's decision is what is measured, not a session the null device
             // could never open
             const started: string[] = [];
-            const component = camera.component;
+            const component = camera.component!;
             component.startXr = ((type: string) => {
                 started.push(type);
             }) as typeof component.startXr;

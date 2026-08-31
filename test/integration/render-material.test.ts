@@ -22,7 +22,7 @@ describe('<pc-render> material', () => {
 
     it('resolves the material onto every mesh instance', async () => {
         const { get } = await bootApp(markup);
-        const component = get<RenderComponentElement>('pc-render').component;
+        const component = get<RenderComponentElement>('pc-render').component!;
 
         expect(component.meshInstances.length).toBeGreaterThan(0);
         for (const meshInstance of component.meshInstances) {
@@ -37,7 +37,7 @@ describe('<pc-render> material', () => {
         // with no material at all. The lookup is now guarded like every other reference attribute.
         const { get } = await bootApp(markup);
         const element = get<RenderComponentElement>('pc-render');
-        const component = element.component;
+        const component = element.component!;
 
         element.removeAttribute('material');
 
@@ -50,7 +50,7 @@ describe('<pc-render> material', () => {
     it('ignores a material id that resolves to nothing', async () => {
         const { get } = await bootApp(markup);
         const element = get<RenderComponentElement>('pc-render');
-        const component = element.component;
+        const component = element.component!;
 
         element.setAttribute('material', 'no-such-material');
 

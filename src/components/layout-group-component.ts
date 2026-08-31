@@ -40,7 +40,7 @@ const fittings = new Map<'none' | 'stretch' | 'shrink' | 'both', number>([
  *
  * @category Components
  */
-class LayoutGroupComponentElement extends ComponentElement {
+class LayoutGroupComponentElement extends ComponentElement<LayoutGroupComponent> {
     private _orientation: 'horizontal' | 'vertical' = 'horizontal';
 
     private _reverseX = false;
@@ -79,11 +79,12 @@ class LayoutGroupComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the underlying PlayCanvas layout group component.
-     * @returns The layout group component.
+     * Gets the underlying PlayCanvas layout group component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The layout group component, or `null`.
      */
-    get component(): LayoutGroupComponent {
-        return super.component as LayoutGroupComponent;
+    get component(): LayoutGroupComponent | null {
+        return super.component;
     }
 
     /**
