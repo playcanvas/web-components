@@ -57,7 +57,7 @@ const stubPicker = (
 ) => {
     const calls = { sync: 0, async: 0, cameras: [] as unknown[] };
 
-    (appElement as unknown as { _picker: unknown })._picker = {
+    (appElement as unknown as { _pointer: { _picker: unknown } })._pointer._picker = {
         prepare: (camera: unknown) => {
             calls.cameras.push(camera);
         },
@@ -281,6 +281,29 @@ describe('pc-app pointer picking', () => {
         await flush();
 
         expect(spies.pointerenter).not.toHaveBeenCalled();
+    });
+
+    it('ignores a hover pick from a previous connection that resolves after a re-boot', async () => {
+        // A remove and re-insert repopulates the picker and application, so presence checks
+        // alone cannot tell an old operation from the new connection - only a pick's own
+        // connection may deliver it.
+        const { appElement, container, canvas, element, spies } = await bootTarget();
+        const pending = deferred<ReturnType<typeof hit>[]>();
+        stubPicker(appElement, [pending.promise]);
+
+        canvas.dispatchEvent(move(400, 300));
+
+        appElement.remove();
+        container.appendChild(appElement);
+        await readyWithin(appElement);
+        await settle(container);
+        appElement.app!.autoRender = false;
+
+        // The old connection's pick resolves now, against the re-booted entity
+        pending.resolve([hit(element.entity!)]);
+        await flush();
+
+        expect(spies.pointerenter, "the old connection's hover pick must not apply").not.toHaveBeenCalled();
     });
 
     it('dispatches pointerdown and pointerup on the picked entity', async () => {
@@ -673,6 +696,29 @@ describe('pc-app pointer picking', () => {
             expect(spies.pointerdown, 'the re-booted chain dispatches immediately').toHaveBeenCalledTimes(1);
             expect(spies.pointerup).toHaveBeenCalledTimes(1);
             expect(spies.click).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not dispatch a press picked before a re-boot into the new connection', async () => {
+            // The re-boot repopulates the picker and application, so the old press's dispatch
+            // step cannot rely on their presence - its own connection is gone.
+            const { appElement, container, canvas, element, spies } = await bootClickTarget();
+            const pending = deferred<ReturnType<typeof hit>[]>();
+            stubPicker(appElement, [pending.promise]);
+
+            canvas.dispatchEvent(down());
+
+            appElement.remove();
+            container.appendChild(appElement);
+            await readyWithin(appElement);
+            await settle(container);
+            appElement.app!.autoRender = false;
+
+            // The old connection's pick resolves now, against the re-booted entity
+            pending.resolve([hit(element.entity!)]);
+            await flush();
+
+            expect(spies.pointerdown, "the old connection's press must not dispatch").not.toHaveBeenCalled();
+            expect(spies.click).not.toHaveBeenCalled();
         });
 
         it('tracks presses per pointer', async () => {
