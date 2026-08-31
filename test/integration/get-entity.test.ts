@@ -38,28 +38,36 @@ describe('entity references', () => {
             expect(getEntity('#cube-id')).toBe(app.root.findByName('Cube'));
         });
 
-        it('resolves an attribute selector', async () => {
-            const { app } = await bootApp(markup);
-            expect(getEntity('pc-entity[name="Cube"]')).toBe(app.root.findByName('Cube'));
+        it('resolves any selector written behind #, not just a bare id', async () => {
+            const { app } = await bootApp('<pc-entity id="wrap"><pc-entity name="inner"></pc-entity></pc-entity>');
+            expect(getEntity('#wrap pc-entity')).toBe(app.root.findByName('inner'));
         });
 
-        it('resolves a bare element id', async () => {
-            const { app } = await bootApp(markup);
-            expect(getEntity('cube-id')).toBe(app.root.findByName('Cube'));
+        it('never interprets a bare reference as a selector', async () => {
+            await bootApp(markup);
+            // Both are valid selectors that would match - a type selector and an attribute
+            // selector - but a bare reference is a name and nothing else, so neither can be
+            // silently retargeted by elements matching it as a selector.
+            expect(getEntity('pc-entity')).toBeNull();
+            expect(getEntity('pc-entity[name="Cube"]')).toBeNull();
         });
 
-        it('falls back to a name lookup for a valid selector that matches nothing', async () => {
+        it('does not resolve a bare reference that only matches an element id', async () => {
+            await bootApp(markup);
+            // A bare reference is a name - the element whose id is 'cube-id' is written '#cube-id'
+            expect(getEntity('cube-id')).toBeNull();
+        });
+
+        it('resolves a name containing a space, which no selector interpretation could', async () => {
             const { app } = await bootApp(markup);
-            // 'Spaced Name' is a *valid* descendant selector, so querySelector returns null rather
-            // than throwing, and the id/name fallback is what resolves it. This path does not
-            // exercise the try/catch - see the malformed-selector test below for that.
             expect(getEntity('Spaced Name')).toBe(app.root.findByName('Spaced Name'));
         });
 
-        it('falls back to a name lookup for a malformed selector, exercising the try/catch', async () => {
+        it('resolves a name that is itself a malformed selector', async () => {
             const { app } = await bootApp('<pc-entity name="pc-entity["></pc-entity>');
-            // An unclosed attribute selector makes querySelector throw, which is the only way into
-            // getEntity's catch block.
+            // The unclosed attribute selector is escaped safely into the name lookup; the raw
+            // reference would make querySelector throw, which the selector fallback absorbs
+            // (the warning tests below drive a ref through that catch).
             expect(getEntity('pc-entity[')).toBe(app.root.findByName('pc-entity['));
         });
 
@@ -78,12 +86,14 @@ describe('entity references', () => {
             expect(getEntity('#plain')).toBeNull();
         });
 
-        it('prefers an id match over a name match', async () => {
+        it('resolves a bare reference as a name even when a same-spelled id exists', async () => {
             const { app } = await bootApp(`
                 <pc-entity id="target" name="ById"></pc-entity>
                 <pc-entity name="target"></pc-entity>
             `);
-            expect(getEntity('target')).toBe(app.root.findByName('ById'));
+            // The two forms never compete: the bare spelling is the name, the '#' spelling the id
+            expect(getEntity('target')).toBe(app.root.findByName('target'));
+            expect(getEntity('#target')).toBe(app.root.findByName('ById'));
         });
 
         it('resolves a name containing a quote through the escaped fallback selector', async () => {
@@ -132,6 +142,38 @@ describe('entity references', () => {
             );
         });
 
+        it('suggests the #id form for a bare reference that only matches an element id', async () => {
+            await bootApp(markup);
+            expect(resolveEntity('cube-id', caller(), 'target', 'reference ignored')).toBeNull();
+            warnings.expect(
+                "pc-test could not resolve target 'cube-id' - nothing in the document matches it - " +
+                    "reference ignored. A bare reference is a name - write '#cube-id' to reference " +
+                    'the element with that id.'
+            );
+        });
+
+        it('escapes the suggested #id so it parses as a selector', async () => {
+            // getElementById accepts ids no unescaped selector can express - the suggestion must
+            // be the form that actually works in one
+            await bootApp('<pc-entity id="a:b" name="Colon"></pc-entity>');
+            expect(resolveEntity('a:b', caller(), 'target', 'reference ignored')).toBeNull();
+            warnings.expect(
+                "pc-test could not resolve target 'a:b' - nothing in the document matches it - " +
+                    "reference ignored. A bare reference is a name - write '#a\\:b' to reference " +
+                    'the element with that id.'
+            );
+        });
+
+        it('keeps the generic advice when the same-spelled id is not entity-fronting', async () => {
+            // Suggesting the # form here would only trade this warning for the wrong-target one
+            await bootApp('<div id="plain-block"></div>');
+            expect(resolveEntity('plain-block', caller(), 'target', 'reference ignored')).toBeNull();
+            warnings.expect(
+                "pc-test could not resolve target 'plain-block' - nothing in the document matches it - " +
+                    'reference ignored. Assign target again once the entity exists.'
+            );
+        });
+
         it('warns with the timing cause when the matched element is not backing an entity yet', async () => {
             await bootApp(markup);
 
@@ -159,7 +201,7 @@ describe('entity references', () => {
             expect(resolveEntity('#plain', caller(), 'target', 'reference ignored')).toBeNull();
             warnings.expect(
                 "pc-test could not resolve target '#plain' - <div> matches it but cannot back an entity - " +
-                    'reference ignored. Point target at a pc-entity instead.'
+                    'reference ignored. Point target at a pc-entity, pc-model or pc-node instead.'
             );
         });
 
@@ -260,17 +302,18 @@ describe('entity references', () => {
             }
         });
 
-        it('prefers an in-scope entity name over a document id match', async () => {
-            const { app, get } = await bootApp(`<pc-entity id="dup" name="ById"></pc-entity>${DUPLICATES}`);
+        it('resolves a bare reference as a name regardless of a same-spelled document id', async () => {
+            const { get } = await bootApp(`<pc-entity id="dup" name="ById"></pc-entity>${DUPLICATES}`);
             const near = get<EntityElement>('pc-entity[name="second"] > pc-entity[name="dup"]');
+            const far = get<EntityElement>('pc-entity[name="first"] > pc-entity[name="dup"]');
 
-            // Unscoped, the id lookup wins (pinned above); scoped, the lexical name phase runs
-            // first, so a page-level id cannot shadow a prefab's internal wiring.
-            expect(getEntity('dup')).toBe(app.root.findByName('ById'));
+            // The bare spelling is a name in both phases - the page-level id never competes, so
+            // it cannot shadow a prefab's internal wiring (nor divert the unscoped lookup).
             expect(getEntity('dup', get('pc-test'))).toBe(near.entity);
+            expect(getEntity('dup')).toBe(far.entity);
         });
 
-        it('resolves selector and id references document-wide from inside a scope', async () => {
+        it('resolves a # reference document-wide from inside a scope', async () => {
             const { get } = await bootApp(`
                 <pc-entity name="first">
                     <pc-entity id="first-dup" name="dup"></pc-entity>
@@ -282,11 +325,23 @@ describe('entity references', () => {
             `);
             const far = get<EntityElement>('#first-dup');
 
-            // No entity is *named* the reference text, so the lexical phase misses and the
-            // document resolver interprets the reference - selectors and ids keep their
-            // document-wide meaning even from inside a scope.
-            expect(getEntity('pc-entity[name="dup"]', get('pc-test'))).toBe(far.entity);
+            // The '#' form is document-global by definition - a nearer same-named entity does
+            // not enter into it.
             expect(getEntity('#first-dup', get('pc-test'))).toBe(far.entity);
+        });
+
+        it('resolves a #id document-wide even when an in-scope entity is named like it', async () => {
+            const { get } = await bootApp(`
+                <pc-entity id="target" name="ById"></pc-entity>
+                <pc-entity name="outer">
+                    <pc-entity name="#target"></pc-entity>
+                    <pc-test></pc-test>
+                </pc-entity>
+            `);
+
+            // The '#' form is authoritative: it bypasses the name lookup entirely, so an
+            // unusually named entity can never shadow the element with that id.
+            expect(getEntity('#target', get('pc-test'))).toBe(get<EntityElement>('#target').entity);
         });
 
         it('does not skip a nearer name match that backs no entity yet', async () => {
@@ -317,7 +372,7 @@ describe('entity references', () => {
             const cube = app.root.findByName('Cube');
 
             expect(getEntity('#cube-id', get('pc-test')), 'a connected caller').toBe(cube);
-            expect(getEntity('cube-id', document.createElement('div')), 'a disconnected one').toBe(cube);
+            expect(getEntity('Cube', document.createElement('div')), 'a disconnected one').toBe(cube);
         });
 
         it('warns without throwing for a reference no CSS string can express, from inside a scope', async () => {

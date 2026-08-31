@@ -23,7 +23,7 @@ describe('<pc-button>', () => {
 
         it('resolves an explicit reference', async () => {
             const { app, get } = await bootApp(`
-                <pc-entity name="btn"><pc-button image="target-id"></pc-button></pc-entity>
+                <pc-entity name="btn"><pc-button image="#target-id"></pc-button></pc-entity>
                 <pc-entity id="target-id" name="target"></pc-entity>
             `);
             const button = get<ButtonComponentElement>('pc-button');
@@ -41,7 +41,7 @@ describe('<pc-button>', () => {
 
         it('keeps the current image entity when a reassigned reference does not resolve', async () => {
             const { app, get } = await bootApp(`
-                <pc-entity name="btn"><pc-button image="target-id"></pc-button></pc-entity>
+                <pc-entity name="btn"><pc-button image="#target-id"></pc-button></pc-entity>
                 <pc-entity id="target-id" name="target"></pc-entity>
             `);
             const button = get<ButtonComponentElement>('pc-button');

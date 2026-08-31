@@ -13,11 +13,12 @@
  *   so they never warn.
  *
  * `findEntityElement` and `getEntity` are the exceptions: they resolve a reference rather than
- * parsing a literal, and return `null` instead of falling back to a default. An exact entity-name
- * match resolves lexically through the entity hierarchy first; otherwise the reference is
- * interpreted against the document as a CSS selector, element id or entity name. They also do not
- * warn - what an unresolved reference means depends on the element holding it - so elements
- * report through `resolveEntity`, which takes that meaning as parameters.
+ * parsing a literal, and return `null` instead of falling back to a default. A reference
+ * beginning with `#` is a document-wide selector (an element id, or any selector rooted in one);
+ * anything else is an entity name, resolved lexically through the entity hierarchy first and
+ * against the document after — never as a selector or an id. They also do not warn - what an
+ * unresolved reference means depends on the element holding it - so elements report through
+ * `resolveEntity`, which takes that meaning as parameters.
  */
 
 import type { Entity } from 'playcanvas';
@@ -384,17 +385,23 @@ const ENTITY_KINDS = ['pc-entity', 'pc-model', 'pc-node'] as const;
 const ENTITY_SCOPES = ENTITY_KINDS.join(', ');
 
 /**
- * Resolves a reference string to the element it names. The reference can be a CSS selector (e.g.
- * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or the bare name of an entity-fronting
- * element (`<pc-entity>`, `<pc-model>` or `<pc-node>` — for a node, the glTF node name it binds).
+ * Resolves a reference string to the element it names. The grammar is closed — every reference
+ * has exactly one interpretation:
  *
- * When `from` is supplied, an exact name match resolves lexically first: the closest
- * entity-fronting ancestor's inclusive subtree, then each outer entity-fronting ancestor, then the
- * containing `<pc-app>`. This is what lets a `<template>` prefab reference its own entities by
- * name — every clone resolves within itself before the document-wide lookup below could reach an
- * earlier clone — provided the prefab has a single entity-fronting root to be the enclosing scope.
- * Otherwise (and as the fallback) the reference is interpreted against the document as a CSS
- * selector, then an element id, then a name.
+ * - A reference beginning with `#` is a document-wide CSS selector — an element id (`#body`), or
+ *   any selector rooted in one (`#hud pc-entity`). It is authoritative: the name lookup never
+ *   runs for it, so an unusually named entity cannot shadow it.
+ * - Any other reference is the name of an entity-fronting element (`<pc-entity>`, `<pc-model>` or
+ *   `<pc-node>` — for a node, the glTF node name it binds), and nothing else. A bare reference is
+ *   never interpreted as a selector or an element id, so adding or renaming elements can never
+ *   change which form it takes.
+ *
+ * When `from` is supplied, a name resolves lexically first: the closest entity-fronting
+ * ancestor's inclusive subtree, then each outer entity-fronting ancestor, then the containing
+ * `<pc-app>`, then the document. This is what lets a `<template>` prefab reference its own
+ * entities by name — every clone resolves within itself before a document-wide lookup could reach
+ * an earlier clone — provided the prefab has a single entity-fronting root to be the enclosing
+ * scope.
  *
  * Separate from {@link getEntity} so a caller reporting a failure can tell the causes apart
  * ({@link unresolvedCause} words them): nothing in the document matches the reference, or
@@ -402,13 +409,19 @@ const ENTITY_SCOPES = ENTITY_KINDS.join(', ');
  *
  * @param ref - The reference string to resolve.
  * @param from - The element resolving the reference, whose entity-fronting ancestors scope the
- * name lookup. Omitted, the lookup is document-wide only.
+ * name lookup. Omitted, the name lookup is document-wide only.
  * @returns The matched element, or `null`.
  * @internal
  */
 export const findEntityElement = (ref: string, from?: Element): Element | null => {
     if (!ref) {
         return null;
+    }
+
+    // A '#' reference is document-wide and bypasses the name lookup entirely - an entity named
+    // '#body' must never shadow the element whose id is 'body'.
+    if (ref.startsWith('#')) {
+        return query(ref);
     }
 
     // The name lands inside a quoted CSS string, so its quotes and backslashes are escaped -
@@ -435,28 +448,19 @@ export const findEntityElement = (ref: string, from?: Element): Element | null =
         }
     }
 
-    // Try the reference as a CSS selector. An invalid selector (e.g. a bare name containing
-    // spaces) falls through to the id/name lookups below.
-    let element = query(ref);
-
-    if (!element) {
-        element = document.getElementById(ref) ?? query(nameSelector);
-    }
-
-    return element;
+    return query(nameSelector);
 };
 
 /**
  * Resolves a reference string to the {@link Entity} backing an entity-fronting element
- * (`<pc-entity>`, `<pc-model>` or `<pc-node>`). The reference can be a CSS selector (e.g.
- * `#my-id`, `pc-entity[name="Foo"]`), a bare element id, or a bare name — an exact name match
- * resolves lexically through the entity hierarchy first when `from` is supplied
- * ({@link findEntityElement} details the order). Returns `null` if no matching element (or
- * backing entity) is found.
+ * (`<pc-entity>`, `<pc-model>` or `<pc-node>`). The reference is a name — resolved lexically
+ * through the entity hierarchy first when `from` is supplied — or a document-wide `#` selector
+ * ({@link findEntityElement} details the grammar and order). Returns `null` if no matching
+ * element (or backing entity) is found.
  *
  * @param ref - The reference string to resolve.
  * @param from - The element resolving the reference, whose entity-fronting ancestors scope the
- * name lookup. Omitted, the lookup is document-wide only.
+ * name lookup. Omitted, the name lookup is document-wide only.
  * @returns The resolved entity, or `null`.
  * @internal
  */
@@ -487,6 +491,26 @@ export const unresolvedCause = (element: Element | null): string => {
 };
 
 /**
+ * Builds the migration pointer for a bare reference that names nothing but matches the id of an
+ * entity-fronting element - it was almost certainly meant as an id, so point at the form that
+ * expresses it, escaped so the suggestion actually parses as a selector (an id like `a:b` must
+ * be written `#a\:b`). Empty when the reference is already a `#` form, matches no id, or the id
+ * belongs to an element that could never back an entity - suggesting it would only trade this
+ * warning for the wrong-target one.
+ *
+ * @param ref - The unresolved reference.
+ * @param prefix - Text the suggested form must carry in the caller's syntax (e.g. `entity:`).
+ * @returns The advice sentence, or an empty string.
+ * @internal
+ */
+export const idHint = (ref: string, prefix = ''): string => {
+    const match = !ref.startsWith('#') && document.getElementById(ref);
+    return match && 'entity' in match
+        ? `A bare reference is a name - write '${prefix}#${CSS.escape(ref)}' to reference the element with that id.`
+        : '';
+};
+
+/**
  * Resolves a reference string to the {@link Entity} backing an entity-fronting element, scoped to
  * the resolving element ({@link findEntityElement} details the order) and warning when a
  * non-empty reference does not resolve - otherwise the reference fails silently, invisible
@@ -511,10 +535,15 @@ export const resolveEntity = (ref: string, from: Element, attribute: string, con
     const element = findEntityElement(ref, from);
     const entity = entityOf(element);
     if (!entity) {
-        const advice =
-            element && !('entity' in element)
-                ? `Point ${attribute} at a pc-entity instead.`
-                : `Assign ${attribute} again once the entity exists.`;
+        let advice = `Assign ${attribute} again once the entity exists.`;
+        if (element && !('entity' in element)) {
+            advice = `Point ${attribute} at a pc-entity, pc-model or pc-node instead.`;
+        } else if (!element) {
+            const hint = idHint(ref);
+            if (hint) {
+                advice = hint;
+            }
+        }
         console.warn(
             `${from.tagName.toLowerCase()} could not resolve ${attribute} '${ref}' - ${unresolvedCause(element)} - ${consequence}. ${advice}`
         );

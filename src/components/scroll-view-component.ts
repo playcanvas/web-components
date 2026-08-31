@@ -294,8 +294,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
-     * `pc-node`) to the entity used as the viewport, which clips the content to the scroll view's
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity used as the viewport, which clips the content to the scroll view's
      * bounds. An exact name resolves against the nearest enclosing entity first, then outward,
      * then the document. A non-empty reference that does not resolve warns and is ignored.
      * @param value - The viewport entity reference.
@@ -311,7 +311,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the reference to the `<pc-entity>` used as the viewport.
+     * Gets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity used as the viewport.
      * @returns The viewport entity reference.
      */
     get viewport() {
@@ -319,8 +320,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
-     * `pc-node`) to the entity used as the content, which is moved as the scroll view is
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity used as the content, which is moved as the scroll view is
      * scrolled. An exact name resolves against the nearest enclosing entity first, then outward,
      * then the document. A non-empty reference that does not resolve warns and is ignored.
      * @param value - The content entity reference.
@@ -336,7 +337,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the reference to the `<pc-entity>` used as the content.
+     * Gets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity used as the content.
      * @returns The content entity reference.
      */
     get content() {
@@ -344,8 +346,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
-     * `pc-node`) to the entity containing the horizontal `<pc-scrollbar>`. An exact name resolves
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity containing the horizontal `<pc-scrollbar>`. An exact name resolves
      * against the nearest enclosing entity first, then outward, then the document. A non-empty
      * reference that does not resolve warns and is ignored.
      * @param value - The horizontal scrollbar entity reference.
@@ -361,7 +363,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the reference to the `<pc-entity>` containing the horizontal scrollbar.
+     * Gets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity containing the horizontal scrollbar.
      * @returns The horizontal scrollbar entity reference.
      */
     get horizontalScrollbar() {
@@ -369,8 +372,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
-     * `pc-node`) to the entity containing the vertical `<pc-scrollbar>`. An exact name resolves
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity containing the vertical `<pc-scrollbar>`. An exact name resolves
      * against the nearest enclosing entity first, then outward, then the document. A non-empty
      * reference that does not resolve warns and is ignored.
      * @param value - The vertical scrollbar entity reference.
@@ -386,7 +389,8 @@ class ScrollViewComponentElement extends ComponentElement {
     }
 
     /**
-     * Gets the reference to the `<pc-entity>` containing the vertical scrollbar.
+     * Gets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
+     * selector) to the entity containing the vertical scrollbar.
      * @returns The vertical scrollbar entity reference.
      */
     get verticalScrollbar() {

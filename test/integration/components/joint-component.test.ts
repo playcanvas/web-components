@@ -245,7 +245,7 @@ describe('<pc-joint>', () => {
             );
             const joint = get<JointComponentElement>('pc-joint');
 
-            joint.setAttribute('entity-b', 'post-id');
+            joint.setAttribute('entity-b', '#post-id');
 
             expect(joint.component.entityB).toBe(app.root.findByName('post'));
         });
@@ -287,7 +287,7 @@ describe('<pc-joint>', () => {
 
             warnings.expect(
                 '<div> matches it but cannot back an entity - constraint not created. ' +
-                    'Point entity-a at a pc-entity instead.'
+                    'Point entity-a at a pc-entity, pc-model or pc-node instead.'
             );
             expect(joint.component.entityA).toBeNull();
         });

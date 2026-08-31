@@ -163,11 +163,25 @@ describe('<pc-script>', () => {
 
         it('resolves an entity: reference to the live entity', async () => {
             const { app, script } = await bootReference(
-                'entity:target-id',
+                'entity:#target-id',
                 '<pc-entity id="target-id" name="target"></pc-entity>'
             );
 
             expect(script.target).toBe(app.root.findByName('target'));
+        });
+
+        it('suggests the #id form when a bare entity: reference only matches an element id', async () => {
+            const { script } = await bootReference(
+                'entity:plain-id',
+                '<pc-entity id="plain-id" name="Plain"></pc-entity>'
+            );
+
+            warnings.expect(
+                "Unable to resolve 'entity:plain-id' in script attributes - nothing in the document " +
+                    "matches it. A bare reference is a name - write 'entity:#plain-id' to reference " +
+                    'the element with that id.'
+            );
+            expect(script.target).toBe('entity:plain-id');
         });
 
         it('resolves an entity: reference against the enclosing scope first', async () => {
