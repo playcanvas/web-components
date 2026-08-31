@@ -16,7 +16,7 @@ describe('<pc-scrollbar>', () => {
         it('resolves the handle reference', async () => {
             const { app, get } = await bootApp(`
                 <pc-entity name="track">
-                    <pc-scrollbar handle="handle-id"></pc-scrollbar>
+                    <pc-scrollbar handle="#handle-id"></pc-scrollbar>
                     <pc-entity id="handle-id" name="handle"></pc-entity>
                 </pc-entity>
             `);
@@ -36,7 +36,7 @@ describe('<pc-scrollbar>', () => {
         it('keeps the current handle when a reassigned reference does not resolve', async () => {
             const { app, get } = await bootApp(`
                 <pc-entity name="track">
-                    <pc-scrollbar handle="handle-id"></pc-scrollbar>
+                    <pc-scrollbar handle="#handle-id"></pc-scrollbar>
                     <pc-entity id="handle-id" name="handle"></pc-entity>
                 </pc-entity>
             `);

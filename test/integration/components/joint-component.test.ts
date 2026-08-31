@@ -245,7 +245,7 @@ describe('<pc-joint>', () => {
             );
             const joint = get<JointComponentElement>('pc-joint');
 
-            joint.setAttribute('entity-b', 'post-id');
+            joint.setAttribute('entity-b', '#post-id');
 
             expect(joint.component.entityB).toBe(app.root.findByName('post'));
         });

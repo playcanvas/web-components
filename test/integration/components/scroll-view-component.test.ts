@@ -15,8 +15,8 @@ describe('<pc-scroll-view>', () => {
     it('resolves all four entity references', async () => {
         const { app, get } = await bootApp(`
             <pc-entity name="sv">
-                <pc-scroll-view viewport="viewport-id" content="content-id"
-                    horizontal-scrollbar="h-scrollbar-id" vertical-scrollbar="v-scrollbar-id"></pc-scroll-view>
+                <pc-scroll-view viewport="#viewport-id" content="#content-id"
+                    horizontal-scrollbar="#h-scrollbar-id" vertical-scrollbar="#v-scrollbar-id"></pc-scroll-view>
                 <pc-entity id="viewport-id" name="viewport">
                     <pc-entity id="content-id" name="content"></pc-entity>
                 </pc-entity>

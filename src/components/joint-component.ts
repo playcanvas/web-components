@@ -26,11 +26,11 @@ export type MotionMode = 'locked' | 'limited' | 'free';
  * about it. The constrained bodies are referenced by `entity-a` and `entity-b`, both of which need
  * a rigid body component; leaving `entity-b` empty constrains `entity-a` to a fixed point in world
  * space. A reference can name any entity-fronting element — `<pc-entity>`, `<pc-model>` or
- * `<pc-node>`, so a ragdoll can join a model's own skeleton nodes by name — and an exact name
- * resolves against the nearest enclosing entity first, then outward through the entity hierarchy,
- * then the document. A `<template>` prefab with one entity-fronting root can therefore wire its
- * joints by name and stay self-contained when cloned. The underlying engine component is in
- * alpha, so its API may change.
+ * `<pc-node>`, so a ragdoll can join a model's own skeleton nodes by name — and a name resolves
+ * against the nearest enclosing entity first, then outward through the entity hierarchy, then the
+ * document, while a `#id` or CSS selector resolves document-wide. A `<template>` prefab with one
+ * entity-fronting root can therefore wire its joints by name and stay self-contained when cloned.
+ * The underlying engine component is in alpha, so its API may change.
  *
  * @elementSummary The `<pc-joint>` element constrains two rigid bodies to each other — a hinged
  * door, a swinging chain, a sliding drawer. Its entity's transform is the joint frame, and
@@ -500,8 +500,8 @@ class JointComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
-     * `pc-node`) to the element providing the first constrained body. An exact name resolves
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#id` or
+     * CSS selector) to the element providing the first constrained body. An exact name resolves
      * against the nearest enclosing entity first, then outward, then the document. The reference
      * resolves when it is set, so an entity created later is picked up by setting the attribute
      * again. A non-empty reference that does not resolve warns, naming which of the two causes it
@@ -524,8 +524,8 @@ class JointComponentElement extends ComponentElement {
     }
 
     /**
-     * Sets the reference (CSS selector, element id, or name of a `pc-entity`, `pc-model` or
-     * `pc-node`) to the element providing the second constrained body, or empty to constrain the
+     * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#id` or
+     * CSS selector) to the element providing the second constrained body, or empty to constrain the
      * first body to a fixed point in world space. An exact name resolves against the nearest
      * enclosing entity first, then outward, then the document. The reference resolves when it is
      * set, so an entity created later is picked up by setting the attribute again. A non-empty
