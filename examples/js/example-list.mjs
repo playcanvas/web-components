@@ -21,7 +21,7 @@
 export const examples = [
     // Showcases
     { name: 'Car Configurator', path: 'car-configurator.html', category: 'Showcases' },
-    { name: 'Model Inspector', path: 'model-inspector.html', category: 'Showcases' },
+    { name: 'Product Viewer', path: 'product-viewer.html', category: 'Showcases' },
     { name: 'Annotations', path: 'annotations.html', category: 'Showcases' },
     { name: 'Shoe Configurator', path: 'shoe-configurator.html', category: 'Showcases' },
     { name: 'Solar System', path: 'solar-system.html', category: 'Showcases' },
