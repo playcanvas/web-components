@@ -120,20 +120,43 @@ function onActivity() {
     idleTimeout = setTimeout(fadeWhenIdle, IDLE_FADE_MS);
 }
 
-// While faded the buttons are not hit-testable, so a press aimed at them would fall
-// through to the page beneath - and on touch there is no pointermove to reveal them
-// first. Capture the press, spend it on revealing the buttons, and stop it from
-// reaching the page (mouse users are unaffected: pointermove reveals before any click).
-function onPress(event) {
-    if (container.classList.contains('faded')) {
-        event.stopPropagation();
-    }
+// Faded, the buttons stay hit-testable, so a press aimed at one lands on it rather than falling
+// through to the page beneath - and on touch, where no pointermove precedes the tap, that press
+// is also what reveals them. It is spent on the reveal: a button the user could not see must not
+// act, so the click it produces is stopped before reaching the button. Every press re-decides
+// this, so a press that finds the buttons already revealed leaves nothing to stop.
+let pressSpent = false;
+
+function onPress() {
+    pressSpent = container.classList.contains('faded');
     onActivity();
 }
 
-window.addEventListener('pointerdown', onPress, { capture: true, passive: true });
-window.addEventListener('touchstart', onPress, { capture: true, passive: true });
-for (const event of ['pointermove', 'keydown']) {
-    window.addEventListener(event, onActivity, { passive: true });
+// Keyboard activity reveals the buttons too, and a keyboard activation produces a click with no
+// press behind it, so nothing is left to spend.
+function onKeyDown() {
+    pressSpent = false;
+    onActivity();
 }
+
+container.addEventListener(
+    'click',
+    (event) => {
+        if (pressSpent) {
+            pressSpent = false;
+            event.stopPropagation();
+        }
+    },
+    { capture: true }
+);
+
+// Pointer events cover touch, so touchstart is the press signal only where they are absent: a
+// browser firing both would run onPress twice for one press, the second time after the reveal
+// had already cleared the faded class.
+window.addEventListener(window.PointerEvent ? 'pointerdown' : 'touchstart', onPress, {
+    capture: true,
+    passive: true
+});
+window.addEventListener('pointermove', onActivity, { passive: true });
+window.addEventListener('keydown', onKeyDown, { passive: true });
 onActivity();
