@@ -108,9 +108,15 @@ const STYLES = `
     to { opacity: 1; transform: none; }
 }
 
-/* Holds its line even when a top-level part has no ancestors, so all picked parts align */
+/* Exactly one line, always: it holds its height when a top-level part has no ancestors, and
+   truncates rather than wrapping when a deeply nested one has a long path - either would
+   otherwise change the panel's height and shift the buttons under the pointer. The leaf name
+   below is never truncated, so the part is still identified. */
 .mi-trail {
     min-height: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: 9px;
     font-weight: 650;
     letter-spacing: 0.1em;
@@ -219,9 +225,36 @@ const STYLES = `
 
 .mi-reset:disabled { opacity: 0.38; cursor: default; }
 
-/* Keep clear of the example harness's buttons once the viewport gets short */
+/* A landscape phone is only ~390px tall, and this panel is the only way to read a part or get
+   back to the assembled pose - so it goes compact rather than away. The counts are the first
+   thing to drop; the readout and the controls stay. */
 @media (max-height: 460px) {
-    .mi-panel { display: none; }
+    .mi-panel {
+        width: 200px;
+        padding: 10px 12px 12px;
+        border-radius: 13px;
+        font-size: 12px;
+    }
+
+    .mi-meta { display: none; }
+
+    /* Esc is no use on the touch devices this breakpoint targets, and dropping the tip keeps the
+       hint shorter than the part readout, so the readout alone sets the reserved height */
+    .mi-tip { display: none; }
+
+    .mi-part {
+        margin-top: 9px;
+        padding-top: 9px;
+        min-height: 82px;
+    }
+
+    .mi-label { font-size: 14px; }
+
+    .mi-material { margin-top: 7px; }
+
+    .mi-actions { margin-top: 10px; }
+
+    .mi-actions button { height: 30px; }
 }
 `;
 
@@ -450,8 +483,11 @@ const pick = (part) => {
         part = null; // clicking the picked part again puts it back
     }
     picked = part;
-    // The pointer is still on this part, so its hover tint is live - drop it, and give the tint
-    // back to a part that has just been un-picked from under the pointer
+    // Picking moves geometry out from under the pointer (and un-picking moves it back), so what
+    // we recorded about hover is no longer true and cannot be recovered - the engine only
+    // re-reports hover on the next pointer move. Forget it rather than acting on a stale value,
+    // which otherwise lights a part up after Esc when the pointer is nowhere near it.
+    hovered = null;
     syncHighlight();
     describe(picked);
     animate();
