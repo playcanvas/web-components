@@ -271,6 +271,7 @@ const sampleTexture = (texture) => {
     scratch.width = 1;
     scratch.height = 1;
     const ctx = scratch.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return null;
     try {
         ctx.drawImage(source, 0, 0, 1, 1);
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
@@ -378,8 +379,27 @@ const exploded = new Map(parts.map((part) => {
 }));
 
 let picked = null;
+let hovered = null;
 let explodeAll = false;
 let frame = 0;
+
+/**
+ * Puts the hover tint on the hovered part and nowhere else - never on the picked part, which
+ * shows its own material so the panel's material readout and swatch describe what you can see.
+ *
+ * Expressed as one invariant over every part rather than as add/remove calls in each handler,
+ * because the pointer is still resting on a part at the moment it is picked (and at the moment
+ * it is un-picked), so the two states have to be reconciled, not toggled independently.
+ */
+const syncHighlight = () => {
+    for (const part of parts) {
+        if (part === hovered && part !== picked) {
+            part.setAttribute('material-overrides', HOVER);
+        } else {
+            part.removeAttribute('material-overrides');
+        }
+    }
+};
 
 const tick = () => {
     frame = 0;
@@ -430,6 +450,9 @@ const pick = (part) => {
         part = null; // clicking the picked part again puts it back
     }
     picked = part;
+    // The pointer is still on this part, so its hover tint is live - drop it, and give the tint
+    // back to a part that has just been un-picked from under the pointer
+    syncHighlight();
     describe(picked);
     animate();
 };
@@ -453,13 +476,16 @@ for (const part of parts) {
     // pc-node is an ordinary custom element, so these are ordinary DOM listeners - the same
     // events the onpointerenter/onclick attributes would run
     part.addEventListener('pointerenter', () => {
-        part.setAttribute('material-overrides', HOVER);
+        hovered = part;
+        syncHighlight();
         // Once something is picked the panel stays on it, so moving the pointer around does not
         // flicker the readout
         if (!picked) describe(part, true);
     });
     part.addEventListener('pointerleave', () => {
-        part.removeAttribute('material-overrides');
+        if (hovered !== part) return;
+        hovered = null;
+        syncHighlight();
         if (!picked) describe(null);
     });
     part.addEventListener('click', () => pick(part));
