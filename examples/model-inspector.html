@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Model Inspector</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <pc-asset src="assets/models/camera-drone.glb" id="drone"></pc-asset>
+            <!-- The hover highlight. A pc-node's material-overrides swaps this in by id, and
+                 removing the attribute puts the GLB's own material back, so no material state is
+                 tracked anywhere. A picked part deliberately keeps its own material - being
+                 pulled out of the assembly and named in the panel is signal enough, and
+                 recolouring it would hide the very material the panel is reporting. -->
+            <pc-material id="hl-hover" diffuse="0.07 0.20 0.28" metalness="0.3" gloss="0.85" use-metalness="true"
+                         emissive="#1f8fbe" emissive-intensity="0.16"></pc-material>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Sky (lighting only - the drone reads against a plain backdrop) -->
+                <pc-sky asset="studio" type="none" lighting></pc-sky>
+                <!-- Key light. The HDRI alone lights the metals nicely but leaves the dark
+                     plastics flat, so one directional light adds a shaping highlight and lets
+                     the props drop shadows onto the arms. A light emits along its entity's -Y. -->
+                <pc-entity name="key-light" rotation="48 -38 0">
+                    <pc-light type="directional" color="#fff4e8" intensity="0.85"
+                              cast-shadows shadow-resolution="2048" shadow-distance="1.5"
+                              shadow-type="pcss-32f" penumbra-size="0.08"
+                              normal-offset-bias="0.02"></pc-light>
+                </pc-entity>
+                <!-- Camera -->
+                <!-- 0.72 m from the focus point at 28 degrees elevation -->
+                <pc-entity name="camera" position="0.34 0.38 0.54">
+                    <!-- No tonemap attribute here: cameraFrame below owns tone mapping, and
+                         pc-camera's own toneMapping reads TONEMAP_NONE as a result. That also
+                         makes clear-color a LINEAR value - the scene renders into an HDR target
+                         and is tone mapped on the way out - so this deliberately dark hex is
+                         what arrives on screen as roughly #1d1d23. Retune it by eye, not by
+                         sRGB intuition: the curve is steep down here, and #04 or below is
+                         crushed to pure black. -->
+                    <pc-camera fov="32" clear-color="#101011"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="cameraControls"
+                                            enable-fly="false"
+                                            enable-pan="false"
+                                            focus-point="0 0.045 0"
+                                            pitch-range="-85 85"
+                                            zoom-range="0.3 1.8"></pc-script-instance>
+                        <!-- Post-processing. toneMapping 5 is TONEMAP_NEUTRAL and renderFormat
+                             12/18/7 are pixel-format constants: this script's enums are numeric,
+                             so they have to be written as numbers here.
+                             ssao.radius is in WORLD UNITS, so it has to be scaled to the subject:
+                             this drone is only 0.375 m across, and the usual scene-sized radius of
+                             0.5 samples a hemisphere wider than the whole model, which returns an
+                             almost blank occlusion buffer. 0.035 is the scale of the actual
+                             crevices here - shell seams, motor rings, arm roots. -->
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
+                            "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.6, "radius": 0.035, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
+                            "bloom": { "enabled": true, "intensity": 0.04, "blurLevel": 4 },
+                            "grading": { "enabled": true, "brightness": 1, "contrast": 1.06, "saturation": 1.05 },
+                            "vignette": { "enabled": true, "inner": 0.5, "outer": 1.4, "curvature": 0.6, "intensity": 0.4 }
+                        }'></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Drone. Every part below is one node of the GLB, fronted by a pc-node so the
+                     page can address it: data-label and data-spec are what the details panel
+                     reads, and data-explode is where the part travels to when it is picked.
+                     Each part is authored on the model origin, so that offset IS its position
+                     override - and dropping the attribute returns it to the assembled pose.
+                     Offsets are in metres, +X left, +Y up, +Z forward. -->
+                <pc-model name="drone" asset="drone">
+                    <!-- Fuselage -->
+                    <pc-node name="canopy"  data-label="Top Shell"      data-spec="Satin ABS · 18 g"            data-explode="0 0.034 0"></pc-node>
+                    <pc-node name="sensor"  data-label="Sensor Window"  data-spec="Smoked perspex · IR-pass"    data-explode="0 0.015 0.018"></pc-node>
+                    <pc-node name="chassis" data-label="Main Chassis"   data-spec="Glass-filled nylon · 42 g"   data-explode="0 -0.030 0"></pc-node>
+                    <!-- The trim band is a child of the chassis, so its offset stacks on the
+                         chassis's: it has to travel UP, and far enough to clear the canopy when
+                         picked on its own, or it sinks into the shell it is bonded to -->
+                    <pc-node name="trim"    data-label="Accent Trim"    data-spec="Anodised 6061 aluminium"     data-explode="0 0.046 0"></pc-node>
+                    <pc-node name="battery" data-label="Battery Pack"   data-spec="LiPo 4S · 3850 mAh"          data-explode="0 0.028 -0.026"></pc-node>
+                    <pc-node name="led-l"   data-label="Nav Light · Port"      data-spec="Red · 120 mcd"        data-explode="0.014 -0.008 -0.018"></pc-node>
+                    <pc-node name="led-r"   data-label="Nav Light · Starboard" data-spec="Green · 120 mcd"     data-explode="-0.014 -0.008 -0.018"></pc-node>
+                    <!-- Gimbal (nested exactly as the asset nests it: the yoke hangs off the
+                         chassis, so picking either one carries the camera, barrel and cover with
+                         it. Mostly a forward offset - the chassis it rides on already supplies
+                         the downward spread, and stacking both drove it through the feet.) -->
+                    <pc-node name="gimbal"  data-label="Gimbal Yoke"    data-spec="Machined aluminium · 3-axis" data-explode="0 -0.004 0.038"></pc-node>
+                    <pc-node name="camera"  data-label="Camera Housing" data-spec="1/1.3-inch CMOS · 48 MP"     data-explode="0 -0.010 0.022"></pc-node>
+                    <pc-node name="barrel"  data-label="Lens Barrel"    data-spec="7-element · f/1.7"           data-explode="0 0 0.017"></pc-node>
+                    <pc-node name="lens"    data-label="Lens Cover"     data-spec="Coated optical glass"        data-explode="0 0 0.023"></pc-node>
+                    <!-- Front left rotor assembly -->
+                    <pc-node name="arm-fl"  data-label="Arm · Front Left"        data-spec="Carbon-reinforced nylon"    data-explode="0.022 0.006 0.022"></pc-node>
+                    <pc-node name="motor-fl" data-label="Motor · Front Left"     data-spec="Brushless 1504 · 3800 KV"   data-explode="0 0.014 0"></pc-node>
+                    <pc-node name="prop-fl" data-label="Propeller · Front Left"  data-spec="152 mm · self-tightening"   data-explode="0 0.016 0"></pc-node>
+                    <pc-node name="foot-fl" data-label="Landing Foot · Front Left" data-spec="Moulded TPE rubber"       data-explode="0 -0.015 0"></pc-node>
+                    <!-- Front right rotor assembly -->
+                    <pc-node name="arm-fr"  data-label="Arm · Front Right"       data-spec="Carbon-reinforced nylon"    data-explode="-0.022 0.006 0.022"></pc-node>
+                    <pc-node name="motor-fr" data-label="Motor · Front Right"    data-spec="Brushless 1504 · 3800 KV"   data-explode="0 0.014 0"></pc-node>
+                    <pc-node name="prop-fr" data-label="Propeller · Front Right" data-spec="152 mm · self-tightening"   data-explode="0 0.016 0"></pc-node>
+                    <pc-node name="foot-fr" data-label="Landing Foot · Front Right" data-spec="Moulded TPE rubber"      data-explode="0 -0.015 0"></pc-node>
+                    <!-- Rear left rotor assembly -->
+                    <pc-node name="arm-rl"  data-label="Arm · Rear Left"         data-spec="Carbon-reinforced nylon"    data-explode="0.022 0.006 -0.022"></pc-node>
+                    <pc-node name="motor-rl" data-label="Motor · Rear Left"      data-spec="Brushless 1504 · 3800 KV"   data-explode="0 0.014 0"></pc-node>
+                    <pc-node name="prop-rl" data-label="Propeller · Rear Left"   data-spec="152 mm · self-tightening"   data-explode="0 0.016 0"></pc-node>
+                    <pc-node name="foot-rl" data-label="Landing Foot · Rear Left" data-spec="Moulded TPE rubber"        data-explode="0 -0.015 0"></pc-node>
+                    <!-- Rear right rotor assembly -->
+                    <pc-node name="arm-rr"  data-label="Arm · Rear Right"        data-spec="Carbon-reinforced nylon"    data-explode="-0.022 0.006 -0.022"></pc-node>
+                    <pc-node name="motor-rr" data-label="Motor · Rear Right"     data-spec="Brushless 1504 · 3800 KV"   data-explode="0 0.014 0"></pc-node>
+                    <pc-node name="prop-rr" data-label="Propeller · Rear Right"  data-spec="152 mm · self-tightening"   data-explode="0 0.016 0"></pc-node>
+                    <pc-node name="foot-rr" data-label="Landing Foot · Rear Right" data-spec="Moulded TPE rubber"       data-explode="0 -0.015 0"></pc-node>
+                </pc-model>
+            </pc-scene>
+        </pc-app>
+        <script type="module" src="js/model-inspector.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
