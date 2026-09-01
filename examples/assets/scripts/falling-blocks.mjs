@@ -625,9 +625,8 @@ export class TouchControls extends Script {
         this._onUp = this._onUp.bind(this);
         this._onCancel = this._onCancel.bind(this);
 
-        // Capture phase, because the example chrome swallows the first bubbling
-        // pointerdown after its buttons have idle-faded - a same-node capture listener
-        // still sees every press
+        // Capture phase on window, so a press is seen whatever the page's own UI above the
+        // canvas does with it on the way back up
         window.addEventListener('pointerdown', this._onDown, { capture: true });
         window.addEventListener('pointermove', this._onMove, { capture: true });
         window.addEventListener('pointerup', this._onUp, { capture: true });

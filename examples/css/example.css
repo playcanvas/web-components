@@ -40,9 +40,10 @@ pc-app {
     transition: opacity 0.5s ease;
 }
 
+/* Faded out but still hit-testable, so a press aimed at the buttons lands on them instead of
+   falling through to the scene behind - the page helper spends that press on revealing them */
 .example-button-container.faded {
     opacity: 0;
-    pointer-events: none;
 }
 
 .example-button-container.bottom-right {
