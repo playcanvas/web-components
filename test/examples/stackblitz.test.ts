@@ -25,11 +25,11 @@ describe('stripSiteChrome', () => {
     });
 
     /**
-     * js/model-inspector.mjs sits in the same directory and is loaded the same way, but it is the
+     * js/product-viewer.mjs sits in the same directory and is loaded the same way, but it is the
      * example's own page glue - the panel the example is about - not chrome.
      */
     it('leaves an example page module of its own alone', () => {
-        const html = '        <script type="module" src="js/model-inspector.mjs"></script>';
+        const html = '        <script type="module" src="js/product-viewer.mjs"></script>';
 
         expect(stripSiteChrome(html)).toBe(html);
     });

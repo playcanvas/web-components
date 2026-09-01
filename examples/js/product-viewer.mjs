@@ -1,5 +1,5 @@
 /**
- * Page glue for model-inspector.html.
+ * Page glue for product-viewer.html.
  *
  * The 3D side of this example is entirely declarative: the drone's parts are `pc-node` elements
  * in the page, and the two states a part can be in are `pc-material` elements. So all this
@@ -29,7 +29,7 @@ const EASE = REDUCED_MOTION ? 1 : 0.16;
 const SETTLED = 0.0002;
 
 const STYLES = `
-.mi-panel {
+.pv-panel {
     position: fixed;
     top: max(16px, env(safe-area-inset-top));
     left: max(16px, env(safe-area-inset-left));
@@ -47,17 +47,17 @@ const STYLES = `
 }
 
 @supports not (backdrop-filter: blur(22px)) {
-    .mi-panel { background: rgba(16, 17, 19, 0.93); }
+    .pv-panel { background: rgba(16, 17, 19, 0.93); }
 }
 
-.mi-head {
+.pv-head {
     display: flex;
     align-items: baseline;
     gap: 7px;
 }
 
 /* Picks up the drone's own accent trim colour */
-.mi-head::before {
+.pv-head::before {
     content: "";
     flex: none;
     width: 6px;
@@ -67,43 +67,43 @@ const STYLES = `
     box-shadow: 0 0 8px rgba(255, 106, 0, 0.7);
 }
 
-.mi-title {
+.pv-title {
     font-size: 11px;
     font-weight: 650;
     letter-spacing: 0.13em;
     text-transform: uppercase;
 }
 
-.mi-meta {
+.pv-meta {
     margin: 3px 0 0 13px;
     font-size: 11px;
     color: rgba(255, 255, 255, 0.4);
 }
 
-.mi-part {
+.pv-part {
     margin-top: 13px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.09);
     /* Pinned to the tallest state - the part readout - so merely sweeping the pointer over the
-       model can never nudge the buttons underneath. .mi-trail holds its line for the same
+       model can never nudge the buttons underneath. .pv-trail holds its line for the same
        reason, keeping top-level and nested parts the same height. */
     min-height: 86px;
 }
 
 /* The hint is shorter than the readout, so centre it in the reserved box rather than leaving
    a gap that reads as an unfinished card */
-.mi-part.is-idle {
+.pv-part.is-idle {
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
 /* Hovering previews a part; the dimming says "not selected yet" without extra copy */
-.mi-part.is-preview { opacity: 0.6; }
+.pv-part.is-preview { opacity: 0.6; }
 
-.mi-part.is-enter { animation: mi-enter 0.18s ease both; }
+.pv-part.is-enter { animation: pv-enter 0.18s ease both; }
 
-@keyframes mi-enter {
+@keyframes pv-enter {
     from { opacity: 0; transform: translateY(3px); }
     to { opacity: 1; transform: none; }
 }
@@ -112,7 +112,7 @@ const STYLES = `
    truncates rather than wrapping when a deeply nested one has a long path - either would
    otherwise change the panel's height and shift the buttons under the pointer. The leaf name
    below is never truncated, so the part is still identified. */
-.mi-trail {
+.pv-trail {
     min-height: 13px;
     white-space: nowrap;
     overflow: hidden;
@@ -124,35 +124,35 @@ const STYLES = `
     color: rgba(255, 255, 255, 0.32);
 }
 
-.mi-label {
+.pv-label {
     font-size: 15px;
     font-weight: 550;
     letter-spacing: -0.01em;
 }
 
-.mi-spec {
+.pv-spec {
     margin-top: 2px;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.58);
 }
 
-.mi-hint {
+.pv-hint {
     margin: 0;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.45);
 }
 
-.mi-hint b {
+.pv-hint b {
     font-weight: 550;
     color: rgba(255, 255, 255, 0.72);
 }
 
-.mi-tip {
+.pv-tip {
     margin-top: 7px;
     color: rgba(255, 255, 255, 0.3);
 }
 
-.mi-tip kbd {
+.pv-tip kbd {
     padding: 1px 4px;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.09);
@@ -160,7 +160,7 @@ const STYLES = `
     font-size: 10.5px;
 }
 
-.mi-material {
+.pv-material {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -174,20 +174,20 @@ const STYLES = `
 }
 
 /* The part's real colour, read off the instantiated material */
-.mi-swatch {
+.pv-swatch {
     width: 11px;
     height: 11px;
     border-radius: 50%;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
 
-.mi-actions {
+.pv-actions {
     display: flex;
     gap: 7px;
     margin-top: 14px;
 }
 
-.mi-actions button {
+.pv-actions button {
     height: 33px;
     border-radius: 9px;
     border: 1px solid rgba(255, 255, 255, 0.13);
@@ -200,61 +200,61 @@ const STYLES = `
     transition: background-color 0.15s, border-color 0.15s, opacity 0.15s;
 }
 
-.mi-explode {
+.pv-explode {
     flex: 1.7;
     border-color: rgba(255, 133, 51, 0.45) !important;
     background: rgba(255, 106, 0, 0.17) !important;
 }
 
-.mi-reset { flex: 1; }
+.pv-reset { flex: 1; }
 
-.mi-explode:hover {
+.pv-explode:hover {
     background: rgba(255, 106, 0, 0.3) !important;
     border-color: rgba(255, 133, 51, 0.8) !important;
 }
 
-.mi-reset:hover:not(:disabled) {
+.pv-reset:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.13);
     border-color: rgba(255, 255, 255, 0.26);
 }
 
-.mi-actions button:focus-visible {
+.pv-actions button:focus-visible {
     outline: 2px solid #ff8533;
     outline-offset: 2px;
 }
 
-.mi-reset:disabled { opacity: 0.38; cursor: default; }
+.pv-reset:disabled { opacity: 0.38; cursor: default; }
 
 /* A landscape phone is only ~390px tall, and this panel is the only way to read a part or get
    back to the assembled pose - so it goes compact rather than away. The counts are the first
    thing to drop; the readout and the controls stay. */
 @media (max-height: 460px) {
-    .mi-panel {
+    .pv-panel {
         width: 200px;
         padding: 10px 12px 12px;
         border-radius: 13px;
         font-size: 12px;
     }
 
-    .mi-meta { display: none; }
+    .pv-meta { display: none; }
 
     /* Esc is no use on the touch devices this breakpoint targets, and dropping the tip keeps the
        hint shorter than the part readout, so the readout alone sets the reserved height */
-    .mi-tip { display: none; }
+    .pv-tip { display: none; }
 
-    .mi-part {
+    .pv-part {
         margin-top: 9px;
         padding-top: 9px;
         min-height: 82px;
     }
 
-    .mi-label { font-size: 14px; }
+    .pv-label { font-size: 14px; }
 
-    .mi-material { margin-top: 7px; }
+    .pv-material { margin-top: 7px; }
 
-    .mi-actions { margin-top: 10px; }
+    .pv-actions { margin-top: 10px; }
 
-    .mi-actions button { height: 30px; }
+    .pv-actions button { height: 30px; }
 }
 `;
 
@@ -340,19 +340,19 @@ style.textContent = STYLES;
 document.head.appendChild(style);
 
 const panel = document.createElement('div');
-panel.classList.add('mi-panel');
+panel.classList.add('pv-panel');
 panel.innerHTML = `
-    <div class="mi-head"><span class="mi-title">Camera Drone</span></div>
-    <div class="mi-meta">${parts.length} parts &middot; ${new Set(materials.values()).size} materials</div>
-    <div class="mi-part" aria-live="polite"></div>
-    <div class="mi-actions">
-        <button type="button" class="mi-explode">Explode all</button>
-        <button type="button" class="mi-reset">Reset</button>
+    <div class="pv-head"><span class="pv-title">Camera Drone</span></div>
+    <div class="pv-meta">${parts.length} parts &middot; ${new Set(materials.values()).size} materials</div>
+    <div class="pv-part" aria-live="polite"></div>
+    <div class="pv-actions">
+        <button type="button" class="pv-explode">Explode all</button>
+        <button type="button" class="pv-reset">Reset</button>
     </div>
 `;
-const detail = panel.querySelector('.mi-part');
-const explodeButton = panel.querySelector('.mi-explode');
-const resetButton = panel.querySelector('.mi-reset');
+const detail = panel.querySelector('.pv-part');
+const explodeButton = panel.querySelector('.pv-explode');
+const resetButton = panel.querySelector('.pv-reset');
 document.body.appendChild(panel);
 
 /**
@@ -370,8 +370,8 @@ const describe = (part, preview = false) => {
     resetButton.disabled = !picked && !explodeAll;
 
     if (!part) {
-        detail.innerHTML = '<p class="mi-hint">Hover a part to highlight it. <b>Click</b> to pull it out of the assembly.</p>' +
-            '<p class="mi-hint mi-tip"><kbd>Esc</kbd> puts everything back.</p>';
+        detail.innerHTML = '<p class="pv-hint">Hover a part to highlight it. <b>Click</b> to pull it out of the assembly.</p>' +
+            '<p class="pv-hint pv-tip"><kbd>Esc</kbd> puts everything back.</p>';
     } else {
         const name = part.getAttribute('name');
         // Ancestors of the bound node, as authored labels - the root has none, so it drops out
@@ -380,16 +380,16 @@ const describe = (part, preview = false) => {
             .filter(Boolean)
             .join(' › ');
         detail.innerHTML = `
-            <div class="mi-trail"></div>
-            <div class="mi-label"></div>
-            <div class="mi-spec"></div>
-            <span class="mi-material"><span class="mi-swatch"></span><span class="mi-material-name"></span></span>
+            <div class="pv-trail"></div>
+            <div class="pv-label"></div>
+            <div class="pv-spec"></div>
+            <span class="pv-material"><span class="pv-swatch"></span><span class="pv-material-name"></span></span>
         `;
-        detail.querySelector('.mi-trail').textContent = trail;
-        detail.querySelector('.mi-label').textContent = part.dataset.label;
-        detail.querySelector('.mi-spec').textContent = part.dataset.spec;
-        detail.querySelector('.mi-material-name').textContent = materials.get(name) ?? 'unknown';
-        detail.querySelector('.mi-swatch').style.backgroundColor = swatches.get(part) ?? 'transparent';
+        detail.querySelector('.pv-trail').textContent = trail;
+        detail.querySelector('.pv-label').textContent = part.dataset.label;
+        detail.querySelector('.pv-spec').textContent = part.dataset.spec;
+        detail.querySelector('.pv-material-name').textContent = materials.get(name) ?? 'unknown';
+        detail.querySelector('.pv-swatch').style.backgroundColor = swatches.get(part) ?? 'transparent';
     }
 
     // Re-trigger the entry animation, but not for hover previews - sweeping the pointer across
