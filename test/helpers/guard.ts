@@ -126,7 +126,7 @@ export const currentGuard = () => active;
  *
  * This is load bearing rather than convenient. The library reports every misuse through
  * console.warn - it never throws and never rejects - so the warning IS the assertion for a whole
- * class of behaviour, and an unclaimed warning is how a test silently stops meaning anything.
+ * class of behavior, and an unclaimed warning is how a test silently stops meaning anything.
  * Three examples that are untestable without it:
  *
  * - A component element outside <pc-entity>: the only observable difference from correct placement

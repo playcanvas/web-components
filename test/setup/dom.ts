@@ -82,7 +82,7 @@ HTMLCanvasElement.prototype.getBoundingClientRect = function getBoundingClientRe
  * which Vitest then prints. backend="null" never reaches it, so this exists purely so that a test
  * which forgets backend="null" fails with one legible error instead of that plus jsdom noise.
  *
- * @returns Always `null`, matching jsdom's own unimplemented behaviour.
+ * @returns Always `null`, matching jsdom's own unimplemented behavior.
  */
 HTMLCanvasElement.prototype.getContext = function getContext() {
     return null;
@@ -108,7 +108,7 @@ Object.defineProperty(window, 'devicePixelRatio', {
 //   with no observer callbacks firing between assertions. Resize-driven syncing is exercised
 //   through the max-pixel-ratio setter, which shares the same code path.
 // - navigator.xr: absent means XrManager reports supported === false, which is the correct
-//   headless answer. A truthy stub would push it down paths jsdom cannot honour.
+//   headless answer. A truthy stub would push it down paths jsdom cannot honor.
 // - AudioContext: absent means SoundManager's lazy context getter returns null. Verified that
 //   <pc-sound>/<pc-sound-slot> still create slots via addSlot() with no context.
 

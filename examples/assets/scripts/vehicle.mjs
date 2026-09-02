@@ -199,7 +199,7 @@ export class Vehicle extends Script {
     steerRate = 5;
 
     /**
-     * The fraction of full lock still available once the car is travelling at
+     * The fraction of full lock still available once the car is traveling at
      * {@link highSpeedLockAt}. Full lock at speed is a spin, so cars wind the steering off as they
      * gather pace.
      *
@@ -370,7 +370,7 @@ export class Vehicle extends Script {
     }
 
     /**
-     * The speed the chassis is travelling at, in km/h, negative when reversing.
+     * The speed the chassis is traveling at, in km/h, negative when reversing.
      *
      * @type {number}
      */

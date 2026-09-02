@@ -75,7 +75,7 @@ describe('<pc-material> integration', () => {
         expect(material.metalness).toBe(0);
     });
 
-    it('honours use-metalness="false" for the older specular workflow', async () => {
+    it('honors use-metalness="false" for the older specular workflow', async () => {
         const { get } = await bootApp('<pc-material id="m" use-metalness="false"></pc-material>');
 
         expect(get<MaterialElement>('pc-material').material!.useMetalness).toBe(false);

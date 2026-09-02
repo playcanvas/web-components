@@ -8,7 +8,7 @@ import { useGuard } from '../helpers/guard';
  *
  * Custom elements pass `null` to attributeChangedCallback on removal. These cases used to assign
  * that null through, so the element property reported `null` where its own backing field had been
- * initialised to `''` - and the value then reached the engine. `attributeChangedCallback` declared
+ * initialized to `''` - and the value then reached the engine. `attributeChangedCallback` declared
  * `newValue: string`, so TypeScript never flagged any of it; widening the signature is what
  * surfaced the whole set at once.
  *

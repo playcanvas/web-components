@@ -194,7 +194,7 @@ class ScriptInstanceElement extends AsyncElement {
                 break;
             case 'name':
                 // The first set is handled by the parent's creation paths (the boot query and
-                // the added-node mutation), so only a genuine rename is signalled here. Note
+                // the added-node mutation), so only a genuine rename is signaled here. Note
                 // that setAttribute fires this callback even when the value is unchanged.
                 if (oldValue !== null && oldValue !== newValue) {
                     this.dispatchEvent(

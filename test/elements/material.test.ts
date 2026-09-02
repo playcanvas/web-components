@@ -8,7 +8,7 @@ const kebabToCamel = (name: string) => name.replace(/-([a-z])/g, (_, char) => ch
 
 /** Attributes whose element property is not simply the camel-cased attribute name. */
 const ALIASES: Record<string, string> = {
-    // The engine keeps the initialism capitalised, so the mechanical conversion does not apply
+    // The engine keeps the initialism capitalized, so the mechanical conversion does not apply
     'enable-ggx-specular': 'enableGGXSpecular',
     roughness: 'gloss',
     'roughness-map': 'glossMap'

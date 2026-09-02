@@ -17,13 +17,13 @@
 import { whenReady } from '@playcanvas/web-components';
 
 /**
- * Selects mesh instance 0 - every part in this asset has exactly one. Only hover recolours a
+ * Selects mesh instance 0 - every part in this asset has exactly one. Only hover recolors a
  * part; a picked part keeps its own material, since the explode and the panel already say which
  * one it is, and tinting it would hide the material the panel is reporting.
  */
 const HOVER = '{"index:0": "hl-hover"}';
 
-/** Per-frame approach fraction, and the offset in metres at which a part counts as arrived. */
+/** Per-frame approach fraction, and the offset in meters at which a part counts as arrived. */
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const EASE = REDUCED_MOTION ? 1 : 0.16;
 const SETTLED = 0.0002;
@@ -56,7 +56,7 @@ const STYLES = `
     gap: 7px;
 }
 
-/* Picks up the drone's own accent trim colour */
+/* Picks up the drone's own accent trim color */
 .pv-head::before {
     content: "";
     flex: none;
@@ -90,7 +90,7 @@ const STYLES = `
     min-height: 86px;
 }
 
-/* The hint is shorter than the readout, so centre it in the reserved box rather than leaving
+/* The hint is shorter than the readout, so center it in the reserved box rather than leaving
    a gap that reads as an unfinished card */
 .pv-part.is-idle {
     display: flex;
@@ -173,7 +173,7 @@ const STYLES = `
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* The part's real colour, read off the instantiated material */
+/* The part's real color, read off the instantiated material */
 .pv-swatch {
     width: 11px;
     height: 11px;
@@ -283,19 +283,19 @@ if (tree) {
     collect(tree);
 }
 
-// Wait for every pc-node to bind before reading colours off the live materials, and do it before
+// Wait for every pc-node to bind before reading colors off the live materials, and do it before
 // any override can be applied, so these are the asset's own values.
 await Promise.all(parts.map(part => part.ready()));
 
 const channel = v => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0');
 
 /**
- * The average colour of a texture, by letting the canvas downscale it to a single pixel. Needed
+ * The average color of a texture, by letting the canvas downscale it to a single pixel. Needed
  * for a textured part, whose diffuse factor is plain white and so says nothing about how it
- * looks. Texture bytes are already sRGB, as the material colours below are.
+ * looks. Texture bytes are already sRGB, as the material colors below are.
  *
  * @param {object} texture - The engine texture to sample.
- * @returns {string | null} The colour as CSS, or `null` if the source cannot be read.
+ * @returns {string | null} The color as CSS, or `null` if the source cannot be read.
  */
 const sampleTexture = (texture) => {
     const source = texture.getSource?.();
@@ -315,7 +315,7 @@ const sampleTexture = (texture) => {
 };
 
 /**
- * A part's own colour as CSS. StandardMaterial colours are already gamma-space - the glTF loader
+ * A part's own color as CSS. StandardMaterial colors are already gamma-space - the glTF loader
  * converts baseColorFactor out of linear on the way in - so these go straight to CSS. Encoding
  * them again washes every swatch out.
  */
@@ -324,7 +324,7 @@ for (const part of parts) {
     const material = part.entity?.render?.meshInstances?.[0]?.material;
     if (!material) continue;
     const emissive = material.emissive;
-    // An emissive part (the nav lights) is its emissive colour, not its near-black base
+    // An emissive part (the nav lights) is its emissive color, not its near-black base
     const lit = emissive && emissive.r + emissive.g + emissive.b > 0.25;
     const c = lit ? emissive : material.diffuse;
     const factor = `#${channel(c.r)}${channel(c.g)}${channel(c.b)}`;

@@ -117,7 +117,7 @@ export class UiLayout extends Script {
 
     /**
      * Binds each control to its action. The buttons are declared in the page so their labels and
-     * layout stay in the markup; only the behaviour lives here.
+     * layout stay in the markup; only the behavior lives here.
      */
     _wireControls() {
         const actions = {

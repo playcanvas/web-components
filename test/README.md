@@ -7,7 +7,7 @@ Five tiers, four of which run in Node and need neither a build nor a browser.
 | Unit        | `npm run test:unit`        | `node`      | The pure parsers in `src/parse.ts` and the `CSS_COLORS` table           |
 | Elements    | `npm run test:elements`    | `jsdom`     | Attribute and property surface, with no engine created                  |
 | Integration | `npm run test:integration` | `jsdom`     | A real `AppBase` on `NullGraphicsDevice`, via `<pc-app backend="null">` |
-| Examples    | `npm run test:examples`    | `node`\*    | `examples/` as a set: the catalogue, and the markup of every page       |
+| Examples    | `npm run test:examples`    | `node`\*    | `examples/` as a set: the catalog, and the markup of every page       |
 | Browser     | _(not yet implemented)_    | Chromium    | The built `dist/` bundle and the example pages                          |
 
 `npm test` runs the four Node tiers. `npm run test:watch` watches them, and
@@ -20,7 +20,7 @@ tier, still reads its sources as text and imports nothing.
 
 `example-list.test.ts` exists because `examples/js/example-list.mjs` is the only name a reader sees in
 the sidebar while each page carries its own `<title>`, and those two drifted apart across a third of
-the examples before it was added. It also fails on an example page that the catalogue never lists — a
+the examples before it was added. It also fails on an example page that the catalog never lists — a
 page nothing imports, which no other tier can see.
 
 `example-markup.test.ts` parses every page and checks it against the registered elements, because
@@ -116,9 +116,9 @@ attributed to the test that caused it.
 
 ## Known bugs
 
-When a test documents a defect, pin the **actual** behaviour in an `it(...)` whose title ends
+When a test documents a defect, pin the **actual** behavior in an `it(...)` whose title ends
 `(known bug #NNN)`, with a comment naming the file, line and root cause, and add an `it.todo(...)`
-stating the intended behaviour beside it.
+stating the intended behavior beside it.
 
 Do **not** use `it.fails()` — it passes for _any_ failure, so it silently absorbs an unrelated
 regression on the same path, and it cannot see errors that are reported rather than thrown. Do not
@@ -141,7 +141,7 @@ defect executably, and makes the fix a one-line flip.
 - `test.for` over `test.each`, so the case arrives typed.
 - `expect.soft` inside table-driven cases, so one broken attribute reports every finding in a single
   run. Fail fast everywhere else.
-- Alphabetise members, except in table-driven suites where the order comes from
+- Alphabetize members, except in table-driven suites where the order comes from
   `observedAttributes` — the source of truth. Re-sorting would make failures harder to correlate.
 
 ## Environment notes
@@ -157,7 +157,7 @@ can reach it first. `test/integration/environment.test.ts` asserts the exact res
 that file is red, treat every other integration result as unreliable.
 
 Not polyfilled, on purpose: `ResizeObserver` (unused by the engine and by `src/`), `navigator.xr`
-(absent is the correct headless answer; a stub sends `XrManager` down paths jsdom cannot honour), and
+(absent is the correct headless answer; a stub sends `XrManager` down paths jsdom cannot honor), and
 `AudioContext` (absent means `SoundManager.context` is `null`, and sound slots still work). The
 `canvas` npm package is **not** a dependency — it implements 2D drawing, not layout, and the null
 device never asks for a context.

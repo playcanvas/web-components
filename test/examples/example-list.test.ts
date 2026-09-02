@@ -55,7 +55,7 @@ describe('example-list.mjs', () => {
     /**
      * The browser groups by category into a Map keyed on the category string, so a category listed
      * in two separate blocks silently merges into one sidebar section - and the within-category
-     * "simplest first" order the catalogue documents stops describing what a reader sees.
+     * "simplest first" order the catalog documents stops describing what a reader sees.
      */
     it('keeps each category in one contiguous block', () => {
         const blocks = examples

@@ -99,10 +99,10 @@ describe('headless environment', () => {
     });
 
     it('loads the release build of playcanvas, not the debug build', () => {
-        // Because playcanvas is valid ESM in node_modules, Vitest externalises it and Node resolves
+        // Because playcanvas is valid ESM in node_modules, Vitest externalizes it and Node resolves
         // it with the node/import conditions, landing on the release build. Inlining it would pick
         // the development condition and give the .dbg build with Debug.assert live - a real
-        // behavioural difference decided by externalisation heuristics rather than by our config,
+        // behavioral difference decided by externalization heuristics rather than by our config,
         // so a future Vitest upgrade could flip it silently. This pins it.
         const resolve = (import.meta as unknown as { resolve?: (specifier: string) => string }).resolve;
         if (!resolve) {
