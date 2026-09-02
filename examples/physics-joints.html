@@ -41,14 +41,9 @@
                         <pc-script-instance name="cameraControls" focus-point="0 3 0" zoom-range="2 60"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Light. Without normal-offset-bias the white floor is covered in a moire acne
-                     stipple. One shadow texel is 0.0575 world units at this shadow-distance, the
-                     stipple clears at exactly one, and 0.07 is that plus a little margin. -->
+                <!-- Light -->
                 <pc-entity name="light" rotation="45 30 0">
-                    <pc-light cast-shadows
-                              shadow-distance="60"
-                              shadow-resolution="2048"
-                              normal-offset-bias="0.07"></pc-light>
+                    <pc-light cast-shadows shadow-distance="60" shadow-resolution="2048" normal-offset-bias="0.07"></pc-light>
                 </pc-entity>
                 <!-- Each joint entity below is not itself a body: its world transform is the joint
                      frame, and its local X axis is the hinge axis, slider axis or ball twist axis.

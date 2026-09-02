@@ -263,9 +263,7 @@
                         }'></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Light. normal-offset-bias is the only bias PCSS reads, and without it the dark
-                     floor bands with acne. 0.02 is just under two shadow texels here; by 0.05 the
-                     tiers of the base plinth have lost their own self-shadowing. -->
+                <!-- Light -->
                 <pc-entity name="light" rotation="48 38 0">
                     <pc-light cast-shadows
                               shadow-type="pcss-32f"
