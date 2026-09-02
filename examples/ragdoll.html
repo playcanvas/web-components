@@ -66,20 +66,17 @@
                         }'></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Light. PCSS gives a contact-hard, distance-soft shadow, which is what sells the
-                     robot hanging clear of the floor. penumbra-size is the softness control and it
-                     bites hard at this scale - 0.05 smears the shadow into a barely visible smudge,
-                     where 0.012 keeps the feet and legs readable. shadow-distance is deliberately
-                     larger than the scene needs, so the shadow survives zooming out to the far end
-                     of the camera's zoom-range.
-
-                     normal-offset-bias is what keeps the floor and the robot's own plates clear of
-                     shadow acne, and it is the only bias that reaches a PCSS shadow: shadow-bias
-                     feeds the hardware polygon offset, which the engine switches off for PCSS, so
-                     reaching for that one instead does nothing at all. 0.02 is a shade over one
-                     shadow texel at this shadow-distance and resolution, and about the least that
-                     clears the acne. Much higher starts eating the robot's own self-shadowing - by
-                     0.05 the shadow the chest lip casts down onto the reactor has visibly receded. -->
+                <!-- Light. PCSS is here for the contact hardening: the shadow tightens as the robot
+                     swings nearer the floor. Three of these read differently to how they behave.
+                     shadow-distance sizes the map off the camera frustum, not the casters, and 16
+                     is what keeps a shadow at the far end of the zoom-range - which leaves it coarse
+                     close up, so penumbra-falloff runs high and that wide penumbra doubles as
+                     anti-aliasing. Lower it for a crisper contact and the silhouette staircases.
+                     penumbra-size is a fraction of the shadow camera's depth range rather than a
+                     world size, which couples it to shadow-distance and is why 0.012 bites so hard
+                     here. normal-offset-bias is the only bias PCSS reads - shadow-bias feeds the
+                     hardware polygon offset, which the engine switches off for PCSS - and 0.02 is
+                     about one shadow texel, the least that clears the acne. -->
                 <pc-entity name="light" rotation="52 32 0">
                     <pc-light cast-shadows
                               shadow-type="pcss-32f"
