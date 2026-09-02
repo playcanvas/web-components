@@ -263,13 +263,20 @@
                         }'></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Light -->
+                <!-- Light. normal-offset-bias is the only bias a PCSS shadow reads, and without it
+                     the dark floor carries a fine acne stipple that gathers into horizontal banding
+                     out towards the horizon. One shadow texel is roughly 0.0115 world units at this
+                     shadow-distance and resolution, so 0.02 is a little under two texels and about
+                     the least that reads clean. Higher starts eating the arm's own self-shadowing:
+                     by 0.05 the crescents between the tiers of the base plinth have visibly
+                     lifted. -->
                 <pc-entity name="light" rotation="48 38 0">
                     <pc-light cast-shadows
                               shadow-type="pcss-32f"
                               intensity="0.9"
                               shadow-distance="12"
                               shadow-resolution="2048"
+                              normal-offset-bias="0.02"
                               penumbra-size="0.014"
                               penumbra-falloff="5"
                               shadow-samples="16"

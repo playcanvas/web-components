@@ -41,9 +41,20 @@
                         <pc-script-instance name="cameraControls" focus-point="0 3 0" zoom-range="2 60"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Light -->
+                <!-- Light. shadow-distance="60" matches the far end of the camera's zoom-range, and
+                     since it is the binding constraint at every zoom the texel size never varies:
+                     one shadow texel is 0.0575 world units here. Without a normal offset the white
+                     floor is covered in a fine moire acne stipple, which clears at exactly one
+                     texel, so 0.07 buys a little margin. Push it much further and the thin slider
+                     rail loses its contact shadow first - down a fifth by 0.2, nearly half by 0.4.
+                     shadow-bias is live for pcf3-32f, unlike the PCSS examples where the engine
+                     switches its polygon offset off, but on its own it needs 0.2 to clear the same
+                     stipple, so it is left at the engine default. -->
                 <pc-entity name="light" rotation="45 30 0">
-                    <pc-light cast-shadows shadow-distance="60" shadow-resolution="2048"></pc-light>
+                    <pc-light cast-shadows
+                              shadow-distance="60"
+                              shadow-resolution="2048"
+                              normal-offset-bias="0.07"></pc-light>
                 </pc-entity>
                 <!-- Each joint entity below is not itself a body: its world transform is the joint
                      frame, and its local X axis is the hinge axis, slider axis or ball twist axis.
