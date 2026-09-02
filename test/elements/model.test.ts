@@ -5,7 +5,7 @@ import type { ModelElement } from '../../src/model';
 import { useGuard } from '../helpers/guard';
 
 /**
- * Element-level behaviour, with no <pc-app> and therefore no engine. Every setter caches to a
+ * Element-level behavior, with no <pc-app> and therefore no engine. Every setter caches to a
  * private field and only writes through when the host entity exists, so attribute handling is
  * fully observable on a disconnected element. The host-entity attributes mirror <pc-entity>'s;
  * the cases here pin that the shared machinery really is wired into this element.

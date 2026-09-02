@@ -107,7 +107,7 @@ describe('examples/*.html', () => {
     });
 
     /**
-     * An attribute the element does not recognise is dropped in silence, so markup that reads
+     * An attribute the element does not recognize is dropped in silence, so markup that reads
      * correctly can do nothing at all. Three of these had accumulated before this ran: a
      * `tone-mapping` that should have been `tonemap`, and an `intensity` and a `cast-shadows` sitting
      * on <pc-entity> rather than on the component below it.

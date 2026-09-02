@@ -26,7 +26,7 @@
                  removing the attribute puts the GLB's own material back, so no material state is
                  tracked anywhere. A picked part deliberately keeps its own material - being
                  pulled out of the assembly and named in the panel is signal enough, and
-                 recolouring it would hide the very material the panel is reporting. -->
+                 recoloring it would hide the very material the panel is reporting. -->
             <pc-material id="hl-hover" diffuse="0.07 0.20 0.28" metalness="0.3" gloss="0.85" use-metalness="true"
                          emissive="#1f8fbe" emissive-intensity="0.16"></pc-material>
             <!-- Scene -->
@@ -82,7 +82,7 @@
                      reads, and data-explode is where the part travels to when it is picked.
                      Each part is authored on the model origin, so that offset IS its position
                      override - and dropping the attribute returns it to the assembled pose.
-                     Offsets are in metres, +X left, +Y up, +Z forward. -->
+                     Offsets are in meters, +X left, +Y up, +Z forward. -->
                 <pc-model name="drone" asset="drone">
                     <!-- Fuselage -->
                     <pc-node name="canopy"  data-label="Top Shell"      data-spec="Satin ABS · 18 g"            data-explode="0 0.034 0"></pc-node>

@@ -219,7 +219,7 @@ describe('parse', () => {
 
     describe('parseColor', () => {
         it.for([
-            // CSS colour names, matched case insensitively via toLowerCase()
+            // CSS color names, matched case insensitively via toLowerCase()
             ['red', [1, 0, 0, 1]],
             ['REBECCAPURPLE', [0.4, 0.2, 0.6, 1]],
             // Hex, including the 3- and 4-digit short forms

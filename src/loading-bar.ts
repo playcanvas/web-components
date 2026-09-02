@@ -105,7 +105,7 @@ export class LoadingBar {
     }
 
     /**
-     * Removes the bar immediately, cancelling any pending fade. Idempotent.
+     * Removes the bar immediately, canceling any pending fade. Idempotent.
      */
     destroy() {
         if (this._sweep) {

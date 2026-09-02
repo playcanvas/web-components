@@ -319,7 +319,7 @@ class MaterialElement extends HTMLElement {
 
     /**
      * One asset binding per texture slot, created on first use and kept for the element's
-     * lifetime. A slot's binding is superseded when the slot is reassigned and cancelled when the
+     * lifetime. A slot's binding is superseded when the slot is reassigned and canceled when the
      * element disconnects, so a late-arriving asset can never write a texture the element no
      * longer wants.
      */
@@ -533,7 +533,7 @@ class MaterialElement extends HTMLElement {
         }
 
         // Drop any load still pending for this slot - its texture is no longer the one we want.
-        // Cancelled here rather than left to the bind below, which the material-less and
+        // Canceled here rather than left to the bind below, which the material-less and
         // clear-slot returns never reach.
         binding.cancel();
 

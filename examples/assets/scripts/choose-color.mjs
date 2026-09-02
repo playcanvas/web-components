@@ -123,7 +123,7 @@ export class ChooseColor extends Script {
     static TRANSITION_SPEED = 2;
 
     /**
-     * Metallic paint is a pigmented base coat with aluminium flake, so it wants some metalness -
+     * Metallic paint is a pigmented base coat with aluminum flake, so it wants some metalness -
      * but not a mirror. Solid and Special colors get their shine from the clear coat alone.
      */
     static METALNESS = {

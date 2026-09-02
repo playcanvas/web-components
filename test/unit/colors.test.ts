@@ -6,7 +6,7 @@ import { CSS_COLORS } from '../../src/colors';
 describe('CSS_COLORS', () => {
     const entries = Object.entries(CSS_COLORS);
 
-    it('contains the full CSS named-colour set', () => {
+    it('contains the full CSS named-color set', () => {
         expect(entries).toHaveLength(148);
     });
 
@@ -38,7 +38,7 @@ describe('CSS_COLORS', () => {
         ['slategray', 'slategrey'],
         ['darkslategray', 'darkslategrey'],
         ['lightslategray', 'lightslategrey']
-    ])('%s and %s are the same colour', ([first, second]) => {
+    ])('%s and %s are the same color', ([first, second]) => {
         expect(CSS_COLORS[first]).toBe(CSS_COLORS[second]);
     });
 

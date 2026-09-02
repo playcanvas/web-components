@@ -49,7 +49,7 @@ describe('<pc-asset> texture options', () => {
     });
 
     it('drives the engine TextureHandler: patching applies every mapped value', async () => {
-        // A key the handler does not recognise would assign undefined here, so this pins the
+        // A key the handler does not recognize would assign undefined here, so this pins the
         // kebab-to-snake rename against the real engine rather than against this library's tables
         const { app, get } = await bootApp(ALL_OPTIONS);
 

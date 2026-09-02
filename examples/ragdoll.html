@@ -38,12 +38,12 @@
             <pc-scene>
                 <!-- The HDR is the scene's only image-based light. type="none" keeps the skybox out
                      of the frame while `lighting` still builds the environment atlas from it, so the
-                     metal and glass have something to reflect against the flat clear colour. -->
+                     metal and glass have something to reflect against the flat clear color. -->
                 <pc-sky asset="studio" type="none" lighting></pc-sky>
                 <!-- Camera. The ball launcher fires from here, through wherever you tap. -->
                 <pc-entity name="camera" position="1.05 1.85 4.35">
                     <!-- Very dark on purpose. With cameraFrame attached the scene renders into a
-                         linear HDR target and tone mapping happens at compose, so the clear colour
+                         linear HDR target and tone mapping happens at compose, so the clear color
                          is a linear value - this is roughly #1b1d21 once it reaches the screen. -->
                     <pc-camera clear-color="#030304"></pc-camera>
                     <pc-script>
@@ -132,7 +132,7 @@
                         part is its own rigid body, so physics writes a world transform straight onto
                         the node it drives. Every <pc-node> below binds one of those nodes by its name
                         in the asset and hangs a collision shape and a rigid body on it, and each
-                        part's origin was authored at its centre of mass so the shapes sit centred.
+                        part's origin was authored at its center of mass so the shapes sit centered.
 
                         Each joint lives on a <pc-entity> nested inside the part it drives, positioned
                         in that part's local space - so the joint frame follows the part rather than
@@ -178,7 +178,7 @@
 
                             <!-- The hook, with no limits so it swings freely. Its height is what
                                  keeps the ragdoll stable: hang the chest from a point off its
-                                 vertical axis and the torso has to fold to get its centre of
+                                 vertical axis and the torso has to fold to get its center of
                                  mass under the pin, which parks the waist, sternum and neck
                                  cones hard against their limits and leaves the solver fighting a
                                  standing violation every step - the whole rig buzzes. Lifting

@@ -1,5 +1,5 @@
 /**
- * The catalogue behind the example browser's sidebar. Categories appear in the order they first
+ * The catalog behind the example browser's sidebar. Categories appear in the order they first
  * occur here, and examples in the order they are listed within a category - both hand-authored,
  * running simplest first so a newcomer can read down a category.
  *
