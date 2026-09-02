@@ -71,13 +71,22 @@
                      bites hard at this scale - 0.05 smears the shadow into a barely visible smudge,
                      where 0.012 keeps the feet and legs readable. shadow-distance is deliberately
                      larger than the scene needs, so the shadow survives zooming out to the far end
-                     of the camera's zoom-range. -->
+                     of the camera's zoom-range.
+
+                     normal-offset-bias is what keeps the floor and the robot's own plates clear of
+                     shadow acne, and it is the only bias that reaches a PCSS shadow: shadow-bias
+                     feeds the hardware polygon offset, which the engine switches off for PCSS, so
+                     reaching for that one instead does nothing at all. 0.02 is a shade over one
+                     shadow texel at this shadow-distance and resolution, and about the least that
+                     clears the acne. Much higher starts eating the robot's own self-shadowing - by
+                     0.05 the shadow the chest lip casts down onto the reactor has visibly receded. -->
                 <pc-entity name="light" rotation="52 32 0">
                     <pc-light cast-shadows
                               shadow-type="pcss-32f"
                               intensity="1"
                               shadow-distance="16"
                               shadow-resolution="2048"
+                              normal-offset-bias="0.02"
                               penumbra-size="0.012"
                               penumbra-falloff="5"
                               shadow-samples="16"
