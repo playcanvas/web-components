@@ -94,6 +94,11 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         return super.component;
     }
 
+    /**
+     * Sets the rate at which the body loses angular velocity over time, from 0 (none) to 1.
+     * Defaults to 0.
+     * @param value - The angular damping.
+     */
     set angularDamping(value: number) {
         this._angularDamping = value;
         if (this.component) {
@@ -101,10 +106,19 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the rate at which the body loses angular velocity over time, from 0 (none) to 1.
+     * @returns The angular damping.
+     */
     get angularDamping() {
         return this._angularDamping;
     }
 
+    /**
+     * Sets the scaling applied to the body's rotation about each axis: 0 locks an axis and 1 leaves
+     * it free. Applies to `dynamic` bodies only. Defaults to 1 in each axis.
+     * @param value - The angular factor.
+     */
     set angularFactor(value: Vec3) {
         this._angularFactor = value;
         if (this.component) {
@@ -112,10 +126,20 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the scaling applied to the body's rotation about each axis: 0 locks an axis and 1 leaves
+     * it free.
+     * @returns The angular factor.
+     */
     get angularFactor() {
         return this._angularFactor;
     }
 
+    /**
+     * Sets the friction applied where the body contacts another, from 0 (slides freely) to 1
+     * (grips). Defaults to 0.5.
+     * @param value - The friction.
+     */
     set friction(value: number) {
         this._friction = value;
         if (this.component) {
@@ -123,10 +147,20 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the friction applied where the body contacts another, from 0 (slides freely) to 1
+     * (grips).
+     * @returns The friction.
+     */
     get friction() {
         return this._friction;
     }
 
+    /**
+     * Sets the rate at which the body loses linear velocity over time, from 0 (none) to 1. Defaults
+     * to 0.
+     * @param value - The linear damping.
+     */
     set linearDamping(value: number) {
         this._linearDamping = value;
         if (this.component) {
@@ -134,10 +168,19 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the rate at which the body loses linear velocity over time, from 0 (none) to 1.
+     * @returns The linear damping.
+     */
     get linearDamping() {
         return this._linearDamping;
     }
 
+    /**
+     * Sets the scaling applied to the body's movement along each axis: 0 locks an axis and 1 leaves
+     * it free. Applies to `dynamic` bodies only. Defaults to 1 in each axis.
+     * @param value - The linear factor.
+     */
     set linearFactor(value: Vec3) {
         this._linearFactor = value;
         if (this.component) {
@@ -145,10 +188,20 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the scaling applied to the body's movement along each axis: 0 locks an axis and 1 leaves
+     * it free.
+     * @returns The linear factor.
+     */
     get linearFactor() {
         return this._linearFactor;
     }
 
+    /**
+     * Sets the mass of the body. Applies to `dynamic` bodies only; `static` and `kinematic` bodies
+     * behave as if infinitely massive. Defaults to 1.
+     * @param value - The mass.
+     */
     set mass(value: number) {
         this._mass = value;
         if (this.component) {
@@ -156,10 +209,20 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the mass of the body, which applies to `dynamic` bodies only.
+     * @returns The mass.
+     */
     get mass() {
         return this._mass;
     }
 
+    /**
+     * Sets the bounciness of the body, from 0 (all energy lost in a collision) to 1 (none lost).
+     * The restitution of both colliding bodies is multiplied together, so two bodies at 1 bounce
+     * fully and one at 0 stops any bounce. Defaults to 0.
+     * @param value - The restitution.
+     */
     set restitution(value: number) {
         this._restitution = value;
         if (this.component) {
@@ -167,10 +230,19 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the bounciness of the body, from 0 (all energy lost in a collision) to 1 (none lost).
+     * @returns The restitution.
+     */
     get restitution() {
         return this._restitution;
     }
 
+    /**
+     * Sets the friction that resists the body rolling across a contact, where `friction` resists it
+     * sliding. Defaults to 0.
+     * @param value - The rolling friction.
+     */
     set rollingFriction(value: number) {
         this._rollingFriction = value;
         if (this.component) {
@@ -178,10 +250,22 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets the friction that resists the body rolling across a contact, where `friction` resists it
+     * sliding.
+     * @returns The rolling friction.
+     */
     get rollingFriction() {
         return this._rollingFriction;
     }
 
+    /**
+     * Sets how the body takes part in the simulation. Can be `static` (never moves, and other
+     * bodies collide with it), `dynamic` (moved by forces, gravity and collisions) or `kinematic`
+     * (moved only by setting its transform, and pushes `dynamic` bodies aside). Defaults to
+     * `static`.
+     * @param value - The type.
+     */
     set type(value: 'static' | 'dynamic' | 'kinematic') {
         this._type = value;
         if (this.component) {
@@ -189,6 +273,10 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
         }
     }
 
+    /**
+     * Gets how the body takes part in the simulation: `static`, `dynamic` or `kinematic`.
+     * @returns The type.
+     */
     get type() {
         return this._type;
     }
