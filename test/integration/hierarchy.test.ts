@@ -17,15 +17,27 @@ import { readyWithin } from '../helpers/ready';
  */
 const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
 const positionsBase64 = btoa(String.fromCharCode(...new Uint8Array(positions.buffer)));
+const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+const normalsBase64 = btoa(String.fromCharCode(...new Uint8Array(normals.buffer)));
 
-/** The buffer plumbing every primitive below shares: one triangle, referenced by accessor 0. */
+/** The buffer plumbing every primitive below shares: one triangle with explicit normals. */
 const GEOMETRY = {
-    accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] }],
-    bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: positions.byteLength }],
+    accessors: [
+        { bufferView: 0, componentType: 5126, count: 3, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] },
+        { bufferView: 1, componentType: 5126, count: 3, type: 'VEC3' }
+    ],
+    bufferViews: [
+        { buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+        { buffer: 1, byteOffset: 0, byteLength: normals.byteLength }
+    ],
     buffers: [
         {
             uri: `data:application/octet-stream;base64,${positionsBase64}`,
             byteLength: positions.byteLength
+        },
+        {
+            uri: `data:application/octet-stream;base64,${normalsBase64}`,
+            byteLength: normals.byteLength
         }
     ]
 };
@@ -44,7 +56,7 @@ const CAR_SRC = `data:application/json,${encodeURIComponent(
             { name: 'Wing' },
             { name: 'Wing' }
         ],
-        meshes: [{ primitives: [{ attributes: { POSITION: 0 } }] }],
+        meshes: [{ primitives: [{ attributes: { POSITION: 0, NORMAL: 1 } }] }],
         ...GEOMETRY
     })
 )}`;
@@ -65,11 +77,11 @@ const BODY_SRC = `data:application/json,${encodeURIComponent(
         meshes: [
             {
                 primitives: [
-                    { attributes: { POSITION: 0 }, material: 0 },
-                    { attributes: { POSITION: 0 }, material: 3 },
-                    { attributes: { POSITION: 0 }, material: 1 },
-                    { attributes: { POSITION: 0 } },
-                    { attributes: { POSITION: 0 }, material: 2 }
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 0 },
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 3 },
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 1 },
+                    { attributes: { POSITION: 0, NORMAL: 1 } },
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 2 }
                 ]
             }
         ],
