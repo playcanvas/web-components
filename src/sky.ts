@@ -146,10 +146,8 @@ class SkyElement extends AsyncElement {
         if (!this._appElement?.app) return;
 
         scene.skybox?.destroy();
-        // @ts-ignore
         scene.skybox = null;
         scene.envAtlas?.destroy();
-        // @ts-ignore
         scene.envAtlas = null;
     }
 

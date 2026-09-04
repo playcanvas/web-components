@@ -327,21 +327,20 @@ class AssetElement extends AsyncElement {
         // Optional inline asset data, used by data-driven assets such as texture atlases (frame
         // definitions) and sprites (atlas reference, frame keys, etc.).
         const data = this._buildData(type);
+        const assetType = type as ConstructorParameters<typeof Asset>[1];
 
-        if (type === 'container') {
-            this.asset = new Asset(id, type, { url: src }, undefined, {
-                // @ts-ignore TODO no definition in pc
+        if (assetType === 'container') {
+            this.asset = new Asset(id, assetType, { url: src }, undefined, {
+                // @ts-expect-error PlayCanvas does not declare the container bufferView hook.
                 bufferView: {
                     processAsync: processBufferView.bind(this)
                 }
             });
-        } else if (type === 'sprite') {
+        } else if (assetType === 'sprite') {
             // Sprite assets have no file of their own; their data references a texture atlas asset.
-            // @ts-ignore
-            this.asset = new Asset(id, type, null, data);
+            this.asset = new Asset(id, assetType, undefined, data);
         } else {
-            // @ts-ignore
-            this.asset = new Asset(id, type, src ? { url: src } : null, data);
+            this.asset = new Asset(id, assetType, src ? { url: src } : undefined, data);
         }
 
         this.asset.preload = !this._lazy;
