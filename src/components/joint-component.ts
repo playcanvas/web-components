@@ -6,12 +6,18 @@ import { parseBool, parseEnum, parseNumber, parseVec2, parseVec3 } from '../pars
 
 import { ComponentElement } from './component';
 
-/** The constraint types supported by the `<pc-joint>` element. */
+/**
+ * The constraint types supported by the `<pc-joint>` element.
+ *
+ * @category Types
+ */
 export type JointType = 'fixed' | 'ball' | 'hinge' | 'slider' | '6dof';
 
 /**
  * The motion modes for a single joint axis: fully constrained (`locked`), constrained within
  * limits (`limited`) or unconstrained (`free`).
+ *
+ * @category Types
  */
 export type MotionMode = 'locked' | 'limited' | 'free';
 

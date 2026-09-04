@@ -13,6 +13,8 @@ import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
  * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
  * along with the scene-wide fog, exposure and gravity settings. Must be a direct child of
  * `<pc-app>`.
+ *
+ * @category Application
  */
 class SceneElement extends AsyncElement {
     /**

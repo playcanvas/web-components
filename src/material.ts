@@ -29,7 +29,11 @@ import type { AppElement } from './app';
 import { AssetBinding } from './asset-binding';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2 } from './parse';
 
-/** The blend modes for a material. */
+/**
+ * The blend modes for a material.
+ *
+ * @category Types
+ */
 export type BlendType =
     | 'none'
     | 'normal'
@@ -57,7 +61,11 @@ const blendTypes = new Map<BlendType, number>([
     ['subtractive', BLEND_SUBTRACTIVE]
 ]);
 
-/** The face culling modes for a material. */
+/**
+ * The face culling modes for a material.
+ *
+ * @category Types
+ */
 export type CullMode = 'none' | 'back' | 'front' | 'front-and-back';
 
 const cullModes = new Map<CullMode, number>([
@@ -67,7 +75,11 @@ const cullModes = new Map<CullMode, number>([
     ['front-and-back', CULLFACE_FRONTANDBACK]
 ]);
 
-/** The Fresnel models for a material. */
+/**
+ * The Fresnel models for a material.
+ *
+ * @category Types
+ */
 export type FresnelModel = 'none' | 'schlick';
 
 const fresnelModels = new Map<FresnelModel, number>([
@@ -75,7 +87,11 @@ const fresnelModels = new Map<FresnelModel, number>([
     ['schlick', FRESNEL_SCHLICK]
 ]);
 
-/** The specular occlusion modes for a material. */
+/**
+ * The specular occlusion modes for a material.
+ *
+ * @category Types
+ */
 export type OccludeSpecular = 'none' | 'ao' | 'gloss-dependent';
 
 const occludeSpeculars = new Map<OccludeSpecular, number>([
@@ -84,19 +100,31 @@ const occludeSpeculars = new Map<OccludeSpecular, number>([
     ['gloss-dependent', SPECOCC_GLOSSDEPENDENT]
 ]);
 
-/** The opacity dithering modes for a material. */
+/**
+ * The opacity dithering modes for a material.
+ *
+ * @category Types
+ */
 export type OpacityDither = 'none' | 'bayer8' | 'bluenoise' | 'ignnoise';
 
 // The DITHER_* constants are strings whose values are exactly these names, so a parsed value is
 // assigned to the material unchanged rather than mapped through a table.
 const opacityDithers: OpacityDither[] = ['none', 'bayer8', 'bluenoise', 'ignnoise'];
 
-/** The texture channels a color map can sample. */
+/**
+ * The texture channels a color map can sample.
+ *
+ * @category Types
+ */
 export type ColorChannel = 'r' | 'g' | 'b' | 'a' | 'rgb';
 
 const colorChannels: ColorChannel[] = ['r', 'g', 'b', 'a', 'rgb'];
 
-/** The texture channels a scalar map can sample. */
+/**
+ * The texture channels a scalar map can sample.
+ *
+ * @category Types
+ */
 export type ScalarChannel = 'r' | 'g' | 'b' | 'a';
 
 const scalarChannels: ScalarChannel[] = ['r', 'g', 'b', 'a'];
@@ -152,6 +180,8 @@ type TextureSlot =
  * @attribute {string} roughness-map - The id of the `pc-asset` to use as the roughness map. An
  * alias for `gloss-map` that also inverts the gloss channel, so do not combine it with the `gloss`
  * attributes.
+ *
+ * @category Resources
  */
 class MaterialElement extends HTMLElement {
     private _alphaTest = 0;

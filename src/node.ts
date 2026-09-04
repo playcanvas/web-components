@@ -14,6 +14,8 @@ import { parseBool, parseTags, parseVec3 } from './parse';
  * instantiated (or no `name` is assigned), `bound` once a node has been resolved and decorated,
  * `missing`/`ambiguous`/`duplicate` when resolution failed — each accompanied by a warning
  * naming the cause.
+ *
+ * @category Types
  */
 export type NodeBindingState = 'pending' | 'bound' | 'missing' | 'ambiguous' | 'duplicate';
 
@@ -34,6 +36,8 @@ type AuthoredState = {
  * attribute and `materialOverrides` property. A `name:X` key selects every mesh instance of the
  * bound node's render component whose baseline material is named `X`; an `index:N` key selects
  * mesh instance `N` and wins over a name rule for the same instance.
+ *
+ * @category Types
  */
 type MaterialOverrides = Readonly<Record<string, string>>;
 
@@ -204,6 +208,8 @@ const levenshtein = (a: string, b: string): number => {
  * over the node. A press and release that picked different entities fires on their nearest
  * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
  * arrives as a click whose `detail` is 2.
+ *
+ * @category Entities
  */
 class NodeElement extends EntityBaseElement {
     private _name = '';

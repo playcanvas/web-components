@@ -47,6 +47,16 @@
         "@typedef",
         "@yields"
     ],
+    "categoryOrder": [
+        "Application",
+        "Resources",
+        "Entities",
+        "Components",
+        "Base Classes",
+        "Functions",
+        "Types",
+        "*"
+    ],
     "entryPoints": [
         "./src/index.ts"
     ],

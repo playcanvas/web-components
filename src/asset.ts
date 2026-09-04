@@ -26,7 +26,11 @@ const renderModes = new Map<'simple' | 'sliced' | 'tiled', number>([
     ['tiled', SPRITE_RENDERMODE_TILED]
 ]);
 
-/** The addressing modes for a texture asset. */
+/**
+ * The addressing modes for a texture asset.
+ *
+ * @category Types
+ */
 export type AddressMode = 'repeat' | 'clamp' | 'mirror';
 
 const addressModes = new Map<AddressMode, number>([
@@ -35,7 +39,11 @@ const addressModes = new Map<AddressMode, number>([
     ['mirror', ADDRESS_MIRRORED_REPEAT]
 ]);
 
-/** The minification filter modes for a texture asset. */
+/**
+ * The minification filter modes for a texture asset.
+ *
+ * @category Types
+ */
 export type MinFilterMode =
     'nearest' | 'linear' | 'nearest-mip-nearest' | 'linear-mip-nearest' | 'nearest-mip-linear' | 'linear-mip-linear';
 
@@ -51,6 +59,8 @@ const minFilterModes = new Map<MinFilterMode, number>([
 /**
  * The magnification filter modes for a texture asset. Magnification has no mip variants - the
  * engine (and the GPU) only accepts these two.
+ *
+ * @category Types
  */
 export type MagFilterMode = 'nearest' | 'linear';
 
@@ -195,6 +205,8 @@ const processBufferView = (
  * @fires {ErrorEvent} error - Fired when the asset fails to load, with the engine's error in
  * `message`. Does not bubble. The element still becomes ready — readiness means the load settled,
  * not that it succeeded.
+ *
+ * @category Resources
  */
 class AssetElement extends AsyncElement {
     private _addressU: AddressMode | null = null;

@@ -34,6 +34,8 @@ export const EVENT_ATTRIBUTES = SYNTHESIZED_EVENTS.map((type) => `on${type}`);
  * with the owning application (which joins picked scene nodes back to elements by identity,
  * never by name), and the pointer listener bookkeeping that lets the application lazily attach
  * its canvas handlers.
+ *
+ * @category Base Classes
  */
 class EntityBaseElement extends AsyncElement {
     protected _entity: Entity | null = null;

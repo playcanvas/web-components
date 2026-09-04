@@ -27,6 +27,8 @@ import { AsyncElement } from './async-element';
  * @attribute {string} wasm - The URL of the module's WebAssembly binary.
  * @attribute {string} fallback - The URL of the module's asm.js fallback script, used when
  * WebAssembly is unavailable.
+ *
+ * @category Resources
  */
 class WasmElement extends AsyncElement {
     private _loadPromise: Promise<void> | null = null;

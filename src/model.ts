@@ -9,6 +9,8 @@ import { parseBool, parseTags, parseVec3 } from './parse';
 /**
  * One material assignment of a {@link HierarchyNode} with a render component: a mesh instance's
  * position within the component and the runtime name of its current material.
+ *
+ * @category Types
  */
 type HierarchyMaterial = {
     /** The mesh instance's position in the render component's `meshInstances` array. */
@@ -26,6 +28,8 @@ type HierarchyMaterial = {
  * One node of the tree returned by {@link ModelElement.hierarchy}. A plain-data snapshot —
  * `JSON.stringify` serializes it — whose `toString()` renders the node's subtree as a printable
  * tree.
+ *
+ * @category Types
  */
 type HierarchyNode = {
     /**
@@ -160,6 +164,8 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * @fires {ErrorEvent} error - Fired when the container asset fails to load, with the engine's
  * error in `message`. Does not bubble. The element still becomes ready — readiness means the load
  * settled, not that it succeeded.
+ *
+ * @category Entities
  */
 class ModelElement extends EntityOwnerElement {
     private _asset = '';

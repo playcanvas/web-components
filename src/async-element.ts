@@ -7,6 +7,8 @@ import type { EntityBaseElement } from './entity-base';
  * @fires {CustomEvent} ready - Fired when the element is fully initialized — once per readiness
  * cycle, so an element that is torn down and re-initialized (for example by removing and
  * re-inserting it) fires it again. Bubbles and is composed.
+ *
+ * @category Base Classes
  */
 class AsyncElement extends HTMLElement {
     private _readyPromise: Promise<void>;
@@ -88,6 +90,8 @@ class AsyncElement extends HTMLElement {
 /**
  * A union of the tag names of all elements that initialize asynchronously (i.e. elements whose
  * classes extend {@link AsyncElement}).
+ *
+ * @category Types
  */
 type AsyncElementTagName = {
     [K in keyof HTMLElementTagNameMap]: HTMLElementTagNameMap[K] extends AsyncElement ? K : never;
@@ -104,6 +108,8 @@ type AsyncElementTagName = {
  * @returns A promise that resolves with the element once it's ready.
  * @example
  * const { app } = await whenReady('pc-app');
+ *
+ * @category Functions
  */
 function whenReady<K extends AsyncElementTagName>(target: K): Promise<HTMLElementTagNameMap[K]>;
 /**
