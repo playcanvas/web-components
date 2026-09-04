@@ -66,6 +66,11 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
         return super.component;
     }
 
+    /**
+     * Sets the order in which the screen is drawn relative to other screens in the same layer, from
+     * 0 to 255, with higher values drawn on top. Defaults to 0.
+     * @param value - The priority.
+     */
     set priority(value: number) {
         this._priority = value;
         if (this.component) {
@@ -73,10 +78,21 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
         }
     }
 
+    /**
+     * Gets the order in which the screen is drawn relative to other screens in the same layer, from
+     * 0 to 255, with higher values drawn on top.
+     * @returns The priority.
+     */
     get priority() {
         return this._priority;
     }
 
+    /**
+     * Sets the resolution the screen's layout was designed for, as a width and height in pixels.
+     * Used only when `screenSpace` is set and `scaleMode` is `blend`, when the contents scale from
+     * this resolution to the actual canvas size, weighted by `scaleBlend`. Defaults to 640 by 320.
+     * @param value - The reference resolution.
+     */
     set referenceResolution(value: Vec2) {
         this._referenceResolution = value;
         if (this.component) {
@@ -84,10 +100,20 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
         }
     }
 
+    /**
+     * Gets the resolution the screen's layout was designed for, as a width and height in pixels.
+     * @returns The reference resolution.
+     */
     get referenceResolution() {
         return this._referenceResolution;
     }
 
+    /**
+     * Sets the width and height of the screen in pixels. A screen-space screen ignores this and
+     * always matches the canvas; a world-space screen uses it to size its contents. Defaults to 640
+     * by 320.
+     * @param value - The resolution.
+     */
     set resolution(value: Vec2) {
         this._resolution = value;
         if (this.component) {
@@ -95,6 +121,11 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
         }
     }
 
+    /**
+     * Gets the width and height of the screen in pixels, which a screen-space screen overrides with
+     * the canvas size.
+     * @returns The resolution.
+     */
     get resolution() {
         return this._resolution;
     }
@@ -142,6 +173,11 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
         return this._scaleMode;
     }
 
+    /**
+     * Sets whether the screen renders its `<pc-element>` descendants in screen space, as a 2D
+     * overlay on the canvas, rather than in the world. Defaults to `false`.
+     * @param value - Whether the screen is in screen space.
+     */
     set screenSpace(value: boolean) {
         this._screenSpace = value;
         if (this.component) {
@@ -149,6 +185,11 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
         }
     }
 
+    /**
+     * Gets whether the screen renders its `<pc-element>` descendants in screen space rather than in
+     * the world.
+     * @returns Whether the screen is in screen space.
+     */
     get screenSpace() {
         return this._screenSpace;
     }

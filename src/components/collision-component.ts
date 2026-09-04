@@ -99,6 +99,11 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         return super.component;
     }
 
+    /**
+     * Sets the rotation of the collision shape relative to the entity, in local space. Defaults to
+     * no rotation.
+     * @param value - The angular offset.
+     */
     set angularOffset(value: Quat) {
         this._angularOffset = value;
         if (this.component) {
@@ -106,10 +111,19 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the rotation of the collision shape relative to the entity, in local space.
+     * @returns The angular offset.
+     */
     get angularOffset() {
         return this._angularOffset;
     }
 
+    /**
+     * Sets the local axis along which a `capsule`, `cylinder` or `cone` shape is aligned: 0 for X,
+     * 1 for Y and 2 for Z. Defaults to 1.
+     * @param value - The axis.
+     */
     set axis(value: number) {
         this._axis = value;
         if (this.component) {
@@ -117,10 +131,21 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the local axis along which a `capsule`, `cylinder` or `cone` shape is aligned: 0 for X,
+     * 1 for Y and 2 for Z.
+     * @returns The axis.
+     */
     get axis() {
         return this._axis;
     }
 
+    /**
+     * Sets whether a `mesh` shape is treated as a convex hull rather than a triangle mesh. A
+     * triangle mesh can only be used with a `static` rigid body; a convex hull can also move as a
+     * `dynamic` or `kinematic` one. Defaults to `false`.
+     * @param value - Whether the mesh is a convex hull.
+     */
     set convexHull(value: boolean) {
         this._convexHull = value;
         if (this.component) {
@@ -128,10 +153,19 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets whether a `mesh` shape is treated as a convex hull rather than a triangle mesh.
+     * @returns Whether the mesh is a convex hull.
+     */
     get convexHull() {
         return this._convexHull;
     }
 
+    /**
+     * Sets the half-extents of a `box` shape along its local X, Y and Z axes. Defaults to 0.5 in
+     * each axis.
+     * @param value - The half-extents.
+     */
     set halfExtents(value: Vec3) {
         this._halfExtents = value;
         if (this.component) {
@@ -139,10 +173,19 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the half-extents of a `box` shape along its local X, Y and Z axes.
+     * @returns The half-extents.
+     */
     get halfExtents() {
         return this._halfExtents;
     }
 
+    /**
+     * Sets the total height of a `capsule`, `cylinder` or `cone` shape, measured tip to tip along
+     * its `axis`. Defaults to 2.
+     * @param value - The height.
+     */
     set height(value: number) {
         this._height = value;
         if (this.component) {
@@ -150,10 +193,20 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the total height of a `capsule`, `cylinder` or `cone` shape, measured tip to tip along
+     * its `axis`.
+     * @returns The height.
+     */
     get height() {
         return this._height;
     }
 
+    /**
+     * Sets the position of the collision shape relative to the entity, along its local axes.
+     * Defaults to no offset.
+     * @param value - The linear offset.
+     */
     set linearOffset(value: Vec3) {
         this._linearOffset = value;
         if (this.component) {
@@ -161,10 +214,18 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the position of the collision shape relative to the entity, along its local axes.
+     * @returns The linear offset.
+     */
     get linearOffset() {
         return this._linearOffset;
     }
 
+    /**
+     * Sets the radius of a `sphere`, `capsule`, `cylinder` or `cone` shape. Defaults to 0.5.
+     * @param value - The radius.
+     */
     set radius(value: number) {
         this._radius = value;
         if (this.component) {
@@ -172,10 +233,21 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the radius of a `sphere`, `capsule`, `cylinder` or `cone` shape.
+     * @returns The radius.
+     */
     get radius() {
         return this._radius;
     }
 
+    /**
+     * Sets the shape of the collision volume. Can be `box`, `sphere`, `capsule`, `cylinder`,
+     * `cone`, `mesh` or `compound`: a `mesh` shape takes its geometry from the host entity's
+     * render asset, and a `compound` shape combines the shapes of descendant entities' collision
+     * components into one rigid shape. Defaults to `box`.
+     * @param value - The type.
+     */
     set type(value: 'box' | 'capsule' | 'compound' | 'cone' | 'cylinder' | 'mesh' | 'sphere') {
         this._type = value;
         if (this.component) {
@@ -184,6 +256,10 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
         }
     }
 
+    /**
+     * Gets the shape of the collision volume.
+     * @returns The type.
+     */
     get type() {
         return this._type;
     }
