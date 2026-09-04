@@ -60,6 +60,29 @@ const BODY_SRC = `data:application/json,${encodeURIComponent(
 )}`;
 
 /**
+ * A single material on a triangle with no NORMAL attribute. Engine 2.22 clones the material for
+ * flat shading and appends `-flatShaded` to its runtime name.
+ */
+const NO_NORMAL_SRC = `data:application/json,${encodeURIComponent(
+    JSON.stringify({
+        asset: { version: '2.0' },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'Flat', mesh: 0 }],
+        materials: [{ name: 'Glass' }],
+        meshes: [{ primitives: [{ attributes: { POSITION: 0 }, material: 0 }] }],
+        accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] }],
+        bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: positions.byteLength }],
+        buffers: [
+            {
+                uri: `data:application/octet-stream;base64,${positionsBase64}`,
+                byteLength: positions.byteLength
+            }
+        ]
+    })
+)}`;
+
+/**
  * A minimally skinned glTF: one bone, identity bind matrix, every vertex weighted to it. The
  * mesh instance carries a skin instance, which a material swap must leave in place.
  */
@@ -107,6 +130,7 @@ const PRELUDE = `
     <pc-material id="candy-red" name="Candy Red"></pc-material>
     <pc-material id="smoked-glass"></pc-material>
     <pc-asset id="body" type="container" src="${BODY_SRC}"></pc-asset>
+    <pc-asset id="flat" type="container" src="${NO_NORMAL_SRC}"></pc-asset>
     <pc-asset id="skinned" type="container" src="${SKINNED_SRC}"></pc-asset>
 `;
 
@@ -135,6 +159,23 @@ describe('<pc-node> material-overrides', () => {
     };
 
     describe('selection', () => {
+        it('matches the runtime flat-shaded name for a primitive without normals', async () => {
+            const { get } = await bootApp(
+                `${PRELUDE}<pc-model asset="flat"><pc-node name="Flat"></pc-node></pc-model>`
+            );
+            const model = get<ModelElement>('pc-model');
+            const node = get<NodeElement>('pc-node');
+            const replacement = get<MaterialElement>('pc-material[id="smoked-glass"]').material!;
+            const meshInstance = model.contentEntity!.render!.meshInstances[0];
+
+            expect(meshInstance.material.name).toBe('Glass-flatShaded');
+
+            node.materialOverrides = { 'name:Glass-flatShaded': 'smoked-glass' };
+
+            expect(meshInstance.material).toBe(replacement);
+            expect(uncaught.seen).toEqual([]);
+        });
+
         it('replaces sparsely by name and index, leaving unmatched assignments untouched', async () => {
             const { authored, meshInstances, node, replacements } = await bootAuthored();
 

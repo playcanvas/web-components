@@ -451,8 +451,6 @@ class MaterialElement extends HTMLElement {
         material.normalMapRotation = this._normalMapRotation;
         material.normalMapTiling = this._normalMapTiling;
         material.normalMapUv = this._normalMapUv;
-        // @ts-ignore the engine's generated .d.ts types occludeDirect as a number, but its own
-        // JSDoc documents it as a boolean and its runtime default is `false`
         material.occludeDirect = this._occludeDirect;
         material.occludeSpecular = occludeSpeculars.get(this._occludeSpecular) ?? SPECOCC_AO;
         material.opacity = this._opacity;
@@ -1781,7 +1779,6 @@ class MaterialElement extends HTMLElement {
     set occludeDirect(value: boolean) {
         this._occludeDirect = value;
         if (this.material) {
-            // @ts-ignore see _createMaterial() - the engine mistypes occludeDirect as a number
             this.material.occludeDirect = value;
             this._scheduleUpdate();
         }

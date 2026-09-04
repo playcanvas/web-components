@@ -11,8 +11,8 @@ import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
  * {@link HTMLElement} interface.
  *
  * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
- * along with the scene-wide fog, exposure and gravity settings. Must be a direct child of
- * `<pc-app>`.
+ * along with scene-wide fog, exposure, Gaussian splat LOD and gravity settings. Must be a direct
+ * child of `<pc-app>`.
  *
  * @category Application
  */
@@ -46,6 +46,16 @@ class SceneElement extends AsyncElement {
      * The end distance of the fog.
      */
     private _fogEnd = 1000;
+
+    /**
+     * The Gaussian splat LOD selection mode.
+     */
+    private _gsplatLodMode: 'error' | 'distance' = 'error';
+
+    /**
+     * The target number of Gaussian splats rendered across the scene.
+     */
+    private _gsplatSplatBudget = 1_000_000;
 
     /**
      * The gravity of the scene.
@@ -111,6 +121,9 @@ class SceneElement extends AsyncElement {
             this._scene.fog.density = this._fogDensity;
             this._scene.fog.start = this._fogStart;
             this._scene.fog.end = this._fogEnd;
+
+            this._scene.gsplat.lodMode = this._gsplatLodMode;
+            this._scene.gsplat.splatBudget = this._gsplatSplatBudget;
 
             this._applyGravity(this._gravity);
         }
@@ -244,6 +257,48 @@ class SceneElement extends AsyncElement {
     }
 
     /**
+     * Sets how LOD levels are chosen for streamed Gaussian splats. `error` spends the global splat
+     * budget where it removes the most approximation error; `distance` orders detail by camera
+     * distance alone. Defaults to `error`.
+     * @param value - The Gaussian splat LOD mode.
+     */
+    set gsplatLodMode(value: 'error' | 'distance') {
+        this._gsplatLodMode = value;
+        if (this.scene) {
+            this.scene.gsplat.lodMode = value;
+        }
+    }
+
+    /**
+     * Gets the Gaussian splat LOD selection mode.
+     * @returns The Gaussian splat LOD mode.
+     */
+    get gsplatLodMode() {
+        return this._gsplatLodMode;
+    }
+
+    /**
+     * Sets the target number of splats rendered across all Gaussian splats in the scene. The
+     * Engine distributes this budget globally between streamed splat assets. Defaults to
+     * 1,000,000.
+     * @param value - The scene-wide splat budget.
+     */
+    set gsplatSplatBudget(value: number) {
+        this._gsplatSplatBudget = value;
+        if (this.scene) {
+            this.scene.gsplat.splatBudget = value;
+        }
+    }
+
+    /**
+     * Gets the target number of splats rendered across the scene.
+     * @returns The scene-wide splat budget.
+     */
+    get gsplatSplatBudget() {
+        return this._gsplatSplatBudget;
+    }
+
+    /**
      * Sets the gravity of the scene.
      * @param value - The gravity.
      */
@@ -263,7 +318,17 @@ class SceneElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['exposure', 'fog', 'fog-color', 'fog-density', 'fog-start', 'fog-end', 'gravity'];
+        return [
+            'exposure',
+            'fog',
+            'fog-color',
+            'fog-density',
+            'fog-start',
+            'fog-end',
+            'gsplat-lod-mode',
+            'gsplat-splat-budget',
+            'gravity'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -285,6 +350,12 @@ class SceneElement extends AsyncElement {
                 break;
             case 'fog-end':
                 this.fogEnd = parseNumber(newValue, 1000, name);
+                break;
+            case 'gsplat-lod-mode':
+                this.gsplatLodMode = parseEnum(newValue, ['error', 'distance'], 'error', name);
+                break;
+            case 'gsplat-splat-budget':
+                this.gsplatSplatBudget = parseNumber(newValue, 1_000_000, name);
                 break;
             case 'gravity':
                 this.gravity = parseVec3(newValue, new Vec3(0, -9.81, 0), name);
