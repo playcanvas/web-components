@@ -286,7 +286,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
         this._hoverSpriteAsset = value;
         const asset = useAsset(value);
         if (this.component && asset) {
-            this.component.hoverSpriteAsset = asset;
+            this.component.hoverSpriteAsset = asset.id as any;
         }
     }
 
@@ -326,7 +326,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
         this._pressedSpriteAsset = value;
         const asset = useAsset(value);
         if (this.component && asset) {
-            this.component.pressedSpriteAsset = asset;
+            this.component.pressedSpriteAsset = asset.id as any;
         }
     }
 
@@ -366,7 +366,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
         this._inactiveSpriteAsset = value;
         const asset = useAsset(value);
         if (this.component && asset) {
-            this.component.inactiveSpriteAsset = asset;
+            this.component.inactiveSpriteAsset = asset.id as any;
         }
     }
 
