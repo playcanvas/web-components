@@ -40,32 +40,6 @@ Explore the [PlayCanvas Web Components examples gallery](https://playcanvas.gith
 
 Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) for installation and usage instructions.
 
-## PlayCanvas Engine Compatibility
-
-This version of PlayCanvas Web Components requires PlayCanvas Engine 2.22.0 or later.
-
-When upgrading an existing application to Engine 2.22:
-
-- Gaussian splat LOD is now controlled by a scene-wide budget. Replace the removed
-  `lod-base-distance` and `lod-multiplier` attributes with `lod-falloff` on `<pc-gsplat>`, and set
-  `gsplat-splat-budget` or `gsplat-lod-mode` on `<pc-scene>` when the defaults are not appropriate.
-- The corrected parallax calculation makes `height-map-factor` approximately four times stronger.
-  Divide an existing value by four to preserve its previous appearance.
-- A glTF triangle primitive without a `NORMAL` attribute is now flat shaded. The Engine appends
-  `-flatShaded` to the runtime material clone's name, and `<pc-node material-overrides>` name
-  selectors match that runtime name. Prefer an `index:` selector when the authored material name
-  must remain stable across Engine processing.
-
-For example:
-
-```html
-<pc-scene gsplat-splat-budget="1000000" gsplat-lod-mode="error">
-    <pc-entity>
-        <pc-gsplat asset="capture" lod-falloff="1"></pc-gsplat>
-    </pc-entity>
-</pc-scene>
-```
-
 ## Editor Support
 
 The package ships a [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest), which editors use to offer tag and attribute completions, valid attribute values and hover documentation when authoring HTML.
