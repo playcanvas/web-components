@@ -42,6 +42,8 @@ import { parseBool } from '../parse';
  * `detail` carries the new `enabled` state. Bubbles.
  * @fires {CustomEvent} scriptnamechange - Fired when the script is renamed on a live element. The
  * `detail` carries `oldName` and `newName`. Bubbles.
+ *
+ * @category Components
  */
 class ScriptInstanceElement extends AsyncElement {
     private _attributes: Record<string, any> = {};

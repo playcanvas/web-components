@@ -116,6 +116,8 @@ const ensureBaseStyles = () => {
  * backends and `error` holds the underlying failure. The element never becomes ready
  * and `app` stays `null` — listen for this event to show a fallback UI. Removing the element and
  * re-inserting it retries the boot with its current attributes. Does not bubble.
+ *
+ * @category Application
  */
 class AppElement extends AsyncElement {
     /**

@@ -15,6 +15,8 @@ import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
  * @elementSummary The `<pc-sky>` element renders a skybox from a texture asset, projected as an
  * infinite background, a box or a dome, and optionally lights the scene from it. Must be a direct
  * child of `<pc-scene>`.
+ *
+ * @category Application
  */
 class SkyElement extends AsyncElement {
     private _asset = '';

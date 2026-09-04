@@ -8,7 +8,7 @@ import { parseBool } from '../parse';
 /**
  * Represents a component in the PlayCanvas engine.
  *
- * @category Components
+ * @category Base Classes
  */
 class ComponentElement<T extends Component = Component> extends AsyncElement {
     private _componentName: string;

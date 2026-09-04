@@ -36,6 +36,8 @@ export const buildDescendantEntities = (root: Element, app: AppBase) => {
  * property state, entity creation and parenting, and the reset that follows the entity's
  * destruction. `<pc-node>` sits outside this class: it borrows an entity a model instantiated,
  * and its properties are nullable overrides rather than owned values.
+ *
+ * @category Base Classes
  */
 class EntityOwnerElement extends EntityBaseElement {
     /**

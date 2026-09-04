@@ -13,6 +13,8 @@ import { SoundComponentElement } from './sound-component';
  *
  * @elementSummary The `<pc-sound-slot>` element declares one named sound on its parent `<pc-sound>`
  * — its asset, volume, pitch, looping and autoplay. Must be a direct child of `<pc-sound>`.
+ *
+ * @category Components
  */
 class SoundSlotElement extends AsyncElement {
     private _asset = '';
