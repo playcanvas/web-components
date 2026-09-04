@@ -17,6 +17,8 @@ import { readyWithin } from '../helpers/ready';
  */
 const positions = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
 const positionsBase64 = btoa(String.fromCharCode(...new Uint8Array(positions.buffer)));
+const normals = new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+const normalsBase64 = btoa(String.fromCharCode(...new Uint8Array(normals.buffer)));
 const BODY_SRC = `data:application/json,${encodeURIComponent(
     JSON.stringify({
         asset: { version: '2.0' },
@@ -27,21 +29,31 @@ const BODY_SRC = `data:application/json,${encodeURIComponent(
         meshes: [
             {
                 primitives: [
-                    { attributes: { POSITION: 0 }, material: 0 },
-                    { attributes: { POSITION: 0 }, material: 3 },
-                    { attributes: { POSITION: 0 }, material: 1 },
-                    { attributes: { POSITION: 0 } },
-                    { attributes: { POSITION: 0 }, material: 2 }
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 0 },
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 3 },
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 1 },
+                    { attributes: { POSITION: 0, NORMAL: 1 } },
+                    { attributes: { POSITION: 0, NORMAL: 1 }, material: 2 }
                 ]
             },
-            { primitives: [{ attributes: { POSITION: 0 }, material: 0 }] }
+            { primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, material: 0 }] }
         ],
-        accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] }],
-        bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: positions.byteLength }],
+        accessors: [
+            { bufferView: 0, componentType: 5126, count: 3, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] },
+            { bufferView: 1, componentType: 5126, count: 3, type: 'VEC3' }
+        ],
+        bufferViews: [
+            { buffer: 0, byteOffset: 0, byteLength: positions.byteLength },
+            { buffer: 1, byteOffset: 0, byteLength: normals.byteLength }
+        ],
         buffers: [
             {
                 uri: `data:application/octet-stream;base64,${positionsBase64}`,
                 byteLength: positions.byteLength
+            },
+            {
+                uri: `data:application/octet-stream;base64,${normalsBase64}`,
+                byteLength: normals.byteLength
             }
         ]
     })
@@ -51,12 +63,13 @@ const BODY_SRC = `data:application/json,${encodeURIComponent(
  * A minimally skinned glTF: one bone, identity bind matrix, every vertex weighted to it. The
  * mesh instance carries a skin instance, which a material swap must leave in place.
  */
-const skinnedBytes = new Uint8Array(160);
+const skinnedBytes = new Uint8Array(160 + normals.byteLength);
 skinnedBytes.set(new Uint8Array(positions.buffer), 0);
 // Joints (UBYTE4 x 3) at offset 36 stay zero; weights bind every vertex fully to joint 0
 skinnedBytes.set(new Uint8Array(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]).buffer), 48);
 // prettier-ignore
 skinnedBytes.set(new Uint8Array(new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]).buffer), 96);
+skinnedBytes.set(new Uint8Array(normals.buffer), 160);
 const skinnedBase64 = btoa(String.fromCharCode(...skinnedBytes));
 const SKINNED_SRC = `data:application/json,${encodeURIComponent(
     JSON.stringify({
@@ -66,18 +79,20 @@ const SKINNED_SRC = `data:application/json,${encodeURIComponent(
         nodes: [{ name: 'Root', children: [1, 2] }, { name: 'Bone' }, { name: 'Skinny', mesh: 0, skin: 0 }],
         skins: [{ joints: [1], inverseBindMatrices: 3 }],
         materials: [{ name: 'Skin' }],
-        meshes: [{ primitives: [{ attributes: { POSITION: 0, JOINTS_0: 1, WEIGHTS_0: 2 }, material: 0 }] }],
+        meshes: [{ primitives: [{ attributes: { POSITION: 0, JOINTS_0: 1, WEIGHTS_0: 2, NORMAL: 4 }, material: 0 }] }],
         accessors: [
             { bufferView: 0, componentType: 5126, count: 3, type: 'VEC3', min: [0, 0, 0], max: [1, 1, 0] },
             { bufferView: 1, componentType: 5121, count: 3, type: 'VEC4' },
             { bufferView: 2, componentType: 5126, count: 3, type: 'VEC4' },
-            { bufferView: 3, componentType: 5126, count: 1, type: 'MAT4' }
+            { bufferView: 3, componentType: 5126, count: 1, type: 'MAT4' },
+            { bufferView: 4, componentType: 5126, count: 3, type: 'VEC3' }
         ],
         bufferViews: [
             { buffer: 0, byteOffset: 0, byteLength: 36 },
             { buffer: 0, byteOffset: 36, byteLength: 12 },
             { buffer: 0, byteOffset: 48, byteLength: 48 },
-            { buffer: 0, byteOffset: 96, byteLength: 64 }
+            { buffer: 0, byteOffset: 96, byteLength: 64 },
+            { buffer: 0, byteOffset: 160, byteLength: normals.byteLength }
         ],
         buffers: [
             {
