@@ -256,7 +256,7 @@
                         <!-- Bloom is deliberately weak: much above this and the orange shell haloes
                              rather than just the two emissive panels. -->
                         <pc-script-instance name="cameraFrame" attributes='{
-                            "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
+                            "rendering": { "toneMapping": "neutral", "samples": 4, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
                             "bloom": { "enabled": true, "intensity": 0.01, "blurLevel": 3 },
                             "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.55, "radius": 0.4, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
                             "vignette": { "enabled": true, "inner": 0.55, "outer": 1.4, "curvature": 0.7, "intensity": 0.45 }
