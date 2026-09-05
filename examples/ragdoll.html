@@ -52,14 +52,14 @@
                         <!-- Bloom is what makes the visor and the reactor read as lit rather than
                              just brightly painted, and it is the reason those two materials carry a
                              high emissive strength. It blooms out of a half-float buffer:
-                             renderFormat 12 is RGBA16F, which gives those panels the headroom to
-                             bleed from, and it degrades to RG11B10 then RGBA8 where that is not
-                             available. cameraFrame owns tone mapping once it is attached, so it is
-                             set here rather than on pc-camera - 5 is neutral. Worth knowing if you
-                             retune it: the ACES curves (3 and 4) desaturate the orange accents to
-                             cream and wash the cyan panels towards white. -->
+                             renderFormat rgba16 gives those panels the headroom to bleed from, and
+                             it degrades to rg11b10 then rgba8 where that is not available.
+                             cameraFrame owns tone mapping once it is attached, so it is set here
+                             rather than on pc-camera. Worth knowing if you retune it: the ACES
+                             curves ('aces' and 'aces2') desaturate the orange accents to cream and
+                             wash the cyan panels towards white. -->
                         <pc-script-instance name="cameraFrame" attributes='{
-                            "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
+                            "rendering": { "toneMapping": "neutral", "samples": 4, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
                             "bloom": { "enabled": true, "intensity": 0.04, "blurLevel": 4 },
                             "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.35, "radius": 0.6, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
                             "vignette": { "enabled": true, "inner": 0.6, "outer": 1.4, "curvature": 0.7, "intensity": 0.4 }

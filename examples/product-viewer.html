@@ -60,16 +60,14 @@
                                             focus-point="0 0.045 0"
                                             pitch-range="-85 85"
                                             zoom-range="0.3 1.8"></pc-script-instance>
-                        <!-- Post-processing. toneMapping 5 is TONEMAP_NEUTRAL and renderFormat
-                             12/18/7 are pixel-format constants: this script's enums are numeric,
-                             so they have to be written as numbers here.
-                             ssao.radius is in WORLD UNITS, so it has to be scaled to the subject:
-                             this drone is only 0.375 m across, and the usual scene-sized radius of
-                             0.5 samples a hemisphere wider than the whole model, which returns an
-                             almost blank occlusion buffer. 0.035 is the scale of the actual
-                             crevices here - shell seams, motor rings, arm roots. -->
+                        <!-- Post-processing. ssao.radius is in WORLD UNITS, so it has to be scaled
+                             to the subject: this drone is only 0.375 m across, and the usual
+                             scene-sized radius of 0.5 samples a hemisphere wider than the whole
+                             model, which returns an almost blank occlusion buffer. 0.035 is the
+                             scale of the actual crevices here - shell seams, motor rings, arm
+                             roots. -->
                         <pc-script-instance name="cameraFrame" attributes='{
-                            "rendering": { "toneMapping": 5, "samples": 4, "renderFormat": 12, "renderFormatFallback0": 18, "renderFormatFallback1": 7 },
+                            "rendering": { "toneMapping": "neutral", "samples": 4, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
                             "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.6, "radius": 0.035, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
                             "bloom": { "enabled": true, "intensity": 0.04, "blurLevel": 4 },
                             "grading": { "enabled": true, "brightness": 1, "contrast": 1.06, "saturation": 1.05 },
