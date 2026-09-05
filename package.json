@@ -99,7 +99,7 @@
     "eslint": "9.39.5",
     "globals": "17.12.0",
     "jsdom": "30.0.1",
-    "mediabunny": "1.55.6",
+    "mediabunny": "1.55.7",
     "opentype.js": "2.0.0",
     "playcanvas": "2.22.0",
     "prettier": "3.9.6",
