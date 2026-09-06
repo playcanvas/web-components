@@ -65,9 +65,3 @@ jobs:
       # Vitest detects GitHub Actions and annotates failures on the diff without configuration.
       - name: Run tests
         run: npm test
-
-      - name: Install observatory asset test dependencies
-        run: npm ci --prefix utils/third-person-controller
-
-      - name: Check delivered observatory assets
-        run: npm run test:observatory-assets

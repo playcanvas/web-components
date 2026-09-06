@@ -136,9 +136,3 @@ docs
 
 # Claude Code local settings
 .claude/
-
-# Local asset authoring output, captures and Blender backups
-/output/
-*.blend1
-*.blend2
-__pycache__/
