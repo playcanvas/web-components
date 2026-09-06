@@ -93,14 +93,13 @@ export default defineConfig({
                 extends: true,
                 test: {
                     /**
-                     * Consistency of examples/ as a set: the catalogue in example-list.mjs against
-                     * the pages on disk. Reads sources as text rather than loading anything, so it
-                     * needs no DOM - and unlike every tier above, it can fail on a file that
-                     * nothing imports. Last because it tests the examples, not the library.
+                     * Catalogue and StackBlitz source consistency, plus lightweight example
+                     * behavior regressions that need no DOM. Tests of example markup with live
+                     * components belong in the integration project above.
                      */
                     name: 'examples',
                     environment: 'node',
-                    include: ['test/examples/**/*.test.ts']
+                    include: ['test/examples/**/*.test.{ts,mjs}']
                 }
             }
         ],

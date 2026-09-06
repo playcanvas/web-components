@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Third Person Controller</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <link rel="stylesheet" href="css/third-person-controller.css">
+    </head>
+    <body>
+        <pc-app antialias="false" max-pixel-ratio="2">
+            <pc-wasm name="Ammo" glue="modules/ammo/ammo.wasm.js" wasm="modules/ammo/ammo.wasm.wasm" fallback="modules/ammo/ammo.js"></pc-wasm>
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
+            <pc-asset src="assets/scripts/observatory-controller.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/observatory-scene.mjs"></pc-asset>
+            <pc-asset src="assets/skies/observatory.hdr" id="observatory-sky"></pc-asset>
+            <pc-asset src="assets/models/observatory-character.glb" id="explorer-asset"></pc-asset>
+            <pc-asset src="assets/models/observatory-environment.glb" id="environment-asset"></pc-asset>
+            <pc-asset src="assets/models/observatory-collision.glb" id="collision-asset"></pc-asset>
+            <pc-scene exposure="0.9" fog="linear" fog-color="#b9b5a2" fog-start="45" fog-end="220" gravity="0 -16 0">
+                <pc-sky asset="observatory-sky" lighting intensity="0.65"></pc-sky>
+                <pc-entity name="camera" rotation="0 -8 0">
+                    <pc-camera fov="56" near-clip="0.1" far-clip="250"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": "neutral", "samples": 2, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
+                            "ssao": { "type": "none" },
+                            "bloom": { "enabled": true, "intensity": 0.04, "blurLevel": 4 },
+                            "vignette": { "enabled": true, "inner": 0.6, "outer": 1.4, "curvature": 0.5, "intensity": 0.2 }
+                        }'></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <pc-entity name="sun" rotation="42 -35 0">
+                    <pc-light type="directional" color="#ffe4bc" intensity="1.25" cast-shadows
+                              shadow-type="pcf5-32f" shadow-resolution="2048" shadow-distance="55"
+                              shadow-bias="0.25" normal-offset-bias="0.08" num-cascades="2" cascade-blend="0.2"></pc-light>
+                </pc-entity>
+                <pc-model name="observatory" asset="environment-asset">
+                    <pc-anim clip="Observatory_Loop"></pc-anim>
+                    <pc-node name="Armillary Celestial Core">
+                        <pc-light type="omni" color="#73ddff" intensity="1.5" range="9"></pc-light>
+                    </pc-node>
+                </pc-model>
+                <pc-model name="collision-world" asset="collision-asset">
+                    <pc-script>
+                        <pc-script-instance name="observatoryScene" player="entity:explorer" camera="entity:camera"
+                                            environment="entity:observatory"></pc-script-instance>
+                    </pc-script>
+                </pc-model>
+                <pc-entity name="explorer" position="0 1.001 17">
+                    <pc-collision type="capsule" radius="0.5" height="2"></pc-collision>
+                    <pc-rigid-body type="dynamic" mass="100" angular-factor="0 0 0" linear-damping="0" angular-damping="0" friction="0.5" restitution="0"></pc-rigid-body>
+                    <pc-entity name="character-facing">
+                        <!-- Metre-scale Owl Wayfarer. Capsule center is 1 m above the floor. -->
+                        <pc-model name="character" asset="explorer-asset" position="0 -1.0065 -0.0081">
+                            <pc-anim id="explorer-animation" clip="Idle" transition-time="0.14">
+                                <pc-anim-clip name="Idle"></pc-anim-clip>
+                                <pc-anim-clip name="Walk"></pc-anim-clip>
+                                <pc-anim-clip name="Run"></pc-anim-clip>
+                                <pc-anim-clip name="JumpStart" loop="false"></pc-anim-clip>
+                                <pc-anim-clip name="FallLoop"></pc-anim-clip>
+                                <pc-anim-clip name="Land" loop="false"></pc-anim-clip>
+                            </pc-anim>
+                        </pc-model>
+                    </pc-entity>
+                    <pc-script id="explorer-scripts">
+                        <pc-script-instance id="explorer-controller" name="observatoryController"
+                                            camera="entity:camera" character-model="entity:character-facing"
+                                            speed-ground="21" speed-air="2" sprint-mult="3" jump-force="520"
+                                            camera-distance="5.4" camera-distance-min="2.3" camera-distance-max="9"
+                                            camera-height="0.6" initial-pitch="8" pitch-min="-35" pitch-max="65"
+                                            invert-look-y="true"
+                                            pointer-lock="false"
+                                            game-pad-dead-zone-high="0.9" jog-speed-threshold="2.3"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="observatory-ui" data-state="loading">
+            <header class="observatory-heading">
+                <span class="observatory-eyebrow">A PLAYCANVAS EXPLORATION</span>
+                <h1>The Sunken<br>Observatory<span>.</span></h1>
+                <p>Follow the light. Find a different perspective.</p>
+            </header>
+            <div class="observatory-prompt">
+                <button id="observatory-resume" hidden>Continue exploring →</button>
+                <p id="observatory-hint" aria-live="polite">Loading the explorer and its world</p>
+            </div>
+            <div class="observatory-toolbar">
+                <span id="observatory-place">01 / ARRIVAL COURT</span>
+                <div>
+                    <button id="observatory-pause" aria-label="Pause exploration">Pause</button>
+                    <button id="observatory-reset" aria-label="Return to the arrival court">Reset</button>
+                    <button id="observatory-quality" aria-label="Switch rendering quality">Quality: high</button>
+                </div>
+            </div>
+            <footer class="observatory-controls">
+                <span class="desktop-help"><kbd>W A S D</kbd> move <kbd>SHIFT</kbd> sprint <kbd>SPACE</kbd> jump <span class="help-extra">Drag to look · Scroll to zoom</span></span>
+                <span class="touch-help">Left thumb to move · Right thumb to look · Double-tap right to jump</span>
+            </footer>
+        </div>
+        <div id="observatory-fade" aria-hidden="true"></div>
+        <script>
+            // Select a backend before custom-element upgrade when comparing browser support.
+            if (new URLSearchParams(location.search).get('backend') === 'webgl2') {
+                document.querySelector('pc-app').setAttribute('backend', 'webgl2');
+            }
+        </script>
+        <script type="module" src="js/observatory.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

@@ -1,0 +1,22 @@
+{
+    "observatory": {
+        "scene": "PWC Observatory",
+        "collectionPrefix": "Observatory Environment",
+        "uv": "AO UV",
+        "distance": 1.5,
+        "strength": 0.65,
+        "samples": 64,
+        "margin": 16,
+        "deliveryResolution": 1024,
+        "regions": { "center": 2048, "west": 2048, "east": 2048, "north": 2048, "distance": 2048 },
+        "materialPrefixes": [
+            "Limestone",
+            "Layered bedrock",
+            "Pale carved edges",
+            "Antique brass",
+            "OBS Valley limestone",
+            "OBS Worn gold edges",
+            "OBS Bronze engraved recess"
+        ]
+    }
+}
