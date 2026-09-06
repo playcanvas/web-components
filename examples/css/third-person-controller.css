@@ -102,7 +102,8 @@ body {
 #observatory-pause {
     visibility: hidden;
 }
-.observatory-ui[data-state='loading'] .observatory-toolbar {
+.observatory-ui[data-state='loading'] .observatory-toolbar,
+.observatory-ui[data-state='error'] .observatory-toolbar {
     visibility: hidden;
 }
 #observatory-place {
