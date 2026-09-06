@@ -40,7 +40,7 @@ export default [
         }
     },
     {
-        files: ['test/**/*.{ts,mjs}', 'vitest.config.ts'],
+        files: ['test/**/*.ts', 'vitest.config.ts'],
         languageOptions: {
             globals: {
                 ...globals.node
