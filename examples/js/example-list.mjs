@@ -45,6 +45,7 @@ export const examples = [
     // Controls
     { name: 'First Person Teleport', path: 'first-person-teleport.html', category: 'Controls' },
     { name: 'First Person Controller', path: 'first-person-controller.html', category: 'Controls' },
+    { name: 'Third Person Controller', path: 'third-person-controller.html', category: 'Controls' },
     // Graphics
     { name: 'Basic Shapes', path: 'basic-shapes.html', category: 'Graphics' },
     { name: 'Basic Particles', path: 'basic-particles.html', category: 'Graphics' },

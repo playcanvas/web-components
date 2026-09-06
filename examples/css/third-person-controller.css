@@ -1,0 +1,221 @@
+body {
+    background: #839e9c;
+}
+.observatory-ui {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    color: #fff6de;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.observatory-heading {
+    position: absolute;
+    top: max(38px, env(safe-area-inset-top));
+    left: max(44px, env(safe-area-inset-left));
+    text-shadow: 0 2px 20px #25312f55;
+    transition: opacity 0.35s;
+}
+.observatory-eyebrow {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.29em;
+    font-weight: 600;
+}
+.observatory-heading h1 {
+    font:
+        400 clamp(35px, 4.4vw, 68px)/1.04 Georgia,
+        'Times New Roman',
+        serif;
+    letter-spacing: -0.045em;
+    margin: 19px 0 15px;
+}
+.observatory-heading h1 span {
+    color: #e7a760;
+}
+.observatory-heading p {
+    font-size: 12px;
+    letter-spacing: 0.015em;
+    opacity: 0.9;
+}
+.observatory-prompt {
+    position: absolute;
+    left: max(44px, env(safe-area-inset-left));
+    bottom: 110px;
+}
+.observatory-ui button {
+    pointer-events: auto;
+    font: inherit;
+    cursor: pointer;
+}
+#observatory-resume {
+    color: #243c3c;
+    background: #fff5dc;
+    border: 0;
+    border-radius: 2px;
+    padding: 16px 27px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 25px #23373622;
+}
+#observatory-resume:hover {
+    background: #ffe9bd;
+}
+#observatory-hint {
+    font-size: 11px;
+    margin-top: 15px;
+    text-shadow: 0 1px 6px #162b2b;
+}
+.observatory-controls {
+    position: absolute;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    left: max(44px, env(safe-area-inset-left));
+    font-size: 11px;
+    text-shadow: 0 1px 8px #142929;
+}
+.observatory-controls kbd {
+    font:
+        10px Arial,
+        sans-serif;
+    border: 1px solid #fff5dc55;
+    border-radius: 3px;
+    padding: 4px 6px;
+    margin: 0 5px 0 12px;
+    background: #243c3c38;
+}
+.observatory-controls kbd:first-child {
+    margin-left: 0;
+}
+.help-extra {
+    margin-left: 15px;
+}
+.observatory-toolbar {
+    position: absolute;
+    top: max(24px, env(safe-area-inset-top));
+    left: 30px;
+    right: 30px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+#observatory-place,
+#observatory-pause {
+    visibility: hidden;
+}
+.observatory-ui[data-state='loading'] .observatory-toolbar,
+.observatory-ui[data-state='error'] .observatory-toolbar {
+    visibility: hidden;
+}
+#observatory-place {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-shadow: 0 1px 10px #132829;
+}
+.observatory-toolbar button {
+    border: 1px solid #fff5dc33;
+    border-radius: 3px;
+    color: #fff6de;
+    background: #172e2db8;
+    font-size: 11px;
+    padding: 9px 12px;
+}
+.observatory-toolbar button:hover {
+    background: #172e2de8;
+}
+.observatory-ui[data-state='playing'] .observatory-heading,
+.observatory-ui[data-state='playing'] .observatory-prompt {
+    opacity: 0;
+    visibility: hidden;
+}
+.observatory-ui[data-state='playing'] .observatory-toolbar {
+    opacity: 1;
+    visibility: visible;
+}
+.observatory-ui[data-state='playing'] #observatory-place,
+.observatory-ui[data-state='playing'] #observatory-pause {
+    visibility: visible;
+}
+.observatory-ui[data-state='paused'] .observatory-heading p {
+    opacity: 0;
+}
+#observatory-fade {
+    position: fixed;
+    inset: 0;
+    background: #193031;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s;
+}
+#observatory-fade.visible {
+    opacity: 1;
+}
+.touch-help {
+    display: none;
+}
+@media (pointer: coarse) {
+    .desktop-help {
+        display: none;
+    }
+    .touch-help {
+        display: block;
+    }
+    .observatory-toolbar button {
+        min-height: 44px;
+    }
+}
+@media (max-width: 600px) {
+    .observatory-heading {
+        top: 36px;
+        left: 24px;
+    }
+    .observatory-eyebrow {
+        font-size: 9px;
+    }
+    .observatory-heading h1 {
+        font-size: 43px;
+    }
+    .observatory-heading p {
+        max-width: 210px;
+        line-height: 1.5;
+    }
+    .observatory-prompt {
+        left: 24px;
+        bottom: 112px;
+    }
+    .observatory-controls {
+        left: 24px;
+        right: 24px;
+        bottom: 68px;
+        font-size: 10px;
+        line-height: 1.7;
+    }
+    .observatory-controls kbd {
+        margin-left: 5px;
+        padding: 3px;
+    }
+    .help-extra {
+        display: none;
+    }
+    .observatory-toolbar {
+        top: 15px;
+        left: 16px;
+        right: 16px;
+        align-items: flex-start;
+    }
+    .observatory-toolbar > div {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 4px;
+    }
+    #observatory-place {
+        max-width: 90px;
+        line-height: 1.6;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .observatory-heading,
+    #observatory-fade {
+        transition: none;
+    }
+}

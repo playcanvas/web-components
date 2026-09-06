@@ -325,7 +325,7 @@ describe('examples/*.html', () => {
         ref.includes('/');
 
     it('finds every example page', () => {
-        expect(pages.length).toBe(42);
+        expect(pages.length).toBe(43);
     });
 
     /**
