@@ -1,5 +1,15 @@
 import type { LightComponent } from 'playcanvas';
-import { Color, Entity, SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_VSM_16F } from 'playcanvas';
+import {
+    Color,
+    Entity,
+    LIGHTSHAPE_DISK,
+    LIGHTSHAPE_PUNCTUAL,
+    LIGHTSHAPE_RECT,
+    LIGHTSHAPE_SPHERE,
+    SHADOW_PCF1_32F,
+    SHADOW_PCF3_32F,
+    SHADOW_VSM_16F
+} from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { LightComponentElement } from '../../../src/components/light-component';
@@ -40,6 +50,7 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['shadow-resolution', 'shadowResolution', '2048', 2048, 1024],
     ['shadow-samples', 'shadowSamples', '8', 8, 16],
     ['shadow-type', 'shadowType', 'pcf1-32f', SHADOW_PCF1_32F, SHADOW_PCF3_32F],
+    ['shape', 'shape', 'rect', LIGHTSHAPE_RECT, LIGHTSHAPE_PUNCTUAL],
     ['type', 'type', 'omni', 'omni', 'directional'],
     ['vsm-bias', 'vsmBias', '0.01', 0.01, 0.0025],
     ['vsm-blur-size', 'vsmBlurSize', '5', 5, 11]
@@ -116,7 +127,7 @@ describe('<pc-light>', () => {
 
         it('falls back to the default and warns once per invalid value', async () => {
             const { get } = await bootApp(
-                scene('type="area" shadow-type="pcf7-32f" intensity="bright" shadow-bias="soft"')
+                scene('type="area" shadow-type="pcf7-32f" shape="cube" intensity="bright" shadow-bias="soft"')
             );
             const component = get<LightComponentElement>('pc-light').component!;
 
@@ -126,6 +137,9 @@ describe('<pc-light>', () => {
             warnings.expect(
                 "Invalid value 'pcf7-32f' for attribute 'shadow-type'. Valid values: pcf1-16f, pcf1-32f, pcf3-16f, pcf3-32f, pcf5-16f, pcf5-32f, vsm-16f, vsm-32f, pcss-32f. Using 'pcf3-32f'."
             );
+            warnings.expect(
+                "Invalid value 'cube' for attribute 'shape'. Valid values: punctual, rect, disk, sphere. Using 'punctual'."
+            );
             warnings.expect("Invalid value 'bright' for attribute 'intensity'. Expected a finite number. Using '1'.");
             warnings.expect(
                 "Invalid value 'soft' for attribute 'shadow-bias'. Expected a finite number. Using '0.05'."
@@ -133,8 +147,26 @@ describe('<pc-light>', () => {
 
             expect(component.type).toBe('directional');
             expect(component.shadowType).toBe(SHADOW_PCF3_32F);
+            expect(component.shape).toBe(LIGHTSHAPE_PUNCTUAL);
             expect(component.intensity).toBe(1);
             expect(component.shadowBias).toBe(0.05);
+        });
+
+        it('maps each light shape name to its own engine constant', async () => {
+            const { get } = await bootApp(scene());
+            const light = get<LightComponentElement>('pc-light');
+
+            const shapes = [
+                ['punctual', LIGHTSHAPE_PUNCTUAL],
+                ['rect', LIGHTSHAPE_RECT],
+                ['disk', LIGHTSHAPE_DISK],
+                ['sphere', LIGHTSHAPE_SPHERE]
+            ] as const;
+
+            for (const [name, constant] of shapes) {
+                light.setAttribute('shape', name);
+                expect.soft(light.component!.shape, name).toBe(constant);
+            }
         });
 
         it('maps each PCF shadow type name to its own engine constant', async () => {

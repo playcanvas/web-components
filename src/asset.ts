@@ -17,6 +17,7 @@ import type { Texture, TextureAtlas } from 'playcanvas';
 
 import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
+import { findAsset } from './asset-binding';
 import { AsyncElement } from './async-element';
 import { parseBool, parseEnum, parseNumber } from './parse';
 
@@ -702,8 +703,7 @@ class AssetElement extends AsyncElement {
      * @returns The asset, or `undefined`.
      */
     static get(id: string) {
-        const assetElement = document.querySelector<AssetElement>(`pc-asset[id="${id}"]`);
-        return assetElement?.asset;
+        return findAsset(id);
     }
 
     static get observedAttributes() {
@@ -790,26 +790,5 @@ class AssetElement extends AsyncElement {
 }
 
 customElements.define('pc-asset', AssetElement);
-
-/**
- * Resolves an asset reference for use: {@link AssetElement.get}, plus starting the load of a
- * registered asset that has not begun one - a `lazy` asset. Every element that consumes assets
- * resolves its references here, which is what makes `lazy` mean load on first use without any
- * consumer having to remember the load. The load is asynchronous - callers observe the asset's
- * `load` event for the resource.
- *
- * @param id - The `id` of the `<pc-asset>` element.
- * @returns The asset, or `undefined`.
- * @internal
- */
-export const useAsset = (id: string) => {
-    const asset = AssetElement.get(id);
-    // load() ignores an asset that is already loaded or loading, so repeated resolution
-    // costs nothing.
-    if (asset) {
-        asset.registry?.load(asset);
-    }
-    return asset;
-};
 
 export { AssetElement };

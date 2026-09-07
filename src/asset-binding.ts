@@ -1,10 +1,52 @@
 import type { Asset, EventHandle } from 'playcanvas';
 
-import { useAsset } from './asset';
+import type { AssetElement } from './asset';
 
 // Keep `export` on these declarations. TypeScript removes the declaration and its inline export
 // when `stripInternal` is enabled. A separate `export { ... }` statement would remain in the
 // generated .d.ts file and refer to a declaration that had been removed.
+
+// This module imports asset.ts for its types only. pc-app imports this module, and pc-app has to
+// be defined before pc-asset: defining an element upgrades every instance already in the document
+// and runs its connectedCallback, which awaits the application through `closestApp` - an
+// un-upgraded <pc-app> has no `ready()` to await. A value import here would define pc-asset
+// first, so the lookup lives here and AssetElement.get delegates to it.
+
+/**
+ * Looks up the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
+ * `undefined` if there is no such element or its asset has not been created yet.
+ *
+ * @param id - The `id` of the `<pc-asset>` element.
+ * @returns The asset, or `undefined`.
+ * @internal
+ */
+export const findAsset = (id: string) => {
+    // getElementById rather than a selector built from the id: an id containing a quote or a
+    // backslash would make the selector throw, whereas here it simply matches nothing
+    const element = document.getElementById(id);
+    return element?.localName === 'pc-asset' ? (element as AssetElement).asset : undefined;
+};
+
+/**
+ * Resolves an asset reference for use: {@link findAsset}, plus starting the load of a registered
+ * asset that has not begun one - a `lazy` asset. Every element that consumes assets resolves its
+ * references here, which is what makes `lazy` mean load on first use without any consumer having
+ * to remember the load. The load is asynchronous - callers observe the asset's `load` event for
+ * the resource.
+ *
+ * @param id - The `id` of the `<pc-asset>` element.
+ * @returns The asset, or `undefined`.
+ * @internal
+ */
+export const useAsset = (id: string) => {
+    const asset = findAsset(id);
+    // load() ignores an asset that is already loaded or loading, so repeated resolution
+    // costs nothing.
+    if (asset) {
+        asset.registry?.load(asset);
+    }
+    return asset;
+};
 
 /**
  * Functions called when an {@link AssetBinding} finishes loading an asset or encounters an

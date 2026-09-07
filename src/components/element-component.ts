@@ -1,7 +1,7 @@
 import type { ElementComponent } from 'playcanvas';
 import { Color, Vec2, Vec4 } from 'playcanvas';
 
-import { useAsset } from '../asset';
+import { useAsset } from '../asset-binding';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';

@@ -1,7 +1,7 @@
 import type { ScriptComponent, Script } from 'playcanvas';
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
-import { useAsset } from '../asset';
+import { useAsset } from '../asset-binding';
 import { findEntityElement, getEntity, idHint, unresolvedCause } from '../entity-reference';
 import {
     parseBool,
