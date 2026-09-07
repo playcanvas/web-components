@@ -1,6 +1,6 @@
 import type { GSplatComponent } from 'playcanvas';
 
-import { useAsset } from '../asset';
+import { useAsset } from '../asset-binding';
 import { parseBool, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';

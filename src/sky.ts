@@ -2,8 +2,7 @@ import type { Asset, Scene, Texture } from 'playcanvas';
 import { EnvLighting, LAYERID_SKYBOX, Quat, Vec3 } from 'playcanvas';
 
 import type { AppElement } from './app';
-import { useAsset } from './asset';
-import { AssetBinding } from './asset-binding';
+import { AssetBinding, useAsset } from './asset-binding';
 import { AsyncElement } from './async-element';
 import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
 

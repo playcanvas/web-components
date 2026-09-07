@@ -791,8 +791,4 @@ class AssetElement extends AsyncElement {
 
 customElements.define('pc-asset', AssetElement);
 
-// useAsset is defined in asset-binding.ts (see the note there on why the resolution lives outside
-// this module) and re-exported from here, its home for every element that consumes assets.
-export { useAsset } from './asset-binding';
-
 export { AssetElement };

@@ -1,7 +1,7 @@
 import type { ButtonComponent } from 'playcanvas';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Color, Vec4 } from 'playcanvas';
 
-import { useAsset } from '../asset';
+import { useAsset } from '../asset-binding';
 import { resolveEntity } from '../entity-reference';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 

@@ -1,6 +1,6 @@
 import type { SoundSlot } from 'playcanvas';
 
-import { useAsset } from '../asset';
+import { useAsset } from '../asset-binding';
 import { AsyncElement } from '../async-element';
 import { parseBool, parseNumber } from '../parse';
 

@@ -1,7 +1,6 @@
 import type { Asset, ParticleSystemComponent } from 'playcanvas';
 
-import { useAsset } from '../asset';
-import { AssetBinding } from '../asset-binding';
+import { AssetBinding, useAsset } from '../asset-binding';
 
 import { ComponentElement } from './component';
 

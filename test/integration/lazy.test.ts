@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { AssetElement, useAsset } from '../../src/asset';
+import { AssetElement } from '../../src/asset';
+import { useAsset } from '../../src/asset-binding';
 import { bootApp } from '../helpers/app';
 import { useGuard } from '../helpers/guard';
 
