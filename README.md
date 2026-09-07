@@ -36,9 +36,51 @@ PlayCanvas Web Components are a set of custom HTML elements for building 3D inte
 
 Explore the [PlayCanvas Web Components examples gallery](https://playcanvas.github.io/web-components/examples).
 
-## Usage
+## Getting Started
 
-Please see the [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) for installation and usage instructions.
+The PlayCanvas Engine is a peer dependency, so your page needs an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) that tells the browser where to find both packages.
+
+**CDN (no install, no build step)** — load both from jsDelivr:
+
+```html
+<script type="importmap">
+    {
+        "imports": {
+            "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@latest/build/playcanvas.mjs",
+            "@playcanvas/web-components": "https://cdn.jsdelivr.net/npm/@playcanvas/web-components@latest/dist/pwc.min.mjs"
+        }
+    }
+</script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@playcanvas/web-components@latest/dist/pwc.min.mjs"></script>
+```
+
+**npm** — for projects with a `package.json`, dev server or bundler:
+
+```bash
+npm install playcanvas @playcanvas/web-components
+```
+
+Then point the import map at the installed packages:
+
+```html
+<script type="importmap">
+    {
+        "imports": {
+            "playcanvas": "/node_modules/playcanvas/build/playcanvas.mjs",
+            "@playcanvas/web-components": "/node_modules/@playcanvas/web-components/dist/pwc.mjs"
+        }
+    }
+</script>
+<script type="module" src="/node_modules/@playcanvas/web-components/dist/pwc.mjs"></script>
+```
+
+**New project** — scaffold a Vite and TypeScript app with one of 12 runnable starters:
+
+```bash
+npm create playcanvas@latest my-app -- -f web-components
+```
+
+The [Getting Started Guide](https://developer.playcanvas.com/user-manual/web-components/getting-started/) walks through a complete first page, version pinning and bundler setups.
 
 ## Editor Support
 
