@@ -637,8 +637,10 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Binds the lookup table asset named by `area-light-luts`, applying it once it has loaded, or
-     * switches area lights off when the attribute is empty.
+     * Binds the lookup table asset named by `area-light-luts`, applying it once it has loaded. An
+     * empty attribute, or one naming an asset that does not exist, switches area lights off. A
+     * change from one asset to another keeps the previous tables lit until the new file applies or
+     * is refused - the engine keeps them either way.
      */
     private _bindAreaLightLuts() {
         this._areaLightLutsBinding.cancel();
@@ -654,6 +656,7 @@ class AppElement extends AsyncElement {
         });
         if (!asset) {
             console.warn(`pc-app could not find asset '${id}' - area light lookup tables not applied`);
+            this._setAreaLightsEnabled(false);
         }
     }
 
@@ -670,8 +673,19 @@ class AppElement extends AsyncElement {
             return;
         }
 
-        const isTable = (value: unknown): value is number[] =>
-            Array.isArray(value) && value.length === AREA_LIGHT_LUT_LENGTH;
+        // Every entry is checked, not just the length: the engine converts each value to half float
+        // as it is, so a hole or a non-number would upload as garbage
+        const isTable = (value: unknown): value is number[] => {
+            if (!Array.isArray(value) || value.length !== AREA_LIGHT_LUT_LENGTH) {
+                return false;
+            }
+            for (let i = 0; i < value.length; i++) {
+                if (!Number.isFinite(value[i])) {
+                    return false;
+                }
+            }
+            return true;
+        };
         const file = asset.resource as { LTC_MAT_1?: unknown; LTC_MAT_2?: unknown } | null;
 
         if (!file || !isTable(file.LTC_MAT_1) || !isTable(file.LTC_MAT_2)) {

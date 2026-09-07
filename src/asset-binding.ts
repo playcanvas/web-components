@@ -20,7 +20,12 @@ import type { AssetElement } from './asset';
  * @returns The asset, or `undefined`.
  * @internal
  */
-export const findAsset = (id: string) => document.querySelector<AssetElement>(`pc-asset[id="${id}"]`)?.asset;
+export const findAsset = (id: string) => {
+    // getElementById rather than a selector built from the id: an id containing a quote or a
+    // backslash would make the selector throw, whereas here it simply matches nothing
+    const element = document.getElementById(id);
+    return element?.localName === 'pc-asset' ? (element as AssetElement).asset : undefined;
+};
 
 /**
  * Resolves an asset reference for use: {@link findAsset}, plus starting the load of a registered

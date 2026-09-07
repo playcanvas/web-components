@@ -178,10 +178,49 @@ describe('<pc-app> area lights', () => {
             expect(uncaught.seen).toEqual([]);
         });
 
+        it('refuses a table whose entries are not all finite numbers', async () => {
+            const { app, appElement } = await bootApp(LAZY_ASSETS);
+            const parked = parkLoads(app);
+            const placeholder = lutTexture(app, 1);
+
+            appElement.setAttribute('area-light-luts', 'luts-a');
+            const file = tables();
+            (file.LTC_MAT_2 as unknown[])[100] = 'nan';
+            parked.get('luts-a.json')!(null, file);
+
+            warnings.expect("pc-asset 'luts-a' is not an area light lookup table");
+            expect(lutTexture(app, 1)).toBe(placeholder);
+            expect(app.scene.lighting.areaLightsEnabled).toBe(false);
+        });
+
         it('warns when the asset id resolves to nothing', async () => {
             const { app } = await bootApp('', { appAttributes: 'area-light-luts="missing"' });
 
             warnings.expect("pc-app could not find asset 'missing' - area light lookup tables not applied");
+            expect(app.scene.lighting.areaLightsEnabled).toBe(false);
+        });
+
+        it('switches area lights off when changed to an asset that does not exist', async () => {
+            const { app, appElement } = await bootApp(LAZY_ASSETS);
+            const parked = parkLoads(app);
+
+            appElement.setAttribute('area-light-luts', 'luts-a');
+            parked.get('luts-a.json')!(null, tables());
+            expect(app.scene.lighting.areaLightsEnabled).toBe(true);
+
+            appElement.setAttribute('area-light-luts', 'missing');
+
+            warnings.expect("pc-app could not find asset 'missing' - area light lookup tables not applied");
+            expect(app.scene.lighting.areaLightsEnabled, 'nothing valid is bound any more').toBe(false);
+        });
+
+        it('treats an id that would not survive a selector as missing rather than throwing', async () => {
+            const { app, appElement } = await bootApp();
+            const id = 'lu"ts';
+
+            expect(() => appElement.setAttribute('area-light-luts', id)).not.toThrow();
+
+            warnings.expect(`pc-app could not find asset '${id}' - area light lookup tables not applied`);
             expect(app.scene.lighting.areaLightsEnabled).toBe(false);
         });
 
