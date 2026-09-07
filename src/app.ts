@@ -1,4 +1,4 @@
-import type { GraphicsDevice, GraphNode, Entity } from 'playcanvas';
+import type { Asset, GraphicsDevice, GraphNode, Entity } from 'playcanvas';
 import {
     AppBase,
     AppOptions,
@@ -63,6 +63,7 @@ import {
 } from 'playcanvas';
 
 import type { AssetElement } from './asset';
+import { AssetBinding } from './asset-binding';
 import { AsyncElement } from './async-element';
 import { SYNTHESIZED_EVENTS } from './entity-base';
 import type { EntityBaseElement } from './entity-base';
@@ -91,6 +92,14 @@ const ensureBaseStyles = () => {
 };
 
 /**
+ * The number of values in each area light lookup table, a 64x64 RGBA texture. The engine copies a
+ * table into a texture of exactly that size, so a longer array would throw from inside the asset's
+ * load handler and a shorter one would leave part of the texture unwritten - a file is checked
+ * against this before it reaches the engine.
+ */
+const AREA_LIGHT_LUT_LENGTH = 64 * 64 * 4;
+
+/**
  * The AppElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-app/ | `<pc-app>`} elements.
  * The AppElement interface also inherits the properties and methods of the
@@ -104,7 +113,8 @@ const ensureBaseStyles = () => {
  *
  * @elementSummary The `<pc-app>` element creates a PlayCanvas application and the canvas it renders
  * into, and is the root of every scene. It holds the `<pc-asset>`, `<pc-material>`, `<pc-wasm>` and
- * `<pc-scene>` elements, and the page's CSS sizes it, as it would a `<video>`.
+ * `<pc-scene>` elements, loads the area light lookup tables from one of its assets, and the page's
+ * CSS sizes it, as it would a `<video>`.
  *
  * @fires {ProgressEvent} progress - Fired while the application preloads its assets. `loaded` and
  * `total` are asset counts, not bytes, and an asset that fails to load still counts as loaded.
@@ -127,6 +137,8 @@ class AppElement extends AsyncElement {
 
     private _alpha = true;
 
+    private _areaLightLuts = '';
+
     private _backend: 'webgpu' | 'webgl2' | 'null' = 'webgpu';
 
     private _antialias = true;
@@ -147,6 +159,12 @@ class AppElement extends AsyncElement {
     private _optionsLocked = false;
 
     private _bar: LoadingBar | null = null;
+
+    /**
+     * Watches the area light lookup table asset while it loads. Rebinding or disconnecting cancels
+     * it, so a superseded file can never reach the engine.
+     */
+    private _areaLightLutsBinding = new AssetBinding();
 
     /**
      * Whether the application has created its initial entity hierarchy. Read by EntityElement to
@@ -449,6 +467,10 @@ class AppElement extends AsyncElement {
             }
         }
 
+        // The lookup table asset is registered now, so binding it here lets a preloaded one apply
+        // inside app.preload(), before the first frame
+        this._bindAreaLightLuts();
+
         // Get all pc-material elements that are direct children of the pc-app element
         const materialElements = this.querySelectorAll<MaterialElement>(':scope > pc-material');
         Array.from(materialElements).forEach((materialElement) => {
@@ -533,6 +555,10 @@ class AppElement extends AsyncElement {
         this._optionsLocked = false;
         this._pointer.disconnect();
 
+        // A lookup table still loading must not be handed to the application destroyed below, nor
+        // to the one a re-inserted element boots - that boot binds afresh from the attribute
+        this._areaLightLutsBinding.cancel();
+
         // Clean up the application. Destroying it destroys every entity, whose destroy hooks
         // unregister them - clear() covers any entity the engine no longer reached.
         if (this._app) {
@@ -611,6 +637,68 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Binds the lookup table asset named by `area-light-luts`, applying it once it has loaded, or
+     * switches area lights off when the attribute is empty.
+     */
+    private _bindAreaLightLuts() {
+        this._areaLightLutsBinding.cancel();
+
+        const id = this._areaLightLuts;
+        if (!id) {
+            this._setAreaLightsEnabled(false);
+            return;
+        }
+
+        const asset = this._areaLightLutsBinding.bind(id, {
+            load: (asset) => this._applyAreaLightLuts(asset, id)
+        });
+        if (!asset) {
+            console.warn(`pc-app could not find asset '${id}' - area light lookup tables not applied`);
+        }
+    }
+
+    /**
+     * Hands a loaded lookup table asset to the engine and switches area lights on in clustered
+     * lighting. A file that is not a lookup table is refused and switches them off instead.
+     *
+     * @param asset - The loaded `json` asset.
+     * @param id - The asset's `pc-asset` id, for the warning.
+     */
+    private _applyAreaLightLuts(asset: Asset, id: string) {
+        const app = this._app;
+        if (!app) {
+            return;
+        }
+
+        const isTable = (value: unknown): value is number[] =>
+            Array.isArray(value) && value.length === AREA_LIGHT_LUT_LENGTH;
+        const file = asset.resource as { LTC_MAT_1?: unknown; LTC_MAT_2?: unknown } | null;
+
+        if (!file || !isTable(file.LTC_MAT_1) || !isTable(file.LTC_MAT_2)) {
+            console.warn(
+                `pc-asset '${id}' is not an area light lookup table - expected LTC_MAT_1 and LTC_MAT_2 arrays of ${AREA_LIGHT_LUT_LENGTH} numbers - not applied`
+            );
+            this._setAreaLightsEnabled(false);
+            return;
+        }
+
+        app.setAreaLightLuts(file.LTC_MAT_1, file.LTC_MAT_2);
+        this._setAreaLightsEnabled(true);
+    }
+
+    /**
+     * Switches area lights on or off in clustered lighting, which the engine ignores on devices
+     * that cannot render them.
+     *
+     * @param value - Whether area lights are enabled.
+     */
+    private _setAreaLightsEnabled(value: boolean) {
+        if (this._app) {
+            this._app.scene.lighting.areaLightsEnabled = value;
+        }
+    }
+
+    /**
      * Warns that a graphics option was written too late to have any effect. These options are read
      * once, when the element connects and creates its graphics device, so a later write updates
      * only the element's own property - silently, without this.
@@ -658,6 +746,34 @@ class AppElement extends AsyncElement {
      */
     get antialias() {
         return this._antialias;
+    }
+
+    /**
+     * Sets the id of the `<pc-asset>` holding the area light lookup tables, whose loading also
+     * enables area lights for the application, so `<pc-light>` elements with a `rect`, `disk` or
+     * `sphere` shape render as intended. The asset is a JSON file with `LTC_MAT_1` and `LTC_MAT_2`
+     * arrays, like the PlayCanvas Engine examples' `area-light-luts.json`. The tables apply to the
+     * whole application and, when set before the application boots, load along with the other
+     * assets. Unlike the frame buffer options this applies immediately: clearing it switches area
+     * lights off again, though tables already handed to the engine stay in place. Devices that
+     * cannot render area lights ignore the switch, and `omni` and `spot` area lights stay punctual
+     * there.
+     * @param value - The asset ID.
+     */
+    set areaLightLuts(value: string) {
+        this._areaLightLuts = value;
+        if (this._app) {
+            this._bindAreaLightLuts();
+        }
+    }
+
+    /**
+     * Gets the id of the `<pc-asset>` holding the area light lookup tables, whose loading also
+     * enables area lights for the application.
+     * @returns The asset ID.
+     */
+    get areaLightLuts() {
+        return this._areaLightLuts;
     }
 
     /**
@@ -764,7 +880,16 @@ class AppElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['alpha', 'antialias', 'backend', 'depth-buffer', 'loading-bar', 'max-pixel-ratio', 'stencil-buffer'];
+        return [
+            'alpha',
+            'antialias',
+            'area-light-luts',
+            'backend',
+            'depth-buffer',
+            'loading-bar',
+            'max-pixel-ratio',
+            'stencil-buffer'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -774,6 +899,9 @@ class AppElement extends AsyncElement {
                 break;
             case 'antialias':
                 this.antialias = parseBool(newValue, true);
+                break;
+            case 'area-light-luts':
+                this.areaLightLuts = newValue ?? '';
                 break;
             case 'backend':
                 this.backend = parseEnum(newValue, ['webgpu', 'webgl2', 'null'], 'webgpu', name);

@@ -1,6 +1,10 @@
 import type { LightComponent } from 'playcanvas';
 import {
     Color,
+    LIGHTSHAPE_DISK,
+    LIGHTSHAPE_PUNCTUAL,
+    LIGHTSHAPE_RECT,
+    LIGHTSHAPE_SPHERE,
     SHADOW_PCF1_16F,
     SHADOW_PCF1_32F,
     SHADOW_PCF3_16F,
@@ -32,6 +36,21 @@ const shadowTypes = new Map<
 ]);
 
 /**
+ * The light source shapes supported by the `<pc-light>` element: a `punctual` point, or an area
+ * light shaped as a `rect`, `disk` or `sphere`.
+ *
+ * @category Types
+ */
+export type LightShape = 'punctual' | 'rect' | 'disk' | 'sphere';
+
+const lightShapes = new Map<LightShape, number>([
+    ['punctual', LIGHTSHAPE_PUNCTUAL],
+    ['rect', LIGHTSHAPE_RECT],
+    ['disk', LIGHTSHAPE_DISK],
+    ['sphere', LIGHTSHAPE_SPHERE]
+]);
+
+/**
  * The LightComponentElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-light/ | `<pc-light>`} elements.
  * The LightComponentElement interface also inherits the properties and methods of the
@@ -40,8 +59,8 @@ const shadowTypes = new Map<
  * Engine component: {@link LightComponent} (`light`).
  *
  * @elementSummary The `<pc-light>` element lights the scene from its entity — as a directional,
- * omni or spot light — with attributes for color, intensity, range and shadows. Must be a child of
- * a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
+ * omni or spot light, from a point or from a rectangle, disk or sphere — with attributes for color,
+ * intensity, range and shadows. Must be a child of a `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *
  * @category Components
  */
@@ -85,6 +104,8 @@ class LightComponentElement extends ComponentElement<LightComponent> {
         | 'vsm-32f'
         | 'pcss-32f' = 'pcf3-32f';
 
+    private _shape: LightShape = 'punctual';
+
     private _type: 'directional' | 'omni' | 'spot' = 'directional';
 
     private _vsmBias = 0.0025;
@@ -125,6 +146,7 @@ class LightComponentElement extends ComponentElement<LightComponent> {
             shadowResolution: this._shadowResolution,
             shadowSamples: this._shadowSamples,
             shadowType: shadowTypes.get(this._shadowType) ?? SHADOW_PCF3_32F,
+            shape: lightShapes.get(this._shape) ?? LIGHTSHAPE_PUNCTUAL,
             type: this._type,
             vsmBias: this._vsmBias,
             vsmBlurSize: this._vsmBlurSize
@@ -456,6 +478,36 @@ class LightComponentElement extends ComponentElement<LightComponent> {
     }
 
     /**
+     * Sets the shape of the light source: `punctual` for a point, or an area light shaped as a
+     * `rect`, `disk` or `sphere` that takes its size from the entity's scale and needs the lookup
+     * tables loaded by `area-light-luts` on `<pc-app>`. Defaults to `punctual`.
+     * @param value - The light shape. Can be:
+     *
+     * - `punctual` - An infinitesimally small point.
+     * - `rect` - A rectangle in the entity's local XZ plane, 1 by 1 at unit scale.
+     * - `disk` - A disk in the entity's local XZ plane, 1 across at unit scale.
+     * - `sphere` - A sphere, 1 across at unit scale.
+     *
+     * Area shapes fall off with their size and distance, so `range` is only a cutoff for them.
+     */
+    set shape(value: LightShape) {
+        this._shape = value;
+        if (this.component) {
+            this.component.shape = lightShapes.get(value) ?? LIGHTSHAPE_PUNCTUAL;
+        }
+    }
+
+    /**
+     * Gets the shape of the light source: `punctual`, or an area light shaped as a `rect`, `disk`
+     * or `sphere` that takes its size from the entity's scale and needs the lookup tables loaded by
+     * `area-light-luts` on `<pc-app>`.
+     * @returns The light shape.
+     */
+    get shape() {
+        return this._shape;
+    }
+
+    /**
      * Sets the type of the light. Can be `directional`, `omni` or `spot`. Defaults to
      * `directional`.
      * @param value - The type.
@@ -611,6 +663,7 @@ class LightComponentElement extends ComponentElement<LightComponent> {
             'shadow-resolution',
             'shadow-samples',
             'shadow-type',
+            'shape',
             'type',
             'vsm-bias',
             'vsm-blur-size'
@@ -677,6 +730,9 @@ class LightComponentElement extends ComponentElement<LightComponent> {
                 break;
             case 'shadow-type':
                 this.shadowType = parseEnum(newValue, shadowTypes, 'pcf3-32f', name);
+                break;
+            case 'shape':
+                this.shape = parseEnum(newValue, lightShapes, 'punctual', name);
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);

@@ -173,7 +173,13 @@ if (manifest) {
     expectEnum('pc-light', 'type', 3, 'directional');
     expectEnum('pc-camera', 'tonemap', 7, 'none');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
+    expectEnum('pc-light', 'shape', 4, 'punctual');
     expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'when-required');
+
+    // An area light shape renders wrong until <pc-app> has loaded the lookup tables, so its tooltip
+    // has to point at the attribute that does that
+    check((attribute('pc-light', 'shape')?.description ?? '').includes('area-light-luts'),
+        `pc-light[shape] does not mention 'area-light-luts': ${JSON.stringify(attribute('pc-light', 'shape')?.description)}`);
 
     // Two-value enums that replaced booleans. Both are named for the engine property they drive, so
     // the description has to survive as well - the old names ('blend', 'orthographic') are what made
@@ -207,6 +213,13 @@ if (manifest) {
     // "no cap" / "unbreakable", which renderDefault has a dedicated branch for.
     expectAttribute('pc-app', 'max-pixel-ratio', { type: 'number', default: 'Infinity', fieldName: 'maxPixelRatio' });
     expectAttribute('pc-joint', 'break-impulse', { type: 'number', default: 'Infinity', fieldName: 'breakImpulse' });
+
+    // The lookup table attribute names a pc-asset, so it publishes no default - and loading that
+    // asset is also what switches area lights on, which the tooltip has to say
+    check(attribute('pc-app', 'area-light-luts')?.default === undefined,
+        'pc-app[area-light-luts] should have no default');
+    check(/area lights/.test(attribute('pc-app', 'area-light-luts')?.description ?? ''),
+        `pc-app[area-light-luts] lost its descriptive tooltip: ${JSON.stringify(attribute('pc-app', 'area-light-luts')?.description)}`);
 
     // pc-joint's remaining shapes: enums from inline arrays, a Vec2 default with negative
     // components, and string entity references
