@@ -23,37 +23,30 @@ const engineValue = (component: ElementComponent, property: string) =>
  * a non-default value, what the engine must report for it, and the default that removal must
  * restore. Ordered by `observedAttributes`.
  *
- * The anchor used to default to the center, which is the Editor's convention; it is the engine's
- * bottom-left corner now, and `matches an element the engine built itself` below holds it there.
+ * Every `restored` value is the engine's own default. The anchor and pivot used to default to the
+ * center and the size to zero - the Editor's conventions - which is what `matches an element the
+ * engine built itself` below now holds them to.
  */
 const cases: [attribute: string, property: string, value: string, expected: unknown, restored: unknown][] = [
     // A point anchor rather than a split one: split anchors size the element from the parent, which
     // would override the width and height rows when every attribute is applied at once
     ['anchor', 'anchor', '1 1 1 1', new Vec4(1, 1, 1, 1), new Vec4(0, 0, 0, 0)],
     ['color', 'color', '1 0 0', new Color(1, 0, 0), new Color(1, 1, 1, 1)],
-    ['height', 'height', '50', 50, 0],
+    ['height', 'height', '50', 50, 32],
     ['mask', 'mask', '', true, false],
     // [opacity] is covered on its own below: the engine reports it as the color's alpha, so a row
     // here would change what the color row reads back
-    ['pivot', 'pivot', '0 1', new Vec2(0, 1), new Vec2(0.5, 0.5)],
+    ['pivot', 'pivot', '0.5 1', new Vec2(0.5, 1), new Vec2(0, 0)],
     ['sprite-frame', 'spriteFrame', '2', 2, 0],
     ['use-input', 'useInput', '', true, false],
-    ['width', 'width', '80', 80, 0]
+    ['width', 'width', '80', 80, 32]
 ];
-
-/**
- * Defaults that still differ from a bare engine element - the Editor's conventions rather than
- * the engine's: a centered pivot, and a zero size, where the engine gives an element 32 units a
- * side. Whether they stay is a release decision; until it is made they are listed here, so the
- * divergence is visible rather than hidden in a filtered comparison.
- */
-const editorDefaults = new Set(['pivot', 'width', 'height']);
 
 describe('<pc-element>', () => {
     useGuard();
 
     describe('#component', () => {
-        it('creates the element component with the expected defaults', async () => {
+        it('creates the element component with the engine defaults', async () => {
             const { get } = await bootApp(scene());
             const component = get<ElementComponentElement>('pc-element').component!;
 
@@ -77,29 +70,9 @@ describe('<pc-element>', () => {
             const engine = bare.addComponent('element', { type: 'image' }) as ElementComponent;
 
             for (const [attribute, property] of cases) {
-                if (editorDefaults.has(property)) {
-                    continue;
-                }
                 expect
                     .soft(engineValue(element, property), `${attribute} vs a bare engine element`)
                     .toEqual(engineValue(engine, property));
-            }
-        });
-
-        it('keeps the listed Editor-convention defaults, and only those', async () => {
-            const { app, get } = await bootApp(scene());
-            const element = get<ElementComponentElement>('pc-element').component!;
-
-            const bare = new Entity('bare', app);
-            app.root.addChild(bare);
-            const engine = bare.addComponent('element', { type: 'image' }) as ElementComponent;
-
-            // Pinned both ways: a default aligned with the engine must leave this set, and a new
-            // divergence must be added to it deliberately.
-            for (const [attribute, property] of cases) {
-                const differs =
-                    JSON.stringify(engineValue(element, property)) !== JSON.stringify(engineValue(engine, property));
-                expect.soft(differs, `${attribute} differs from the engine`).toBe(editorDefaults.has(property));
             }
         });
 

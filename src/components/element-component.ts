@@ -48,7 +48,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     private _minFontSize = 8;
 
-    private _height = 0;
+    private _height = 32;
 
     private _lineHeight = 32;
 
@@ -58,7 +58,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     private _opacity = 1;
 
-    private _pivot: Vec2 = new Vec2(0.5, 0.5);
+    private _pivot: Vec2 = new Vec2(0, 0);
 
     private _pixelsPerUnit: number | null = null;
 
@@ -74,7 +74,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     private _useInput = false;
 
-    private _width = 0;
+    private _width = 32;
 
     private _wrapLines = false;
 
@@ -305,7 +305,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
-     * Sets the height of the element component.
+     * Sets the height of the element component. Defaults to the engine's 32.
      * @param value - The height.
      */
     set height(value: number) {
@@ -401,7 +401,9 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
-     * Sets the pivot of the element component.
+     * Sets the pivot of the element component: the point within its rectangle, as fractions of
+     * its width and height, that sits on its position and that it rotates and scales about.
+     * Defaults to the engine's `0 0`, the bottom-left corner; `0.5 0.5` centers it.
      * @param value - The pivot.
      */
     set pivot(value: Vec2) {
@@ -555,7 +557,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
-     * Sets the width of the element component.
+     * Sets the width of the element component. Defaults to the engine's 32.
      * @param value - The width.
      */
     set width(value: number) {
@@ -740,7 +742,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
                 this.minFontSize = parseNumber(newValue, 8, name);
                 break;
             case 'height':
-                this.height = parseNumber(newValue, 0, name);
+                this.height = parseNumber(newValue, 32, name);
                 break;
             case 'line-height':
                 this.lineHeight = parseNumber(newValue, 32, name);
@@ -755,7 +757,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
                 this.opacity = parseNumber(newValue, 1, name);
                 break;
             case 'pivot':
-                this.pivot = parseVec2(newValue, new Vec2(0.5, 0.5), name);
+                this.pivot = parseVec2(newValue, new Vec2(0, 0), name);
                 break;
             case 'pixels-per-unit':
                 this.pixelsPerUnit = parseNumber(newValue, null, name);
@@ -779,7 +781,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
                 this.useInput = parseBool(newValue, false);
                 break;
             case 'width':
-                this.width = parseNumber(newValue, 0, name);
+                this.width = parseNumber(newValue, 32, name);
                 break;
             case 'wrap-lines':
                 this.wrapLines = parseBool(newValue, false);
