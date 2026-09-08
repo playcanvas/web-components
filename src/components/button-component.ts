@@ -36,11 +36,11 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     private _transitionMode: 'tint' | 'sprite' = 'tint';
 
-    private _hoverTint = new Color(1, 1, 1, 1);
+    private _hoverTint = new Color(0.75, 0.75, 0.75, 1);
 
-    private _pressedTint = new Color(1, 1, 1, 1);
+    private _pressedTint = new Color(0.5, 0.5, 0.5, 1);
 
-    private _inactiveTint = new Color(1, 1, 1, 1);
+    private _inactiveTint = new Color(0.25, 0.25, 0.25, 1);
 
     private _fadeDuration = 0;
 
@@ -200,7 +200,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     /**
      * Sets the tint color applied to the image entity when the button is hovered (tint transition
-     * mode).
+     * mode). Defaults to `0.75 0.75 0.75 1`.
      * @param value - The hover tint.
      */
     set hoverTint(value: Color) {
@@ -220,7 +220,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     /**
      * Sets the tint color applied to the image entity when the button is pressed (tint transition
-     * mode).
+     * mode). Defaults to `0.5 0.5 0.5 1`.
      * @param value - The pressed tint.
      */
     set pressedTint(value: Color) {
@@ -240,7 +240,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     /**
      * Sets the tint color applied to the image entity when the button is inactive (tint transition
-     * mode).
+     * mode). Defaults to `0.25 0.25 0.25 1`.
      * @param value - The inactive tint.
      */
     set inactiveTint(value: Color) {
@@ -434,13 +434,13 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
                 this.transitionMode = parseEnum(newValue, transitionModes, 'tint', name);
                 break;
             case 'hover-tint':
-                this.hoverTint = parseColor(newValue, Color.WHITE, name);
+                this.hoverTint = parseColor(newValue, new Color(0.75, 0.75, 0.75, 1), name);
                 break;
             case 'pressed-tint':
-                this.pressedTint = parseColor(newValue, Color.WHITE, name);
+                this.pressedTint = parseColor(newValue, new Color(0.5, 0.5, 0.5, 1), name);
                 break;
             case 'inactive-tint':
-                this.inactiveTint = parseColor(newValue, Color.WHITE, name);
+                this.inactiveTint = parseColor(newValue, new Color(0.25, 0.25, 0.25, 1), name);
                 break;
             case 'fade-duration':
                 this.fadeDuration = parseNumber(newValue, 0, name);

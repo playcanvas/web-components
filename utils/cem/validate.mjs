@@ -111,7 +111,16 @@ if (manifest) {
     check(Boolean(attribute('pc-entity', 'position')?.description), 'pc-entity[position] has no description');
     check(Boolean(attribute('pc-model', 'position')?.description), 'pc-model[position] has no description');
     expectAttribute('pc-button', 'hit-padding', { default: '0 0 0 0' });
-    expectAttribute('pc-button', 'hover-tint', { default: '1 1 1' });
+    expectAttribute('pc-button', 'hover-tint', { default: '0.75 0.75 0.75 1' });
+    expectAttribute('pc-button', 'pressed-tint', { default: '0.5 0.5 0.5 1' });
+    expectAttribute('pc-button', 'inactive-tint', { default: '0.25 0.25 0.25 1' });
+    expectAttribute('pc-element', 'anchor', { default: '0 0 0 0' });
+    expectAttribute('pc-element', 'pivot', { default: '0 0' });
+    expectAttribute('pc-element', 'width', { type: 'number', default: '32', fieldName: 'width' });
+    expectAttribute('pc-element', 'height', { default: '32' });
+    expectAttribute('pc-layout-group', 'reverse-y', { type: 'boolean', default: 'true', fieldName: 'reverseY' });
+    expectAttribute('pc-sound', 'positional', { type: 'boolean', default: 'true', fieldName: 'positional' });
+    expectAttribute('pc-scrollbar', 'handle-size', { type: 'number', default: '0', fieldName: 'handleSize' });
     expectAttribute('pc-collision', 'angular-offset', { default: '0 0 0' });
 
     // A `null` default means "leave the engine value alone", so it is omitted
@@ -171,10 +180,11 @@ if (manifest) {
     // Enums resolved from an inline array, and from a module-scope Map
     expectEnum('pc-render', 'type', 6, 'box');
     expectEnum('pc-light', 'type', 3, 'directional');
-    expectEnum('pc-camera', 'tonemap', 7, 'none');
+    expectEnum('pc-camera', 'tonemap', 7, 'linear');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-light', 'shape', 4, 'punctual');
-    expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'when-required');
+    expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'always');
+    expectEnum('pc-scroll-view', 'vertical-scrollbar-visibility', 2, 'always');
 
     // An area light shape renders wrong until <pc-app> has loaded the lookup tables, so its tooltip
     // has to point at the attribute that does that

@@ -87,7 +87,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
     private _scissorRect = new Vec4(0, 0, 1, 1);
 
-    private _tonemap: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' = 'none';
+    private _tonemap: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' = 'linear';
 
     /** @ignore */
     constructor() {
@@ -114,7 +114,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             priority: this._priority,
             rect: this._rect,
             scissorRect: this._scissorRect,
-            toneMapping: tonemaps.get(this._tonemap) ?? TONEMAP_NONE
+            toneMapping: tonemaps.get(this._tonemap) ?? TONEMAP_LINEAR
         };
     }
 
@@ -529,13 +529,15 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
     }
 
     /**
-     * Sets the tone mapping of the camera.
+     * Sets the tone mapping of the camera. Can be `none`, `linear`, `filmic`, `hejl`, `aces`,
+     * `aces2` or `neutral`. Defaults to `linear`, which applies the scene exposure and nothing
+     * else; `none` skips the exposure too.
      * @param value - The tone mapping.
      */
     set tonemap(value: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral') {
         this._tonemap = value;
         if (this.component) {
-            this.component.toneMapping = tonemaps.get(value) ?? TONEMAP_NONE;
+            this.component.toneMapping = tonemaps.get(value) ?? TONEMAP_LINEAR;
         }
     }
 
@@ -631,7 +633,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
                 this.scissorRect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
                 break;
             case 'tonemap':
-                this.tonemap = parseEnum(newValue, tonemaps, 'none', name);
+                this.tonemap = parseEnum(newValue, tonemaps, 'linear', name);
                 break;
         }
     }

@@ -25,7 +25,7 @@ class SoundComponentElement extends ComponentElement<SoundComponent> {
 
     private _pitch = 1;
 
-    private _positional = false;
+    private _positional = true;
 
     private _refDistance = 1;
 
@@ -117,7 +117,8 @@ class SoundComponentElement extends ComponentElement<SoundComponent> {
     }
 
     /**
-     * Sets the positional flag of the sound.
+     * Sets whether the sounds play positionally, attenuated by their distance from the audio
+     * listener. Defaults to true.
      * @param value - The positional flag.
      */
     set positional(value: boolean) {
@@ -128,7 +129,7 @@ class SoundComponentElement extends ComponentElement<SoundComponent> {
     }
 
     /**
-     * Gets the positional flag of the sound.
+     * Gets whether the sounds play positionally.
      * @returns The positional flag.
      */
     get positional() {
@@ -219,7 +220,7 @@ class SoundComponentElement extends ComponentElement<SoundComponent> {
                 this.pitch = parseNumber(newValue, 1, name);
                 break;
             case 'positional':
-                this.positional = parseBool(newValue, false);
+                this.positional = parseBool(newValue, true);
                 break;
             case 'ref-distance':
                 this.refDistance = parseNumber(newValue, 1, name);

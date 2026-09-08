@@ -375,7 +375,7 @@
 
                 <!-- World-space marquee above the well -->
                 <pc-entity name="marquee" position="0 22.2 -0.2">
-                    <pc-element type="text" font-asset="orbitron" text="FALLING BLOCKS" color="#ff3df0" font-size="1.1"></pc-element>
+                    <pc-element type="text" font-asset="orbitron" pivot="0.5 0.5" text="FALLING BLOCKS" color="#ff3df0" font-size="1.1"></pc-element>
                 </pc-entity>
 
                 <!-- The game. Dynamic block entities are spawned under this entity by
@@ -398,7 +398,7 @@
                                             flash-duration="0.25"></pc-script-instance>
                         <pc-script-instance name="touchControls" drag-cell="24" drag-row="28"></pc-script-instance>
                     </pc-script>
-                    <pc-sound>
+                    <pc-sound positional="false">
                         <pc-sound-slot name="rotate" asset="rotate-sound" overlap volume="0.6"></pc-sound-slot>
                         <pc-sound-slot name="drop" asset="drop-sound" overlap></pc-sound-slot>
                         <!-- The lock tick reuses the drop sample, pitched down and quieter -->
