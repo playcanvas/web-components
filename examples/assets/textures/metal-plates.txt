@@ -1,0 +1,10 @@
+Metal Plates 008 (metal-plates-*.webp) by ambientCG:
+
+https://ambientcg.com/view?id=MetalPlates008
+
+CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/
+
+Changes made for this example: the 2K color, normal (OpenGL) and roughness maps were converted
+to WebP at their 2048x2048 size - the JPEG color map lossy at quality 85, the PNG data maps
+lossless, so the normals and roughness are the source's exactly. The metalness map is not used:
+it is a uniform white, which the material states as a number.

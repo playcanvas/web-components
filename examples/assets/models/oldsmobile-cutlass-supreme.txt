@@ -1,0 +1,14 @@
+Oldsmobile Cutlass Supreme Sedan '71 by Barbo on Sketchfab:
+
+https://sketchfab.com/3d-models/oldsmobile-cutlass-supreme-sedan-71-78f76d386a4341b0b71745bdc50fd5ab
+
+CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+
+Changes made for this example: the texture of the ground quad under the car - the car's soft
+shadow, whose color channels also spelled out the model's title beside the car - was replaced
+by the same shadow with the title removed, at 512x512, and the vertex data no material reads
+(spare UV sets) was dropped. The geometry was Draco compressed, and the textures were encoded to
+KTX2 with full mipmap chains: the normal maps as Basis UASTC (2048x2048 for the body and chrome,
+1024x1024 for the wheels and lamps, 512x512 for the license plate) and everything else with
+Basis ETC1S supercompression (the 4096x4096 body and chrome maps resampled to 2048x2048, the
+license plate to 512x512, the rest at their original size).
