@@ -111,7 +111,10 @@ if (manifest) {
     check(Boolean(attribute('pc-entity', 'position')?.description), 'pc-entity[position] has no description');
     check(Boolean(attribute('pc-model', 'position')?.description), 'pc-model[position] has no description');
     expectAttribute('pc-button', 'hit-padding', { default: '0 0 0 0' });
-    expectAttribute('pc-button', 'hover-tint', { default: '1 1 1' });
+    expectAttribute('pc-button', 'hover-tint', { default: '0.75 0.75 0.75 1' });
+    expectAttribute('pc-button', 'pressed-tint', { default: '0.5 0.5 0.5 1' });
+    expectAttribute('pc-button', 'inactive-tint', { default: '0.25 0.25 0.25 1' });
+    expectAttribute('pc-element', 'anchor', { default: '0 0 0 0' });
     expectAttribute('pc-collision', 'angular-offset', { default: '0 0 0' });
 
     // A `null` default means "leave the engine value alone", so it is omitted

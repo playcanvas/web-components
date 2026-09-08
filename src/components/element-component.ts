@@ -26,7 +26,7 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class ElementComponentElement extends ComponentElement<ElementComponent> {
-    private _anchor: Vec4 = new Vec4(0.5, 0.5, 0.5, 0.5);
+    private _anchor: Vec4 = new Vec4(0, 0, 0, 0);
 
     private _autoWidth = true;
 
@@ -167,7 +167,9 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
-     * Sets the anchor of the element component.
+     * Sets the anchor of the element component: the left, bottom, right and top edges as fractions
+     * of the parent's size, in that order. Defaults to the engine's `0 0 0 0`, the parent's
+     * bottom-left corner; `0.5 0.5 0.5 0.5` centers the element.
      * @param value - The anchor.
      */
     set anchor(value: Vec4) {
@@ -705,7 +707,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
         switch (name) {
             case 'anchor':
-                this.anchor = parseVec4(newValue, new Vec4(0.5, 0.5, 0.5, 0.5), name);
+                this.anchor = parseVec4(newValue, new Vec4(0, 0, 0, 0), name);
                 break;
             case 'auto-width':
                 this.autoWidth = parseBool(newValue, true);
