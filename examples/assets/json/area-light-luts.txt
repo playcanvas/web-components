@@ -1,0 +1,11 @@
+area-light-luts.json holds the two 64x64 lookup tables of the linearly transformed cosines
+technique for real-time area lights:
+
+Eric Heitz, Jonathan Dupuy, Stephen Hill and David Neubelt, "Real-Time Polygonal-Light Shading
+with Linearly Transformed Cosines", ACM SIGGRAPH 2016.
+
+https://eheitzresearch.wordpress.com/415-2/
+
+The file is the PlayCanvas Engine's copy of the tables (examples/assets/json/area-light-luts.json
+in https://github.com/playcanvas/engine), MIT licensed, in the format `<pc-app area-light-luts>`
+expects: `LTC_MAT_1` and `LTC_MAT_2`, 16384 numbers each.

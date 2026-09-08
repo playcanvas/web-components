@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Area Lights</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Glass recipe copied from example.css's .example-button; sits bottom-left because
+               js/example.mjs owns bottom-right */
+            .lights-panel {
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                display: grid;
+                gap: 8px;
+                box-sizing: border-box;
+                width: min(300px, calc(100vw - 32px));
+                padding: 12px 14px;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font: 600 12px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            @supports not (backdrop-filter: blur(12px)) {
+                .lights-panel {
+                    background-color: rgba(18, 18, 18, 0.88);
+                }
+            }
+
+            .lights-panel label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+            }
+
+            .lights-panel input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                margin: 0;
+                accent-color: #f60;
+                cursor: pointer;
+            }
+
+            .lights-panel input:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: 2px;
+            }
+
+            .lights-panel .hint {
+                margin: 0;
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 11px;
+                font-weight: 400;
+            }
+
+            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
+            @media (max-width: 720px) {
+                .lights-panel {
+                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- area-light-luts names the lookup tables below. Loading them is what turns the rect
+             lights in this page into true area lights: without the tables the engine has only a
+             blank placeholder, so a rect light gets no specular and a disk light emits nothing.
+             The one attribute also enables area lights in the clustered lighting that omni and
+             spot lights use, so there is no second switch to remember. -->
+        <!-- Every pixel here is shaded by up to 33 lights, so the pixel ratio is capped at 2 -
+             a 3x display would pay half again for pixels it cannot show. -->
+        <pc-app area-light-luts="luts" max-pixel-ratio="2">
+            <!-- Decoders. The car's geometry is Draco compressed and its textures are KTX2
+                 (Basis) -->
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/area-lights.mjs"></pc-asset>
+            <pc-asset src="assets/json/area-light-luts.json" id="luts"></pc-asset>
+            <pc-asset src="assets/models/oldsmobile-cutlass-supreme.glb" id="car"></pc-asset>
+            <!-- The engine reads a texture as linear data unless told otherwise, so the color map
+                 says it is sRGB; the normal and roughness maps are data and stay linear -->
+            <pc-asset src="assets/textures/metal-plates-color.webp" id="plates-color" srgb></pc-asset>
+            <pc-asset src="assets/textures/metal-plates-normal.webp" id="plates-normal"></pc-asset>
+            <pc-asset src="assets/textures/metal-plates-roughness.webp" id="plates-roughness"></pc-asset>
+            <!-- Materials. The floor is where the area lights show: a satin metal that reflects
+                 each bar as a soft, correctly sized streak rather than a pinpoint. Its gloss is
+                 the inverted roughness map alone: the scalar gloss multiplies the map BEFORE the
+                 inversion, so the default of 0.25 would leave the floor at 0.93 - a mirror. -->
+            <pc-material id="floor"
+                         diffuse-map="plates-color" diffuse-map-tiling="2 2"
+                         normal-map="plates-normal" normal-map-tiling="2 2"
+                         gloss="1" gloss-map="plates-roughness" gloss-map-channel="r" gloss-map-tiling="2 2" gloss-invert
+                         use-metalness metalness="0.9"></pc-material>
+            <!-- The black housing of a light bar, and the tube itself: pure emissive, unlit, and
+                 alpha blended so a bar can fade to nothing as it flickers on -->
+            <pc-material id="housing" diffuse="#000000" use-metalness metalness="1"></pc-material>
+            <pc-material id="tube" emissive="#ffffff" use-lighting="false" blend-type="normal"></pc-material>
+            <!-- Scene. No sky: the showroom is lit by its lights alone, which is what lets the
+                 area lights' soft reflections read on the paint and the floor. -->
+            <pc-scene>
+                <!-- Camera. areaLightsShow below drives it round a focus point above the car's
+                     rear deck, so both the car and the rig behind it stay in frame; the position
+                     here is where the opening shot puts it. -->
+                <pc-entity name="camera" position="0 1.92 5.56">
+                    <pc-camera fov="45" near-clip="0.1" far-clip="100" clear-color="#000000"></pc-camera>
+                    <pc-script>
+                        <!-- Bloom is what makes the tubes and panels glow; everything else in the
+                             frame is lit by the lights themselves -->
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": "aces", "samples": 4, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
+                            "ssao": { "type": "none" },
+                            "bloom": { "enabled": true, "intensity": 0.1, "blurLevel": 4 }
+                        }'></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- The show's fade: a black screen-space image whose opacity areaLightsShow
+                     drops from 1 to 0 after each cut. Drawn as UI, so the post-processing leaves
+                     it alone. -->
+                <pc-entity name="fade">
+                    <pc-screen screen-space></pc-screen>
+                    <pc-entity name="fade-image">
+                        <pc-element type="image" anchor="0 0 1 1" margin="0 0 0 0" color="#000000" opacity="0"></pc-element>
+                    </pc-entity>
+                </pc-entity>
+                <!-- The show itself: three camera shots and the lights' on-off cycle, looping
+                     every 18 seconds. Every LightShow, LightWave and LightFadeIn in the scene is
+                     restarted with each loop, each after its own delay. -->
+                <pc-entity name="show">
+                    <pc-script>
+                        <pc-script-instance name="areaLightsShow" camera="entity:camera" fade="entity:fade-image"
+                                            focus-point="0 1.72 -3.15"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Car. The model faces -Z with its front bumper on its origin, so it is turned
+                     to face the camera and its origin placed where the bumper should be. The
+                     scale is the original demo's: it shows the car at 6.9 m, a third over life
+                     size, and the rig, lights and camera are all laid out around that. -->
+                <pc-model name="car" asset="car" position="0 1.004 -0.203" rotation="0 180 0" scale="0.02869 0.02869 0.02869"></pc-model>
+                <!-- Floor -->
+                <pc-entity name="floor" position="0 0 -3.74" scale="30 1 30">
+                    <pc-render type="plane" material="floor" cast-shadows="false" receive-shadows="false"></pc-render>
+                </pc-entity>
+                <!-- The rig: six rows of joints climbing from behind the car to above it, each row
+                     peaking at its middle, with a light bar hung between neighboring joints
+                     (stamped out below). The joints are bare entities - only the bars are seen.
+                     lightWave rolls the rows and joints in slow cosines, and the bars follow. -->
+                <pc-entity name="rig" position="0 -0.29 -3.68">
+                    <pc-script>
+                        <pc-script-instance name="lightWave" delay="1.5"></pc-script-instance>
+                    </pc-script>
+                    <pc-entity name="row-1" position="0 2 -3.976">
+                        <pc-entity name="r1-j1" position="-3.586 0 0"></pc-entity>
+                        <pc-entity name="r1-j2" position="-2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r1-j3" position="0 1.801 0"></pc-entity>
+                        <pc-entity name="r1-j4" position="2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r1-j5" position="3.586 0 0"></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="row-2" position="0 2.995 -3.14">
+                        <pc-entity name="r2-j1" position="-3.586 0 0"></pc-entity>
+                        <pc-entity name="r2-j2" position="-2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r2-j3" position="0 1.801 0"></pc-entity>
+                        <pc-entity name="r2-j4" position="2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r2-j5" position="3.586 0 0"></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="row-3" position="0 3.557 -2.003">
+                        <pc-entity name="r3-j1" position="-3.586 0 0"></pc-entity>
+                        <pc-entity name="r3-j2" position="-2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r3-j3" position="0 1.801 0"></pc-entity>
+                        <pc-entity name="r3-j4" position="2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r3-j5" position="3.586 0 0"></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="row-4" position="0 3.77 -0.775">
+                        <pc-entity name="r4-j1" position="-3.586 0 0"></pc-entity>
+                        <pc-entity name="r4-j2" position="-2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r4-j3" position="0 1.801 0"></pc-entity>
+                        <pc-entity name="r4-j4" position="2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r4-j5" position="3.586 0 0"></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="row-5" position="0 3.851 0.329">
+                        <pc-entity name="r5-j1" position="-3.586 0 0"></pc-entity>
+                        <pc-entity name="r5-j2" position="-2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r5-j3" position="0 1.801 0"></pc-entity>
+                        <pc-entity name="r5-j4" position="2.101 0.392 0"></pc-entity>
+                        <pc-entity name="r5-j5" position="3.586 0 0"></pc-entity>
+                    </pc-entity>
+                    <!-- The apex: one joint out in front of the last row -->
+                    <pc-entity name="row-6" position="0 3.851 0.329">
+                        <pc-entity name="r6-j1" position="0 0.878 1.175"></pc-entity>
+                    </pc-entity>
+                </pc-entity>
+                <!-- The light bars live here, one clone of the template per pair of joints -
+                     js/area-lights.mjs stamps them out. lightShow switches them on a few at a time
+                     and cycles their colors from then on. -->
+                <pc-entity name="bars" id="light-bars">
+                    <pc-script>
+                        <pc-script-instance name="lightShow" delay="1.5"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- One light bar: a black housing with a glowing tube on its face, and the light
+                     itself - a spot with a rect shape the size of the tube, so it emits from a
+                     1.8 x 0.1 m strip rather than a point. A light emits along its entity's -Y,
+                     hence the 90 degree turn to face out of the housing along with the tube. -->
+                <template id="bar-template">
+                    <pc-entity>
+                        <pc-script>
+                            <pc-script-instance name="lightBar"></pc-script-instance>
+                        </pc-script>
+                        <pc-entity name="housing" scale="1.8 0.1 0.1">
+                            <pc-render type="box" material="housing"></pc-render>
+                        </pc-entity>
+                        <pc-entity name="strip" position="0 0 -0.065" rotation="-90 0 0" scale="1.8 1 0.1">
+                            <pc-render type="plane" material="tube"></pc-render>
+                        </pc-entity>
+                        <pc-entity name="light" position="0 0 -0.065" rotation="90 0 0" scale="1.8 1 0.1">
+                            <pc-light type="spot" shape="rect" intensity="20" range="16" inner-cone-angle="40" outer-cone-angle="70"></pc-light>
+                        </pc-entity>
+                    </pc-entity>
+                </template>
+                <!-- Five 2 x 10 m panels fanned out behind the car, fading up over two seconds
+                     once the show starts its lights. The entity's scale is the light's size, and the strip inherits it. -->
+                <pc-entity name="columns">
+                    <pc-entity name="column-1" position="-7.725 4.813 -9.363" rotation="-90 -69.98 180" scale="2 1 10">
+                        <pc-light type="spot" shape="rect" intensity="8" range="12.5" inner-cone-angle="40" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1.5" duration="2"></pc-script-instance></pc-script>
+                        <pc-entity name="strip" rotation="0 0 180"><pc-render type="plane" material="tube"></pc-render></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="column-2" position="-4.819 4.813 -12.465" rotation="-90 -15.34 180" scale="2 1 10">
+                        <pc-light type="spot" shape="rect" intensity="8" range="12.5" inner-cone-angle="40" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1.5" duration="2"></pc-script-instance></pc-script>
+                        <pc-entity name="strip" rotation="0 0 180"><pc-render type="plane" material="tube"></pc-render></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="column-3" position="0 4.813 -13.306" rotation="-90 0 180" scale="2 1 10">
+                        <pc-light type="spot" shape="rect" intensity="8" range="12.5" inner-cone-angle="40" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1.5" duration="2"></pc-script-instance></pc-script>
+                        <pc-entity name="strip" rotation="0 0 180"><pc-render type="plane" material="tube"></pc-render></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="column-4" position="4.819 4.813 -12.465" rotation="-90 15.34 180" scale="2 1 10">
+                        <pc-light type="spot" shape="rect" intensity="8" range="12.5" inner-cone-angle="40" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1.5" duration="2"></pc-script-instance></pc-script>
+                        <pc-entity name="strip" rotation="0 0 180"><pc-render type="plane" material="tube"></pc-render></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="column-5" position="7.725 4.813 -9.363" rotation="-90 69.98 180" scale="2 1 10">
+                        <pc-light type="spot" shape="rect" intensity="8" range="12.5" inner-cone-angle="40" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1.5" duration="2"></pc-script-instance></pc-script>
+                        <pc-entity name="strip" rotation="0 0 180"><pc-render type="plane" material="tube"></pc-render></pc-entity>
+                    </pc-entity>
+                </pc-entity>
+                <!-- A soft fill from low in front, so the car's nose is not lit by its own
+                     headlights alone -->
+                <pc-entity name="fill" position="0 -0.996 3.573" rotation="90 39.98 -90" scale="2.16 2.16 3.579">
+                    <pc-light type="spot" shape="rect" intensity="2" range="4.77" inner-cone-angle="88" outer-cone-angle="89"></pc-light>
+                    <pc-script><pc-script-instance name="lightFadeIn" delay="1.5" duration="2.5"></pc-script-instance></pc-script>
+                </pc-entity>
+                <!-- Headlights, switched on a second in: a spot per lamp throws the beam onto the
+                     floor ahead, and a small sphere light inside each housing puts the glow on
+                     the lens itself. The car has two lamps a side. -->
+                <pc-entity name="headlights">
+                    <pc-entity name="beam-1" position="-0.996 0.821 -0.395" rotation="-62.9 0 0">
+                        <pc-light type="spot" color="#f1e9c2" intensity="2.66" range="8" inner-cone-angle="4" outer-cone-angle="41"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="beam-2" position="-0.809 0.861 -0.386" rotation="-62.9 0 0">
+                        <pc-light type="spot" color="#f1e9c2" intensity="2.66" range="8" inner-cone-angle="4" outer-cone-angle="41"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="beam-3" position="0.809 0.861 -0.386" rotation="-62.9 0 0">
+                        <pc-light type="spot" color="#f1e9c2" intensity="2.66" range="8" inner-cone-angle="4" outer-cone-angle="41"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="beam-4" position="0.996 0.821 -0.395" rotation="-62.9 0 0">
+                        <pc-light type="spot" color="#f1e9c2" intensity="2.66" range="8" inner-cone-angle="4" outer-cone-angle="41"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="lamp-1" position="-0.996 0.821 -0.505" scale="0.16 0.16 0.16">
+                        <pc-light type="omni" shape="sphere" color="#f1e9c2" intensity="12" range="0.4"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="lamp-2" position="-0.809 0.861 -0.496" scale="0.16 0.16 0.16">
+                        <pc-light type="omni" shape="sphere" color="#f1e9c2" intensity="12" range="0.4"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="lamp-3" position="0.809 0.861 -0.496" scale="0.16 0.16 0.16">
+                        <pc-light type="omni" shape="sphere" color="#f1e9c2" intensity="12" range="0.4"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                    <pc-entity name="lamp-4" position="0.996 0.821 -0.505" scale="0.16 0.16 0.16">
+                        <pc-light type="omni" shape="sphere" color="#f1e9c2" intensity="12" range="0.4"></pc-light>
+                        <pc-script><pc-script-instance name="lightFadeIn" delay="1" duration="0.15"></pc-script-instance></pc-script>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <!-- No control shares an id with an entity name: entity: references resolve
+             document-wide, and an id match wins over an entity-name match -->
+        <div class="lights-panel">
+            <label><input type="checkbox" id="area-lights-toggle" checked> Area lights</label>
+            <p class="hint">Off, every rect light falls back to a punctual spot at its center: the
+                same lights, without their size.</p>
+        </div>
+        <script type="module" src="js/area-lights.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
