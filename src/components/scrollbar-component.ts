@@ -30,7 +30,7 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
 
     private _value = 0;
 
-    private _handleSize = 0.5;
+    private _handleSize = 0;
 
     private _handle = '';
 
@@ -104,6 +104,7 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
 
     /**
      * Sets the size of the handle relative to the size of the track, in the range 0 to 1.
+     * Defaults to 0.
      * @param value - The handle size.
      */
     set handleSize(value: number) {
@@ -162,7 +163,7 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
                 this.value = parseNumber(newValue, 0, name);
                 break;
             case 'handle-size':
-                this.handleSize = parseNumber(newValue, 0.5, name);
+                this.handleSize = parseNumber(newValue, 0, name);
                 break;
             case 'handle':
                 this.handle = newValue ?? '';

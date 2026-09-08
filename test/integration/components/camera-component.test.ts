@@ -7,7 +7,7 @@ import {
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
     TONEMAP_ACES,
-    TONEMAP_NONE,
+    TONEMAP_LINEAR,
     XRTYPE_AR,
     XRTYPE_VR
 } from 'playcanvas';
@@ -76,10 +76,10 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['projection', 'projection', 'orthographic', PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE],
     ['rect', 'rect', '0 0 0.5 1', new Vec4(0, 0, 0.5, 1), new Vec4(0, 0, 1, 1)],
     ['scissor-rect', 'scissorRect', '0 0 0.5 0.5', new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0, 1, 1)],
-    // The one exception: the engine defaults toneMapping to TONEMAP_LINEAR and this element writes
-    // TONEMAP_NONE. The two diverge only once Scene#exposure moves off 1, which no attribute
-    // reaches, so the deviation is pinned here rather than changed under existing apps.
-    ['tonemap', 'toneMapping', 'aces', TONEMAP_ACES, TONEMAP_NONE]
+    // Used to be the one exception, writing TONEMAP_NONE: the two only differ once the scene
+    // exposure leaves 1, which no attribute could reach at the time. pc-scene[exposure] can now,
+    // and TONEMAP_NONE would ignore it, so the engine default holds here too.
+    ['tonemap', 'toneMapping', 'aces', TONEMAP_ACES, TONEMAP_LINEAR]
 ];
 
 describe('<pc-camera>', () => {
@@ -144,7 +144,7 @@ describe('<pc-camera>', () => {
                 "Invalid value 'isometric' for attribute 'projection'. Valid values: perspective, orthographic. Using 'perspective'."
             );
             warnings.expect(
-                "Invalid value 'reinhard' for attribute 'tonemap'. Valid values: none, linear, filmic, hejl, aces, aces2, neutral. Using 'none'."
+                "Invalid value 'reinhard' for attribute 'tonemap'. Valid values: none, linear, filmic, hejl, aces, aces2, neutral. Using 'linear'."
             );
             warnings.expect(
                 "Invalid value '0 0' for attribute 'rect'. Expected 4 space-separated numbers. Using '[0, 0, 1, 1]'."
@@ -153,7 +153,7 @@ describe('<pc-camera>', () => {
 
             expect(component.fov).toBe(45);
             expect(component.projection).toBe(PROJECTION_PERSPECTIVE);
-            expect(component.toneMapping).toBe(TONEMAP_NONE);
+            expect(component.toneMapping).toBe(TONEMAP_LINEAR);
             expect(component.rect).toEqual(new Vec4(0, 0, 1, 1));
             expect(component.clearDepth).toBe(1);
         });

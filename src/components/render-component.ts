@@ -39,12 +39,20 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
     }
 
     protected getInitialComponentData() {
-        return {
+        const data: Record<string, unknown> = {
             type: this._type,
             castShadows: this._castShadows,
-            material: MaterialElement.get(this._material),
             receiveShadows: this._receiveShadows
         };
+
+        // Only a resolved material is passed on: an undefined one would replace the engine's
+        // default material with nothing at the component level
+        const material = MaterialElement.get(this._material);
+        if (material) {
+            data.material = material;
+        }
+
+        return data;
     }
 
     /**

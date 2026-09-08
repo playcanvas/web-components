@@ -45,7 +45,7 @@ class LayoutGroupComponentElement extends ComponentElement<LayoutGroupComponent>
 
     private _reverseX = false;
 
-    private _reverseY = false;
+    private _reverseY = true;
 
     private _alignment = new Vec2(0, 1);
 
@@ -127,7 +127,8 @@ class LayoutGroupComponentElement extends ComponentElement<LayoutGroupComponent>
     }
 
     /**
-     * Sets whether the order of children is reversed along the vertical axis.
+     * Sets whether the order of children is reversed along the vertical axis. Defaults to true, so
+     * a vertical group lays its children out from the top down.
      * @param value - Whether to reverse the vertical order.
      */
     set reverseY(value: boolean) {
@@ -287,7 +288,7 @@ class LayoutGroupComponentElement extends ComponentElement<LayoutGroupComponent>
                 this.reverseX = parseBool(newValue, false);
                 break;
             case 'reverse-y':
-                this.reverseY = parseBool(newValue, false);
+                this.reverseY = parseBool(newValue, true);
                 break;
             case 'alignment':
                 this.alignment = parseVec2(newValue, new Vec2(0, 1), name);

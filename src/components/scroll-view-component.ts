@@ -53,9 +53,9 @@ class ScrollViewComponentElement extends ComponentElement<ScrollViewComponent> {
 
     private _mouseWheelSensitivity = new Vec2(1, 1);
 
-    private _horizontalScrollbarVisibility: 'always' | 'when-required' = 'when-required';
+    private _horizontalScrollbarVisibility: 'always' | 'when-required' = 'always';
 
-    private _verticalScrollbarVisibility: 'always' | 'when-required' = 'when-required';
+    private _verticalScrollbarVisibility: 'always' | 'when-required' = 'always';
 
     private _viewport = '';
 
@@ -255,7 +255,7 @@ class ScrollViewComponentElement extends ComponentElement<ScrollViewComponent> {
 
     /**
      * Sets the visibility of the horizontal scrollbar. Can be `always` or `when-required`.
-     * Defaults to `when-required`.
+     * Defaults to `always`.
      * @param value - The horizontal scrollbar visibility.
      */
     set horizontalScrollbarVisibility(value: 'always' | 'when-required') {
@@ -276,7 +276,7 @@ class ScrollViewComponentElement extends ComponentElement<ScrollViewComponent> {
 
     /**
      * Sets the visibility of the vertical scrollbar. Can be `always` or `when-required`.
-     * Defaults to `when-required`.
+     * Defaults to `always`.
      * @param value - The vertical scrollbar visibility.
      */
     set verticalScrollbarVisibility(value: 'always' | 'when-required') {
@@ -444,10 +444,10 @@ class ScrollViewComponentElement extends ComponentElement<ScrollViewComponent> {
                 this.mouseWheelSensitivity = parseVec2(newValue, Vec2.ONE, name);
                 break;
             case 'horizontal-scrollbar-visibility':
-                this.horizontalScrollbarVisibility = parseEnum(newValue, visibilities, 'when-required', name);
+                this.horizontalScrollbarVisibility = parseEnum(newValue, visibilities, 'always', name);
                 break;
             case 'vertical-scrollbar-visibility':
-                this.verticalScrollbarVisibility = parseEnum(newValue, visibilities, 'when-required', name);
+                this.verticalScrollbarVisibility = parseEnum(newValue, visibilities, 'always', name);
                 break;
             case 'viewport':
                 this.viewport = newValue ?? '';

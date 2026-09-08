@@ -1,3 +1,5 @@
+import type { ScrollViewComponent } from 'playcanvas';
+import { Entity, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { ScrollViewComponentElement } from '../../../src/components/scroll-view-component';
@@ -54,5 +56,44 @@ describe('<pc-scroll-view>', () => {
         // test if anything warns
         expect(scrollView.component!.viewportEntity).toBeNull();
         expect(scrollView.component!.contentEntity).toBeNull();
+    });
+
+    describe('scrollbar visibility', () => {
+        const attributes = ['horizontal-scrollbar-visibility', 'vertical-scrollbar-visibility'] as const;
+        const properties = ['horizontalScrollbarVisibility', 'verticalScrollbarVisibility'] as const;
+
+        it("defaults both to the engine's, showing the scrollbars always", async () => {
+            const { app, get } = await bootApp('<pc-entity name="sv"><pc-scroll-view></pc-scroll-view></pc-entity>');
+            const component = get<ScrollViewComponentElement>('pc-scroll-view').component!;
+
+            // The other scroll settings (horizontal, vertical, scroll-mode, bounce-amount,
+            // friction) have no engine default at all - a bare engine component leaves them
+            // undefined - so these two are the ones a bare component can be held to.
+            const bare = new Entity('bare', app);
+            app.root.addChild(bare);
+            const engine = bare.addComponent('scrollview') as ScrollViewComponent;
+
+            for (const property of properties) {
+                expect.soft(component[property], property).toBe(SCROLLBAR_VISIBILITY_SHOW_ALWAYS);
+                expect.soft(component[property], `${property} vs a bare engine scroll view`).toBe(engine[property]);
+            }
+        });
+
+        it('writes each through and restores the default on removal', async () => {
+            const { get } = await bootApp('<pc-entity name="sv"><pc-scroll-view></pc-scroll-view></pc-entity>');
+            const scrollView = get<ScrollViewComponentElement>('pc-scroll-view');
+
+            attributes.forEach((attribute, i) => {
+                scrollView.setAttribute(attribute, 'when-required');
+                expect
+                    .soft(scrollView.component![properties[i]], attribute)
+                    .toBe(SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED);
+
+                scrollView.removeAttribute(attribute);
+                expect
+                    .soft(scrollView.component![properties[i]], `${attribute} restored`)
+                    .toBe(SCROLLBAR_VISIBILITY_SHOW_ALWAYS);
+            });
+        });
     });
 });
