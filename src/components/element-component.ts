@@ -168,7 +168,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     /**
      * Sets the anchor of the element component: the left, bottom, right and top edges as fractions
-     * of the parent's size, in that order. Defaults to the engine's `0 0 0 0`, the parent's
+     * of the parent's size, in that order. Defaults to `0 0 0 0`, the parent's
      * bottom-left corner; `0.5 0.5 0.5 0.5` centers the element.
      * @param value - The anchor.
      */
@@ -305,7 +305,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
-     * Sets the height of the element component. Defaults to the engine's 32.
+     * Sets the height of the element component. Defaults to 32.
      * @param value - The height.
      */
     set height(value: number) {
@@ -403,7 +403,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     /**
      * Sets the pivot of the element component: the point within its rectangle, as fractions of
      * its width and height, that sits on its position and that it rotates and scales about.
-     * Defaults to the engine's `0 0`, the bottom-left corner; `0.5 0.5` centers it.
+     * Defaults to `0 0`, the bottom-left corner; `0.5 0.5` centers it.
      * @param value - The pivot.
      */
     set pivot(value: Vec2) {
@@ -557,7 +557,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
-     * Sets the width of the element component. Defaults to the engine's 32.
+     * Sets the width of the element component. Defaults to 32.
      * @param value - The width.
      */
     set width(value: number) {

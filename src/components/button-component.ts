@@ -200,7 +200,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     /**
      * Sets the tint color applied to the image entity when the button is hovered (tint transition
-     * mode). Defaults to the engine's `0.75 0.75 0.75 1`.
+     * mode). Defaults to `0.75 0.75 0.75 1`.
      * @param value - The hover tint.
      */
     set hoverTint(value: Color) {
@@ -220,7 +220,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     /**
      * Sets the tint color applied to the image entity when the button is pressed (tint transition
-     * mode). Defaults to the engine's `0.5 0.5 0.5 1`.
+     * mode). Defaults to `0.5 0.5 0.5 1`.
      * @param value - The pressed tint.
      */
     set pressedTint(value: Color) {
@@ -240,7 +240,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
 
     /**
      * Sets the tint color applied to the image entity when the button is inactive (tint transition
-     * mode). Defaults to the engine's `0.25 0.25 0.25 1`.
+     * mode). Defaults to `0.25 0.25 0.25 1`.
      * @param value - The inactive tint.
      */
     set inactiveTint(value: Color) {
