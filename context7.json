@@ -1,4 +1,21 @@
 {
   "url": "https://context7.com/playcanvas/web-components",
-  "public_key": "pk_ZBCAOpqvyscrOelnvmhm6"
+  "public_key": "pk_ZBCAOpqvyscrOelnvmhm6",
+  "projectTitle": "PlayCanvas Web Components",
+  "description": "Custom HTML elements that build interactive 3D scenes on the PlayCanvas Engine declaratively, with attribute-driven configuration and a small JavaScript API for engine access.",
+  "excludeFolders": [
+    ".github",
+    "examples/assets",
+    "test"
+  ],
+  "rules": [
+    "Load the engine and the components through an import map with entries for 'playcanvas' and '@playcanvas/web-components'; the engine is a peer dependency and is never bundled.",
+    "Multi-value attributes are space-separated strings: position=\"0 1 -3\", rotation=\"0 45 0\", scale=\"2 2 2\". Colors accept a CSS color name, a hex code, or 3 or 4 numbers in the range 0 to 1.",
+    "Component tags such as pc-camera, pc-light, pc-render and pc-rigid-body go directly inside a pc-entity, pc-model or pc-node, one of each kind per host.",
+    "Declare resources once as pc-asset, pc-material and pc-wasm children of pc-app, then reference them from the scene by id.",
+    "An absent attribute applies the engine default; an invalid value logs a console warning and applies the default. Remove an attribute to reset it rather than setting it to an empty string.",
+    "From JavaScript, await whenReady('pc-app') (or any selector or element) before reading .app, .entity or .component; those accessors are null until the element is ready.",
+    "For update loops or per-entity behavior, write a pc.Script and attach it with pc-script-instance instead of driving entities from page scripts.",
+    "The complete tag and attribute reference is at https://developer.playcanvas.com/user-manual/web-components/tags; consult it instead of inferring attribute names from examples."
+  ]
 }
