@@ -917,11 +917,13 @@ class AppElement extends AsyncElement {
 
     /**
      * Gets whether asset requests send credentials (cookies and HTTP authentication) to other
-     * origins, which applies to every application on the page.
+     * origins, which applies to every application on the page. Once the application has booted,
+     * this reports the engine's page-wide setting - which another `<pc-app>` may have switched on -
+     * rather than this element's own attribute.
      * @returns Whether asset requests send credentials.
      */
     get withCredentials() {
-        return this._withCredentials;
+        return this.app?.loader.withCredentials ?? this._withCredentials;
     }
 
     static get observedAttributes() {

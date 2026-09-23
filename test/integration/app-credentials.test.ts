@@ -43,8 +43,17 @@ describe('<pc-app> with-credentials', () => {
         // Stands in for a first <pc-app with-credentials> elsewhere on the page
         http.withCredentials = true;
 
-        const { app } = await bootApp();
+        const { app, get } = await bootApp();
 
         expect(app.loader.withCredentials, 'the page-wide flag survives a second boot').toBe(true);
+        expect(get<AppElement>('pc-app').withCredentials, 'the property reports the flag in effect').toBe(true);
+    });
+
+    it('reports its own setting before the application boots', () => {
+        const element = document.createElement('pc-app') as AppElement;
+
+        expect(element.withCredentials).toBe(false);
+        element.setAttribute('with-credentials', '');
+        expect(element.withCredentials).toBe(true);
     });
 });
