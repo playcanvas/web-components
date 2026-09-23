@@ -32,6 +32,7 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     // would override the width and height rows when every attribute is applied at once
     ['anchor', 'anchor', '1 1 1 1', new Vec4(1, 1, 1, 1), new Vec4(0, 0, 0, 0)],
     ['color', 'color', '1 0 0', new Color(1, 0, 0), new Color(1, 1, 1, 1)],
+    ['fit-mode', 'fitMode', 'contain', 'contain', 'stretch'],
     ['height', 'height', '50', 50, 32],
     ['mask', 'mask', '', true, false],
     // [opacity] is covered on its own below: the engine reports it as the color's alpha, so a row
@@ -40,6 +41,26 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['sprite-frame', 'spriteFrame', '2', 2, 0],
     ['use-input', 'useInput', '', true, false],
     ['width', 'width', '80', 80, 32]
+];
+
+/** A text element, for the attributes the engine only reports through its text element. */
+const textScene = (elementAttributes = '') =>
+    `<pc-entity name="el"><pc-element type="text" ${elementAttributes}></pc-element></pc-entity>`;
+
+/**
+ * The text-only attributes, in the same shape as `cases`. The engine keeps them on its text element,
+ * which exists as soon as the type is text - no font is needed to read them back.
+ */
+const textCases: [attribute: string, property: string, value: string, expected: unknown, restored: unknown][] = [
+    ['alignment', 'alignment', '0 1', new Vec2(0, 1), new Vec2(0.5, 0.5)],
+    ['justify', 'justify', '', true, false],
+    // The engine reports "no limit" as -1 however it was set
+    ['max-lines', 'maxLines', '3', 3, -1],
+    ['outline-color', 'outlineColor', '1 0 0', new Color(1, 0, 0), new Color(0, 0, 0, 1)],
+    ['outline-thickness', 'outlineThickness', '0.5', 0.5, 0],
+    ['shadow-color', 'shadowColor', '0 0 1', new Color(0, 0, 1), new Color(0, 0, 0, 1)],
+    ['shadow-offset', 'shadowOffset', '0.25 -0.25', new Vec2(0.25, -0.25), new Vec2(0, 0)],
+    ['spacing', 'spacing', '1.5', 1.5, 1]
 ];
 
 describe('<pc-element>', () => {
@@ -127,6 +148,47 @@ describe('<pc-element>', () => {
             element.removeAttribute('opacity');
             expect(element.component!.opacity).toBe(1);
             expect(element.component!.color).toEqual(new Color(1, 1, 1, 1));
+        });
+    });
+    describe('text attributes', () => {
+        it('creates the text element with the engine defaults', async () => {
+            const { app, get } = await bootApp(textScene());
+            const element = get<ElementComponentElement>('pc-element').component!;
+
+            const bare = new Entity('bare', app);
+            app.root.addChild(bare);
+            const engine = bare.addComponent('element', { type: 'text' }) as ElementComponent;
+
+            for (const [attribute, property, , , restored] of textCases) {
+                expect.soft(engineValue(element, property), attribute).toEqual(restored);
+                expect
+                    .soft(engineValue(element, property), `${attribute} vs a bare engine element`)
+                    .toEqual(engineValue(engine, property));
+            }
+        });
+
+        it('applies every declarative attribute through the initial component data', async () => {
+            const markup = textCases
+                .map(([attribute, , value]) => (value === '' ? attribute : `${attribute}="${value}"`))
+                .join(' ');
+            const { get } = await bootApp(textScene(markup));
+            const component = get<ElementComponentElement>('pc-element').component!;
+
+            for (const [attribute, property, , expected] of textCases) {
+                expect.soft(engineValue(component, property), attribute).toEqual(expected);
+            }
+        });
+
+        it('writes attribute changes through and restores the default on removal', async () => {
+            const { get } = await bootApp(textScene());
+            const element = get<ElementComponentElement>('pc-element');
+
+            for (const [attribute, property, value, expected, restored] of textCases) {
+                element.setAttribute(attribute, value);
+                expect.soft(engineValue(element.component!, property), attribute).toEqual(expected);
+                element.removeAttribute(attribute);
+                expect.soft(engineValue(element.component!, property), `${attribute} removed`).toEqual(restored);
+            }
         });
     });
 });

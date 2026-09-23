@@ -7,6 +7,18 @@ import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } f
 import { ComponentElement } from './component';
 
 /**
+ * How an image element fits its texture or sprite into its rectangle: `stretch` fills the rectangle
+ * exactly, `contain` fits within it and `cover` fills it, both preserving the source aspect ratio.
+ *
+ * @category Types
+ */
+export type FitMode = 'stretch' | 'contain' | 'cover';
+
+// The FITMODE_* constants are strings whose values are exactly these names, so a parsed value is
+// assigned to the component unchanged rather than mapped through a table.
+const fitModes: FitMode[] = ['stretch', 'contain', 'cover'];
+
+/**
  * The ElementComponentElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-element/ | `<pc-element>`} elements.
  * The ElementComponentElement interface also inherits the properties and methods of the
@@ -26,6 +38,8 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class ElementComponentElement extends ComponentElement<ElementComponent> {
+    private _alignment: Vec2 = new Vec2(0.5, 0.5);
+
     private _anchor: Vec4 = new Vec4(0, 0, 0, 0);
 
     private _autoWidth = true;
@@ -40,6 +54,8 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     private _enableMarkup = false;
 
+    private _fitMode: FitMode = 'stretch';
+
     private _fontAsset = '';
 
     private _fontSize = 32;
@@ -50,17 +66,31 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     private _height = 32;
 
+    private _justify = false;
+
     private _lineHeight = 32;
 
     private _margin: Vec4 | null = null;
 
     private _mask = false;
 
+    private _maxLines: number | null = null;
+
     private _opacity = 1;
+
+    private _outlineColor: Color = new Color(0, 0, 0, 1);
+
+    private _outlineThickness = 0;
 
     private _pivot: Vec2 = new Vec2(0, 0);
 
     private _pixelsPerUnit: number | null = null;
+
+    private _shadowColor: Color = new Color(0, 0, 0, 1);
+
+    private _shadowOffset: Vec2 = new Vec2(0, 0);
+
+    private _spacing = 1;
 
     private _spriteAsset = '';
 
@@ -104,6 +134,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     protected getInitialComponentData() {
         const data: Record<string, any> = {
+            alignment: this._alignment,
             anchor: this._anchor,
             autoWidth: this._autoWidth,
             autoHeight: this._autoHeight,
@@ -111,14 +142,23 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             autoFitHeight: this._autoFitHeight,
             color: this._color,
             enableMarkup: this._enableMarkup,
+            fitMode: this._fitMode,
             fontSize: this._fontSize,
             maxFontSize: this._maxFontSize,
             minFontSize: this._minFontSize,
             height: this._height,
+            justify: this._justify,
             lineHeight: this._lineHeight,
             mask: this._mask,
+            // The engine reads null as "no limit"
+            maxLines: this._maxLines,
             opacity: this._opacity,
+            outlineColor: this._outlineColor,
+            outlineThickness: this._outlineThickness,
             pivot: this._pivot,
+            shadowColor: this._shadowColor,
+            shadowOffset: this._shadowOffset,
+            spacing: this._spacing,
             spriteFrame: this._spriteFrame,
             type: this._type,
             text: this._text,
@@ -164,6 +204,26 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     get component(): ElementComponent | null {
         return super.component;
+    }
+
+    /**
+     * Sets the horizontal and vertical alignment of the text within the element (text elements
+     * only), each from 0 to 1. Defaults to `0.5 0.5`, centered; `0 1` aligns to the top left.
+     * @param value - The alignment.
+     */
+    set alignment(value: Vec2) {
+        this._alignment = value;
+        if (this.component) {
+            this.component.alignment = value;
+        }
+    }
+
+    /**
+     * Gets the horizontal and vertical alignment of the text within the element.
+     * @returns The alignment.
+     */
+    get alignment() {
+        return this._alignment;
     }
 
     /**
@@ -266,6 +326,31 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
+     * Sets how the texture or sprite fits the element's rectangle (image elements only). Can be:
+     *
+     * - `stretch` - Fills the rectangle exactly, ignoring the source aspect ratio.
+     * - `contain` - Fits within the rectangle, preserving the source aspect ratio.
+     * - `cover` - Covers the whole rectangle, preserving the source aspect ratio.
+     *
+     * Defaults to `stretch`.
+     * @param value - The fit mode.
+     */
+    set fitMode(value: FitMode) {
+        this._fitMode = value;
+        if (this.component) {
+            this.component.fitMode = value;
+        }
+    }
+
+    /**
+     * Gets how the texture or sprite fits the element's rectangle.
+     * @returns The fit mode.
+     */
+    get fitMode(): FitMode {
+        return this._fitMode;
+    }
+
+    /**
      * Sets the id of the `pc-asset` to use for the font (text elements).
      * @param value - The font asset ID.
      */
@@ -321,6 +406,29 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     get height() {
         return this._height;
+    }
+
+    /**
+     * Sets whether wrapped lines are stretched flush with both edges of the element by widening
+     * the gaps between their words, which needs `wrap-lines` and a fixed width (text elements
+     * only). The last line, and any line ended by an explicit line break, follows `alignment`
+     * instead. Defaults to `false`.
+     * @param value - Whether to justify wrapped lines.
+     */
+    set justify(value: boolean) {
+        this._justify = value;
+        if (this.component) {
+            this.component.justify = value;
+        }
+    }
+
+    /**
+     * Gets whether wrapped lines are stretched flush with both edges of the element, which needs
+     * `wrap-lines` and a fixed width.
+     * @returns Whether wrapped lines are justified.
+     */
+    get justify() {
+        return this._justify;
     }
 
     /**
@@ -382,6 +490,26 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 
     /**
+     * Sets the maximum number of lines `wrap-lines` wraps the text onto, appending any leftover
+     * text to the last line (text elements only). Defaults to `null`, no limit.
+     * @param value - The maximum number of lines, or `null` for no limit.
+     */
+    set maxLines(value: number | null) {
+        this._maxLines = value;
+        if (this.component) {
+            this.component.maxLines = value as number;
+        }
+    }
+
+    /**
+     * Gets the maximum number of lines `wrap-lines` wraps the text onto.
+     * @returns The maximum number of lines, or `null` for no limit.
+     */
+    get maxLines() {
+        return this._maxLines;
+    }
+
+    /**
      * Sets the opacity of the element component.
      * @param value - The opacity (0 to 1).
      */
@@ -398,6 +526,46 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     get opacity() {
         return this._opacity;
+    }
+
+    /**
+     * Sets the color of the text outline, which is only drawn when `outline-thickness` is above 0
+     * (text elements only). Defaults to opaque black.
+     * @param value - The outline color.
+     */
+    set outlineColor(value: Color) {
+        this._outlineColor = value;
+        if (this.component) {
+            this.component.outlineColor = value;
+        }
+    }
+
+    /**
+     * Gets the color of the text outline, which is only drawn when `outline-thickness` is above 0.
+     * @returns The outline color.
+     */
+    get outlineColor() {
+        return this._outlineColor;
+    }
+
+    /**
+     * Sets the thickness of the text outline, from 0 to 1 (text elements only). Defaults to 0,
+     * no outline.
+     * @param value - The outline thickness.
+     */
+    set outlineThickness(value: number) {
+        this._outlineThickness = value;
+        if (this.component) {
+            this.component.outlineThickness = value;
+        }
+    }
+
+    /**
+     * Gets the thickness of the text outline.
+     * @returns The outline thickness.
+     */
+    get outlineThickness() {
+        return this._outlineThickness;
     }
 
     /**
@@ -438,6 +606,67 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     get pixelsPerUnit() {
         return this._pixelsPerUnit;
+    }
+
+    /**
+     * Sets the color of the text shadow, which is only drawn when `shadow-offset` is not `0 0`
+     * (text elements only). Defaults to opaque black.
+     * @param value - The shadow color.
+     */
+    set shadowColor(value: Color) {
+        this._shadowColor = value;
+        if (this.component) {
+            this.component.shadowColor = value;
+        }
+    }
+
+    /**
+     * Gets the color of the text shadow, which is only drawn when `shadow-offset` is not `0 0`.
+     * @returns The shadow color.
+     */
+    get shadowColor() {
+        return this._shadowColor;
+    }
+
+    /**
+     * Sets the offset of the text shadow, horizontally and vertically, each from -1 to 1 and
+     * proportional to the font size (text elements only). Positive values shift the shadow right
+     * and up. Defaults to `0 0`, no shadow.
+     * @param value - The shadow offset.
+     */
+    set shadowOffset(value: Vec2) {
+        this._shadowOffset = value;
+        if (this.component) {
+            this.component.shadowOffset = value;
+        }
+    }
+
+    /**
+     * Gets the offset of the text shadow.
+     * @returns The shadow offset.
+     */
+    get shadowOffset() {
+        return this._shadowOffset;
+    }
+
+    /**
+     * Sets the spacing between the letters of the text, as a multiple of their normal spacing
+     * (text elements only). Defaults to 1.
+     * @param value - The letter spacing.
+     */
+    set spacing(value: number) {
+        this._spacing = value;
+        if (this.component) {
+            this.component.spacing = value;
+        }
+    }
+
+    /**
+     * Gets the spacing between the letters of the text.
+     * @returns The letter spacing.
+     */
+    get spacing() {
+        return this._spacing;
     }
 
     /**
@@ -675,6 +904,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
+            'alignment',
             'anchor',
             'auto-width',
             'auto-height',
@@ -682,17 +912,25 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             'auto-fit-height',
             'color',
             'enable-markup',
+            'fit-mode',
             'font-asset',
             'font-size',
             'max-font-size',
             'min-font-size',
             'height',
+            'justify',
             'line-height',
             'margin',
             'mask',
+            'max-lines',
             'opacity',
+            'outline-color',
+            'outline-thickness',
             'pivot',
             'pixels-per-unit',
+            'shadow-color',
+            'shadow-offset',
+            'spacing',
             'sprite-asset',
             'sprite-frame',
             'text',
@@ -708,6 +946,9 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
+            case 'alignment':
+                this.alignment = parseVec2(newValue, new Vec2(0.5, 0.5), name);
+                break;
             case 'anchor':
                 this.anchor = parseVec4(newValue, new Vec4(0, 0, 0, 0), name);
                 break;
@@ -729,6 +970,9 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             case 'enable-markup':
                 this.enableMarkup = parseBool(newValue, false);
                 break;
+            case 'fit-mode':
+                this.fitMode = parseEnum(newValue, fitModes, 'stretch', name);
+                break;
             case 'font-asset':
                 this.fontAsset = newValue ?? '';
                 break;
@@ -744,6 +988,9 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             case 'height':
                 this.height = parseNumber(newValue, 32, name);
                 break;
+            case 'justify':
+                this.justify = parseBool(newValue, false);
+                break;
             case 'line-height':
                 this.lineHeight = parseNumber(newValue, 32, name);
                 break;
@@ -753,14 +1000,32 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             case 'mask':
                 this.mask = parseBool(newValue, false);
                 break;
+            case 'max-lines':
+                this.maxLines = parseNumber(newValue, null, name);
+                break;
             case 'opacity':
                 this.opacity = parseNumber(newValue, 1, name);
+                break;
+            case 'outline-color':
+                this.outlineColor = parseColor(newValue, Color.BLACK, name);
+                break;
+            case 'outline-thickness':
+                this.outlineThickness = parseNumber(newValue, 0, name);
                 break;
             case 'pivot':
                 this.pivot = parseVec2(newValue, new Vec2(0, 0), name);
                 break;
             case 'pixels-per-unit':
                 this.pixelsPerUnit = parseNumber(newValue, null, name);
+                break;
+            case 'shadow-color':
+                this.shadowColor = parseColor(newValue, Color.BLACK, name);
+                break;
+            case 'shadow-offset':
+                this.shadowOffset = parseVec2(newValue, new Vec2(0, 0), name);
+                break;
+            case 'spacing':
+                this.spacing = parseNumber(newValue, 1, name);
                 break;
             case 'sprite-asset':
                 this.spriteAsset = newValue ?? '';
