@@ -21,10 +21,12 @@
 /**
  * The attribute-parsing helpers from `src/parse.ts`, mapped to the manifest type they imply.
  * `format` selects a trailing hint appended to the attribute description, since the accepted
- * string syntax of a color or vector attribute is not obvious from the type alone.
+ * string syntax of a color or vector attribute is not obvious from the type alone. `default` is
+ * the published default of a helper that takes none as an argument.
  */
 const PARSE_HELPERS = {
     parseBool: { type: 'boolean' },
+    parseCascadeMask: { type: 'string', format: 'cascades', default: '0 1 2 3' },
     parseNumber: { type: 'number' },
     parseEnum: { type: 'enum' },
     parseColor: { type: 'string', format: 'color' },
@@ -35,6 +37,7 @@ const PARSE_HELPERS = {
 };
 
 const FORMAT_HINTS = {
+    cascades: 'Accepts space-separated shadow cascade indices from 0 to 3.',
     color: 'Accepts a CSS color name, a hex color, or 3 or 4 space-separated numbers in the range 0 to 1.',
     quat: 'Accepts 3 space-separated Euler angles in degrees.',
     vec2: 'Accepts 2 space-separated numbers.',
@@ -339,7 +342,7 @@ const describeValue = (ts, sourceFile, value, context) => {
 
     return {
         type: helper.type,
-        default: renderDefault(ts, second),
+        default: helper.default ?? renderDefault(ts, second),
         format: helper.format
     };
 };

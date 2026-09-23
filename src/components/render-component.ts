@@ -2,32 +2,9 @@ import type { RenderComponent, StandardMaterial } from 'playcanvas';
 import { SHADOW_CASCADE_ALL } from 'playcanvas';
 
 import { MaterialElement } from '../material';
-import { parseBool, parseEnum } from '../parse';
+import { parseBool, parseCascadeMask, parseEnum } from '../parse';
 
 import { ComponentElement } from './component';
-
-/**
- * Parses a `shadow-cascade-mask` attribute: the space-separated indices, 0 to 3, of the shadow
- * cascades to cast into, folded into the engine's bitmask (cascade `n` is bit `n`, the value of
- * `SHADOW_CASCADE_n`). An empty value casts into none of them.
- *
- * @param value - The attribute value (`null` when the attribute is absent).
- * @param attribute - The attribute name, used in the warning message.
- * @returns The cascade mask, or `SHADOW_CASCADE_ALL` when absent or invalid.
- */
-const parseCascadeMask = (value: string | null, attribute: string): number => {
-    if (value === null) {
-        return SHADOW_CASCADE_ALL;
-    }
-    const indices = value.trim().split(/\s+/).filter(Boolean);
-    if (indices.every((index) => /^[0-3]$/.test(index))) {
-        return indices.reduce((mask, index) => mask | (1 << Number(index)), 0);
-    }
-    console.warn(
-        `Invalid value '${value}' for attribute '${attribute}'. Expected space-separated cascade indices from 0 to 3. Using all cascades.`
-    );
-    return SHADOW_CASCADE_ALL;
-};
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -189,8 +166,8 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
 
     /**
      * Gets which shadow cascades of directional lights the render component casts into, which
-     * needs `cast-shadows`: space-separated cascade indices from 0 to 3 in markup (all by
-     * default), or a bitmask of `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags as a property.
+     * needs `cast-shadows`. As a property, it is a bitmask of `SHADOW_CASCADE_0` to
+     * `SHADOW_CASCADE_3` flags.
      * @returns The cascade mask.
      */
     get shadowCascadeMask() {

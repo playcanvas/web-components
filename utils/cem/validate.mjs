@@ -122,6 +122,8 @@ if (manifest) {
     expectAttribute('pc-sound', 'positional', { type: 'boolean', default: 'true', fieldName: 'positional' });
     expectAttribute('pc-scrollbar', 'handle-size', { type: 'number', default: '0', fieldName: 'handleSize' });
     expectAttribute('pc-collision', 'angular-offset', { default: '0 0 0' });
+    expectAttribute('pc-render', 'shadow-cascade-mask',
+        { type: 'string', default: '0 1 2 3', fieldName: 'shadowCascadeMask' });
 
     // A `null` default means "leave the engine value alone", so it is omitted
     check(attribute('pc-element', 'margin')?.default === undefined,

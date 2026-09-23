@@ -1,8 +1,9 @@
-import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { Color, Quat, SHADOW_CASCADE_0, SHADOW_CASCADE_2, SHADOW_CASCADE_ALL, Vec2, Vec3, Vec4 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import {
     parseBool,
+    parseCascadeMask,
     parseColor,
     parseComponents,
     parseEnum,
@@ -214,6 +215,29 @@ describe('parse', () => {
         it('is case sensitive', () => {
             expect(parseEnum('Orthographic', projections, 'perspective', 'projection')).toBe('perspective');
             warnings.expect("Invalid value 'Orthographic' for attribute 'projection'.");
+        });
+    });
+
+    describe('parseCascadeMask', () => {
+        it('folds cascade indices into the engine bitmask, in any order and spacing', () => {
+            expect(parseCascadeMask('2  0', 'shadow-cascade-mask')).toBe(SHADOW_CASCADE_0 | SHADOW_CASCADE_2);
+            expect(parseCascadeMask('0 1 2 3', 'shadow-cascade-mask')).toBe(0b1111);
+        });
+
+        it('includes no cascade for an empty value', () => {
+            expect(parseCascadeMask('', 'shadow-cascade-mask')).toBe(0);
+            expect(parseCascadeMask('   ', 'shadow-cascade-mask')).toBe(0);
+        });
+
+        it('includes every cascade when absent', () => {
+            expect(parseCascadeMask(null, 'shadow-cascade-mask')).toBe(SHADOW_CASCADE_ALL);
+        });
+
+        it.for(['4', '0 x', '-1', '1.5', '0,1'])('warns on %j and includes every cascade', (value) => {
+            expect(parseCascadeMask(value, 'shadow-cascade-mask')).toBe(SHADOW_CASCADE_ALL);
+            warnings.expect(
+                `Invalid value '${value}' for attribute 'shadow-cascade-mask'. Expected space-separated cascade indices from 0 to 3. Using all cascades.`
+            );
         });
     });
 
