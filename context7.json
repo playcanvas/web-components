@@ -16,6 +16,6 @@
     "An absent attribute applies the engine default; an invalid value logs a console warning and applies the default. Remove an attribute to reset it rather than setting it to an empty string.",
     "From JavaScript, await whenReady('pc-app') (or any selector or element) before reading .app, .entity or .component; those accessors are null until the element is ready.",
     "For update loops or per-entity behavior, write a pc.Script and attach it with pc-script-instance instead of driving entities from page scripts.",
-    "The complete tag and attribute reference is at https://developer.playcanvas.com/user-manual/web-components/tags; consult it instead of inferring attribute names from examples."
+    "The complete tag and attribute reference is indexed at https://developer.playcanvas.com/user-manual/web-components/llms.txt; consult it instead of inferring attribute names from examples. The JavaScript API, such as whenReady and the element classes, is indexed at https://api.playcanvas.com/web-components/llms.txt."
   ]
 }
