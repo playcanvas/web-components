@@ -42,6 +42,43 @@ describe('<pc-material> integration', () => {
         expect(material!.twoSidedLighting).toBe(true);
     });
 
+    it('writes the parallax, flat shading and dither attributes through to the material', async () => {
+        const { get } = await bootApp(`
+            <pc-material id="m"
+                flat-shading
+                height-map-base="1"
+                parallax-mode="occlusion"
+                parallax-samples="32"
+                parallax-shadow-samples="8"
+                opacity-dither="bayer4"></pc-material>
+        `);
+
+        // Read through a widened type: the engine's declarations omit these parameters
+        const material = get<MaterialElement>('pc-material').material! as unknown as Record<string, unknown>;
+        expect(material.flatShading).toBe(true);
+        expect(material.heightMapBase).toBe(1);
+        expect(material.parallaxMode).toBe('occlusion');
+        expect(material.parallaxSamples).toBe(32);
+        expect(material.parallaxShadowSamples).toBe(8);
+        expect(material.opacityDither).toBe('bayer4');
+    });
+
+    it('dithers by opacity until alpha-dither is set, and again once it is removed', async () => {
+        const { get } = await bootApp('<pc-material id="m" opacity="0.5" opacity-dither="bayer8"></pc-material>');
+
+        const element = get<MaterialElement>('pc-material');
+        const material = element.material! as StandardMaterial & { alphaDither: number | null };
+        expect(material.alphaDither, 'the engine falls back to the opacity').toBe(0.5);
+
+        element.setAttribute('alpha-dither', '0.25');
+        expect(material.alphaDither).toBe(0.25);
+        expect(material.opacity, 'the blend alpha is independent').toBe(0.5);
+
+        element.removeAttribute('alpha-dither');
+        material.opacity = 0.75;
+        expect(material.alphaDither, 'removal hands the dither alpha back to the opacity').toBe(0.75);
+    });
+
     it('names the material from the name attribute, independent of the id', async () => {
         const { all } = await bootApp(`
             <pc-material id="candy-red" name="Candy Red"></pc-material>

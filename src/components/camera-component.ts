@@ -1,6 +1,7 @@
 import type { CameraComponent } from 'playcanvas';
 import {
     Color,
+    Vec2,
     Vec4,
     GAMMA_NONE,
     GAMMA_SRGB,
@@ -17,7 +18,7 @@ import {
     XRTYPE_VR
 } from 'playcanvas';
 
-import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -79,6 +80,8 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
     private _projection: 'perspective' | 'orthographic' = 'perspective';
 
+    private _projectionOffset = new Vec2(0, 0);
+
     private _orthoHeight = 10;
 
     private _priority = 0;
@@ -110,6 +113,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             horizontalFov: this._horizontalFov,
             nearClip: this._nearClip,
             projection: projections.get(this._projection) ?? PROJECTION_PERSPECTIVE,
+            projectionOffset: this._projectionOffset,
             orthoHeight: this._orthoHeight,
             priority: this._priority,
             rect: this._rect,
@@ -491,6 +495,28 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
     }
 
     /**
+     * Sets the offset of the projection window from the view direction, for an off-center (shift
+     * lens) projection, in half-frustum units: `0 1` moves the window up by half the frustum
+     * height. Keeping the camera level and shifting the window frames a tall subject with its
+     * verticals parallel. Applies to both projections and is ignored in XR. Defaults to `0 0`.
+     * @param value - The projection offset.
+     */
+    set projectionOffset(value: Vec2) {
+        this._projectionOffset = value;
+        if (this.component) {
+            this.component.projectionOffset = value;
+        }
+    }
+
+    /**
+     * Gets the offset of the projection window from the view direction.
+     * @returns The projection offset.
+     */
+    get projectionOffset() {
+        return this._projectionOffset;
+    }
+
+    /**
      * Sets the rect of the camera.
      * @param value - The rect.
      */
@@ -568,6 +594,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             'ortho-height',
             'priority',
             'projection',
+            'projection-offset',
             'rect',
             'scissor-rect',
             'tonemap'
@@ -625,6 +652,9 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
                 break;
             case 'projection':
                 this.projection = parseEnum(newValue, projections, 'perspective', name);
+                break;
+            case 'projection-offset':
+                this.projectionOffset = parseVec2(newValue, new Vec2(0, 0), name);
                 break;
             case 'rect':
                 this.rect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);

@@ -52,6 +52,7 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['shadow-type', 'shadowType', 'pcf1-32f', SHADOW_PCF1_32F, SHADOW_PCF3_32F],
     ['shape', 'shape', 'rect', LIGHTSHAPE_RECT, LIGHTSHAPE_PUNCTUAL],
     ['type', 'type', 'omni', 'omni', 'directional'],
+    ['volumetric-scattering', 'volumetricScattering', '0.5', 0.5, 1],
     ['vsm-bias', 'vsmBias', '0.01', 0.01, 0.0025],
     ['vsm-blur-size', 'vsmBlurSize', '5', 5, 11]
 ];

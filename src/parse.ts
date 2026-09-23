@@ -149,6 +149,43 @@ export const parseEnum = <T extends string>(
 };
 
 /**
+ * Resolves a flags attribute value - a space-separated set of names, in any order - against the
+ * valid names, and combines the engine flag each one maps to into a bitmask. An empty value
+ * combines none, giving 0. Returns the mask of `defaultValue` when the attribute is absent
+ * (`null`), or when any name is invalid — the latter also logs a warning listing the valid names.
+ *
+ * The default is given in markup form, like the value, so that it reads the same in the code as it
+ * does in the published manifest.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param flags - The valid names, each mapped to its engine flag.
+ * @param defaultValue - The names to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The combined flags.
+ * @internal
+ */
+export const parseFlags = <T extends string>(
+    value: string | null,
+    flags: ReadonlyMap<T, number>,
+    defaultValue: string,
+    attribute: string
+): number => {
+    const combine = (names: string[]) => names.reduce((mask, name) => mask | flags.get(name as T)!, 0);
+    const split = (text: string) => text.split(/\s+/).filter(Boolean);
+
+    if (value !== null) {
+        const names = split(value);
+        if (names.every((name) => flags.has(name as T))) {
+            return combine(names);
+        }
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected space-separated names from: ${[...flags.keys()].join(', ')}. Using '${defaultValue}'.`
+        );
+    }
+    return combine(split(defaultValue));
+};
+
+/**
  * Parses a number attribute value. Returns the parsed number when the value is a finite number.
  * Returns `defaultValue` when the attribute is absent (`null`), or when the value is not a
  * finite number — the latter also logs a warning.

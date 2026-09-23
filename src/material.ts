@@ -105,11 +105,38 @@ const occludeSpeculars = new Map<OccludeSpecular, number>([
  *
  * @category Types
  */
-export type OpacityDither = 'none' | 'bayer8' | 'bluenoise' | 'ignnoise';
+export type OpacityDither = 'none' | 'bayer2' | 'bayer4' | 'bayer8' | 'bayer16' | 'bluenoise' | 'ignnoise';
 
 // The DITHER_* constants are strings whose values are exactly these names, so a parsed value is
 // assigned to the material unchanged rather than mapped through a table.
-const opacityDithers: OpacityDither[] = ['none', 'bayer8', 'bluenoise', 'ignnoise'];
+const opacityDithers: OpacityDither[] = ['none', 'bayer2', 'bayer4', 'bayer8', 'bayer16', 'bluenoise', 'ignnoise'];
+
+/**
+ * How a material's height map offsets the UVs of its other maps: `offset` takes a single tap of
+ * the height map, and `occlusion` marches the view ray through the height field for deeper relief
+ * at the cost of several taps per pixel.
+ *
+ * @category Types
+ */
+export type ParallaxMode = 'offset' | 'occlusion';
+
+// The PARALLAX_* constants are strings whose values are exactly these names
+const parallaxModes: ParallaxMode[] = ['offset', 'occlusion'];
+
+/**
+ * StandardMaterial parameters the engine's type declarations omit: they are listed by hand in the
+ * engine's utils/plugins/rollup-types-fixup.mjs, which has not caught up with these. Remove once
+ * the engine declares them.
+ */
+type UndeclaredParameters = {
+    alphaDither: number | null;
+    heightMapBase: number;
+    parallaxMode: string;
+    parallaxSamples: number;
+    parallaxShadowSamples: number;
+};
+
+const undeclared = (material: StandardMaterial) => material as StandardMaterial & UndeclaredParameters;
 
 /**
  * The texture channels a color map can sample.
@@ -184,6 +211,8 @@ type TextureSlot =
  * @category Resources
  */
 class MaterialElement extends HTMLElement {
+    private _alphaDither: number | null = null;
+
     private _alphaTest = 0;
 
     private _alphaToCoverage = false;
@@ -246,6 +275,8 @@ class MaterialElement extends HTMLElement {
 
     private _enableGGXSpecular = false;
 
+    private _flatShading = false;
+
     private _fresnelModel: FresnelModel = 'schlick';
 
     private _gloss = 0.25;
@@ -265,6 +296,8 @@ class MaterialElement extends HTMLElement {
     private _glossMapUv = 0;
 
     private _heightMap = '';
+
+    private _heightMapBase = 0.5;
 
     private _heightMapChannel: ScalarChannel = 'g';
 
@@ -325,6 +358,12 @@ class MaterialElement extends HTMLElement {
     private _opacityMapTiling = new Vec2(1, 1);
 
     private _opacityMapUv = 0;
+
+    private _parallaxMode: ParallaxMode = 'offset';
+
+    private _parallaxSamples = 16;
+
+    private _parallaxShadowSamples = 0;
 
     private _slopeDepthBias = 0;
 
@@ -398,6 +437,8 @@ class MaterialElement extends HTMLElement {
         const material = new StandardMaterial();
         this.material = material;
 
+        // null leaves the dither alpha following opacity, as it does on a bare StandardMaterial
+        undeclared(material).alphaDither = this._alphaDither;
         material.alphaTest = this._alphaTest;
         material.alphaToCoverage = this._alphaToCoverage;
         material.aoIntensity = this._aoIntensity;
@@ -426,6 +467,7 @@ class MaterialElement extends HTMLElement {
         material.emissiveMapTiling = this._emissiveMapTiling;
         material.emissiveMapUv = this._emissiveMapUv;
         material.enableGGXSpecular = this._enableGGXSpecular;
+        material.flatShading = this._flatShading;
         material.fresnelModel = fresnelModels.get(this._fresnelModel) ?? FRESNEL_SCHLICK;
         material.gloss = this._gloss;
         material.glossInvert = this._glossInvert;
@@ -434,6 +476,7 @@ class MaterialElement extends HTMLElement {
         material.glossMapRotation = this._glossMapRotation;
         material.glossMapTiling = this._glossMapTiling;
         material.glossMapUv = this._glossMapUv;
+        undeclared(material).heightMapBase = this._heightMapBase;
         material.heightMapChannel = this._heightMapChannel;
         material.heightMapFactor = this._heightMapFactor;
         material.heightMapOffset = this._heightMapOffset;
@@ -461,6 +504,9 @@ class MaterialElement extends HTMLElement {
         material.opacityMapRotation = this._opacityMapRotation;
         material.opacityMapTiling = this._opacityMapTiling;
         material.opacityMapUv = this._opacityMapUv;
+        undeclared(material).parallaxMode = this._parallaxMode;
+        undeclared(material).parallaxSamples = this._parallaxSamples;
+        undeclared(material).parallaxShadowSamples = this._parallaxShadowSamples;
         material.slopeDepthBias = this._slopeDepthBias;
         material.specular = this._specular;
         material.specularityFactor = this._specularityFactor;
@@ -587,6 +633,29 @@ class MaterialElement extends HTMLElement {
         if (!this.material) return;
         this.material[slot] = texture;
         this._scheduleUpdate();
+    }
+
+    /**
+     * Sets the alpha used by opacity dithering, from 0 to 1, which needs an `opacity-dither` mode
+     * other than `none`. It lets a material be alpha blended by `opacity` and dithered by this at
+     * the same time. Defaults to `null`, which dithers by `opacity`.
+     * @param value - The dither alpha, or `null` to follow `opacity`.
+     */
+    set alphaDither(value: number | null) {
+        this._alphaDither = value;
+        if (this.material) {
+            undeclared(this.material).alphaDither = value;
+            this._scheduleUpdate();
+        }
+    }
+
+    /**
+     * Gets the alpha used by opacity dithering, which needs an `opacity-dither` mode other than
+     * `none`.
+     * @returns The dither alpha, or `null` when it follows `opacity`.
+     */
+    get alphaDither() {
+        return this._alphaDither;
     }
 
     /**
@@ -1202,6 +1271,27 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
+     * Sets whether the material is shaded with the geometric normal of each triangle rather than
+     * the normals interpolated from its vertices, giving the surface a faceted look.
+     * @param value - Whether to use flat shading.
+     */
+    set flatShading(value: boolean) {
+        this._flatShading = value;
+        if (this.material) {
+            this.material.flatShading = value;
+            this._scheduleUpdate();
+        }
+    }
+
+    /**
+     * Gets whether the material is shaded with the geometric normal of each triangle.
+     * @returns Whether flat shading is used.
+     */
+    get flatShading() {
+        return this._flatShading;
+    }
+
+    /**
      * Sets the Fresnel model used for specular reflections at grazing angles.
      * @param value - The Fresnel model.
      */
@@ -1394,6 +1484,28 @@ class MaterialElement extends HTMLElement {
      */
     get heightMap() {
         return this._heightMap;
+    }
+
+    /**
+     * Sets the height map value that sits at the level of the geometry, from 0 to 1: relief above
+     * it stands out of the surface and relief below it sinks in. Defaults to 0.5; 1 treats the map
+     * as pure depth and 0 as pure elevation.
+     * @param value - The height map base.
+     */
+    set heightMapBase(value: number) {
+        this._heightMapBase = value;
+        if (this.material) {
+            undeclared(this.material).heightMapBase = value;
+            this._scheduleUpdate();
+        }
+    }
+
+    /**
+     * Gets the height map value that sits at the level of the geometry.
+     * @returns The height map base.
+     */
+    get heightMapBase() {
+        return this._heightMapBase;
     }
 
     /**
@@ -1992,6 +2104,77 @@ class MaterialElement extends HTMLElement {
     }
 
     /**
+     * Sets how the height map offsets the UVs of the other maps. Can be:
+     *
+     * - `offset` - A single tap of the height map.
+     * - `occlusion` - Marches the view ray through the height field, for deeper relief without
+     * smearing at the cost of several taps per pixel. The silhouette of the mesh is unchanged.
+     *
+     * Defaults to `offset`.
+     * @param value - The parallax mode.
+     */
+    set parallaxMode(value: ParallaxMode) {
+        this._parallaxMode = value;
+        if (this.material) {
+            undeclared(this.material).parallaxMode = value;
+            this._scheduleUpdate();
+        }
+    }
+
+    /**
+     * Gets how the height map offsets the UVs of the other maps.
+     * @returns The parallax mode.
+     */
+    get parallaxMode(): ParallaxMode {
+        return this._parallaxMode;
+    }
+
+    /**
+     * Sets the maximum number of height map taps along the view ray, which applies only when
+     * `parallax-mode` is `occlusion`. Defaults to 16.
+     * @param value - The number of samples.
+     */
+    set parallaxSamples(value: number) {
+        this._parallaxSamples = value;
+        if (this.material) {
+            undeclared(this.material).parallaxSamples = value;
+            this._scheduleUpdate();
+        }
+    }
+
+    /**
+     * Gets the maximum number of height map taps along the view ray, which applies only when
+     * `parallax-mode` is `occlusion`.
+     * @returns The number of samples.
+     */
+    get parallaxSamples() {
+        return this._parallaxSamples;
+    }
+
+    /**
+     * Sets the maximum number of height map taps towards each directional light that soft-shadow
+     * the relief against itself, which applies only when `parallax-mode` is `occlusion`. Defaults
+     * to 0, no self-shadowing.
+     * @param value - The number of shadow samples.
+     */
+    set parallaxShadowSamples(value: number) {
+        this._parallaxShadowSamples = value;
+        if (this.material) {
+            undeclared(this.material).parallaxShadowSamples = value;
+            this._scheduleUpdate();
+        }
+    }
+
+    /**
+     * Gets the maximum number of height map taps towards each directional light, which applies
+     * only when `parallax-mode` is `occlusion`.
+     * @returns The number of shadow samples.
+     */
+    get parallaxShadowSamples() {
+        return this._parallaxShadowSamples;
+    }
+
+    /**
      * Sets the roughness of the material, from 0 (shiny) to 1 (rough). This is an alias for `gloss`
      * that also inverts the gloss channel, so do not combine it with the `gloss` attributes.
      * @param value - The roughness.
@@ -2248,6 +2431,7 @@ class MaterialElement extends HTMLElement {
 
     static get observedAttributes() {
         return [
+            'alpha-dither',
             'alpha-test',
             'alpha-to-coverage',
             'ao-intensity',
@@ -2279,6 +2463,7 @@ class MaterialElement extends HTMLElement {
             'emissive-map-tiling',
             'emissive-map-uv',
             'enable-ggx-specular',
+            'flat-shading',
             'fresnel-model',
             'gloss',
             'gloss-invert',
@@ -2289,6 +2474,7 @@ class MaterialElement extends HTMLElement {
             'gloss-map-tiling',
             'gloss-map-uv',
             'height-map',
+            'height-map-base',
             'height-map-channel',
             'height-map-factor',
             'height-map-offset',
@@ -2319,6 +2505,9 @@ class MaterialElement extends HTMLElement {
             'opacity-map-rotation',
             'opacity-map-tiling',
             'opacity-map-uv',
+            'parallax-mode',
+            'parallax-samples',
+            'parallax-shadow-samples',
             'roughness',
             'roughness-map',
             'slope-depth-bias',
@@ -2339,6 +2528,9 @@ class MaterialElement extends HTMLElement {
     // the #309 shape, which is its own change rather than a signature tweak.
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         switch (name) {
+            case 'alpha-dither':
+                this.alphaDither = parseNumber(newValue, null, name);
+                break;
             case 'alpha-test':
                 this.alphaTest = parseNumber(newValue, 0, name);
                 break;
@@ -2432,6 +2624,9 @@ class MaterialElement extends HTMLElement {
             case 'enable-ggx-specular':
                 this.enableGGXSpecular = parseBool(newValue, false);
                 break;
+            case 'flat-shading':
+                this.flatShading = parseBool(newValue, false);
+                break;
             case 'fresnel-model':
                 this.fresnelModel = parseEnum(newValue, fresnelModels, 'schlick', name);
                 break;
@@ -2464,6 +2659,9 @@ class MaterialElement extends HTMLElement {
                 break;
             case 'height-map':
                 this.heightMap = newValue ?? '';
+                break;
+            case 'height-map-base':
+                this.heightMapBase = parseNumber(newValue, 0.5, name);
                 break;
             case 'height-map-channel':
                 this.heightMapChannel = parseEnum(newValue, scalarChannels, 'g', name);
@@ -2554,6 +2752,15 @@ class MaterialElement extends HTMLElement {
                 break;
             case 'opacity-map-uv':
                 this.opacityMapUv = parseNumber(newValue, 0, name);
+                break;
+            case 'parallax-mode':
+                this.parallaxMode = parseEnum(newValue, parallaxModes, 'offset', name);
+                break;
+            case 'parallax-samples':
+                this.parallaxSamples = parseNumber(newValue, 16, name);
+                break;
+            case 'parallax-shadow-samples':
+                this.parallaxShadowSamples = parseNumber(newValue, 0, name);
                 break;
             case 'roughness':
                 // Aliases gloss, and inverts it so the value reads as roughness. Removing the

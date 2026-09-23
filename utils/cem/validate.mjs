@@ -122,6 +122,8 @@ if (manifest) {
     expectAttribute('pc-sound', 'positional', { type: 'boolean', default: 'true', fieldName: 'positional' });
     expectAttribute('pc-scrollbar', 'handle-size', { type: 'number', default: '0', fieldName: 'handleSize' });
     expectAttribute('pc-collision', 'angular-offset', { default: '0 0 0' });
+    expectAttribute('pc-render', 'shadow-cascade-mask',
+        { type: 'string', default: '0 1 2 3', fieldName: 'shadowCascadeMask' });
 
     // A `null` default means "leave the engine value alone", so it is omitted
     check(attribute('pc-element', 'margin')?.default === undefined,
@@ -154,7 +156,8 @@ if (manifest) {
     expectAttribute('pc-material', 'emissive', { default: '0 0 0' });
     expectEnum('pc-material', 'cull', 4, 'back');
     expectEnum('pc-material', 'diffuse-map-channel', 5, 'rgb');
-    expectEnum('pc-material', 'opacity-dither', 4, 'none');
+    expectEnum('pc-material', 'opacity-dither', 7, 'none');
+    expectEnum('pc-material', 'parallax-mode', 2, 'offset');
 
     // The element enables the metalness workflow, unlike a bare StandardMaterial, so the default
     // published to editors has to say so
@@ -178,6 +181,9 @@ if (manifest) {
     // the caveat has to be in it.
     for (const [name, caveat] of [
         ['opacity', 'blend-type'],
+        ['alpha-dither', 'opacity-dither'],
+        ['parallax-samples', 'parallax-mode'],
+        ['parallax-shadow-samples', 'parallax-mode'],
         ['specular', 'use-metalness-specular-color'],
         ['specularity-factor', 'use-metalness-specular-color']
     ]) {
@@ -199,6 +205,17 @@ if (manifest) {
     expectEnum('pc-element', 'fit-mode', 3, 'stretch');
     expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'always');
     expectEnum('pc-scroll-view', 'vertical-scrollbar-visibility', 2, 'always');
+
+    // A flags attribute publishes its names in the syntax hint, since any combination is valid
+    check((attribute('pc-render', 'shadow-cascade-mask')?.description ?? '').includes('Accepts space-separated names from: 0, 1, 2, 3.'),
+        `pc-render[shadow-cascade-mask] does not list its names: ${JSON.stringify(attribute('pc-render', 'shadow-cascade-mask')?.description)}`);
+
+    // Both only act in company: the mask needs the entity to cast shadows at all, and a light only
+    // scatters into the fog a camera frame renders
+    check((attribute('pc-render', 'shadow-cascade-mask')?.description ?? '').includes('cast-shadows'),
+        `pc-render[shadow-cascade-mask] does not mention 'cast-shadows': ${JSON.stringify(attribute('pc-render', 'shadow-cascade-mask')?.description)}`);
+    check((attribute('pc-light', 'volumetric-scattering')?.description ?? '').includes('omni'),
+        `pc-light[volumetric-scattering] does not mention 'omni': ${JSON.stringify(attribute('pc-light', 'volumetric-scattering')?.description)}`);
 
     // An area light shape renders wrong until <pc-app> has loaded the lookup tables, so its tooltip
     // has to point at the attribute that does that

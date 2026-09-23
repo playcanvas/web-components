@@ -6,6 +6,7 @@ import {
     parseColor,
     parseComponents,
     parseEnum,
+    parseFlags,
     parseNumber,
     parseQuat,
     parseTags,
@@ -215,6 +216,40 @@ describe('parse', () => {
             expect(parseEnum('Orthographic', projections, 'perspective', 'projection')).toBe('perspective');
             warnings.expect("Invalid value 'Orthographic' for attribute 'projection'.");
         });
+    });
+
+    describe('parseFlags', () => {
+        // Engine-style flags, one bit each, as the light mask's are
+        const flags = new Map([
+            ['dynamic', 0b001],
+            ['lightmapped', 0b010],
+            ['bake', 0b100]
+        ]);
+
+        it('combines the named flags, in any order and spacing', () => {
+            expect(parseFlags('bake  dynamic', flags, 'dynamic', 'mask')).toBe(0b101);
+            expect(parseFlags('dynamic dynamic', flags, 'bake', 'mask'), 'a repeated name counts once').toBe(0b001);
+        });
+
+        it('combines no flags for an empty value', () => {
+            expect(parseFlags('', flags, 'dynamic', 'mask')).toBe(0);
+            expect(parseFlags('   ', flags, 'dynamic', 'mask')).toBe(0);
+        });
+
+        it('combines the default names when absent', () => {
+            expect(parseFlags(null, flags, 'dynamic lightmapped', 'mask')).toBe(0b011);
+            expect(parseFlags(null, flags, '', 'mask'), 'an empty default is no flags').toBe(0);
+        });
+
+        it.for(['static', 'dynamic static', 'Dynamic', 'dynamic,bake'])(
+            'warns on %j, listing the valid names, and uses the default',
+            (value) => {
+                expect(parseFlags(value, flags, 'dynamic', 'mask')).toBe(0b001);
+                warnings.expect(
+                    `Invalid value '${value}' for attribute 'mask'. Expected space-separated names from: dynamic, lightmapped, bake. Using 'dynamic'.`
+                );
+            }
+        );
     });
 
     describe('parseColor', () => {
