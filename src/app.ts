@@ -151,6 +151,8 @@ class AppElement extends AsyncElement {
 
     private _loadingBar = true;
 
+    private _withCredentials = false;
+
     /**
      * Set once the graphics options above have been handed to `createGraphicsDevice`, after which
      * writing any of them changes nothing. Guards the warning in {@link _warnIfBooted}, and is
@@ -432,6 +434,13 @@ class AppElement extends AsyncElement {
         const app = new AppBase(this._canvas);
         this._app = app;
         app.init(createOptions);
+
+        // Before any asset is added, so preloaded and lazy assets alike pick it up. Only ever
+        // switched on here: the engine keeps the flag in its page-wide HTTP client, so a second
+        // <pc-app> without the attribute must not switch it off for the first
+        if (this._withCredentials) {
+            app.loader.withCredentials = true;
+        }
 
         // FILLMODE_NONE leaves the canvas's CSS sizing alone (the engine's other fill modes
         // stamp window-derived pixel sizes onto it); RESOLUTION_AUTO sizes the drawing buffer
@@ -893,6 +902,28 @@ class AppElement extends AsyncElement {
         return this._stencilBuffer;
     }
 
+    /**
+     * Sets whether asset requests send credentials (cookies and HTTP authentication) to other
+     * origins, which the asset server must allow through CORS. The engine keeps this in its shared
+     * HTTP client, so it applies to every application on the page. Defaults to `false`.
+     * @param value - Whether asset requests send credentials.
+     */
+    set withCredentials(value: boolean) {
+        this._withCredentials = value;
+        if (this.app) {
+            this.app.loader.withCredentials = value;
+        }
+    }
+
+    /**
+     * Gets whether asset requests send credentials (cookies and HTTP authentication) to other
+     * origins, which applies to every application on the page.
+     * @returns Whether asset requests send credentials.
+     */
+    get withCredentials() {
+        return this._withCredentials;
+    }
+
     static get observedAttributes() {
         return [
             'alpha',
@@ -902,7 +933,8 @@ class AppElement extends AsyncElement {
             'depth-buffer',
             'loading-bar',
             'max-pixel-ratio',
-            'stencil-buffer'
+            'stencil-buffer',
+            'with-credentials'
         ];
     }
 
@@ -931,6 +963,9 @@ class AppElement extends AsyncElement {
                 break;
             case 'stencil-buffer':
                 this.stencilBuffer = parseBool(newValue, true);
+                break;
+            case 'with-credentials':
+                this.withCredentials = parseBool(newValue, false);
                 break;
         }
     }
