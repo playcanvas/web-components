@@ -1,6 +1,7 @@
 import type { AppBase, CameraComponent } from 'playcanvas';
 import {
     Color,
+    Vec2,
     Vec4,
     GAMMA_NONE,
     GAMMA_SRGB,
@@ -74,6 +75,7 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['ortho-height', 'orthoHeight', '5', 5, 10],
     ['priority', 'priority', '2', 2, 0],
     ['projection', 'projection', 'orthographic', PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE],
+    ['projection-offset', 'projectionOffset', '0 0.5', new Vec2(0, 0.5), new Vec2(0, 0)],
     ['rect', 'rect', '0 0 0.5 1', new Vec4(0, 0, 0.5, 1), new Vec4(0, 0, 1, 1)],
     ['scissor-rect', 'scissorRect', '0 0 0.5 0.5', new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0, 1, 1)],
     // Used to be the one exception, writing TONEMAP_NONE: the two only differ once the scene

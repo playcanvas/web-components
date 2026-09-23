@@ -24,7 +24,8 @@ const ENUMS: Record<string, { name: string; engine: unknown; alt: string }> = {
     cull: { name: 'back', engine: CULLFACE_BACK, alt: 'none' },
     'fresnel-model': { name: 'schlick', engine: FRESNEL_SCHLICK, alt: 'none' },
     'occlude-specular': { name: 'ao', engine: SPECOCC_AO, alt: 'gloss-dependent' },
-    'opacity-dither': { name: 'none', engine: 'none', alt: 'bayer8' }
+    'opacity-dither': { name: 'none', engine: 'none', alt: 'bayer16' },
+    'parallax-mode': { name: 'offset', engine: 'offset', alt: 'occlusion' }
 };
 
 /**
@@ -32,6 +33,12 @@ const ENUMS: Record<string, { name: string; engine: unknown; alt: string }> = {
  * listed here must match the engine exactly.
  */
 const DIVERGENT: Record<string, { value: unknown; why: string }> = {
+    'alpha-dither': {
+        value: null,
+        // Not a different default: the engine stores the same null, and its getter reports the
+        // opacity it falls back to
+        why: 'null is the engine\'s own "follow opacity" sentinel, which its getter reports as the opacity'
+    },
     'use-metalness': {
         value: true,
         why: 'the element is metal/rough by default so that metalness-map has any effect at all'
@@ -136,7 +143,8 @@ describe('<pc-material>', () => {
             if (typeof current === 'boolean') {
                 return { value: String(!current), expected: !current };
             }
-            if (typeof current === 'number') {
+            // A nullable number, such as alpha-dither
+            if (typeof current === 'number' || current === null) {
                 return { value: '0.5', expected: 0.5 };
             }
             if (current instanceof Vec2) {

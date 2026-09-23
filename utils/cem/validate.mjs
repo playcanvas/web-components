@@ -141,7 +141,8 @@ if (manifest) {
     expectAttribute('pc-material', 'emissive', { default: '0 0 0' });
     expectEnum('pc-material', 'cull', 4, 'back');
     expectEnum('pc-material', 'diffuse-map-channel', 5, 'rgb');
-    expectEnum('pc-material', 'opacity-dither', 4, 'none');
+    expectEnum('pc-material', 'opacity-dither', 7, 'none');
+    expectEnum('pc-material', 'parallax-mode', 2, 'offset');
 
     // The element enables the metalness workflow, unlike a bare StandardMaterial, so the default
     // published to editors has to say so
@@ -165,6 +166,9 @@ if (manifest) {
     // the caveat has to be in it.
     for (const [name, caveat] of [
         ['opacity', 'blend-type'],
+        ['alpha-dither', 'opacity-dither'],
+        ['parallax-samples', 'parallax-mode'],
+        ['parallax-shadow-samples', 'parallax-mode'],
         ['specular', 'use-metalness-specular-color'],
         ['specularity-factor', 'use-metalness-specular-color']
     ]) {
@@ -183,6 +187,13 @@ if (manifest) {
     expectEnum('pc-camera', 'tonemap', 7, 'linear');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-light', 'shape', 4, 'punctual');
+
+    // Both only act in company: the mask needs the entity to cast shadows at all, and a light only
+    // scatters into the fog a camera frame renders
+    check((attribute('pc-render', 'shadow-cascade-mask')?.description ?? '').includes('cast-shadows'),
+        `pc-render[shadow-cascade-mask] does not mention 'cast-shadows': ${JSON.stringify(attribute('pc-render', 'shadow-cascade-mask')?.description)}`);
+    check((attribute('pc-light', 'volumetric-scattering')?.description ?? '').includes('omni'),
+        `pc-light[volumetric-scattering] does not mention 'omni': ${JSON.stringify(attribute('pc-light', 'volumetric-scattering')?.description)}`);
     expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'always');
     expectEnum('pc-scroll-view', 'vertical-scrollbar-visibility', 2, 'always');
 

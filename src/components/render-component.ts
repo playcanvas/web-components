@@ -1,9 +1,33 @@
 import type { RenderComponent, StandardMaterial } from 'playcanvas';
+import { SHADOW_CASCADE_ALL } from 'playcanvas';
 
 import { MaterialElement } from '../material';
 import { parseBool, parseEnum } from '../parse';
 
 import { ComponentElement } from './component';
+
+/**
+ * Parses a `shadow-cascade-mask` attribute: the space-separated indices, 0 to 3, of the shadow
+ * cascades to cast into, folded into the engine's bitmask (cascade `n` is bit `n`, the value of
+ * `SHADOW_CASCADE_n`). An empty value casts into none of them.
+ *
+ * @param value - The attribute value (`null` when the attribute is absent).
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The cascade mask, or `SHADOW_CASCADE_ALL` when absent or invalid.
+ */
+const parseCascadeMask = (value: string | null, attribute: string): number => {
+    if (value === null) {
+        return SHADOW_CASCADE_ALL;
+    }
+    const indices = value.trim().split(/\s+/).filter(Boolean);
+    if (indices.every((index) => /^[0-3]$/.test(index))) {
+        return indices.reduce((mask, index) => mask | (1 << Number(index)), 0);
+    }
+    console.warn(
+        `Invalid value '${value}' for attribute '${attribute}'. Expected space-separated cascade indices from 0 to 3. Using all cascades.`
+    );
+    return SHADOW_CASCADE_ALL;
+};
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -31,6 +55,8 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
 
     private _receiveShadows = true;
 
+    private _shadowCascadeMask: number = SHADOW_CASCADE_ALL;
+
     private _type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'box';
 
     /** @ignore */
@@ -42,7 +68,8 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
         const data: Record<string, unknown> = {
             type: this._type,
             castShadows: this._castShadows,
-            receiveShadows: this._receiveShadows
+            receiveShadows: this._receiveShadows,
+            shadowCascadeMask: this._shadowCascadeMask
         };
 
         // Only a resolved material is passed on: an undefined one would replace the engine's
@@ -145,8 +172,40 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
         return this._receiveShadows;
     }
 
+    /**
+     * Sets which shadow cascades of directional lights the render component casts into, which
+     * needs `cast-shadows`. In markup, it is the space-separated cascade indices from 0 to 3, such
+     * as `0 1` for the two cascades nearest the camera; as a property, it is the engine's bitmask
+     * of `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags. Defaults to all cascades
+     * (`SHADOW_CASCADE_ALL`).
+     * @param value - The cascade mask.
+     */
+    set shadowCascadeMask(value: number) {
+        this._shadowCascadeMask = value;
+        if (this.component) {
+            this.component.shadowCascadeMask = value;
+        }
+    }
+
+    /**
+     * Gets which shadow cascades of directional lights the render component casts into, which
+     * needs `cast-shadows`: space-separated cascade indices from 0 to 3 in markup (all by
+     * default), or a bitmask of `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags as a property.
+     * @returns The cascade mask.
+     */
+    get shadowCascadeMask() {
+        return this._shadowCascadeMask;
+    }
+
     static get observedAttributes() {
-        return [...super.observedAttributes, 'cast-shadows', 'material', 'receive-shadows', 'type'];
+        return [
+            ...super.observedAttributes,
+            'cast-shadows',
+            'material',
+            'receive-shadows',
+            'shadow-cascade-mask',
+            'type'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -161,6 +220,9 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
                 break;
             case 'receive-shadows':
                 this.receiveShadows = parseBool(newValue, true);
+                break;
+            case 'shadow-cascade-mask':
+                this.shadowCascadeMask = parseCascadeMask(newValue, name);
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere'], 'box', name);

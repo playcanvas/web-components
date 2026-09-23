@@ -112,6 +112,8 @@ class LightComponentElement extends ComponentElement<LightComponent> {
 
     private _vsmBlurSize = 11;
 
+    private _volumetricScattering = 1;
+
     private _penumbraSize = 1;
 
     private _penumbraFalloff = 1;
@@ -148,6 +150,7 @@ class LightComponentElement extends ComponentElement<LightComponent> {
             shadowType: shadowTypes.get(this._shadowType) ?? SHADOW_PCF3_32F,
             shape: lightShapes.get(this._shape) ?? LIGHTSHAPE_PUNCTUAL,
             type: this._type,
+            volumetricScattering: this._volumetricScattering,
             vsmBias: this._vsmBias,
             vsmBlurSize: this._vsmBlurSize
         };
@@ -566,6 +569,28 @@ class LightComponentElement extends ComponentElement<LightComponent> {
     }
 
     /**
+     * Sets how strongly the light scatters into volumetric fog, as a multiplier on its
+     * contribution, which applies only to `omni` and `spot` lights while a camera frame renders
+     * volumetric fog with local lights. 0 leaves the light out of the fog. Defaults to 1.
+     * @param value - The volumetric scattering multiplier.
+     */
+    set volumetricScattering(value: number) {
+        this._volumetricScattering = value;
+        if (this.component) {
+            this.component.volumetricScattering = value;
+        }
+    }
+
+    /**
+     * Gets how strongly the light scatters into volumetric fog, which applies only to `omni` and
+     * `spot` lights while a camera frame renders volumetric fog with local lights.
+     * @returns The volumetric scattering multiplier.
+     */
+    get volumetricScattering() {
+        return this._volumetricScattering;
+    }
+
+    /**
      * Sets the penumbra size of the light. Used for PCSS shadows.
      * @param value - The penumbra size.
      */
@@ -665,6 +690,7 @@ class LightComponentElement extends ComponentElement<LightComponent> {
             'shadow-type',
             'shape',
             'type',
+            'volumetric-scattering',
             'vsm-bias',
             'vsm-blur-size'
         ];
@@ -736,6 +762,9 @@ class LightComponentElement extends ComponentElement<LightComponent> {
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
+                break;
+            case 'volumetric-scattering':
+                this.volumetricScattering = parseNumber(newValue, 1, name);
                 break;
             case 'vsm-bias':
                 this.vsmBias = parseNumber(newValue, 0.0025, name);

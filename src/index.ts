@@ -177,6 +177,7 @@ export type {
     FresnelModel,
     OccludeSpecular,
     OpacityDither,
+    ParallaxMode,
     ScalarChannel
 } from './material';
 export type { HierarchyMaterial, HierarchyNode } from './model';
