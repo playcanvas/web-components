@@ -100,6 +100,13 @@ if (manifest) {
     expectAttribute('pc-camera', 'clear-color', { default: '0.75 0.75 0.75 1' });
     expectAttribute('pc-camera', 'rect', { default: '0 0 1 1' });
     expectAttribute('pc-scene', 'gravity', { default: '0 -9.81 0' });
+    expectAttribute('pc-scene', 'lighting-max-lights', { type: 'number', default: '255', fieldName: 'lightingMaxLights' });
+    expectAttribute('pc-scene', 'gsplat-use-tonemap', { type: 'boolean', default: 'true', fieldName: 'gsplatUseTonemap' });
+
+    // The engine keeps the credentials flag in its shared HTTP client, not on the application, so
+    // the tooltip has to say that one <pc-app> sets it for the whole page
+    check((attribute('pc-app', 'with-credentials')?.description ?? '').includes('every application on the page'),
+        `pc-app[with-credentials] does not say it is page-wide: ${JSON.stringify(attribute('pc-app', 'with-credentials')?.description)}`);
     expectAttribute('pc-entity', 'position', { default: '0 0 0', fieldName: 'position' });
     expectAttribute('pc-entity', 'scale', { default: '1 1 1' });
     expectAttribute('pc-model', 'position', { default: '0 0 0', fieldName: 'position' });

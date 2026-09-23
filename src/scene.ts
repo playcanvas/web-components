@@ -2,7 +2,7 @@ import type { Scene } from 'playcanvas';
 import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
-import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
+import { parseBool, parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
@@ -11,8 +11,8 @@ import { parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
  * {@link HTMLElement} interface.
  *
  * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
- * along with scene-wide fog, exposure, Gaussian splat LOD and gravity settings. Must be a direct
- * child of `<pc-app>`.
+ * along with scene-wide fog, exposure, Gaussian splat, clustered lighting and physics settings.
+ * Must be a direct child of `<pc-app>`.
  *
  * @category Application
  */
@@ -58,9 +58,29 @@ class SceneElement extends AsyncElement {
     private _gsplatSplatBudget = 1_000_000;
 
     /**
+     * Whether Gaussian splats are fogged.
+     */
+    private _gsplatUseFog = true;
+
+    /**
+     * Whether Gaussian splats are tonemapped and exposed.
+     */
+    private _gsplatUseTonemap = true;
+
+    /**
      * The gravity of the scene.
      */
     private _gravity = new Vec3(0, -9.81, 0);
+
+    /**
+     * The maximum number of lights clustered lighting uses in a frame.
+     */
+    private _lightingMaxLights = 255;
+
+    /**
+     * The scale on the time the physics simulation advances by each frame.
+     */
+    private _physicsTimeScale = 1;
 
     private _scene: Scene | null = null;
 
@@ -124,8 +144,13 @@ class SceneElement extends AsyncElement {
 
             this._scene.gsplat.lodMode = this._gsplatLodMode;
             this._scene.gsplat.splatBudget = this._gsplatSplatBudget;
+            this._scene.gsplat.useFog = this._gsplatUseFog;
+            this._scene.gsplat.useTonemap = this._gsplatUseTonemap;
+
+            this._scene.lighting.maxLights = this._lightingMaxLights;
 
             this._applyGravity(this._gravity);
+            this._applyPhysicsTimeScale(this._physicsTimeScale);
         }
     }
 
@@ -138,6 +163,18 @@ class SceneElement extends AsyncElement {
      */
     private _applyGravity(value: Vec3) {
         this.closestApp?.app?.systems.rigidbody?.gravity.copy(value);
+    }
+
+    /**
+     * Applies the physics time scale to the rigid body system, resolved like the gravity.
+     *
+     * @param value - The time scale to apply.
+     */
+    private _applyPhysicsTimeScale(value: number) {
+        const rigidbody = this.closestApp?.app?.systems.rigidbody;
+        if (rigidbody) {
+            rigidbody.timeScale = value;
+        }
     }
 
     /**
@@ -299,6 +336,46 @@ class SceneElement extends AsyncElement {
     }
 
     /**
+     * Sets whether the scene fog applies to Gaussian splats. Defaults to `true`.
+     * @param value - Whether Gaussian splats are fogged.
+     */
+    set gsplatUseFog(value: boolean) {
+        this._gsplatUseFog = value;
+        if (this.scene) {
+            this.scene.gsplat.useFog = value;
+        }
+    }
+
+    /**
+     * Gets whether the scene fog applies to Gaussian splats.
+     * @returns Whether Gaussian splats are fogged.
+     */
+    get gsplatUseFog() {
+        return this._gsplatUseFog;
+    }
+
+    /**
+     * Sets whether the camera's tonemapping and the scene's exposure apply to Gaussian splats.
+     * When `false`, splats render with their stored colors, which suits captured scenes that are
+     * already display-ready. Fog still applies. Defaults to `true`.
+     * @param value - Whether Gaussian splats are tonemapped.
+     */
+    set gsplatUseTonemap(value: boolean) {
+        this._gsplatUseTonemap = value;
+        if (this.scene) {
+            this.scene.gsplat.useTonemap = value;
+        }
+    }
+
+    /**
+     * Gets whether the camera's tonemapping and the scene's exposure apply to Gaussian splats.
+     * @returns Whether Gaussian splats are tonemapped.
+     */
+    get gsplatUseTonemap() {
+        return this._gsplatUseTonemap;
+    }
+
+    /**
      * Sets the gravity of the scene.
      * @param value - The gravity.
      */
@@ -317,6 +394,48 @@ class SceneElement extends AsyncElement {
         return this._gravity;
     }
 
+    /**
+     * Sets the maximum number of lights clustered lighting uses in a frame, from 1 to 65535;
+     * lights over the limit are ignored with a warning. Values above 255 double the memory of
+     * the light grid. Defaults to 255.
+     * @param value - The maximum number of lights.
+     */
+    set lightingMaxLights(value: number) {
+        this._lightingMaxLights = value;
+        if (this.scene) {
+            this.scene.lighting.maxLights = value;
+        }
+    }
+
+    /**
+     * Gets the maximum number of lights clustered lighting uses in a frame.
+     * @returns The maximum number of lights.
+     */
+    get lightingMaxLights() {
+        return this._lightingMaxLights;
+    }
+
+    /**
+     * Sets the scale on the time the physics simulation advances by each frame: below 1 is slow
+     * motion, above 1 speeds it up and 0 pauses it while the rest of the application keeps
+     * running. Applied on top of the application's own time scale. Defaults to 1.
+     * @param value - The physics time scale.
+     */
+    set physicsTimeScale(value: number) {
+        this._physicsTimeScale = value;
+        if (this._scene) {
+            this._applyPhysicsTimeScale(value);
+        }
+    }
+
+    /**
+     * Gets the scale on the time the physics simulation advances by each frame.
+     * @returns The physics time scale.
+     */
+    get physicsTimeScale() {
+        return this._physicsTimeScale;
+    }
+
     static get observedAttributes() {
         return [
             'exposure',
@@ -327,7 +446,11 @@ class SceneElement extends AsyncElement {
             'fog-end',
             'gsplat-lod-mode',
             'gsplat-splat-budget',
-            'gravity'
+            'gsplat-use-fog',
+            'gsplat-use-tonemap',
+            'gravity',
+            'lighting-max-lights',
+            'physics-time-scale'
         ];
     }
 
@@ -357,8 +480,20 @@ class SceneElement extends AsyncElement {
             case 'gsplat-splat-budget':
                 this.gsplatSplatBudget = parseNumber(newValue, 1_000_000, name);
                 break;
+            case 'gsplat-use-fog':
+                this.gsplatUseFog = parseBool(newValue, true);
+                break;
+            case 'gsplat-use-tonemap':
+                this.gsplatUseTonemap = parseBool(newValue, true);
+                break;
             case 'gravity':
                 this.gravity = parseVec3(newValue, new Vec3(0, -9.81, 0), name);
+                break;
+            case 'lighting-max-lights':
+                this.lightingMaxLights = parseNumber(newValue, 255, name);
+                break;
+            case 'physics-time-scale':
+                this.physicsTimeScale = parseNumber(newValue, 1, name);
                 break;
             // ... handle other attributes as well
         }
