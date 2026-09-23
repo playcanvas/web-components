@@ -127,6 +127,19 @@ if (manifest) {
     check(attribute('pc-element', 'margin')?.default === undefined,
         'pc-element[margin] should have no default');
 
+    // The text styling attributes that do nothing without another attribute say so in the first
+    // sentence, the only one that reaches the tooltip
+    for (const [name, caveat] of [
+        ['justify', 'wrap-lines'],
+        ['max-lines', 'wrap-lines'],
+        ['outline-color', 'outline-thickness'],
+        ['shadow-color', 'shadow-offset']
+    ]) {
+        const description = attribute('pc-element', name)?.description ?? '';
+        check(description.includes(caveat),
+            `pc-element[${name}] does not mention '${caveat}': ${JSON.stringify(description)}`);
+    }
+
     // pc-material carries by far the largest attribute surface, and it is the one element whose
     // attributes are mostly mechanical repetitions of a handful of shapes - so a regression in any
     // one shape would be easy to miss by eye.
@@ -187,6 +200,9 @@ if (manifest) {
     expectEnum('pc-camera', 'tonemap', 7, 'linear');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-light', 'shape', 4, 'punctual');
+    expectEnum('pc-element', 'fit-mode', 3, 'stretch');
+    expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'always');
+    expectEnum('pc-scroll-view', 'vertical-scrollbar-visibility', 2, 'always');
 
     // Both only act in company: the mask needs the entity to cast shadows at all, and a light only
     // scatters into the fog a camera frame renders
@@ -194,8 +210,6 @@ if (manifest) {
         `pc-render[shadow-cascade-mask] does not mention 'cast-shadows': ${JSON.stringify(attribute('pc-render', 'shadow-cascade-mask')?.description)}`);
     check((attribute('pc-light', 'volumetric-scattering')?.description ?? '').includes('omni'),
         `pc-light[volumetric-scattering] does not mention 'omni': ${JSON.stringify(attribute('pc-light', 'volumetric-scattering')?.description)}`);
-    expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'always');
-    expectEnum('pc-scroll-view', 'vertical-scrollbar-visibility', 2, 'always');
 
     // An area light shape renders wrong until <pc-app> has loaded the lookup tables, so its tooltip
     // has to point at the attribute that does that
