@@ -21,14 +21,13 @@
 /**
  * The attribute-parsing helpers from `src/parse.ts`, mapped to the manifest type they imply.
  * `format` selects a trailing hint appended to the attribute description, since the accepted
- * string syntax of a color or vector attribute is not obvious from the type alone. `default` is
- * the published default of a helper that takes none as an argument.
+ * string syntax of a color or vector attribute is not obvious from the type alone.
  */
 const PARSE_HELPERS = {
     parseBool: { type: 'boolean' },
-    parseCascadeMask: { type: 'string', format: 'cascades', default: '0 1 2 3' },
     parseNumber: { type: 'number' },
     parseEnum: { type: 'enum' },
+    parseFlags: { type: 'flags' },
     parseColor: { type: 'string', format: 'color' },
     parseQuat: { type: 'string', format: 'quat' },
     parseVec2: { type: 'string', format: 'vec2' },
@@ -37,7 +36,6 @@ const PARSE_HELPERS = {
 };
 
 const FORMAT_HINTS = {
-    cascades: 'Accepts space-separated shadow cascade indices from 0 to 3.',
     color: 'Accepts a CSS color name, a hex color, or 3 or 4 space-separated numbers in the range 0 to 1.',
     quat: 'Accepts 3 space-separated Euler angles in degrees.',
     vec2: 'Accepts 2 space-separated numbers.',
@@ -313,7 +311,8 @@ const renderDefault = (ts, expression) => {
  * @param {import('typescript').SourceFile} sourceFile - The file declaring the element.
  * @param {import('typescript').Expression} [value] - The assigned expression.
  * @param {string} context - A label used in warnings.
- * @returns {{ type: string, default?: string, format?: string }} The derived metadata.
+ * @returns {{ type: string, default?: string, hint?: string }} The derived metadata, where `hint`
+ * is the syntax sentence appended to the attribute description.
  */
 const describeValue = (ts, sourceFile, value, context) => {
     // A branch with no assignment (or one assigning the raw attribute value) is a plain string
@@ -340,10 +339,24 @@ const describeValue = (ts, sourceFile, value, context) => {
         };
     }
 
+    // A set of flags takes any combination of its names, so it has no union type to publish -
+    // the names go in the syntax hint instead. The default is written in markup form.
+    if (helper.type === 'flags') {
+        const values = resolveEnumValues(ts, sourceFile, second);
+        if (values.length === 0) {
+            console.warn(`[cem] could not resolve flag names for ${context}; publishing no syntax hint`);
+        }
+        return {
+            type: 'string',
+            default: renderDefault(ts, third),
+            hint: values.length > 0 ? `Accepts space-separated names from: ${values.join(', ')}.` : undefined
+        };
+    }
+
     return {
         type: helper.type,
-        default: helper.default ?? renderDefault(ts, second),
-        format: helper.format
+        default: renderDefault(ts, second),
+        hint: FORMAT_HINTS[helper.format]
     };
 };
 
@@ -398,7 +411,7 @@ export const attributesFromCallbackPlugin = () => ({
         for (const branch of collectBranches(ts, callback.body)) {
             const assignment = findAssignment(ts, branch.statements);
             const fieldName = assignment?.fieldName ?? kebabToCamel(branch.name);
-            const { type, default: defaultValue, format } = describeValue(
+            const { type, default: defaultValue, hint } = describeValue(
                 ts, sourceFile, assignment?.value, `${classDoc.name}'s '${branch.name}'`
             );
 
@@ -415,9 +428,9 @@ export const attributesFromCallbackPlugin = () => ({
             if (defaultValue !== undefined) {
                 attribute.default = defaultValue;
             }
-            if (format) {
+            if (hint) {
                 // Consumed (and removed) in moduleLinkPhase, once member docs are available
-                attribute._pwcFormat = format;
+                attribute._pwcHint = hint;
             }
         }
     },
@@ -425,8 +438,8 @@ export const attributesFromCallbackPlugin = () => ({
     moduleLinkPhase({ moduleDoc }) {
         for (const declaration of moduleDoc.declarations ?? []) {
             for (const attribute of declaration.attributes ?? []) {
-                const hint = FORMAT_HINTS[attribute._pwcFormat];
-                delete attribute._pwcFormat;
+                const hint = attribute._pwcHint;
+                delete attribute._pwcHint;
 
                 if (!attribute.description) {
                     const member = declaration.members?.find(candidate => candidate.kind === 'field' &&

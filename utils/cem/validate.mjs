@@ -206,6 +206,10 @@ if (manifest) {
     expectEnum('pc-scroll-view', 'horizontal-scrollbar-visibility', 2, 'always');
     expectEnum('pc-scroll-view', 'vertical-scrollbar-visibility', 2, 'always');
 
+    // A flags attribute publishes its names in the syntax hint, since any combination is valid
+    check((attribute('pc-render', 'shadow-cascade-mask')?.description ?? '').includes('Accepts space-separated names from: 0, 1, 2, 3.'),
+        `pc-render[shadow-cascade-mask] does not list its names: ${JSON.stringify(attribute('pc-render', 'shadow-cascade-mask')?.description)}`);
+
     // Both only act in company: the mask needs the entity to cast shadows at all, and a light only
     // scatters into the fog a camera frame renders
     check((attribute('pc-render', 'shadow-cascade-mask')?.description ?? '').includes('cast-shadows'),

@@ -11,10 +11,9 @@
  *   shared frozen constants (`Vec3.ZERO`, `Color.WHITE`) as defaults.
  * - `parseBool` and `parseTags` take no attribute name, because every value is valid for them and
  *   so they never warn.
- * - `parseCascadeMask` takes no default, because its only default is every cascade.
  */
 
-import { Color, Quat, SHADOW_CASCADE_ALL, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { CSS_COLORS } from './colors';
 
@@ -62,31 +61,6 @@ const cloneDefault = <T extends Color | Quat | Vec2 | Vec3 | Vec4 | null>(value:
  */
 export const parseBool = (value: string | null, defaultValue: boolean): boolean => {
     return value === null ? defaultValue : value !== 'false';
-};
-
-/**
- * Parses a shadow cascade mask attribute value: the space-separated indices, 0 to 3, of the
- * shadow cascades to include, folded into the engine's bitmask (cascade `n` is bit `n`, the value
- * of `SHADOW_CASCADE_n`). An empty value includes none. Returns `SHADOW_CASCADE_ALL` when the
- * attribute is absent (`null`), or when an index is invalid — the latter also logs a warning.
- *
- * @param value - The attribute value to parse (`null` when the attribute is absent).
- * @param attribute - The attribute name, used in the warning message.
- * @returns The cascade mask.
- * @internal
- */
-export const parseCascadeMask = (value: string | null, attribute: string): number => {
-    if (value === null) {
-        return SHADOW_CASCADE_ALL;
-    }
-    const indices = value.trim().split(/\s+/).filter(Boolean);
-    if (indices.every((index) => /^[0-3]$/.test(index))) {
-        return indices.reduce((mask, index) => mask | (1 << Number(index)), 0);
-    }
-    console.warn(
-        `Invalid value '${value}' for attribute '${attribute}'. Expected space-separated cascade indices from 0 to 3. Using all cascades.`
-    );
-    return SHADOW_CASCADE_ALL;
 };
 
 /**
@@ -172,6 +146,43 @@ export const parseEnum = <T extends string>(
         `Invalid value '${value}' for attribute '${attribute}'. Valid values: ${names.join(', ')}. Using '${defaultValue}'.`
     );
     return defaultValue;
+};
+
+/**
+ * Resolves a flags attribute value - a space-separated set of names, in any order - against the
+ * valid names, and combines the engine flag each one maps to into a bitmask. An empty value
+ * combines none, giving 0. Returns the mask of `defaultValue` when the attribute is absent
+ * (`null`), or when any name is invalid — the latter also logs a warning listing the valid names.
+ *
+ * The default is given in markup form, like the value, so that it reads the same in the code as it
+ * does in the published manifest.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param flags - The valid names, each mapped to its engine flag.
+ * @param defaultValue - The names to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The combined flags.
+ * @internal
+ */
+export const parseFlags = <T extends string>(
+    value: string | null,
+    flags: ReadonlyMap<T, number>,
+    defaultValue: string,
+    attribute: string
+): number => {
+    const combine = (names: string[]) => names.reduce((mask, name) => mask | flags.get(name as T)!, 0);
+    const split = (text: string) => text.split(/\s+/).filter(Boolean);
+
+    if (value !== null) {
+        const names = split(value);
+        if (names.every((name) => flags.has(name as T))) {
+            return combine(names);
+        }
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected space-separated names from: ${[...flags.keys()].join(', ')}. Using '${defaultValue}'.`
+        );
+    }
+    return combine(split(defaultValue));
 };
 
 /**

@@ -1,10 +1,23 @@
 import type { RenderComponent, StandardMaterial } from 'playcanvas';
-import { SHADOW_CASCADE_ALL } from 'playcanvas';
+import { SHADOW_CASCADE_0, SHADOW_CASCADE_1, SHADOW_CASCADE_2, SHADOW_CASCADE_3 } from 'playcanvas';
 
 import { MaterialElement } from '../material';
-import { parseBool, parseCascadeMask, parseEnum } from '../parse';
+import { parseBool, parseEnum, parseFlags } from '../parse';
 
 import { ComponentElement } from './component';
+
+// The shadow cascades are named by their index, nearest the camera first
+const shadowCascades = new Map<'0' | '1' | '2' | '3', number>([
+    ['0', SHADOW_CASCADE_0],
+    ['1', SHADOW_CASCADE_1],
+    ['2', SHADOW_CASCADE_2],
+    ['3', SHADOW_CASCADE_3]
+]);
+
+// Every cascade, which is how the markup default `0 1 2 3` combines. The engine's own default,
+// SHADOW_CASCADE_ALL, sets the bits of cascades it does not have as well (255 rather than 15), but
+// directional lights stop at four cascades, so the two render the same.
+const ALL_CASCADES = SHADOW_CASCADE_0 | SHADOW_CASCADE_1 | SHADOW_CASCADE_2 | SHADOW_CASCADE_3;
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -32,7 +45,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
 
     private _receiveShadows = true;
 
-    private _shadowCascadeMask: number = SHADOW_CASCADE_ALL;
+    private _shadowCascadeMask = ALL_CASCADES;
 
     private _type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'box';
 
@@ -153,8 +166,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
      * Sets which shadow cascades of directional lights the render component casts into, which
      * needs `cast-shadows`. In markup, it is the space-separated cascade indices from 0 to 3, such
      * as `0 1` for the two cascades nearest the camera; as a property, it is the engine's bitmask
-     * of `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags. Defaults to all cascades
-     * (`SHADOW_CASCADE_ALL`).
+     * of `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags. Defaults to all cascades, `0 1 2 3`.
      * @param value - The cascade mask.
      */
     set shadowCascadeMask(value: number) {
@@ -199,7 +211,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
                 this.receiveShadows = parseBool(newValue, true);
                 break;
             case 'shadow-cascade-mask':
-                this.shadowCascadeMask = parseCascadeMask(newValue, name);
+                this.shadowCascadeMask = parseFlags(newValue, shadowCascades, '0 1 2 3', name);
                 break;
             case 'type':
                 this.type = parseEnum(newValue, ['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere'], 'box', name);
