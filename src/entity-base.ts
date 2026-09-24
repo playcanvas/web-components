@@ -2,38 +2,14 @@ import type { Entity } from 'playcanvas';
 
 import type { AppElement } from './app';
 import { AsyncElement } from './async-element';
-
-/**
- * The event types the containing `<pc-app>` synthesizes on entity-fronting elements via picking:
- * the `pointer*` events, plus `click` — which concludes a primary-button press and release, and
- * is delivered as a `PointerEvent` exactly as modern browsers deliver native clicks.
- * @internal
- */
-export const SYNTHESIZED_EVENTS = [
-    'pointerenter',
-    'pointerleave',
-    'pointerdown',
-    'pointerup',
-    'pointermove',
-    'click'
-] as const;
-
-const SYNTHESIZED_EVENT_SET: ReadonlySet<string> = new Set(SYNTHESIZED_EVENTS);
-
-/**
- * The attribute names of the inline event handlers (`onpointerdown`, `onclick`, ...), shared by
- * every element that fronts an engine entity. Spread into `observedAttributes` by subclasses.
- * @internal
- */
-export const EVENT_ATTRIBUTES = SYNTHESIZED_EVENTS.map((type) => `on${type}`);
+import { ListenerRegistry } from './pointer-events';
 
 /**
  * The base class for elements that front an engine {@link Entity}: `<pc-entity>` and
  * `<pc-model>`, which create one, and `<pc-node>`, which binds to one inside a model's
  * instantiated hierarchy. It carries what all of them need — the `entity` contract, registration
  * with the owning application (which joins picked scene nodes back to elements by identity,
- * never by name), and the pointer listener bookkeeping that lets the application lazily attach
- * its canvas handlers.
+ * never by name), and the pointer listener bookkeeping that tells the application when to pick.
  *
  * @category Base Classes
  */
@@ -47,15 +23,11 @@ class EntityBaseElement extends AsyncElement {
     protected _appElement: AppElement | null = null;
 
     /**
-     * The event listeners registered on the element, by type.
+     * The pointer listeners registered on the element, which the containing `<pc-app>` reads to
+     * decide when to pick.
+     * @internal
      */
-    private _listeners: Record<string, EventListener[]> = {};
-
-    /**
-     * The event types for which an inline handler attribute (`onpointerdown`, `onclick`, ...)
-     * is currently present.
-     */
-    private _inlineHandlerTypes = new Set<string>();
+    readonly _pointerListeners = new ListenerRegistry(this);
 
     /**
      * The PlayCanvas entity instance. `null` until the element is ready, and again once the
@@ -89,62 +61,64 @@ class EntityBaseElement extends AsyncElement {
     }
 
     /**
-     * Tracks whether an inline handler attribute is present. The browser itself compiles and
-     * runs these attributes — they are standard `GlobalEventHandlers`, so setting one replaces
-     * the previous handler and removing it removes the handler, exactly like `onclick` on any
-     * HTML element. But because they bypass {@link EventTarget.addEventListener}, the connect/disconnect
-     * bookkeeping that lets the application lazily attach its canvas pointer handlers must be
-     * kept in sync here.
+     * Registers a listener exactly as {@link EventTarget.addEventListener} does, and records it
+     * for the pointer bookkeeping. Internal so that the published typings keep the DOM's own
+     * typed signatures.
      *
-     * @param name - The attribute name (e.g. 'onpointerdown').
-     * @param value - The attribute value, or `null` when the attribute has been removed.
+     * @param type - The event type.
+     * @param listener - The listener.
+     * @param options - The listener options.
+     * @internal
      */
-    protected _updateInlineHandler(name: string, value: string | null) {
-        const type = name.substring(2);
-        const had = this._inlineHandlerTypes.has(type);
-        const has = value !== null;
-
-        if (has && !had) {
-            this._inlineHandlerTypes.add(type);
-            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
-        } else if (!has && had) {
-            this._inlineHandlerTypes.delete(type);
-            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
-        }
-    }
-
-    addEventListener(type: string, listener: EventListener, options?: boolean | AddEventListenerOptions) {
-        if (!this._listeners[type]) {
-            this._listeners[type] = [];
-        }
-        this._listeners[type].push(listener);
+    addEventListener<K extends keyof HTMLElementEventMap>(
+        type: K,
+        listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @internal */
+    addEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @internal */
+    addEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ) {
         super.addEventListener(type, listener, options);
-        if (SYNTHESIZED_EVENT_SET.has(type)) {
-            this.dispatchEvent(new CustomEvent(`${type}:connect`, { bubbles: true }));
-        }
-    }
-
-    removeEventListener(type: string, listener: EventListener, options?: boolean | EventListenerOptions) {
-        if (this._listeners[type]) {
-            this._listeners[type] = this._listeners[type].filter((l) => l !== listener);
-        }
-        super.removeEventListener(type, listener, options);
-        if (SYNTHESIZED_EVENT_SET.has(type)) {
-            this.dispatchEvent(new CustomEvent(`${type}:disconnect`, { bubbles: true }));
-        }
+        this._pointerListeners.add(type, listener, options);
     }
 
     /**
-     * Whether the element has a listener for an event type, registered either with
-     * {@link EventTarget.addEventListener} or with the matching inline handler attribute. Read by the
-     * containing `<pc-app>` element to gate event synthesis.
+     * Removes a listener exactly as {@link EventTarget.removeEventListener} does, and forgets it
+     * for the pointer bookkeeping.
      *
      * @param type - The event type.
-     * @returns Whether a listener is registered.
+     * @param listener - The listener.
+     * @param options - The listener options.
      * @internal
      */
-    _hasListeners(type: string): boolean {
-        return Boolean(this._listeners[type]?.length) || this._inlineHandlerTypes.has(type);
+    removeEventListener<K extends keyof HTMLElementEventMap>(
+        type: K,
+        listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown,
+        options?: boolean | EventListenerOptions
+    ): void;
+    /** @internal */
+    removeEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | EventListenerOptions
+    ): void;
+    /** @internal */
+    removeEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | EventListenerOptions
+    ) {
+        super.removeEventListener(type, listener, options);
+        this._pointerListeners.remove(type, listener, options);
     }
 }
 

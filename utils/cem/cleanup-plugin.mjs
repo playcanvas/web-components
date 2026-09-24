@@ -8,11 +8,11 @@
  *   and it keeps underscore-prefixed members that carry no marker at all. Manifest consumers
  *   such as editor plugins and Storybook surface every member they are given, so anything that
  *   is not public API is dropped here.
- * - `src/entity.ts` dispatches internal wiring events with computed names (`` `${type}:connect` ``)
- *   that cannot be resolved statically, so whatever the analyzer makes of them is dropped.
- * - `src/app.ts` dispatches the pointer and click events *onto* `<pc-entity>` elements rather
- *   than onto itself, so they belong to `EntityElement` (where they are declared with `@fires`),
- *   not to `AppElement`.
+ * - An event dispatched with a computed name (a template literal) cannot be resolved statically,
+ *   so whatever the analyzer makes of it is dropped.
+ * - `<pc-app>` dispatches the pointer and click events *onto* the entity elements rather than
+ *   onto itself, so they belong to those elements (where they are declared with `@fires`), not
+ *   to `AppElement`.
  * - Attributes and events declared on the `AsyncElement` and `ComponentElement` base classes are
  *   copied onto the elements that inherit them, marked with `inheritedFrom`. Without this, an
  *   element like `<pc-audio-listener>` would appear to have no attributes at all, when in fact it
@@ -24,7 +24,10 @@
  */
 
 /** Events dispatched by `AppElement` but targeted at `EntityElement`. */
-const SYNTHESIZED_EVENTS = new Set(['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup', 'click']);
+const SYNTHESIZED_EVENTS = new Set([
+    'pointerover', 'pointerenter', 'pointermove', 'pointerdown', 'pointerup', 'pointercancel', 'pointerout',
+    'pointerleave', 'click'
+]);
 
 const byName = (a, b) => a.name.localeCompare(b.name);
 

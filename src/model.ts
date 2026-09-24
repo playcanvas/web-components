@@ -2,7 +2,6 @@ import type { ContainerResource, Entity } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
 import { AssetBinding } from './asset-binding';
-import { EVENT_ATTRIBUTES } from './entity-base';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseBool, parseTags, parseVec3 } from './parse';
 
@@ -140,24 +139,41 @@ const formatHierarchy = (root: HierarchyNode, counts: ReadonlyMap<string, number
  * @attribute {string} rotation - The rotation of the model.
  * @attribute {string} scale - The scale of the model.
  * @attribute {string} tags - The tags of the model.
- * @attribute {string} onpointerenter - Script to run when the pointer moves onto the model.
- * @attribute {string} onpointerleave - Script to run when the pointer moves off the model.
+ * @attribute {string} onpointerover - Script to run when the pointer moves onto the model, or onto
+ * an entity below it.
+ * @attribute {string} onpointerenter - Script to run when the pointer moves onto the model or an
+ * entity below it, having been over none of them.
  * @attribute {string} onpointermove - Script to run when the pointer moves over the model.
  * @attribute {string} onpointerdown - Script to run when a pointer button is pressed over the
  * model.
- * @attribute {string} onpointerup - Script to run when a pointer button is released over the
- * model.
- * @attribute {string} onclick - Script to run when the model is clicked: a primary pointer
- * button pressed and then released over it.
- * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the model.
- * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the model.
+ * @attribute {string} onpointerup - Script to run when a pointer button is released over the model.
+ * @attribute {string} onpointercancel - Script to run when the browser cancels a press that began
+ * over the model, for example because a touch became a scroll.
+ * @attribute {string} onpointerout - Script to run when the pointer moves off the model, or off an
+ * entity below it.
+ * @attribute {string} onpointerleave - Script to run when the pointer moves off the model and every
+ * entity below it.
+ * @attribute {string} onclick - Script to run when the model is clicked: a primary pointer button
+ * pressed and then released over it.
+ * @fires {PointerEvent} pointerover - Fired when the pointer moves onto the model. Bubbles;
+ * `relatedTarget` is the element the pointer came from, which is `<pc-app>` when it came from the
+ * background.
+ * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the model or an entity
+ * below it, having been over none of them. Does not bubble.
  * @fires {PointerEvent} pointermove - Fired when the pointer moves over the model.
  * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the model.
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the model.
+ * @fires {PointerEvent} pointercancel - Fired on the model a press began over when the browser
+ * cancels that press, for example because a touch became a scroll. No click follows.
+ * @fires {PointerEvent} pointerout - Fired when the pointer moves off the model. Bubbles;
+ * `relatedTarget` is the element the pointer went to, which is `<pc-app>` when it went to the
+ * background.
+ * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the model and every entity
+ * below it. Does not bubble.
  * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
- * over the model. A press and release that picked different entities fires on their nearest
- * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
- * arrives as a click whose `detail` is 2.
+ * over the model. A press and release that picked different elements fires on their nearest common
+ * ancestor instead, as in the DOM. `detail` carries the click count, so a double click arrives as a
+ * click whose `detail` is 2.
  * @fires {Event} load - Fired each time a container asset finishes instantiating, including
  * re-instantiation after `asset` changes. Does not bubble — listen on this element, or use a
  * capture-phase listener on an ancestor.
@@ -423,7 +439,7 @@ class ModelElement extends EntityOwnerElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'enabled', 'name', 'position', 'rotation', 'scale', 'tags', ...EVENT_ATTRIBUTES];
+        return ['asset', 'enabled', 'name', 'position', 'rotation', 'scale', 'tags'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -448,14 +464,6 @@ class ModelElement extends EntityOwnerElement {
                 break;
             case 'tags':
                 this.tags = parseTags(newValue);
-                break;
-            case 'onpointerenter':
-            case 'onpointerleave':
-            case 'onpointerdown':
-            case 'onpointerup':
-            case 'onpointermove':
-            case 'onclick':
-                this._updateInlineHandler(name, newValue);
                 break;
         }
     }

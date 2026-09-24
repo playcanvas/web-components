@@ -1,33 +1,35 @@
 import type { AppBase, CameraComponent, GraphNode, GSplatComponent } from 'playcanvas';
 import { MeshInstance, Picker } from 'playcanvas';
 
-import type { EntityBaseElement } from './entity-base';
-import { SYNTHESIZED_EVENTS } from './entity-base';
+import { EntityBaseElement } from './entity-base';
+import { createPointerEvent, hasVisibleListener } from './pointer-events';
+import type { SynthesizedEventType } from './pointer-events';
 
 // Keep `export` on these declarations. TypeScript removes the declaration and its inline export
 // when `stripInternal` is enabled. A separate `export { ... }` statement would remain in the
 // generated .d.ts file and refer to a declaration that had been removed.
 
 /**
- * The event types whose listeners make an element a hover target. Hover resolution walks past
- * elements listening for none of them, so a silent element never swallows an ancestor's
- * enter/leave pair.
+ * The event types only a hover pick produces: the boundary events and moves. Picking on every
+ * move is the expensive part of pointer input, so it only happens while one of these is listened
+ * for (or `picking` is `always`).
  */
-const hoverEventTypes = ['pointerenter', 'pointerleave', 'pointermove'] as const;
+const HOVER_EVENTS: readonly SynthesizedEventType[] = [
+    'pointerover',
+    'pointerenter',
+    'pointermove',
+    'pointerout',
+    'pointerleave'
+];
 
 /**
- * The canvas listeners each synthesized event type is driven by. Enter and leave are derived
- * from move picks. A click is concluded from the down/up pair, with pointercancel discarding a
- * press the browser takes back (for example a touch that becomes a scroll).
+ * The event types a press pick serves: pointerdown itself, and the click and pointercancel that
+ * are later dispatched to the element the press picked.
  */
-const canvasEventsFor: Record<(typeof SYNTHESIZED_EVENTS)[number], readonly string[]> = {
-    pointermove: ['pointermove'],
-    pointerenter: ['pointermove'],
-    pointerleave: ['pointermove'],
-    pointerdown: ['pointerdown'],
-    pointerup: ['pointerup'],
-    click: ['pointerdown', 'pointerup', 'pointercancel']
-};
+const PRESS_EVENTS: readonly SynthesizedEventType[] = ['pointerdown', 'click', 'pointercancel'];
+
+/** The event types a release pick serves. */
+const RELEASE_EVENTS: readonly SynthesizedEventType[] = ['pointerup', 'click'];
 
 /**
  * How long after a click a further click on the same target still raises the click count that
@@ -36,35 +38,51 @@ const canvasEventsFor: Record<(typeof SYNTHESIZED_EVENTS)[number], readonly stri
 const CLICK_CHAIN_MS = 500;
 
 /**
- * Finds the nearest common inclusive ancestor of two picked nodes - the node a click belongs to
- * when the press and the release picked different geometry, exactly as the DOM assigns a click
- * whose down and up have different targets.
+ * Collects the elements a pointer over `target` is inside of: the target and its ancestors, up
+ * to but excluding `root` - the `<pc-app>`, whose own boundary events the canvas's native ones
+ * already cover.
  *
- * @param a - The node the press picked, or `null`.
- * @param b - The node the release picked, or `null`.
- * @returns The nearest common inclusive ancestor, or `null` when there is none.
+ * @param target - The element under the pointer, or `null` for none.
+ * @param root - The `<pc-app>` element.
+ * @returns The elements, innermost first.
  */
-const commonAncestor = (a: GraphNode | null, b: GraphNode | null): GraphNode | null => {
-    const ancestors = new Set<GraphNode>();
-    for (let node = a; node !== null; node = node.parent) {
-        ancestors.add(node);
+const chainOf = (target: Element | null, root: Element): Element[] => {
+    const chain: Element[] = [];
+    for (let element = target; element && element !== root; element = element.parentElement) {
+        chain.push(element);
     }
-    for (let node = b; node !== null; node = node.parent) {
-        if (ancestors.has(node)) {
-            return node;
-        }
-    }
-    return null;
+    return chain;
 };
 
 /**
- * The services the pointer controller needs from its host `<pc-app>` element. Both are read
- * fresh on every use, so the controller follows the host's registrations and tree without
+ * Finds the nearest common inclusive ancestor of two elements below `root` - the element a click
+ * belongs to when the press and the release picked different entities, exactly as the DOM
+ * assigns a click whose down and up have different targets.
+ *
+ * @param a - The element the press picked.
+ * @param b - The element the release picked.
+ * @param root - The `<pc-app>` element, which is never returned: its clicks are the canvas's own.
+ * @returns The nearest common inclusive ancestor below `root`, or `null` when there is none.
+ */
+const commonAncestor = (a: Element, b: Element, root: Element): Element | null => {
+    const ancestors = new Set(chainOf(a, root));
+    return chainOf(b, root).find((element) => ancestors.has(element)) ?? null;
+};
+
+/**
+ * The services the pointer controller needs from its host `<pc-app>` element. Each is read fresh
+ * on every use, so the controller follows the host's registrations, tree and settings without
  * holding any of them.
  *
  * @internal
  */
 export type PointerHost = {
+    /**
+     * The `<pc-app>` element. Its subtree is where listeners are looked for, and it stands for
+     * the background: the pointer is over it wherever it is over the canvas but no entity.
+     */
+    readonly element: HTMLElement;
+
     /**
      * Resolves a graph node to the element fronting it, or `null` for a node no element fronts
      * (for example, a node inside a model's instantiated hierarchy).
@@ -72,21 +90,59 @@ export type PointerHost = {
     elementFromNode(node: GraphNode): EntityBaseElement | null;
 
     /**
-     * The entity-fronting elements currently under the host, whose listeners decide which canvas
-     * handlers are needed.
+     * The elements whose listeners create demand for picking: the entity elements and the scene
+     * element they sit in.
      */
-    pointerTargets(): EntityBaseElement[];
+    listeningElements(): Iterable<Element>;
+
+    /** When to pick - see `AppElement.picking`. */
+    picking(): 'auto' | 'always' | 'none';
+};
+
+/**
+ * What the controller tracks for one pointer. Pointers are tracked separately, as the DOM tracks
+ * them - two touches can each be over a different entity.
+ */
+type PointerState = {
+    /**
+     * The elements the pointer is inside of, innermost first: the entity element under it and its
+     * ancestors below `<pc-app>`. Empty over the background and off the canvas.
+     */
+    chain: Element[];
+
+    /**
+     * Releases the pointer's newest move while it can still be superseded. A later move, or the
+     * pointer leaving the canvas, calls it: the superseded move then neither dispatches nor holds
+     * up the steps queued behind it by waiting for a pick whose result is no longer wanted. A
+     * press, release or cancel clears it instead, so the move before one of those keeps its place
+     * in the order. `null` when there is no move to release.
+     */
+    supersede: (() => void) | null;
+
+    /**
+     * The element the pointer's current press picked (`null` for the background) and the button
+     * that pressed it, until the release or cancel that ends the press.
+     */
+    press: { target: EntityBaseElement | null; button: number } | null;
+
+    /** The number of dispatch steps queued for the pointer and not yet run. */
+    pending: number;
 };
 
 /**
  * The pointer-input subsystem of a `<pc-app>` element: it owns the engine {@link Picker}, the
  * canvas pointer handlers, and everything between them - mapping browser coordinates into the
- * drawing buffer, selecting the camera, resolving picked nodes to listening elements, tracking
- * hover, and dispatching the synthesized pointer and click events in canvas-event order.
+ * drawing buffer, selecting the camera, resolving picked nodes to elements, tracking what each
+ * pointer is over, and dispatching the synthesized pointer events in canvas-event order.
+ *
+ * The events behave like the DOM's own. Each targets the element fronting the deepest node hit
+ * and propagates through the element tree - so a listener on an ancestor entity, on
+ * `<pc-scene>` or on the document receives it - with `pointerenter` and `pointerleave` dispatched,
+ * without bubbling, to each element the pointer enters or leaves. The canvas keeps receiving its
+ * native events throughout; nothing is ever dispatched on it.
  *
  * The host drives a small lifecycle: {@link connect} once the application and canvas exist,
- * {@link resize} when the drawing buffer changes size, {@link syncListeners} when a descendant's
- * pointer listeners change, and {@link disconnect} on teardown. Everything else is internal.
+ * {@link resize} when the drawing buffer changes size, and {@link disconnect} on teardown.
  *
  * @internal
  */
@@ -108,40 +164,22 @@ export class PointerController {
 
     private _picker: Picker | null = null;
 
-    private _hoveredEntity: EntityBaseElement | null = null;
+    /** The canvas listeners attached by {@link connect}, kept so disconnect can detach them. */
+    private _canvasHandlers: [string, EventListener][] = [];
 
-    // Identifies the newest in-flight hover pick, so out-of-order results can be discarded
-    private _pickToken = 0;
-
-    private _pointerHandlers: Record<string, EventListener | null> = {
-        pointermove: null,
-        pointerdown: null,
-        pointerup: null,
-        pointercancel: null
-    };
-
-    /**
-     * The pick of each pointer's primary-button press, keyed by pointerId and kept while a click
-     * may still conclude it. The promise is stored rather than its result, so a release can
-     * await a press pick that has not resolved yet. Entries are removed by the matching
-     * pointerup or pointercancel, and only ever stored while some element listens for click -
-     * which is also what keeps those two canvas listeners attached.
-     */
-    private _downPicks = new Map<number, Promise<GraphNode | null>>();
-
-    /** Whether any element in the tree listens for click. Maintained by syncListeners. */
-    private _clickListened = false;
+    /** The state of each pointer, by pointerId. */
+    private _pointers = new Map<number, PointerState>();
 
     /**
      * The previous click's target, time and count, for chaining successive clicks into the
-     * click count that `detail` carries. `null` until a click has fired.
+     * click count that `detail` carries. `null` until a click has concluded.
      */
-    private _lastClick: { element: EntityBaseElement; time: number; count: number } | null = null;
+    private _lastClick: { element: Element; time: number; count: number } | null = null;
 
     /**
-     * Serializes dispatch of the discrete synthesized events (pointerdown, pointerup, click),
-     * whose picks resolve in GPU order, not canvas-event order. Replaced on disconnect, so a
-     * pick that never resolves cannot stall the dispatches of a later boot.
+     * Serializes dispatch: picks resolve in GPU order, not canvas-event order, so each canvas
+     * event appends a step that awaits its own pick. Replaced on disconnect, so a pick that
+     * never resolves cannot stall the dispatches of a later boot.
      */
     private _dispatchChain: Promise<void> = Promise.resolve();
 
@@ -153,10 +191,9 @@ export class PointerController {
     }
 
     /**
-     * Creates the picker and the canvas handlers for a booted application, and attaches whatever
-     * canvas listeners the tree's current element listeners already need (handlers created from
-     * inline attributes when their elements were first upgraded, or listeners carried over from
-     * before a re-boot).
+     * Creates the picker for a booted application and attaches the canvas handlers. They stay
+     * attached for the connection's lifetime: whether a canvas event is worth a pick is decided
+     * per event, because an inline handler assigned as a property is invisible until then.
      *
      * @param app - The application to pick against.
      * @param canvas - The canvas the application renders into.
@@ -169,22 +206,14 @@ export class PointerController {
         const { width, height } = app.graphicsDevice;
         this._picker = new Picker(app, width, height);
 
-        // Create bound handlers but don't attach them yet. The move handler is async, so it is
-        // wrapped to discard the promise - a listener must not return one.
-        const listener = (handler: (event: PointerEvent) => void | Promise<void>): EventListener => {
-            return (event: Event) => {
-                handler.call(this, event as PointerEvent);
-            };
-        };
-
-        this._pointerHandlers.pointermove = listener(this._onPointerMove);
-        this._pointerHandlers.pointerdown = listener(this._onPointerDown);
-        this._pointerHandlers.pointerup = listener(this._onPointerUp);
-        this._pointerHandlers.pointercancel = (event: Event) => {
-            this._downPicks.delete((event as PointerEvent).pointerId);
-        };
-
-        this.syncListeners();
+        this._canvasHandlers = [
+            ['pointermove', (event) => this._onPointerMove(event as PointerEvent)],
+            ['pointerdown', (event) => this._onPointerDown(event as PointerEvent)],
+            ['pointerup', (event) => this._onPointerUp(event as PointerEvent)],
+            ['pointercancel', (event) => this._onPointerCancel(event as PointerEvent)],
+            ['pointerout', (event) => this._onPointerOut(event as PointerEvent)]
+        ];
+        this._canvasHandlers.forEach(([type, handler]) => canvas.addEventListener(type, handler));
     }
 
     /**
@@ -195,26 +224,13 @@ export class PointerController {
     disconnect() {
         this._generation++;
 
-        if (this._canvas) {
-            Object.entries(this._pointerHandlers).forEach(([type, handler]) => {
-                if (handler) {
-                    this._canvas!.removeEventListener(type, handler);
-                }
-            });
-        }
+        this._canvasHandlers.forEach(([type, handler]) => this._canvas?.removeEventListener(type, handler));
+        this._canvasHandlers = [];
 
         this._app = null;
         this._canvas = null;
         this._picker = null;
-        this._hoveredEntity = null;
-        this._pointerHandlers = {
-            pointermove: null,
-            pointerdown: null,
-            pointerup: null,
-            pointercancel: null
-        };
-        this._downPicks.clear();
-        this._clickListened = false;
+        this._pointers.clear();
         this._lastClick = null;
 
         // Replace the chain: a pick that never resolves must not stall a later boot's dispatches
@@ -233,75 +249,162 @@ export class PointerController {
     }
 
     /**
-     * Attaches exactly the canvas listeners the tree's current element listeners need, and
-     * detaches the rest. Called whenever a listener connects or disconnects anywhere under the
-     * host element: several synthesized types can need the same canvas listener (enter, leave
-     * and move all ride the move pick; click rides the down/up pair), so one type's removal
-     * must not detach a listener another type still uses. Re-attaching an attached listener is
-     * a no-op by EventTarget semantics, so no attach state is kept. Does nothing before
-     * {@link connect} - connecting syncs once the handlers exist.
+     * Whether any of `types` is worth picking for. `always` and `none` decide outright; `auto`
+     * picks while one of them has a listener the library can see on an entity element or the
+     * scene element - a listener anywhere else (on the document, or a framework's delegated
+     * handler) needs `always`.
+     *
+     * @param types - The event types a pick would serve.
+     * @returns Whether to pick.
      */
-    syncListeners() {
-        const canvas = this._canvas;
-        if (!canvas) return;
-
-        const elements = this._host.pointerTargets();
-        const needed = new Set<string>();
-        for (const type of SYNTHESIZED_EVENTS) {
-            if (elements.some((element) => element._hasListeners(type))) {
-                canvasEventsFor[type].forEach((canvasType) => needed.add(canvasType));
+    private _demanded(types: readonly SynthesizedEventType[]): boolean {
+        const mode = this._host.picking();
+        if (mode !== 'auto') {
+            return mode === 'always';
+        }
+        for (const element of this._host.listeningElements()) {
+            if (types.some((type) => hasVisibleListener(element, type))) {
+                return true;
             }
         }
-        this._clickListened = elements.some((element) => element._hasListeners('click'));
-
-        Object.entries(this._pointerHandlers).forEach(([canvasType, handler]) => {
-            if (!handler) return;
-            if (needed.has(canvasType)) {
-                canvas.addEventListener(canvasType, handler);
-            } else {
-                canvas.removeEventListener(canvasType, handler);
-            }
-        });
+        return false;
     }
 
     /**
-     * Resolves the element that owns hover for a picked node: the nearest node up the parent
-     * chain - starting with the node itself - whose element listens for any of the hover event
-     * types. Skipping silent elements matches {@link _elementWithListener}, so a registered
-     * element with no hover listeners (a `<pc-model>` host, a plain child entity) is transparent
-     * to hover rather than swallowing a listening ancestor's enter/leave pair.
+     * Dispatches a synthesized event. Under `auto` it is only dispatched when a listener the
+     * library can see is on its path - the target or an ancestor below `<pc-app>` - so a page
+     * that listens for nothing never receives synthesized events at all. Nothing is dispatched on
+     * an element that has left the document since it was picked, as the DOM dispatches no pointer
+     * events on a removed node.
+     *
+     * @param target - The element to dispatch on.
+     * @param type - The event type.
+     * @param source - The canvas event that caused it.
+     * @param relatedTarget - The element the pointer came from or went to, for the boundary events.
+     * @param detail - The click count, for `click`.
+     */
+    private _dispatch(
+        target: Element,
+        type: SynthesizedEventType,
+        source: PointerEvent,
+        relatedTarget: EventTarget | null = null,
+        detail = 0
+    ) {
+        const mode = this._host.picking();
+        if (mode === 'none' || !target.isConnected) return;
+        if (
+            mode === 'auto' &&
+            !chainOf(target, this._host.element).some((element) => hasVisibleListener(element, type))
+        ) {
+            return;
+        }
+        target.dispatchEvent(createPointerEvent(type, source, relatedTarget, detail));
+    }
+
+    /**
+     * Returns the state of a pointer, creating it on first use.
+     *
+     * @param pointerId - The pointer.
+     * @returns Its state.
+     */
+    private _state(pointerId: number): PointerState {
+        let state = this._pointers.get(pointerId);
+        if (!state) {
+            state = { chain: [], supersede: null, press: null, pending: 0 };
+            this._pointers.set(pointerId, state);
+        }
+        return state;
+    }
+
+    /**
+     * Appends a dispatch step to {@link _dispatchChain}. Must be called synchronously from the
+     * canvas event handler - the order of appends is what carries canvas-event order. A step
+     * that rejects is reported and released, so the steps queued behind it still dispatch. Once
+     * a pointer has no step left to run and is over nothing, its state is dropped, so touches -
+     * which each get a new pointerId - do not accumulate.
+     *
+     * @param pointerId - The pointer the step belongs to.
+     * @param state - The pointer's state.
+     * @param step - The dispatch work to run once every earlier step has finished.
+     */
+    private _queue(pointerId: number, state: PointerState, step: () => void | Promise<void>) {
+        const generation = this._generation;
+        state.pending++;
+        this._dispatchChain = this._dispatchChain
+            .then(() => {
+                // A step queued before a teardown must not run against the next connection
+                if (generation === this._generation) {
+                    return step();
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            })
+            .finally(() => {
+                state.pending--;
+                const idle = state.pending === 0 && state.chain.length === 0 && state.press === null;
+                if (idle && this._pointers.get(pointerId) === state) {
+                    this._pointers.delete(pointerId);
+                }
+            });
+    }
+
+    /**
+     * Resolves the element a picked node belongs to: the element fronting the node itself or
+     * its nearest ancestor that has one. A model's internal nodes are fronted by no element until
+     * a `<pc-node>` binds them, so this walk is what makes a model pickable at all.
      *
      * @param node - The picked node, or `null`.
-     * @returns The hover-owning element, or `null`.
+     * @returns The element, or `null` for the background.
      */
-    private _hoverTarget(node: GraphNode | null): EntityBaseElement | null {
-        while (node !== null) {
+    private _targetOf(node: GraphNode | null): EntityBaseElement | null {
+        for (; node !== null; node = node.parent) {
             const element = this._host.elementFromNode(node);
-            if (element && hoverEventTypes.some((type) => element._hasListeners(type))) {
+            if (element) {
                 return element;
             }
-            node = node.parent;
         }
         return null;
     }
 
     /**
-     * Like {@link _hoverTarget}, but for one event type: skips elements without a listener for
-     * `type`, so a hit on an unlistened child still reaches a listening ancestor.
+     * Moves a pointer onto `next`, dispatching the boundary events the move implies in the DOM's
+     * order: `pointerout` on the element left, `pointerleave` on each element left (innermost
+     * first), `pointerover` on the element entered, and `pointerenter` on each element entered
+     * (outermost first). The background is stood for by `<pc-app>`: moving between it and an
+     * entity dispatches `pointerout`/`pointerover` on it, so that relatedTarget-based consumers
+     * such as React's enter/leave see a complete transition, but never enter/leave - the canvas's
+     * native events already cover the element itself. Leaving the canvas moves the pointer onto
+     * nothing: the native events take over from there.
      *
-     * @param node - The picked node, or `null`.
-     * @param type - The pointer event type a listener is required for.
-     * @returns The nearest listening element, or `null`.
+     * @param state - The pointer's state.
+     * @param next - The entity element now under the pointer, or `null` for none.
+     * @param source - The canvas event that caused the move.
+     * @param onCanvas - Whether the pointer is still over the canvas.
      */
-    private _elementWithListener(node: GraphNode | null, type: string): EntityBaseElement | null {
-        while (node !== null) {
-            const element = this._host.elementFromNode(node);
-            if (element?._hasListeners(type)) {
-                return element;
-            }
-            node = node.parent;
+    private _hover(state: PointerState, next: EntityBaseElement | null, source: PointerEvent, onCanvas: boolean) {
+        const root = this._host.element;
+
+        // An element removed from the document gets no boundary events, as in the DOM: the
+        // pointer passes to the nearest entity element above it that is still connected
+        const chain = state.chain.filter((element) => element.isConnected);
+        const previous = chain.find((element) => element instanceof EntityBaseElement) ?? null;
+        const nextChain = chainOf(next, root);
+        state.chain = nextChain;
+        if (previous === next) return;
+
+        this._dispatch(previous ?? root, 'pointerout', source, next ?? root);
+        chain
+            .filter((element) => !nextChain.includes(element))
+            .forEach((element) => this._dispatch(element, 'pointerleave', source, next ?? root));
+
+        if (next || onCanvas) {
+            this._dispatch(next ?? root, 'pointerover', source, previous ?? root);
         }
-        return null;
+        nextChain
+            .filter((element) => !chain.includes(element))
+            .reverse()
+            .forEach((element) => this._dispatch(element, 'pointerenter', source, previous ?? root));
     }
 
     /**
@@ -417,134 +520,138 @@ export class PointerController {
         return null;
     }
 
-    private async _onPointerMove(event: PointerEvent) {
-        if (!this._picker || !this._app) return;
+    private _onPointerMove(event: PointerEvent) {
+        if (!this._picker || !this._demanded(HOVER_EVENTS)) return;
 
-        // Moves arrive faster than a pick resolves, so results can land out of order. Only the
-        // newest pick may update the hover state - an older one describes a pointer position the
-        // user has already left, and one from an earlier connection describes a scene that no
-        // longer exists.
+        // Moves arrive faster than a pick resolves. Only the newest may move the pointer - an
+        // older one describes a position already left behind - so a new move releases the one
+        // before it, which then skips its turn instead of waiting for its pick.
         const generation = this._generation;
-        const token = ++this._pickToken;
-        const node = await this._pickNode(event);
-        if (token !== this._pickToken || generation !== this._generation) return;
+        const state = this._state(event.pointerId);
+        state.supersede?.();
+        let superseded = false;
+        const released = new Promise<void>((resolve) => {
+            state.supersede = () => {
+                superseded = true;
+                resolve();
+            };
+        });
+        const pick = this._pickNode(event);
 
-        // The hovered element is the nearest one up the node's parent chain with a hover
-        // listener - the nearest-listener rule down/up use. Dispatch is still gated per event
-        // type below: having any hover listener selects the target, each event needs its own.
-        const newHoverEntity = this._hoverTarget(node);
+        this._queue(event.pointerId, state, async () => {
+            const node = await Promise.race([released.then(() => null), pick]);
+            if (superseded || generation !== this._generation) return;
 
-        // Handle enter/leave events
-        if (this._hoveredEntity !== newHoverEntity) {
-            if (this._hoveredEntity && this._hoveredEntity._hasListeners('pointerleave')) {
-                this._hoveredEntity.dispatchEvent(new PointerEvent('pointerleave', event));
+            const target = this._targetOf(node);
+            this._hover(state, target, event, true);
+            if (target) {
+                this._dispatch(target, 'pointermove', event);
             }
-            if (newHoverEntity && newHoverEntity._hasListeners('pointerenter')) {
-                newHoverEntity.dispatchEvent(new PointerEvent('pointerenter', event));
-            }
-        }
-
-        // Update hover state
-        this._hoveredEntity = newHoverEntity;
-
-        // Handle pointermove event
-        if (newHoverEntity && newHoverEntity._hasListeners('pointermove')) {
-            newHoverEntity.dispatchEvent(new PointerEvent('pointermove', event));
-        }
-    }
-
-    /**
-     * Appends a dispatch step to {@link _dispatchChain}. Must be called synchronously from the
-     * canvas event handler - the order of appends is what carries canvas-event order. A step
-     * that rejects is reported and released, so the steps queued behind it still dispatch.
-     *
-     * @param step - The dispatch work to run once every earlier step has finished.
-     */
-    private _chainDispatch(step: () => Promise<void>) {
-        this._dispatchChain = this._dispatchChain.then(step).catch((error) => {
-            console.error(error);
         });
     }
 
     private _onPointerDown(event: PointerEvent) {
-        if (!this._picker || !this._app) return;
+        if (!this._picker) return;
+        const hover = this._demanded(HOVER_EVENTS);
+        if (!hover && !this._demanded(PRESS_EVENTS)) return;
 
         const generation = this._generation;
+        const state = this._state(event.pointerId);
+        // Only consecutive moves supersede one another: a move before this event keeps its place
+        // in the order, so a later move must not release it
+        state.supersede = null;
 
         // Picks stay concurrent - only the dispatch of the results is serialized
         const pick = this._pickNode(event);
 
-        // A click concludes on the matching pointerup, which needs to know what the press
-        // picked. Primary button only - the only button a click can conclude from - and only
-        // while click is listened for, since it is the click mapping that keeps the pointerup
-        // and pointercancel listeners attached to clean the entry up again.
-        if (this._clickListened && event.button === 0) {
-            this._downPicks.set(event.pointerId, pick);
-        }
-
-        this._chainDispatch(async () => {
+        this._queue(event.pointerId, state, async () => {
             const node = await pick;
             if (generation !== this._generation) return; // this press's connection is gone
 
-            const entityElement = this._elementWithListener(node, 'pointerdown');
-            if (entityElement) {
-                entityElement.dispatchEvent(new PointerEvent('pointerdown', event));
+            // A press is also a hit test: the element under a touch is entered as it goes down
+            const target = this._targetOf(node);
+            if (hover) {
+                this._hover(state, target, event, true);
+            }
+            state.press = { target, button: event.button };
+            if (target) {
+                this._dispatch(target, 'pointerdown', event);
             }
         });
     }
 
     private _onPointerUp(event: PointerEvent) {
-        if (!this._picker || !this._app) return;
+        if (!this._picker) return;
+        const hover = this._demanded(HOVER_EVENTS);
+        if (!hover && !this._demanded(RELEASE_EVENTS)) return;
 
         const generation = this._generation;
-
-        // The press pick this release may conclude as a click. Claimed synchronously, so the
-        // entry is gone before any other event for this pointer can be handled.
-        const downPick = this._downPicks.get(event.pointerId);
-        this._downPicks.delete(event.pointerId);
-
+        const state = this._state(event.pointerId);
+        state.supersede = null;
         const pick = this._pickNode(event);
 
-        this._chainDispatch(async () => {
+        this._queue(event.pointerId, state, async () => {
             const node = await pick;
             if (generation !== this._generation) return; // this release's connection is gone
 
-            const entityElement = this._elementWithListener(node, 'pointerup');
-            if (entityElement) {
-                entityElement.dispatchEvent(new PointerEvent('pointerup', event));
+            const target = this._targetOf(node);
+            if (hover) {
+                this._hover(state, target, event, true);
+            }
+            if (target) {
+                this._dispatch(target, 'pointerup', event);
+            }
+
+            // A click fires where the DOM fires it: at the nearest common inclusive ancestor of
+            // what the press and the release picked, for the primary button only, after the
+            // pointerup that concludes it. A press or release on the background concludes no
+            // synthesized click - the canvas's own native click covers it.
+            const press = state.press;
+            state.press = null;
+            if (!press?.target || !target || press.button !== 0 || event.button !== 0) return;
+
+            const clickTarget = commonAncestor(press.target, target, this._host.element);
+            if (!clickTarget) return;
+
+            // detail is the click count, chained as the platform chains it: same target, within
+            // the double-click window
+            const time = performance.now();
+            const last = this._lastClick;
+            const count =
+                last && last.element === clickTarget && time - last.time <= CLICK_CHAIN_MS ? last.count + 1 : 1;
+            this._lastClick = { element: clickTarget, time, count };
+            this._dispatch(clickTarget, 'click', event, null, count);
+        });
+    }
+
+    private _onPointerCancel(event: PointerEvent) {
+        // The browser took the pointer back (a touch that became a scroll, say): the press can
+        // no longer conclude, and the element it picked is told so
+        const state = this._pointers.get(event.pointerId);
+        if (!state) return;
+        state.supersede = null;
+
+        this._queue(event.pointerId, state, () => {
+            const press = state.press;
+            state.press = null;
+            if (press?.target) {
+                this._dispatch(press.target, 'pointercancel', event);
             }
         });
+    }
 
-        // A click fires where the DOM fires it: at the nearest common inclusive ancestor of
-        // what the press and the release picked, for the primary button only. Appended after
-        // the release's own step, so it dispatches after the pointerup that concludes it.
-        if (!downPick || event.button !== 0) return;
+    private _onPointerOut(event: PointerEvent) {
+        // The canvas has no children, so this is the pointer leaving the canvas: onto an
+        // element over it, or out of the page. Whatever entity it was over, it has left - a
+        // move still in flight must not put it back.
+        const state = this._pointers.get(event.pointerId);
+        if (!state) return;
+        state.supersede?.();
+        state.supersede = null;
 
-        this._chainDispatch(async () => {
-            // A rejected pick was already reported by the press or release step that awaited it;
-            // here it just means no click can conclude.
-            const picked = await Promise.all([downPick, pick]).catch(() => null);
-            if (!picked || generation !== this._generation) return;
-
-            const [downNode, upNode] = picked;
-            const clickElement = this._elementWithListener(commonAncestor(downNode, upNode), 'click');
-            if (clickElement) {
-                const click = new PointerEvent('click', event);
-
-                // The init above copied pointerup's `detail`, which the Pointer Events spec fixes
-                // at 0 - but click is exempt: its detail is the click count, chained here as the
-                // platform chains it (same target, within the double-click window). Overridden
-                // with defineProperty because an event instance used as an init dict cannot have
-                // single fields replaced.
-                const time = performance.now();
-                const last = this._lastClick;
-                const count =
-                    last && last.element === clickElement && time - last.time <= CLICK_CHAIN_MS ? last.count + 1 : 1;
-                this._lastClick = { element: clickElement, time, count };
-                Object.defineProperty(click, 'detail', { value: count });
-
-                clickElement.dispatchEvent(click);
-            }
+        this._queue(event.pointerId, state, () => {
+            state.press = null;
+            this._hover(state, null, event, false);
         });
     }
 }

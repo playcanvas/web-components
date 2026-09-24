@@ -65,7 +65,6 @@ import {
 import type { AssetElement } from './asset';
 import { AssetBinding } from './asset-binding';
 import { AsyncElement } from './async-element';
-import { SYNTHESIZED_EVENTS } from './entity-base';
 import type { EntityBaseElement } from './entity-base';
 import type { EntityOwnerElement } from './entity-owner';
 import { LoadingBar } from './loading-bar';
@@ -110,6 +109,11 @@ const AREA_LIGHT_LUT_LENGTH = 64 * 64 * 4;
  * and the drawing buffer resolution follows the element's size (capped by `max-pixel-ratio`),
  * tracked live via a ResizeObserver — so the element can be embedded at any size, resized by
  * its container, or made fullscreen with ordinary CSS such as `width: 100vw; height: 100dvh`.
+ *
+ * Pointer input over the canvas is hit-tested against the scene and dispatched as pointer events
+ * on the entity elements under the pointer, where they behave like the DOM's own pointer events;
+ * `picking` controls when that happens. The canvas keeps receiving its native events too, so a
+ * listener on this element sees both kinds - `event.target` tells them apart.
  *
  * @elementSummary The `<pc-app>` element creates a PlayCanvas application and the canvas it renders
  * into, and is the root of every scene. It holds the `<pc-asset>`, `<pc-material>`, `<pc-wasm>` and
@@ -192,15 +196,19 @@ class AppElement extends AsyncElement {
      */
     private _entityElements = new Map<GraphNode, EntityBaseElement>();
 
+    private _picking: 'auto' | 'always' | 'none' = 'auto';
+
     /**
      * The pointer-input subsystem: the picker, the canvas handlers, and the synthesized-event
      * dispatch. The element drives its lifecycle (connect on boot, resize with the drawing
-     * buffer, listener syncs, disconnect on teardown) and hands it the two lookups it needs -
+     * buffer, disconnect on teardown) and hands it the lookups and the setting it needs -
      * everything else about pointer input lives in the controller.
      */
     private _pointer = new PointerController({
+        element: this,
         elementFromNode: (node) => this._entityElements.get(node) ?? null,
-        pointerTargets: () => Array.from(this.querySelectorAll<EntityBaseElement>('pc-entity, pc-model, pc-node'))
+        listeningElements: () => this._listeningElements(),
+        picking: () => this._picking
     });
 
     private _app: AppBase | null = null;
@@ -233,23 +241,6 @@ class AppElement extends AsyncElement {
      */
     get loadProgress(): number {
         return this._loadProgress;
-    }
-
-    /**
-     * Creates a new AppElement instance.
-     *
-     * @ignore
-     */
-    constructor() {
-        super();
-
-        // Track listeners for the synthesized events being added to and removed from descendant
-        // entities. Registered once here rather than on every boot - the sync no-ops while there
-        // is no canvas, and a re-booted element must not stack a second set.
-        SYNTHESIZED_EVENTS.forEach((type) => {
-            this.addEventListener(`${type}:connect`, () => this._pointer.syncListeners());
-            this.addEventListener(`${type}:disconnect`, () => this._pointer.syncListeners());
-        });
     }
 
     async connectedCallback() {
@@ -646,6 +637,19 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Yields the elements whose listeners the pointer controller reads under `picking="auto"`:
+     * every element fronting one of this application's entities, then the scene element - the
+     * one ancestor they all share below this element. Read on every pointer move, hence the
+     * live collection, which the browser maintains rather than re-querying the tree.
+     *
+     * @yields The listening elements.
+     */
+    private *_listeningElements(): Generator<Element> {
+        yield* this._entityElements.values();
+        yield* this.getElementsByTagName('pc-scene');
+    }
+
+    /**
      * Binds the lookup table asset named by `area-light-luts`, applying it once it has loaded. An
      * empty attribute, or one naming an asset that does not exist, switches area lights off. A
      * change from one asset to another keeps the previous tables lit until the new file applies or
@@ -885,6 +889,37 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Sets when the application picks the scene under the pointer, which it does to dispatch
+     * pointer events on entity elements. Picking renders the scene again, so by default it only
+     * happens while something listens:
+     *
+     * - `auto` (the default) picks for an event type while a listener for it is registered on an
+     * entity element or on `<pc-scene>` - with `addEventListener`, an inline attribute such as
+     * `onclick`, or a handler property such as `onpointerenter`.
+     * - `always` picks for every pointer event. Listeners the element cannot see need it: one on
+     * the document or on another element outside the scene, or a framework's delegated handler,
+     * such as React's `onClick`.
+     * - `none` never picks, so no pointer events are dispatched on entities.
+     *
+     * Applies from the next pointer event.
+     * @param value - When to pick ('auto', 'always' or 'none').
+     */
+    set picking(value: 'auto' | 'always' | 'none') {
+        this._picking = value;
+    }
+
+    /**
+     * Gets how the application decides whether to pick the scene under the pointer, which it
+     * does to dispatch pointer events on entity elements: `auto` picks for an event type while a
+     * listener for it is registered on an entity element or `<pc-scene>`, `always` for every
+     * pointer event, and `none` never.
+     * @returns When to pick.
+     */
+    get picking() {
+        return this._picking;
+    }
+
+    /**
      * Sets whether the frame buffer has a stencil buffer, which stencil-based effects and UI
      * masking need. Read only when the application boots.
      * @param value - The stencil buffer flag.
@@ -935,6 +970,7 @@ class AppElement extends AsyncElement {
             'depth-buffer',
             'loading-bar',
             'max-pixel-ratio',
+            'picking',
             'stencil-buffer',
             'with-credentials'
         ];
@@ -962,6 +998,9 @@ class AppElement extends AsyncElement {
                 break;
             case 'max-pixel-ratio':
                 this.maxPixelRatio = parseNumber(newValue, Infinity, name);
+                break;
+            case 'picking':
+                this.picking = parseEnum(newValue, ['auto', 'always', 'none'], 'auto', name);
                 break;
             case 'stencil-buffer':
                 this.stencilBuffer = parseBool(newValue, true);
