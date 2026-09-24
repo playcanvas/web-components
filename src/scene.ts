@@ -3,12 +3,18 @@ import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
+import { ListenerRegistry } from './pointer-events';
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-scene/ | `<pc-scene>`} elements.
  * The SceneElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * The scene element is the ancestor of every entity element, so the pointer events `<pc-app>`
+ * dispatches on entities bubble through it, and it receives its own `pointerenter` and
+ * `pointerleave` as the pointer moves onto and off its entities as a whole. A listener here is a
+ * delegated listener for the whole scene: read `event.target` to find the entity element hit.
  *
  * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
  * along with scene-wide fog, exposure, Gaussian splat, clustered lighting and physics settings.
@@ -85,12 +91,80 @@ class SceneElement extends AsyncElement {
     private _scene: Scene | null = null;
 
     /**
+     * The pointer listeners registered on the element. The scene is the ancestor of every
+     * entity element, so a listener here is a delegated listener for all of them, and the
+     * containing `<pc-app>` reads these to decide when to pick.
+     * @internal
+     */
+    readonly _pointerListeners = new ListenerRegistry(this);
+
+    /**
      * The PlayCanvas scene instance. `null` until the element is ready — await
      * {@link whenReady} or the element's `ready()` promise before accessing it.
      * @returns The scene instance, or `null`.
      */
     get scene(): Scene | null {
         return this._scene;
+    }
+
+    /**
+     * Registers a listener exactly as {@link EventTarget.addEventListener} does, through the
+     * pointer bookkeeping that records it. Internal so that the published typings keep the DOM's
+     * own typed signatures.
+     *
+     * @param type - The event type.
+     * @param listener - The listener.
+     * @param options - The listener options.
+     * @internal
+     */
+    addEventListener<K extends keyof HTMLElementEventMap>(
+        type: K,
+        listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @internal */
+    addEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    /** @internal */
+    addEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | AddEventListenerOptions
+    ) {
+        this._pointerListeners.add(type, listener, options, () => super.addEventListener(type, listener, options));
+    }
+
+    /**
+     * Removes a listener exactly as {@link EventTarget.removeEventListener} does, and forgets it
+     * for the pointer bookkeeping.
+     *
+     * @param type - The event type.
+     * @param listener - The listener.
+     * @param options - The listener options.
+     * @internal
+     */
+    removeEventListener<K extends keyof HTMLElementEventMap>(
+        type: K,
+        listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown,
+        options?: boolean | EventListenerOptions
+    ): void;
+    /** @internal */
+    removeEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | EventListenerOptions
+    ): void;
+    /** @internal */
+    removeEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+        options?: boolean | EventListenerOptions
+    ) {
+        super.removeEventListener(type, listener, options);
+        this._pointerListeners.remove(type, listener, options);
     }
 
     async connectedCallback() {

@@ -2,7 +2,7 @@ import type { Entity, EventHandle, GraphNode, Material, MeshInstance, Quat, Rend
 import { Vec3 } from 'playcanvas';
 
 import { ComponentElement } from './components/component';
-import { EntityBaseElement, EVENT_ATTRIBUTES } from './entity-base';
+import { EntityBaseElement } from './entity-base';
 import { buildDescendantEntities } from './entity-owner';
 import type { EntityOwnerElement } from './entity-owner';
 import { MaterialElement } from './material';
@@ -166,7 +166,10 @@ const levenshtein = (a: string, b: string): number => {
  * wait with it.
  *
  * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
- * intersects the bound node's geometry, exactly as for `<pc-entity>`.
+ * is over the bound node's geometry, exactly as for `<pc-entity>`. Like every DOM event they
+ * propagate through the element tree, not through the model's node hierarchy: a hit below the
+ * bound node reaches this element when no nearer `pc-node` fronts it, or when the `pc-node` that
+ * does is nested inside this one.
  *
  * @elementSummary The `<pc-node>` element binds to a node inside the hierarchy a `<pc-model>`
  * instantiated and declares overrides against it: a transform, an enabled state, tags, components
@@ -190,24 +193,40 @@ const levenshtein = (a: string, b: string): number => {
  * wins over a name rule for the same instance. Assignments no rule matches keep their baseline
  * materials, and removing the attribute restores all of them. Use `pc-model.hierarchy()` to
  * discover the names and indices a node offers.
- * @attribute {string} onpointerenter - Script to run when the pointer moves onto the node.
- * @attribute {string} onpointerleave - Script to run when the pointer moves off the node.
+ * @attribute {string} onpointerover - Script to run when the pointer moves onto the node, or onto
+ * an entity below it.
+ * @attribute {string} onpointerenter - Script to run when the pointer moves onto the node or an
+ * entity below it, having been over none of them.
  * @attribute {string} onpointermove - Script to run when the pointer moves over the node.
- * @attribute {string} onpointerdown - Script to run when a pointer button is pressed over the
- * node.
- * @attribute {string} onpointerup - Script to run when a pointer button is released over the
- * node.
- * @attribute {string} onclick - Script to run when the node is clicked: a primary pointer
- * button pressed and then released over it.
- * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the node.
- * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the node.
+ * @attribute {string} onpointerdown - Script to run when a pointer button is pressed over the node.
+ * @attribute {string} onpointerup - Script to run when a pointer button is released over the node.
+ * @attribute {string} onpointercancel - Script to run when the browser cancels a press that began
+ * over the node, for example because a touch became a scroll.
+ * @attribute {string} onpointerout - Script to run when the pointer moves off the node, or off an
+ * entity below it.
+ * @attribute {string} onpointerleave - Script to run when the pointer moves off the node and every
+ * entity below it.
+ * @attribute {string} onclick - Script to run when the node is clicked: a primary pointer button
+ * pressed and then released over it.
+ * @fires {PointerEvent} pointerover - Fired when the pointer moves onto the node. Bubbles;
+ * `relatedTarget` is the element the pointer came from, which is `<pc-app>` when it came from the
+ * background.
+ * @fires {PointerEvent} pointerenter - Fired when the pointer moves onto the node or an entity
+ * below it, having been over none of them. Does not bubble.
  * @fires {PointerEvent} pointermove - Fired when the pointer moves over the node.
  * @fires {PointerEvent} pointerdown - Fired when a pointer button is pressed over the node.
  * @fires {PointerEvent} pointerup - Fired when a pointer button is released over the node.
+ * @fires {PointerEvent} pointercancel - Fired on the node a press began over when the browser
+ * cancels that press, for example because a touch became a scroll. No click follows.
+ * @fires {PointerEvent} pointerout - Fired when the pointer moves off the node. Bubbles;
+ * `relatedTarget` is the element the pointer went to, which is `<pc-app>` when it went to the
+ * background.
+ * @fires {PointerEvent} pointerleave - Fired when the pointer moves off the node and every entity
+ * below it. Does not bubble.
  * @fires {PointerEvent} click - Fired when a primary pointer button is pressed and then released
- * over the node. A press and release that picked different entities fires on their nearest
- * common ancestor instead, as in the DOM. `detail` carries the click count, so a double click
- * arrives as a click whose `detail` is 2.
+ * over the node. A press and release that picked different elements fires on their nearest common
+ * ancestor instead, as in the DOM. `detail` carries the click count, so a double click arrives as a
+ * click whose `detail` is 2.
  *
  * @category Entities
  */
@@ -944,8 +963,7 @@ class NodeElement extends EntityBaseElement {
             'position',
             'rotation',
             'scale',
-            'tags',
-            ...EVENT_ATTRIBUTES
+            'tags'
         ];
     }
 
@@ -988,14 +1006,6 @@ class NodeElement extends EntityBaseElement {
                 break;
             case 'tags':
                 this.tags = newValue === null ? null : parseTags(newValue);
-                break;
-            case 'onpointerenter':
-            case 'onpointerleave':
-            case 'onpointerdown':
-            case 'onpointerup':
-            case 'onpointermove':
-            case 'onclick':
-                this._updateInlineHandler(name, newValue);
                 break;
         }
     }

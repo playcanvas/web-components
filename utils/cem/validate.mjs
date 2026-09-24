@@ -207,6 +207,7 @@ if (manifest) {
     expectEnum('pc-render', 'type', 6, 'box');
     expectEnum('pc-light', 'type', 3, 'directional');
     expectEnum('pc-camera', 'tonemap', 7, 'linear');
+    expectEnum('pc-app', 'picking', 3, 'auto');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-light', 'shape', 4, 'punctual');
     expectEnum('pc-element', 'fit-mode', 3, 'stretch');
@@ -325,7 +326,10 @@ if (manifest) {
 
     check(events('pc-joint').includes('break'), "pc-joint is missing the 'break' event");
 
-    const synthesizedEvents = ['pointerenter', 'pointerleave', 'pointermove', 'pointerdown', 'pointerup', 'click'];
+    const synthesizedEvents = [
+        'pointerover', 'pointerenter', 'pointermove', 'pointerdown', 'pointerup', 'pointercancel', 'pointerout',
+        'pointerleave', 'click'
+    ];
     for (const tag of ENTITY_TAGS) {
         for (const name of synthesizedEvents) {
             check(events(tag).includes(name), `${tag} is missing the '${name}' event`);
@@ -370,10 +374,10 @@ if (manifest) {
         }
     }
 
-    // Over-filtering, part 1: every attribute's backing accessor is still a member. pc-entity's
-    // onpointer*/onclick attributes are exempt - they are handled by a dispatch helper rather
-    // than by accessors, so the fieldName the attributes plugin falls back to names a member
-    // that has never existed.
+    // Over-filtering, part 1: every attribute's backing accessor is still a member. The entity
+    // elements' onpointer*/onclick attributes are exempt - they are the platform's own event
+    // handler attributes rather than accessors, so a fieldName the attributes plugin falls back
+    // to names a member that has never existed.
     const PHANTOM_FIELDS = new Set(synthesizedEvents.map(name => `on${name}`));
     for (const [tag, declaration] of elements) {
         const members = new Set((declaration.members ?? []).map(member => member.name));
@@ -395,13 +399,13 @@ if (manifest) {
         ['pc-app', ['app', 'elementFromEntity', 'loadProgress', ...ASYNC_MEMBERS]],
         ['pc-asset', ['asset', 'get', ...ASYNC_MEMBERS]],
         ['pc-camera', ['arAvailable', 'component', 'endXr', 'startXr', 'vrAvailable', ...ASYNC_MEMBERS]],
-        ['pc-entity', ['addEventListener', 'entity', 'removeEventListener', ...ASYNC_MEMBERS]],
+        ['pc-entity', ['entity', ...ASYNC_MEMBERS]],
         // roughness and roughnessMap are the alias accessors: their attributes resolve to the
         // gloss fields, so no attribute claims them as its backing member
         ['pc-material', ['get', 'material', 'roughness', 'roughnessMap']],
-        ['pc-model', ['addEventListener', 'contentEntity', 'entity', 'hierarchy', 'removeEventListener', ...ASYNC_MEMBERS]],
+        ['pc-model', ['contentEntity', 'entity', 'hierarchy', ...ASYNC_MEMBERS]],
         ['pc-wasm', [...ASYNC_MEMBERS]],
-        ['pc-node', ['addEventListener', 'entity', 'path', 'removeEventListener', 'state', ...ASYNC_MEMBERS]],
+        ['pc-node', ['entity', 'path', 'state', ...ASYNC_MEMBERS]],
         ['pc-particle-system', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
         ['pc-scene', ['scene', ...ASYNC_MEMBERS]],
         ['pc-script-instance', ['script', ...ASYNC_MEMBERS]],
