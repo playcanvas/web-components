@@ -359,12 +359,14 @@ class AppElement extends AsyncElement {
 
         const createOptions = new AppOptions();
         createOptions.graphicsDevice = device;
-        createOptions.keyboard = new Keyboard(window);
-        createOptions.mouse = new Mouse(this._canvas);
+        // The element input is created before the mouse, so that its window listeners run first:
+        // calling stopPropagation() in a UI event handler then also keeps the event from app.mouse
         createOptions.elementInput = new ElementInput(this._canvas, {
             useMouse: true,
             useTouch: true
         });
+        createOptions.keyboard = new Keyboard(window);
+        createOptions.mouse = new Mouse(this._canvas);
         createOptions.componentSystems = [
             AnimComponentSystem,
             AnimationComponentSystem,
