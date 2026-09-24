@@ -129,10 +129,20 @@ type Registration = {
     capture: boolean;
 
     /**
-     * For a `once` registration, the listener registered right behind it that forgets it once it
-     * has run. `null` otherwise.
+     * For a `once` registration, the one-shot listener registered directly ahead of it, which
+     * forgets it. `null` otherwise, and once the registration is forgotten.
      */
-    follower: EventListener | null;
+    sentinel: EventListener | null;
+
+    /** The signal the listener was registered with, or `null` for none. */
+    signal: AbortSignal | null;
+
+    /**
+     * The listener on {@link signal} that forgets the registration when the signal aborts. `null`
+     * without a signal, and once the registration is forgotten - so a long-lived signal never
+     * keeps a removed listener, or this registry, alive.
+     */
+    onAbort: (() => void) | null;
 };
 
 /**
@@ -142,11 +152,13 @@ type Registration = {
  * removes its listeners - so that `<pc-app>` picks exactly while a listener is registered.
  * Listeners for any other event type are not recorded.
  *
- * Fed by the element's `addEventListener` and `removeEventListener` overrides, after the native
- * methods have run. The DOM removes a `once` listener itself, and offers no way to observe that,
- * so a second one-shot listener is registered directly behind it: the DOM runs listeners in
- * registration order, so the follower runs right after the listener it follows, and forgets it.
- * The follower is registered with the native method, so it is never recorded itself.
+ * Fed by the element's `addEventListener` and `removeEventListener` overrides. The DOM removes a
+ * `once` listener itself, and offers no way to observe that, so a one-shot sentinel is registered
+ * directly ahead of it to forget it. The DOM runs a target's listeners in registration order and
+ * nothing sits between the two, so the listener runs whenever the sentinel does - and has been
+ * forgotten before it runs, even if it goes on to call `stopImmediatePropagation()`. That
+ * ordering is why the registry makes the native registration itself. The sentinel is registered
+ * with the native method, so it is never recorded itself.
  *
  * @internal
  */
@@ -163,41 +175,63 @@ export class ListenerRegistry {
     }
 
     /**
-     * Records a registration, after the native `addEventListener` has made it.
+     * Makes a registration through `register` - the native `addEventListener` call - and records
+     * it.
      *
      * @param type - The event type.
      * @param listener - The listener.
-     * @param options - The options it was registered with.
+     * @param options - The options it is registered with.
+     * @param register - Makes the native registration.
      */
     add(
         type: string,
         listener: EventListenerOrEventListenerObject | null,
-        options?: boolean | AddEventListenerOptions
+        options: boolean | AddEventListenerOptions | undefined,
+        register: () => void
     ) {
-        if (!listener || !SYNTHESIZED_EVENT_SET.has(type)) return;
-
         const capture = typeof options === 'boolean' ? options : Boolean(options?.capture);
         const once = typeof options === 'object' && Boolean(options.once);
-        const signal = typeof options === 'object' ? options.signal : undefined;
+        const signal = (typeof options === 'object' ? options.signal : undefined) ?? null;
 
-        // The DOM ignores a registration whose signal has already aborted, and a duplicate
-        if (signal?.aborted) return;
+        // Only the synthesized types are recorded - and the DOM ignores a registration whose
+        // signal has already aborted, and a duplicate
         const registrations = this._registrations.get(type) ?? [];
-        if (registrations.some((r) => r.listener === listener && r.capture === capture)) return;
+        if (
+            !listener ||
+            !SYNTHESIZED_EVENT_SET.has(type) ||
+            signal?.aborted ||
+            registrations.some((r) => r.listener === listener && r.capture === capture)
+        ) {
+            register();
+            return;
+        }
 
-        const registration: Registration = { listener, capture, follower: null };
-        registrations.push(registration);
-        this._registrations.set(type, registrations);
-
+        const registration: Registration = { listener, capture, sentinel: null, signal, onAbort: null };
         if (once) {
-            registration.follower = () => this._forget(type, registration);
-            EventTarget.prototype.addEventListener.call(this._target, type, registration.follower, {
+            registration.sentinel = () => this._forget(type, registration);
+            EventTarget.prototype.addEventListener.call(this._target, type, registration.sentinel, {
                 capture,
                 once: true,
-                signal
+                signal: signal ?? undefined
             });
         }
-        signal?.addEventListener('abort', () => this._forget(type, registration), { once: true });
+        try {
+            register();
+        } catch (error) {
+            // An invalid argument throws from the native call, which then registers nothing - so
+            // neither may the sentinel
+            if (registration.sentinel) {
+                EventTarget.prototype.removeEventListener.call(this._target, type, registration.sentinel, capture);
+            }
+            throw error;
+        }
+
+        registrations.push(registration);
+        this._registrations.set(type, registrations);
+        if (signal) {
+            registration.onAbort = () => this._forget(type, registration);
+            signal.addEventListener('abort', registration.onAbort, { once: true });
+        }
     }
 
     /**
@@ -239,14 +273,18 @@ export class ListenerRegistry {
         if (index < 0) return;
         registrations!.splice(index, 1);
 
-        if (registration.follower) {
+        if (registration.sentinel) {
             EventTarget.prototype.removeEventListener.call(
                 this._target,
                 type,
-                registration.follower,
+                registration.sentinel,
                 registration.capture
             );
-            registration.follower = null;
+            registration.sentinel = null;
+        }
+        if (registration.onAbort) {
+            registration.signal?.removeEventListener('abort', registration.onAbort);
+            registration.onAbort = null;
         }
     }
 }

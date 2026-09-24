@@ -1373,6 +1373,27 @@ describe('pc-app pointer picking', () => {
             expect(cancel).not.toHaveBeenCalled();
         });
 
+        it('forgets a press whose release nothing listens for', async () => {
+            // A press picked for its pointerdown listener still ends with its release, or it would
+            // keep the pointer's state alive - and a later cancel could reach its old target
+            const { appElement, get } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `);
+            const target = get<EntityElement>('pc-entity[name="target"]');
+            target.addEventListener('pointerdown', vi.fn());
+            const canvas = appElement.querySelector('canvas')!;
+            stubPicker(appElement, [[hit(target.entity!)]]);
+
+            canvas.dispatchEvent(press());
+            canvas.dispatchEvent(release());
+            await flush();
+
+            const pointers = (appElement as unknown as { _pointer: { _pointers: Map<number, unknown> } })._pointer
+                ._pointers;
+            expect(pointers.size, 'the pointer is idle once its press has ended').toBe(0);
+        });
+
         it('enters the element under a press before pressing it', async () => {
             // A press is a hit test too: a touch has no hover before it goes down
             const { appElement, canvas, inner, log } = await bootScene();
@@ -1494,6 +1515,20 @@ describe('pc-app pointer picking', () => {
             expect(calls.async, 'the spent listener no longer makes moves worth picking').toBe(1);
         });
 
+        it('forgets a once listener even when it stops immediate propagation', async () => {
+            // The sentinel that forgets a once listener runs ahead of it, so a listener that stops
+            // the event's remaining listeners cannot leave its spent registration counted
+            const { element, calls, moveOn } = await bootBare();
+            const spy = vi.fn((event: Event) => event.stopImmediatePropagation());
+            element.addEventListener('pointermove', spy, { once: true });
+
+            await moveOn();
+            await moveOn();
+
+            expect(spy).toHaveBeenCalledTimes(1);
+            expect(calls.async, 'the spent listener no longer makes moves worth picking').toBe(1);
+        });
+
         it('forgets a listener whose signal aborts', async () => {
             const { element, calls, moveOn } = await bootBare();
             const controller = new AbortController();
@@ -1504,6 +1539,26 @@ describe('pc-app pointer picking', () => {
             await moveOn();
 
             expect(calls.async).toBe(1);
+        });
+
+        it('detaches from a signal once the listener registered with it has gone', async () => {
+            // A long-lived signal must not keep a removed listener - or the registry - alive
+            const { element, moveOn } = await bootBare();
+            const controller = new AbortController();
+            const detach = vi.spyOn(controller.signal, 'removeEventListener');
+            const removed = vi.fn();
+            const spent = vi.fn();
+            element.addEventListener('pointermove', removed, { signal: controller.signal });
+            element.addEventListener('pointerenter', spent, { signal: controller.signal, once: true });
+
+            element.removeEventListener('pointermove', removed);
+            await moveOn();
+
+            expect(spent).toHaveBeenCalledTimes(1);
+            expect(
+                detach.mock.calls.filter(([type]) => type === 'abort'),
+                'one for the removed listener, one for the spent one'
+            ).toHaveLength(2);
         });
 
         it('tells the capture and bubble registrations of one listener apart', async () => {

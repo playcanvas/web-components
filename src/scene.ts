@@ -108,9 +108,9 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Registers a listener exactly as {@link EventTarget.addEventListener} does, and records it
-     * for the pointer bookkeeping. Internal so that the published typings keep the DOM's own
-     * typed signatures.
+     * Registers a listener exactly as {@link EventTarget.addEventListener} does, through the
+     * pointer bookkeeping that records it. Internal so that the published typings keep the DOM's
+     * own typed signatures.
      *
      * @param type - The event type.
      * @param listener - The listener.
@@ -134,8 +134,7 @@ class SceneElement extends AsyncElement {
         listener: EventListenerOrEventListenerObject,
         options?: boolean | AddEventListenerOptions
     ) {
-        super.addEventListener(type, listener, options);
-        this._pointerListeners.add(type, listener, options);
+        this._pointerListeners.add(type, listener, options, () => super.addEventListener(type, listener, options));
     }
 
     /**

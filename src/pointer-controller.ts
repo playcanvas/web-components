@@ -583,7 +583,19 @@ export class PointerController {
     private _onPointerUp(event: PointerEvent) {
         if (!this._picker) return;
         const hover = this._demanded(HOVER_EVENTS);
-        if (!hover && !this._demanded(RELEASE_EVENTS)) return;
+        if (!hover && !this._demanded(RELEASE_EVENTS)) {
+            // Nothing wants the release picked, but the press it ends may have been: forget that,
+            // in order behind the press step still queued, so the press cannot outlive its
+            // release and keep the pointer's state - or misdirect a later pointercancel
+            const state = this._pointers.get(event.pointerId);
+            if (state) {
+                state.supersede = null;
+                this._queue(event.pointerId, state, () => {
+                    state.press = null;
+                });
+            }
+            return;
+        }
 
         const generation = this._generation;
         const state = this._state(event.pointerId);
