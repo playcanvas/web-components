@@ -1428,6 +1428,38 @@ describe('pc-app pointer picking', () => {
             ]);
         });
 
+        it('keeps a press alive while the pointer leaves the canvas and comes back', async () => {
+            // As in the DOM: leaving ends the hover but not the press, so a release back over the
+            // pressed entity still clicks it. The release bubbles past the window, which must
+            // not mistake it for one off the canvas.
+            const { appElement, canvas, inner, log } = await bootScene();
+            stubPicker(appElement, [[hit(inner.entity!)], [hit(inner.entity!)]]);
+
+            canvas.dispatchEvent(press());
+            await flush();
+            canvas.dispatchEvent(new PointerEvent('pointerout', { relatedTarget: document.body }));
+            await flush();
+
+            expect(await logged(log, () => canvas.dispatchEvent(release({ bubbles: true })))).toContain(
+                'click@inner'
+            );
+        });
+
+        it('ends a press released off the canvas', async () => {
+            // Otherwise a later release on the canvas, after a press that began off it, would
+            // conclude the stale press and click its target
+            const { appElement, canvas, inner, log } = await bootScene();
+            stubPicker(appElement, [[hit(inner.entity!)], [hit(inner.entity!)]]);
+
+            canvas.dispatchEvent(press());
+            await flush();
+            canvas.dispatchEvent(new PointerEvent('pointerout', { relatedTarget: document.body }));
+            document.body.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+            await flush();
+
+            expect(await logged(log, () => canvas.dispatchEvent(release()))).not.toContain('click@inner');
+        });
+
         it('does not re-enter an entity from a move picked before the pointer left the canvas', async () => {
             const { appElement, canvas, inner, log } = await bootScene();
             const pending = deferred<ReturnType<typeof hit>[]>();
@@ -1452,6 +1484,19 @@ describe('pc-app pointer picking', () => {
             inner.remove();
 
             expect(await logged(log, () => canvas.dispatchEvent(move(410, 300)))).toEqual(['pointermove@outer']);
+        });
+
+        it('leaves the ancestors of a removed entity when the pointer moves onto the background', async () => {
+            // Removing the hovered entity passes the pointer to the background, but the scene is
+            // still entered - and must still be left, though the target does not change
+            const { appElement, canvas, outer, inner, log } = await bootScene();
+            stubPicker(appElement, [[hit(inner.entity!)], []]);
+            canvas.dispatchEvent(move(400, 300));
+            await flush();
+
+            outer.remove();
+
+            expect(await logged(log, () => canvas.dispatchEvent(move(10, 10)))).toEqual(['pointerleave@scene<app']);
         });
 
         it('tracks each pointer separately', async () => {
@@ -1586,6 +1631,22 @@ describe('pc-app pointer picking', () => {
             await moveOn();
 
             expect(calls.async, 'one removal undoes both adds').toBe(0);
+        });
+
+        it('accepts null options, as the DOM does', async () => {
+            const { element, calls, moveOn } = await bootBare();
+            const listener = vi.fn();
+
+            expect(() => {
+                element.addEventListener('ready', vi.fn(), null as unknown as AddEventListenerOptions);
+                element.addEventListener('pointermove', listener, null as unknown as AddEventListenerOptions);
+            }).not.toThrow();
+            await moveOn();
+            expect(listener).toHaveBeenCalledTimes(1);
+
+            element.removeEventListener('pointermove', listener, null as unknown as EventListenerOptions);
+            await moveOn();
+            expect(calls.async, 'the removal forgets it').toBe(1);
         });
 
         it('accepts a listener object', async () => {

@@ -186,12 +186,13 @@ export class ListenerRegistry {
     add(
         type: string,
         listener: EventListenerOrEventListenerObject | null,
-        options: boolean | AddEventListenerOptions | undefined,
+        options: boolean | AddEventListenerOptions | null | undefined,
         register: () => void
     ) {
+        // `null` is valid options too - the DOM reads it as an empty dictionary
         const capture = typeof options === 'boolean' ? options : Boolean(options?.capture);
-        const once = typeof options === 'object' && Boolean(options.once);
-        const signal = (typeof options === 'object' ? options.signal : undefined) ?? null;
+        const once = typeof options === 'object' && Boolean(options?.once);
+        const signal = (typeof options === 'object' ? options?.signal : undefined) ?? null;
 
         // Only the synthesized types are recorded - and the DOM ignores a registration whose
         // signal has already aborted, and a duplicate
@@ -244,7 +245,7 @@ export class ListenerRegistry {
     remove(
         type: string,
         listener: EventListenerOrEventListenerObject | null,
-        options?: boolean | EventListenerOptions
+        options?: boolean | EventListenerOptions | null
     ) {
         if (!listener) return;
 
