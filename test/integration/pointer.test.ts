@@ -1460,6 +1460,44 @@ describe('pc-app pointer picking', () => {
             expect(await logged(log, () => canvas.dispatchEvent(release()))).not.toContain('click@inner');
         });
 
+        it('ends a press released off the canvas even when the release is stopped', async () => {
+            // An overlay that stops its pointerup must not keep the press alive, or a gesture
+            // from the overlay onto the canvas would click the stale press's target
+            const { appElement, canvas, inner, log } = await bootScene();
+            stubPicker(appElement, [[hit(inner.entity!)], [hit(inner.entity!)]]);
+            const overlay = document.createElement('div');
+            overlay.addEventListener('pointerup', (event) => event.stopPropagation());
+            document.body.appendChild(overlay);
+
+            canvas.dispatchEvent(press());
+            await flush();
+            canvas.dispatchEvent(new PointerEvent('pointerout', { relatedTarget: overlay }));
+            overlay.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+            await flush();
+
+            expect(await logged(log, () => canvas.dispatchEvent(release()))).not.toContain('click@inner');
+            overlay.remove();
+        });
+
+        it('does not let a synthesized release end a press that began after it', async () => {
+            // The pointerup dispatched on the entity bubbles to the window like a native one, but
+            // it reports a release that already happened - a second press queued behind its pick
+            // must survive it and still click
+            const { appElement, canvas, inner, log } = await bootScene();
+            const releasePick = deferred<ReturnType<typeof hit>[]>();
+            stubPicker(appElement, [[hit(inner.entity!)], releasePick.promise, [hit(inner.entity!)], [hit(inner.entity!)]]);
+
+            canvas.dispatchEvent(press());
+            canvas.dispatchEvent(release());
+            canvas.dispatchEvent(press());
+            releasePick.resolve([hit(inner.entity!)]);
+            await flush();
+            canvas.dispatchEvent(release());
+            await flush();
+
+            expect(log.filter((entry) => entry === 'click@inner')).toHaveLength(2);
+        });
+
         it('does not re-enter an entity from a move picked before the pointer left the canvas', async () => {
             const { appElement, canvas, inner, log } = await bootScene();
             const pending = deferred<ReturnType<typeof hit>[]>();

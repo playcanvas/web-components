@@ -100,6 +100,12 @@ export type PointerHost = {
 };
 
 /**
+ * A press: the button that went down, and the element its pick resolved to - `null` for the
+ * background, and until the pick has resolved.
+ */
+type Press = { target: EntityBaseElement | null; button: number };
+
+/**
  * What the controller tracks for one pointer. Pointers are tracked separately, as the DOM tracks
  * them - two touches can each be over a different entity.
  */
@@ -120,12 +126,12 @@ type PointerState = {
     supersede: (() => void) | null;
 
     /**
-     * The element the pointer's current press picked (`null` for the background) and the button
-     * that pressed it, until the release or cancel that ends the press - on the canvas or off it.
-     * Leaving the canvas does not end it: a pointer that returns and releases over the pressed
-     * element still clicks it.
+     * The pointer's current press, from the pointerdown that begins it to the release or cancel
+     * that ends it - on the canvas or off it. Both happen synchronously, in canvas-event order,
+     * however far the picks lag behind. Leaving the canvas does not end it: a pointer that
+     * returns and releases over the pressed element still clicks it.
      */
-    press: { target: EntityBaseElement | null; button: number } | null;
+    press: Press | null;
 
     /** The number of dispatch steps queued for the pointer and not yet run. */
     pending: number;
@@ -167,16 +173,23 @@ export class PointerController {
     private _picker: Picker | null = null;
 
     /**
-     * The listeners attached by {@link connect} - on the canvas, and on its window for releases
-     * off the canvas - kept so disconnect can detach them.
+     * The listeners attached by {@link connect} - on the canvas, and capturing on its window for
+     * every release - with their capture flags, kept so disconnect can detach them.
      */
-    private _listeners: [EventTarget, string, EventListener][] = [];
+    private _listeners: [EventTarget, string, EventListener, boolean][] = [];
 
     /**
-     * The releases and cancels the canvas handled, so the window listeners that see them bubble
-     * past can tell them apart from the ones that happened off the canvas.
+     * The press each release or cancel ended, recorded by the window as the event passes it on
+     * the way in - so the canvas concludes exactly the press that event ended, even when a later
+     * press has begun by the time its pick resolves.
      */
-    private _canvasReleases = new WeakSet<Event>();
+    private _endedPresses = new WeakMap<Event, Press | null>();
+
+    /**
+     * The events this controller synthesized. Their releases and cancels only report ones the
+     * canvas already had, so they end no press as they pass the window.
+     */
+    private _synthesized = new WeakSet<Event>();
 
     /** The state of each pointer, by pointerId. */
     private _pointers = new Map<number, PointerState>();
@@ -218,22 +231,22 @@ export class PointerController {
         this._picker = new Picker(app, width, height);
 
         // A press outlives the pointer leaving the canvas, as in the DOM, so its release or cancel
-        // is also watched for where it lands off the canvas. The window sees it bubble past rather
-        // than capturing it: by then the canvas has marked the ones it handled, which a capture
-        // listener could not tell apart from the rest inside a closed shadow root.
-        const released = (event: Event) => this._onReleaseElsewhere(event as PointerEvent);
+        // may land anywhere. The window captures every one: nothing on the page can stop an event
+        // before it reaches the window's capture phase, and ending the press there needs no
+        // knowledge of where the event is headed - which a closed shadow root would hide
+        const released = (event: Event) => this._onRelease(event as PointerEvent);
         this._listeners = [
-            [canvas, 'pointermove', (event) => this._onPointerMove(event as PointerEvent)],
-            [canvas, 'pointerdown', (event) => this._onPointerDown(event as PointerEvent)],
-            [canvas, 'pointerup', (event) => this._onPointerUp(event as PointerEvent)],
-            [canvas, 'pointercancel', (event) => this._onPointerCancel(event as PointerEvent)],
-            [canvas, 'pointerout', (event) => this._onPointerOut(event as PointerEvent)]
+            [canvas, 'pointermove', (event) => this._onPointerMove(event as PointerEvent), false],
+            [canvas, 'pointerdown', (event) => this._onPointerDown(event as PointerEvent), false],
+            [canvas, 'pointerup', (event) => this._onPointerUp(event as PointerEvent), false],
+            [canvas, 'pointercancel', (event) => this._onPointerCancel(event as PointerEvent), false],
+            [canvas, 'pointerout', (event) => this._onPointerOut(event as PointerEvent), false]
         ];
         const view = canvas.ownerDocument.defaultView;
         if (view) {
-            this._listeners.push([view, 'pointerup', released], [view, 'pointercancel', released]);
+            this._listeners.push([view, 'pointerup', released, true], [view, 'pointercancel', released, true]);
         }
-        this._listeners.forEach(([target, type, handler]) => target.addEventListener(type, handler));
+        this._listeners.forEach(([target, type, handler, capture]) => target.addEventListener(type, handler, capture));
     }
 
     /**
@@ -244,7 +257,9 @@ export class PointerController {
     disconnect() {
         this._generation++;
 
-        this._listeners.forEach(([target, type, handler]) => target.removeEventListener(type, handler));
+        this._listeners.forEach(([target, type, handler, capture]) =>
+            target.removeEventListener(type, handler, capture)
+        );
         this._listeners = [];
 
         this._app = null;
@@ -318,7 +333,9 @@ export class PointerController {
         ) {
             return;
         }
-        target.dispatchEvent(createPointerEvent(type, source, relatedTarget, detail));
+        const event = createPointerEvent(type, source, relatedTarget, detail);
+        this._synthesized.add(event);
+        target.dispatchEvent(event);
     }
 
     /**
@@ -362,11 +379,40 @@ export class PointerController {
             })
             .finally(() => {
                 state.pending--;
-                const idle = state.pending === 0 && state.chain.length === 0 && state.press === null;
-                if (idle && this._pointers.get(pointerId) === state) {
-                    this._pointers.delete(pointerId);
-                }
+                this._dropIfIdle(pointerId, state);
             });
+    }
+
+    /**
+     * Drops a pointer's state once it has no step left to run, is over nothing and has no press.
+     *
+     * @param pointerId - The pointer.
+     * @param state - Its state.
+     */
+    private _dropIfIdle(pointerId: number, state: PointerState) {
+        const idle = state.pending === 0 && state.chain.length === 0 && state.press === null;
+        if (idle && this._pointers.get(pointerId) === state) {
+            this._pointers.delete(pointerId);
+        }
+    }
+
+    /**
+     * Takes the press a release or cancel ends: the one the window recorded for it on the way
+     * in or, for an event the window never saw, the pointer's current press.
+     *
+     * @param event - The release or cancel.
+     * @param state - The pointer's state, if it has one.
+     * @returns The press it ends, or `null` for none.
+     */
+    private _takePress(event: PointerEvent, state: PointerState | undefined): Press | null {
+        if (this._endedPresses.has(event)) {
+            return this._endedPresses.get(event) ?? null;
+        }
+        const press = state?.press ?? null;
+        if (state) {
+            state.press = null;
+        }
+        return press;
     }
 
     /**
@@ -584,6 +630,10 @@ export class PointerController {
         // in the order, so a later move must not release it
         state.supersede = null;
 
+        // The press begins now, in canvas-event order; only its target waits for the pick
+        const press: Press = { target: null, button: event.button };
+        state.press = press;
+
         // Picks stay concurrent - only the dispatch of the results is serialized
         const pick = this._pickNode(event);
 
@@ -596,42 +646,31 @@ export class PointerController {
             if (hover) {
                 this._hover(state, target, event, true);
             }
-            state.press = { target, button: event.button };
+            press.target = target;
             if (target) {
                 this._dispatch(target, 'pointerdown', event);
             }
         });
     }
 
-    /**
-     * Ends a pointer's press without concluding it, in order behind the press step that may
-     * still be queued - so the press cannot outlive its release and keep the pointer's state, or
-     * misdirect a later click or pointercancel.
-     *
-     * @param pointerId - The pointer.
-     */
-    private _endPress(pointerId: number) {
-        const state = this._pointers.get(pointerId);
-        if (!state) return;
-        state.supersede = null;
-        this._queue(pointerId, state, () => {
-            state.press = null;
-        });
-    }
-
     private _onPointerUp(event: PointerEvent) {
-        this._canvasReleases.add(event);
         if (!this._picker) return;
         const hover = this._demanded(HOVER_EVENTS);
         if (!hover && !this._demanded(RELEASE_EVENTS)) {
-            // Nothing wants the release picked, but the press it ends may have been
-            this._endPress(event.pointerId);
+            // Nothing wants the release picked, but the press it ends may have been: that press
+            // is over, so it cannot keep the pointer's state or misdirect a later pointercancel
+            const state = this._pointers.get(event.pointerId);
+            this._takePress(event, state);
+            if (state) {
+                this._dropIfIdle(event.pointerId, state);
+            }
             return;
         }
 
         const generation = this._generation;
         const state = this._state(event.pointerId);
         state.supersede = null;
+        const press = this._takePress(event, state);
         const pick = this._pickNode(event);
 
         this._queue(event.pointerId, state, async () => {
@@ -650,8 +689,6 @@ export class PointerController {
             // what the press and the release picked, for the primary button only, after the
             // pointerup that concludes it. A press or release on the background concludes no
             // synthesized click - the canvas's own native click covers it.
-            const press = state.press;
-            state.press = null;
             if (!press?.target || !target || press.button !== 0 || event.button !== 0) return;
 
             const clickTarget = commonAncestor(press.target, target, this._host.element);
@@ -671,15 +708,13 @@ export class PointerController {
     private _onPointerCancel(event: PointerEvent) {
         // The browser took the pointer back (a touch that became a scroll, say): the press can
         // no longer conclude, and the element it picked is told so
-        this._canvasReleases.add(event);
-        const state = this._pointers.get(event.pointerId);
-        if (!state) return;
+        const press = this._takePress(event, this._pointers.get(event.pointerId));
+        if (!press) return;
+        const state = this._state(event.pointerId);
         state.supersede = null;
 
         this._queue(event.pointerId, state, () => {
-            const press = state.press;
-            state.press = null;
-            if (press?.target) {
+            if (press.target) {
                 this._dispatch(press.target, 'pointercancel', event);
             }
         });
@@ -700,11 +735,17 @@ export class PointerController {
         });
     }
 
-    private _onReleaseElsewhere(event: PointerEvent) {
-        // A press that left the canvas was released or cancelled off it: it concludes nothing,
-        // so a later release on the canvas - after a press that began off it - clicks nothing
-        if (!this._canvasReleases.has(event)) {
-            this._endPress(event.pointerId);
+    private _onRelease(event: PointerEvent) {
+        // Every release or cancel ends the pointer's press, wherever it lands. The canvas's own
+        // handler concludes the press recorded here; one released off the canvas concludes
+        // nothing, so a later release on the canvas - after a press that began off it - clicks
+        // nothing
+        if (this._synthesized.has(event)) return;
+        const state = this._pointers.get(event.pointerId);
+        this._endedPresses.set(event, state?.press ?? null);
+        if (state) {
+            state.press = null;
+            this._dropIfIdle(event.pointerId, state);
         }
     }
 }
