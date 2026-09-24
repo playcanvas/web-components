@@ -2,7 +2,7 @@ import type { AppBase, CameraComponent, GraphNode, GSplatComponent } from 'playc
 import { MeshInstance, Picker } from 'playcanvas';
 
 import { EntityBaseElement } from './entity-base';
-import { createPointerEvent, hasVisibleListener } from './pointer-events';
+import { createPointerEvent, hasVisibleListener, isSynthesized } from './pointer-events';
 import type { SynthesizedEventType } from './pointer-events';
 
 // Keep `export` on these declarations. TypeScript removes the declaration and its inline export
@@ -185,12 +185,6 @@ export class PointerController {
      */
     private _endedPresses = new WeakMap<Event, Press | null>();
 
-    /**
-     * The events this controller synthesized. Their releases and cancels only report ones the
-     * canvas already had, so they end no press as they pass the window.
-     */
-    private _synthesized = new WeakSet<Event>();
-
     /** The state of each pointer, by pointerId. */
     private _pointers = new Map<number, PointerState>();
 
@@ -333,9 +327,7 @@ export class PointerController {
         ) {
             return;
         }
-        const event = createPointerEvent(type, source, relatedTarget, detail);
-        this._synthesized.add(event);
-        target.dispatchEvent(event);
+        target.dispatchEvent(createPointerEvent(type, source, relatedTarget, detail));
     }
 
     /**
@@ -739,8 +731,9 @@ export class PointerController {
         // Every release or cancel ends the pointer's press, wherever it lands. The canvas's own
         // handler concludes the press recorded here; one released off the canvas concludes
         // nothing, so a later release on the canvas - after a press that began off it - clicks
-        // nothing
-        if (this._synthesized.has(event)) return;
+        // nothing. A synthesized one - from this app or another on the page - only reports a
+        // release some canvas already had, so it ends nothing.
+        if (isSynthesized(event)) return;
         const state = this._pointers.get(event.pointerId);
         this._endedPresses.set(event, state?.press ?? null);
         if (state) {

@@ -1498,6 +1498,50 @@ describe('pc-app pointer picking', () => {
             expect(log.filter((entry) => entry === 'click@inner')).toHaveLength(2);
         });
 
+        it("does not let another app's synthesized release end a press", async () => {
+            // Every app watches the same window, so each must pass over the releases any of them
+            // synthesized - not only its own
+            const scene = `
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `;
+            const { appElement, container } = await bootApp(scene);
+
+            // The second app joins the first one's mount, so the guard's teardown covers both
+            const second = document.createElement('pc-app') as AppElement;
+            second.setAttribute('backend', 'null');
+            second.innerHTML = scene;
+            container.appendChild(second);
+            await readyWithin(second);
+            await settle(container);
+            second.app!.autoRender = false;
+
+            const clickable = (app: AppElement) => {
+                const target = app.querySelector<EntityElement>('pc-entity[name="target"]')!;
+                const click = vi.fn();
+                target.addEventListener('pointerup', vi.fn());
+                target.addEventListener('click', click);
+                return { appElement: app, target, click, canvas: app.querySelector('canvas')! };
+            };
+            const a = clickable(appElement);
+            const b = clickable(second);
+            const releasePick = deferred<ReturnType<typeof hit>[]>();
+            stubPicker(a.appElement, [[hit(a.target.entity!)], releasePick.promise]);
+            stubPicker(b.appElement, [[hit(b.target.entity!)], [hit(b.target.entity!)]]);
+
+            a.canvas.dispatchEvent(press());
+            a.canvas.dispatchEvent(release());
+            b.canvas.dispatchEvent(press());
+            await flush();
+            releasePick.resolve([hit(a.target.entity!)]); // a's pointerup passes the window now
+            await flush();
+            b.canvas.dispatchEvent(release());
+            await flush();
+
+            expect(a.click).toHaveBeenCalledTimes(1);
+            expect(b.click, "b's press survives a's release").toHaveBeenCalledTimes(1);
+        });
+
         it('does not re-enter an entity from a move picked before the pointer left the canvas', async () => {
             const { appElement, canvas, inner, log } = await bootScene();
             const pending = deferred<ReturnType<typeof hit>[]>();

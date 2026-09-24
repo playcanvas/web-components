@@ -59,6 +59,22 @@ const BOUNDARY_EVENTS: ReadonlySet<SynthesizedEventType> = new Set([
 ]);
 
 /**
+ * Every event {@link createPointerEvent} has built. Module-wide rather than per `<pc-app>`: each
+ * app watches the shared window for releases, and must pass over every app's synthesized ones.
+ */
+const synthesizedEvents = new WeakSet<Event>();
+
+/**
+ * Whether an event was synthesized by a `<pc-app>` - by any of them on the page - rather than
+ * coming from the browser or page code.
+ *
+ * @param event - The event to check.
+ * @returns Whether it was synthesized.
+ * @internal
+ */
+export const isSynthesized = (event: Event): boolean => synthesizedEvents.has(event);
+
+/**
  * Builds a synthesized event of `type` from the canvas event that caused it. The pointer's
  * position, buttons, modifiers and device properties are copied from the canvas event, while the
  * propagation flags come from the event type itself: an init built by passing the canvas event
@@ -78,7 +94,7 @@ export const createPointerEvent = (
     detail = 0
 ): PointerEvent => {
     const modifier = (key: string) => source.getModifierState(key);
-    return new PointerEvent(type, {
+    const event = new PointerEvent(type, {
         ...EVENT_FLAGS[type],
         composed: true,
         view: source.view,
@@ -119,6 +135,8 @@ export const createPointerEvent = (
         altitudeAngle: source.altitudeAngle,
         azimuthAngle: source.azimuthAngle
     });
+    synthesizedEvents.add(event);
+    return event;
 };
 
 /**
