@@ -184,10 +184,29 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             data.textureAsset = textureAsset.id;
         }
 
-        // Margin is only applied when explicitly set. For stretched (split) anchors it governs the
+        // Authored margins are applied as they are. For stretched (split) anchors they govern the
         // element size; for point anchors width/height take over (handled by the engine).
         if (this._margin) {
             data.margin = this._margin;
+        } else {
+            // Otherwise the margins follow the entity. The engine positions an element from its
+            // margins, but seeds a new component with default ones and applies them during setup
+            // (fit mode, the screen binding), which would move an entity positioned before its
+            // element was added - as every `<pc-entity>` is. So each axis with a point anchor gets
+            // the margins that put the pivot on the entity's position: the near edge, and the far
+            // edge negated. A stretched axis keeps the engine's margins, which with its anchors
+            // define its edges.
+            const position = this.closestEntity?.entity?.getLocalPosition();
+            if (position) {
+                if (Math.abs(this._anchor.x - this._anchor.z) <= 1e-3) {
+                    data.left = position.x - this._width * this._pivot.x;
+                    data.right = -this._width - data.left;
+                }
+                if (Math.abs(this._anchor.y - this._anchor.w) <= 1e-3) {
+                    data.bottom = position.y - this._height * this._pivot.y;
+                    data.top = -this._height - data.bottom;
+                }
+            }
         }
 
         if (this._pixelsPerUnit !== null) {
