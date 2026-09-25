@@ -205,9 +205,12 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
 
         // Remove the component when the element is disconnected. Skip this when the owning
         // application has already been destroyed — removing a <pc-app> disconnects it before
-        // its children, taking the component systems with it.
-        if (this._appElement?.app && this._component?.entity) {
-            this._component.entity.removeComponent(this._componentName);
+        // its children, taking the component systems with it. Skip it too when the entity no
+        // longer holds the component: removing a <pc-entity> or <pc-model> destroys its entity,
+        // and so its components, before its children are disconnected.
+        const entity = this._component?.entity;
+        if (this._appElement?.app && entity && entity.c[this._componentName] === this._component) {
+            entity.removeComponent(this._componentName);
         }
         this._component = null;
         this._appElement = null;

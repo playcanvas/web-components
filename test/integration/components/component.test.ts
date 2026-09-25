@@ -1,12 +1,13 @@
 import type { Component } from 'playcanvas';
 import { LightComponent } from 'playcanvas';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import type { CameraComponentElement } from '../../../src/components/camera-component';
 import type { ComponentElement } from '../../../src/components/component';
 import type { LightComponentElement } from '../../../src/components/light-component';
 import type { RenderComponentElement } from '../../../src/components/render-component';
 import type { EntityElement } from '../../../src/entity';
+import type { EntityBaseElement } from '../../../src/entity-base';
 import type { ModelElement } from '../../../src/model';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
@@ -133,6 +134,39 @@ describe('component hosting', () => {
             expectTypeOf<ComponentElement['component']>().toEqualTypeOf<Component | null>();
 
             light.remove();
+            expect(light.component, 'disconnection released the component').toBeNull();
+        });
+    });
+
+    describe('removal', () => {
+        it('removes the component from the live entity when only the component element is removed', async () => {
+            const { get } = await bootApp('<pc-entity name="row"><pc-light></pc-light></pc-entity>');
+            const entity = get<EntityElement>('pc-entity').entity!;
+            const removeComponent = vi.spyOn(entity, 'removeComponent');
+
+            get<LightComponentElement>('pc-light').remove();
+
+            expect(removeComponent, 'the element removed it itself').toHaveBeenCalledExactlyOnceWith('light');
+            expect(entity.light, 'the entity no longer has the component').toBeUndefined();
+        });
+
+        it.for(['pc-entity', 'pc-model'])('removes the component only once when its %s is removed', async (tag) => {
+            // Removing a <pc-entity> or <pc-model> destroys its entity, and the destroy removes
+            // every component through the component systems, not Entity#removeComponent, before
+            // the component elements below it are disconnected. Removing the component again
+            // made the engine's debug build warn "removeComponent: Entity doesn't have 'light'
+            // component". The suite runs that build, so the guard catches the warning too, but
+            // the spy pins the call itself, which a release build makes without warning.
+            const { get } = await bootApp(`<${tag} name="row"><pc-light></pc-light></${tag}>`);
+            const host = get<EntityBaseElement>(tag);
+            const light = get<LightComponentElement>('pc-light');
+            const entity = host.entity!;
+            const removeComponent = vi.spyOn(entity, 'removeComponent');
+
+            host.remove();
+
+            expect(entity.light, 'the destroy removed the component').toBeUndefined();
+            expect(removeComponent, 'and nothing removed it again').not.toHaveBeenCalled();
             expect(light.component, 'disconnection released the component').toBeNull();
         });
     });
