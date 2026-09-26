@@ -886,6 +886,12 @@ export class BeamDust extends Script {
      */
     threshold = 1.5;
 
+    // Whether the emitter was last told to run, kept here because isPlaying() can't say: a
+    // stopped emitter still reports playing until its particles have lived out their lifetime,
+    // and every stop() pushes that deadline back
+    /** @type {boolean|null} */
+    _emitting = null;
+
     update() {
         const light = this.light?.light;
         const ps = this.entity.particlesystem;
@@ -895,12 +901,14 @@ export class BeamDust extends Script {
         // a light shines down its entity's -Y
         beamDir.copy(this.light.up).mulScalar(-1);
         const through = light.enabled ? light.intensity * Math.max(0, beamDir.dot(this.normal)) : 0;
-        if (through >= this.threshold) {
-            if (!ps.isPlaying()) {
+        const emitting = through >= this.threshold;
+        if (emitting !== this._emitting) {
+            this._emitting = emitting;
+            if (emitting) {
                 ps.play();
+            } else {
+                ps.stop();
             }
-        } else if (ps.isPlaying()) {
-            ps.stop();
         }
         const toFloor = beamDir.y < -0.001 ? this.origin.y / -beamDir.y : this.reach;
         beamMid.copy(beamDir).mulScalar(Math.min(this.reach, toFloor) / 2).add(this.origin);
