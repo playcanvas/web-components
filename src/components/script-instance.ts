@@ -29,7 +29,9 @@ import { parseBool } from '../parse';
  * new-name one, re-applying both attribute channels to it.
  *
  * The element becomes ready once its script instance has been created by the parent
- * `<pc-script>` element.
+ * `<pc-script>` element. A script class registered after the element is waited for, and its
+ * instance created with the element's declared state when it arrives; one still missing once no
+ * script asset is left loading logs a warning.
  *
  * @elementSummary The `<pc-script-instance>` element attaches one script class, named by `name`, to
  * the entity of its parent `<pc-script>`. Its other attributes set script attributes of the same
