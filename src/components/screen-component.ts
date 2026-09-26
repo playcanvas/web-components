@@ -68,7 +68,7 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
 
     /**
      * Sets the order in which the screen is drawn relative to other screens in the same layer, from
-     * 0 to 255, with higher values drawn on top. Defaults to 0.
+     * 0 to 127, with higher values drawn on top and receiving input first. Defaults to 0.
      * @param value - The priority.
      */
     set priority(value: number) {
@@ -80,7 +80,7 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
 
     /**
      * Gets the order in which the screen is drawn relative to other screens in the same layer, from
-     * 0 to 255, with higher values drawn on top.
+     * 0 to 127, with higher values drawn on top and receiving input first.
      * @returns The priority.
      */
     get priority() {
