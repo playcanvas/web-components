@@ -32,7 +32,7 @@ const ALL_CASCADES = SHADOW_CASCADE_0 | SHADOW_CASCADE_1 | SHADOW_CASCADE_2 | SH
  * Engine component: {@link RenderComponent} (`render`).
  *
  * @elementSummary The `<pc-render>` element renders one of the engine's built-in primitives at its
- * entity — box, sphere, capsule, cone, cylinder or plane — shaded by the `<pc-material>` its
+ * entity — box, sphere, capsule, cone, cylinder, plane or torus — shaded by the `<pc-material>` its
  * `material` attribute names. For glTF content, use `<pc-model>` instead. Must be a child of a
  * `<pc-entity>`, `<pc-model>` or `<pc-node>`.
  *
@@ -47,7 +47,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
 
     private _shadowCascadeMask = ALL_CASCADES;
 
-    private _type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' = 'box';
+    private _type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus' = 'box';
 
     /** @ignore */
     constructor() {
@@ -85,7 +85,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
      * Sets the type of the render component.
      * @param value - The type.
      */
-    set type(value: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere') {
+    set type(value: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus') {
         this._type = value;
         if (this.component) {
             this.component.type = value;
@@ -96,7 +96,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
      * Gets the type of the render component.
      * @returns The type.
      */
-    get type(): 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' {
+    get type(): 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus' {
         return this._type;
     }
 
@@ -214,7 +214,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
                 this.shadowCascadeMask = parseFlags(newValue, shadowCascades, '0 1 2 3', name);
                 break;
             case 'type':
-                this.type = parseEnum(newValue, ['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere'], 'box', name);
+                this.type = parseEnum(newValue, ['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere', 'torus'], 'box', name);
                 break;
         }
     }

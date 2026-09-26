@@ -53,6 +53,19 @@ describe('<pc-render>', () => {
         });
     });
 
+    describe('[type]', () => {
+        it('accepts torus initially and when changed at runtime', async () => {
+            const { get } = await bootApp(scene('type="torus"'));
+            const element = get<RenderComponentElement>('pc-render');
+
+            expect(element.component!.type).toBe('torus');
+            element.type = 'sphere';
+            expect(element.component!.type).toBe('sphere');
+            element.type = 'torus';
+            expect(element.component!.type).toBe('torus');
+        });
+    });
+
     describe('[shadow-cascade-mask]', () => {
         it('folds the cascade indices into the mask of every mesh instance', async () => {
             const { get } = await bootApp(scene('shadow-cascade-mask="0 1"'));
