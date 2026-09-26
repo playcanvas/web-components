@@ -251,6 +251,17 @@ export type ScriptNameChangeEvent = {
 } & CustomEvent;
 
 /**
+ * A `pc-script-instance` element's wait for its script class: the registry subscription, and the
+ * timers that create the instance once the class has arrived and warn while it has not.
+ */
+type ScriptWait = {
+    name: string;
+    handle: EventHandle;
+    createTimer?: ReturnType<typeof setTimeout>;
+    warnTimer?: ReturnType<typeof setTimeout>;
+};
+
+/**
  * The ScriptComponentElement interface provides properties and methods for manipulating
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-script/ | `<pc-script>`} elements.
  * The ScriptComponentElement interface also inherits the properties and methods of the
@@ -268,9 +279,9 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
 
     /**
      * The child `pc-script-instance` elements waiting for their script class to be registered,
-     * each with the registry subscription that creates its instance once it is.
+     * each with its wait.
      */
-    private waiting = new Map<ScriptInstanceElement, { name: string; handle: EventHandle }>();
+    private waiting = new Map<ScriptInstanceElement, ScriptWait>();
 
     /** @ignore */
     constructor() {
@@ -576,40 +587,61 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
     }
 
     /**
-     * Waits for a script class to be registered, then creates the element's instance. The
-     * registry announces the class synchronously, as it is added, so the instance exists before
-     * anything else can run a frame with it missing.
+     * Waits for a script class to be registered, then creates the element's instance. Creation
+     * waits out the task that registered the class, as the engine's own deferred creation does:
+     * `createScript()` registers its type before returning it, so the attributes and methods its
+     * caller goes on to declare are not there yet when the registry announces the class.
      * @param scriptElement - The `pc-script-instance` element to create the instance for.
      * @param name - The script name it waits for.
      */
     private waitForScript(scriptElement: ScriptInstanceElement, name: string) {
         this.stopWaiting(scriptElement);
 
-        const handle = this.component!.system.app.scripts.once(`add:${name}`, () => {
-            this.waiting.delete(scriptElement);
-            // A removal reaches this element through the mutation observer, a microtask later -
-            // one not processed yet cancels the wait all the same
-            if (scriptElement.parentElement === this && scriptElement.getAttribute('name') === name) {
-                this.createScript(scriptElement);
-            }
-        });
-        this.waiting.set(scriptElement, { name, handle });
+        const wait: ScriptWait = {
+            name,
+            handle: this.component!.system.app.scripts.once(`add:${name}`, () => {
+                wait.createTimer = setTimeout(() => this.createWaited(scriptElement, wait));
+            })
+        };
+        this.waiting.set(scriptElement, wait);
 
         // Checked after the current task, so a module registering the class right behind this
         // is not taken for a missing one
-        setTimeout(() => this.warnIfStillWaiting(scriptElement, name));
+        wait.warnTimer = setTimeout(() => this.warnIfStillWaiting(scriptElement, wait));
+    }
+
+    /**
+     * Creates a waiting element's instance now its class is registered, unless the wait has
+     * ended meanwhile.
+     * @param scriptElement - The waiting element.
+     * @param wait - The wait the class arrived for.
+     */
+    private createWaited(scriptElement: ScriptInstanceElement, wait: ScriptWait) {
+        if (this.waiting.get(scriptElement) !== wait) return;
+        this.stopWaiting(scriptElement);
+
+        // A removal reaches this element through the mutation observer, a microtask later -
+        // one not processed yet ends the wait all the same
+        if (scriptElement.parentElement === this && scriptElement.getAttribute('name') === wait.name) {
+            this.createScript(scriptElement);
+        }
     }
 
     /**
      * Warns that a `pc-script-instance` is still waiting for its class, once no script asset
-     * that could register it is left loading.
+     * that could register it is left loading. A wait that has ended, or whose class has arrived
+     * and is only waiting to be created, says nothing.
      * @param scriptElement - The waiting element.
-     * @param name - The script name it waits for.
+     * @param wait - Its wait.
      */
-    private warnIfStillWaiting(scriptElement: ScriptInstanceElement, name: string) {
-        if (this.waiting.get(scriptElement)?.name !== name || !this.component) return;
+    private warnIfStillWaiting(scriptElement: ScriptInstanceElement, wait: ScriptWait) {
+        if (this.waiting.get(scriptElement) !== wait || !this.component) return;
 
-        const loading = this.component.system.app.assets.filter((asset) => asset.type === 'script' && asset.loading);
+        const { app } = this.component.system;
+        const { name } = wait;
+        if (app.scripts.has(name)) return;
+
+        const loading = app.assets.filter((asset) => asset.type === 'script' && asset.loading);
         if (loading.length > 0) {
             const settled = loading.map(
                 (asset) =>
@@ -618,7 +650,11 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
                         asset.once('error', resolve);
                     })
             );
-            Promise.all(settled).then(() => setTimeout(() => this.warnIfStillWaiting(scriptElement, name)));
+            Promise.all(settled).then(() => {
+                if (this.waiting.get(scriptElement) === wait) {
+                    wait.warnTimer = setTimeout(() => this.warnIfStillWaiting(scriptElement, wait));
+                }
+            });
             return;
         }
 
@@ -628,11 +664,17 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
     }
 
     /**
-     * Stops waiting for a `pc-script-instance` element's script class.
+     * Ends a `pc-script-instance` element's wait for its script class, cancelling everything it
+     * had pending.
      * @param scriptElement - The element.
      */
     private stopWaiting(scriptElement: ScriptInstanceElement) {
-        this.waiting.get(scriptElement)?.handle.off();
+        const wait = this.waiting.get(scriptElement);
+        if (!wait) return;
+
+        wait.handle.off();
+        clearTimeout(wait.createTimer);
+        clearTimeout(wait.warnTimer);
         this.waiting.delete(scriptElement);
     }
 

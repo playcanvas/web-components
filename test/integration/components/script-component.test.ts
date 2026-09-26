@@ -1,5 +1,5 @@
 import type { AppBase } from 'playcanvas';
-import { Asset, Script } from 'playcanvas';
+import { Asset, createScript, Script } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { ScriptComponentElement } from '../../../src/components/script-component';
@@ -304,6 +304,36 @@ describe('<pc-script>', () => {
             expect(script.initialized).toBe(1);
             expect(script.postInitialized).toBe(1);
             expect(host.entity!.script!.scripts).toEqual([script]);
+        });
+
+        it('waits out the registering task, so a legacy script declares itself first', async () => {
+            const { app, scriptElement } = await bootWaiting('legacy');
+
+            // createScript() registers the type before returning it: its attribute and method
+            // are declared after the registry has announced it
+            const Legacy = createScript('legacy', app)!;
+            Legacy.attributes.add('speed', { type: 'number', default: 1 });
+            let initialized = 0;
+            Object.assign(Legacy.prototype, {
+                initialize() {
+                    initialized++;
+                }
+            });
+
+            await readyWithin(scriptElement);
+            expect((scriptElement.script as unknown as { speed: unknown }).speed).toBe(2);
+            expect(initialized).toBe(1);
+        });
+
+        it('warns once for an element moved while it waits', async () => {
+            const { scriptsElement, scriptElement } = await bootWaiting('missing');
+
+            // Out and back in before the first wait's warning is due: that wait is over
+            scriptElement.remove();
+            scriptsElement.appendChild(scriptElement);
+            await tick();
+
+            warnings.expect("pc-script-instance 'missing' is waiting for a script named 'missing' to be registered");
         });
 
         it('warns while it waits, and still creates the instance when the class arrives', async () => {
