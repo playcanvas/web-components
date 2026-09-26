@@ -204,7 +204,7 @@ if (manifest) {
         'pc-material[diffuse-map] should have no default');
 
     // Enums resolved from an inline array, and from a module-scope Map
-    expectEnum('pc-render', 'type', 6, 'box');
+    expectEnum('pc-render', 'type', 7, 'box');
     expectEnum('pc-light', 'type', 3, 'directional');
     expectEnum('pc-camera', 'tonemap', 7, 'linear');
     expectEnum('pc-app', 'picking', 3, 'auto');

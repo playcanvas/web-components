@@ -53,6 +53,31 @@ describe('<pc-render>', () => {
         });
     });
 
+    describe('[type]', () => {
+        it("renders the engine's own torus", async () => {
+            const { app, get } = await bootApp(scene('type="torus"'));
+            const component = get<RenderComponentElement>('pc-render').component!;
+
+            const bare = new Entity('bare', app);
+            app.root.addChild(bare);
+            const engine = bare.addComponent('render', { type: 'torus' }) as RenderComponent;
+
+            expect(component.type).toBe('torus');
+            expect(component.meshInstances[0].mesh.vertexBuffer.numVertices).toBe(
+                engine.meshInstances[0].mesh.vertexBuffer.numVertices
+            );
+        });
+
+        it('switches an existing element to a torus', async () => {
+            const { get } = await bootApp(scene());
+            const element = get<RenderComponentElement>('pc-render');
+
+            element.setAttribute('type', 'torus');
+            expect(element.type).toBe('torus');
+            expect(element.component!.type).toBe('torus');
+        });
+    });
+
     describe('[shadow-cascade-mask]', () => {
         it('folds the cascade indices into the mask of every mesh instance', async () => {
             const { get } = await bootApp(scene('shadow-cascade-mask="0 1"'));
