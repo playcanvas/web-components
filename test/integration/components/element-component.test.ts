@@ -1,9 +1,11 @@
 import type { ElementComponent } from 'playcanvas';
-import { Color, Entity, Vec2, Vec4 } from 'playcanvas';
+import { Color, Entity, Vec2, Vec3, Vec4 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { ElementComponentElement } from '../../../src/components/element-component';
+import type { EntityElement } from '../../../src/entity';
 import { bootApp } from '../../helpers/app';
+import type { BootedApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
 
 /**
@@ -62,6 +64,26 @@ const textCases: [attribute: string, property: string, value: string, expected: 
     ['shadow-offset', 'shadowOffset', '0.25 -0.25', new Vec2(0.25, -0.25), new Vec2(0, 0)],
     ['spacing', 'spacing', '1.5', 1.5, 1]
 ];
+
+/**
+ * Elements whose entities place them, each exposed to a different way the engine's element setup
+ * can move them. The engine positions an element from its margins, which a new component seeds
+ * with its own defaults rather than from its entity - and a `<pc-entity>` is always positioned
+ * before its element is added.
+ */
+const placed: [name: string, element: string][] = [
+    // The default 32 x 32 size is the engine's own, so writing it syncs nothing from the position
+    ['image', '<pc-element type="image"></pc-element>'],
+    // Fit mode applies the margins before a text element first sizes itself
+    ['text', '<pc-element type="text" pivot="0.5 0.5"></pc-element>'],
+    // A fixed width syncs the horizontal margins, leaving only the vertical ones to lose
+    ['wrapped', '<pc-element type="text" auto-width="false" width="100" wrap-lines></pc-element>']
+];
+
+/** The `placed` elements, each on an entity at `10 20 3`. */
+const placedEntities = placed
+    .map(([name, element]) => `<pc-entity name="${name}" position="10 20 3">${element}</pc-entity>`)
+    .join('');
 
 describe('<pc-element>', () => {
     useGuard();
@@ -189,6 +211,58 @@ describe('<pc-element>', () => {
                 element.removeAttribute(attribute);
                 expect.soft(engineValue(element.component!, property), `${attribute} removed`).toEqual(restored);
             }
+        });
+    });
+
+    describe('placement', () => {
+        /** Asserts that every `placed` element is still where its entity was positioned. */
+        const expectPlaced = ({ app, get }: BootedApp) => {
+            // As the first frame does: syncing the hierarchy re-derives a screen element's size, and
+            // with it the position, from its margins
+            app.root.syncHierarchy();
+
+            for (const [name] of placed) {
+                const entity = get<EntityElement>(`pc-entity[name="${name}"]`).entity!;
+                expect.soft(entity.getLocalPosition(), name).toEqual(new Vec3(10, 20, 3));
+            }
+        };
+
+        it('keeps world-space elements where their entities are positioned', async () => {
+            expectPlaced(await bootApp(placedEntities));
+        });
+
+        it('keeps screen elements where their entities are positioned', async () => {
+            expectPlaced(
+                await bootApp(`<pc-entity name="screen"><pc-screen screen-space></pc-screen>${placedEntities}</pc-entity>`)
+            );
+        });
+
+        it('places a stretched axis from its margins and a point axis from the position', async () => {
+            const { get } = await bootApp(`
+                <pc-entity name="screen">
+                    <pc-screen screen-space></pc-screen>
+                    <pc-entity name="el" position="10 20 3">
+                        <pc-element type="image" anchor="0 0.5 1 0.5"></pc-element>
+                    </pc-entity>
+                </pc-entity>
+            `);
+            const component = get<ElementComponentElement>('pc-element').component!;
+
+            expect(component.margin.x, 'the stretched axis keeps the default margin').toBe(0);
+            expect(component.entity.getLocalPosition().y).toBe(20);
+        });
+
+        it('lets authored margins place the element instead', async () => {
+            const { get } = await bootApp(`
+                <pc-entity name="screen">
+                    <pc-screen screen-space></pc-screen>
+                    <pc-entity name="el" position="10 20 3">
+                        <pc-element type="image" anchor="0 0 1 1" margin="4 5 6 7"></pc-element>
+                    </pc-entity>
+                </pc-entity>
+            `);
+
+            expect(get<ElementComponentElement>('pc-element').component!.margin).toEqual(new Vec4(4, 5, 6, 7));
         });
     });
 });
