@@ -1,4 +1,5 @@
-import { Script } from 'playcanvas';
+import type { AppBase } from 'playcanvas';
+import { Asset, Script } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { ScriptComponentElement } from '../../../src/components/script-component';
@@ -223,6 +224,136 @@ describe('<pc-script>', () => {
                 "Unable to resolve 'entity:#plain' in script attributes - <div> matches it but cannot back an entity."
             );
             expect(script.target).toBe('entity:#plain');
+        });
+    });
+
+    /**
+     * A pc-script-instance whose class is registered after the pc-script has tried to create it.
+     * The engine would park such a request and create the instance itself when the class arrives -
+     * disabled and without the declared state - so the element waits for the class instead.
+     */
+    describe('a script class registered after its element', () => {
+        /** Counts its lifecycle calls, so a second initialization would show. */
+        class Late extends Script {
+            static scriptName = 'late';
+
+            speed = 1;
+
+            initialized = 0;
+
+            postInitialized = 0;
+
+            initialize() {
+                this.initialized++;
+            }
+
+            postInitialize() {
+                this.postInitialized++;
+            }
+        }
+
+        const WAITING = "pc-script-instance 'late' is waiting for a script named 'late' to be registered";
+
+        /**
+         * Boots an empty app and inserts a pc-script whose instance names a script class that is
+         * not registered.
+         *
+         * @param name - The script name the instance declares.
+         * @param setup - Runs on the booted app before the insertion.
+         * @returns The booted handle plus the host entity element and the script elements.
+         */
+        const bootWaiting = async (name = 'late', setup?: (app: AppBase) => void) => {
+            const handle = await bootApp();
+            setup?.(handle.app);
+
+            const host = document.createElement('pc-entity') as EntityElement;
+            host.innerHTML = `<pc-script><pc-script-instance name="${name}" speed="2"></pc-script-instance></pc-script>`;
+            handle.appElement.appendChild(host);
+
+            const scriptsElement = host.querySelector<ScriptComponentElement>('pc-script')!;
+            const scriptElement = host.querySelector<ScriptInstanceElement>('pc-script-instance')!;
+            await readyWithin(scriptsElement);
+            return { ...handle, host, scriptsElement, scriptElement };
+        };
+
+        /** Lets queued timers run: the registry's deferred creation, and the wait's warning. */
+        const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+        it('creates the instance when the class arrives, with the declared state applied', async () => {
+            const { app, scriptElement } = await bootWaiting();
+            expect(scriptElement.script).toBeNull();
+
+            app.scripts.add(Late);
+            await readyWithin(scriptElement);
+
+            const script = scriptElement.script as Late;
+            expect(script.enabled).toBe(true);
+            expect(script.speed).toBe(2);
+            expect(script.initialized).toBe(1);
+        });
+
+        it('initializes it once, leaving the registry nothing to create', async () => {
+            const { app, host, scriptElement } = await bootWaiting();
+
+            app.scripts.add(Late);
+            await readyWithin(scriptElement);
+            // The registry creates parked requests on a timer after a class is added
+            await tick();
+
+            const script = scriptElement.script as Late;
+            expect(script.initialized).toBe(1);
+            expect(script.postInitialized).toBe(1);
+            expect(host.entity!.script!.scripts).toEqual([script]);
+        });
+
+        it('warns while it waits, and still creates the instance when the class arrives', async () => {
+            const { app, scriptElement } = await bootWaiting();
+
+            await tick();
+            warnings.expect(WAITING);
+
+            app.scripts.add(Late);
+            await readyWithin(scriptElement);
+            expect((scriptElement.script as Late).speed).toBe(2);
+        });
+
+        it('holds the warning while a script asset is still loading', async () => {
+            const pending = new Asset('pending', 'script', { url: 'pending.mjs' });
+            await bootWaiting('late', (app) => {
+                app.assets.add(pending);
+                pending.loading = true;
+            });
+
+            await tick();
+            expect(warnings.seen).toEqual([]);
+
+            pending.loading = false;
+            pending.fire('error', 'unreachable', pending);
+            await tick();
+            warnings.expect(WAITING);
+        });
+
+        it('stops waiting when the element is removed, even before the removal is processed', async () => {
+            const { app, host, scriptElement } = await bootWaiting();
+
+            scriptElement.remove();
+            app.scripts.add(Late);
+            await tick();
+
+            expect(scriptElement.script).toBeNull();
+            expect(host.entity!.script!.has('late')).toBe(false);
+        });
+
+        it('waits for the new name after a rename', async () => {
+            const { app, host, scriptElement } = await bootWaiting('early');
+
+            scriptElement.setAttribute('name', 'late');
+            app.scripts.add(Late);
+            await readyWithin(scriptElement);
+            await tick();
+
+            expect(scriptElement.script).toBeInstanceOf(Late);
+            expect(host.entity!.script!.has('early')).toBe(false);
         });
     });
 });

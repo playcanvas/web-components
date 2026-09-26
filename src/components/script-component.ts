@@ -1,4 +1,4 @@
-import type { ScriptComponent, Script } from 'playcanvas';
+import type { EventHandle, ScriptComponent, Script } from 'playcanvas';
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
@@ -266,6 +266,12 @@ export type ScriptNameChangeEvent = {
 class ScriptComponentElement extends ComponentElement<ScriptComponent> {
     private observer: MutationObserver;
 
+    /**
+     * The child `pc-script-instance` elements waiting for their script class to be registered,
+     * each with the registry subscription that creates its instance once it is.
+     */
+    private waiting = new Map<ScriptInstanceElement, { name: string; handle: EventHandle }>();
+
     /** @ignore */
     constructor() {
         super('script');
@@ -529,6 +535,8 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
         }
         scriptElement._script = null;
 
+        // An element still waiting for the old name's class waits for the new one's instead
+        this.stopWaiting(scriptElement);
         this.createScript(scriptElement);
     }
 
@@ -537,12 +545,23 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
      * the element's converted attributes are merged over the instance's defaults (which is what
      * allows plain numeric arrays to be typed against those defaults), and only then is the
      * declared enabled state applied — so `initialize()` runs with every attribute in place.
+     *
+     * A script whose class is not registered yet is waited for, and created by this same path
+     * once it is. It must not be handed to the engine meanwhile: for an unknown name the engine
+     * parks the request and, when the class arrives, creates the instance itself - disabled, as
+     * asked here, without the declared state, and unknown to the element, which then never
+     * becomes ready.
      * @param scriptElement - The `pc-script-instance` element to create the script instance for.
      * @returns The created script, or `null`.
      */
     private createScript(scriptElement: ScriptInstanceElement): Script | null {
         const name = scriptElement.getAttribute('name');
         if (!name || !this.component) return null;
+
+        if (!this.component.system.app.scripts.has(name)) {
+            this.waitForScript(scriptElement, name);
+            return null;
+        }
 
         const script = this.component.create(name, { enabled: false });
         if (!script) return null;
@@ -554,6 +573,67 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
         scriptElement._onScriptCreated();
 
         return script;
+    }
+
+    /**
+     * Waits for a script class to be registered, then creates the element's instance. The
+     * registry announces the class synchronously, as it is added, so the instance exists before
+     * anything else can run a frame with it missing.
+     * @param scriptElement - The `pc-script-instance` element to create the instance for.
+     * @param name - The script name it waits for.
+     */
+    private waitForScript(scriptElement: ScriptInstanceElement, name: string) {
+        this.stopWaiting(scriptElement);
+
+        const handle = this.component!.system.app.scripts.once(`add:${name}`, () => {
+            this.waiting.delete(scriptElement);
+            // A removal reaches this element through the mutation observer, a microtask later -
+            // one not processed yet cancels the wait all the same
+            if (scriptElement.parentElement === this && scriptElement.getAttribute('name') === name) {
+                this.createScript(scriptElement);
+            }
+        });
+        this.waiting.set(scriptElement, { name, handle });
+
+        // Checked after the current task, so a module registering the class right behind this
+        // is not taken for a missing one
+        setTimeout(() => this.warnIfStillWaiting(scriptElement, name));
+    }
+
+    /**
+     * Warns that a `pc-script-instance` is still waiting for its class, once no script asset
+     * that could register it is left loading.
+     * @param scriptElement - The waiting element.
+     * @param name - The script name it waits for.
+     */
+    private warnIfStillWaiting(scriptElement: ScriptInstanceElement, name: string) {
+        if (this.waiting.get(scriptElement)?.name !== name || !this.component) return;
+
+        const loading = this.component.system.app.assets.filter((asset) => asset.type === 'script' && asset.loading);
+        if (loading.length > 0) {
+            const settled = loading.map(
+                (asset) =>
+                    new Promise((resolve) => {
+                        asset.once('load', resolve);
+                        asset.once('error', resolve);
+                    })
+            );
+            Promise.all(settled).then(() => setTimeout(() => this.warnIfStillWaiting(scriptElement, name)));
+            return;
+        }
+
+        console.warn(
+            `pc-script-instance '${name}' is waiting for a script named '${name}' to be registered - is its pc-asset missing?`
+        );
+    }
+
+    /**
+     * Stops waiting for a `pc-script-instance` element's script class.
+     * @param scriptElement - The element.
+     */
+    private stopWaiting(scriptElement: ScriptInstanceElement) {
+        this.waiting.get(scriptElement)?.handle.off();
+        this.waiting.delete(scriptElement);
     }
 
     /**
@@ -722,6 +802,7 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
                         this.destroyScript(scriptName);
                     }
                     node._script = null;
+                    this.stopWaiting(node);
                 }
             });
 
@@ -736,6 +817,10 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
 
     disconnectedCallback() {
         this.observer.disconnect();
+        // The component goes with the connection; a reconnection waits afresh from initComponent
+        for (const scriptElement of Array.from(this.waiting.keys())) {
+            this.stopWaiting(scriptElement);
+        }
         super.disconnectedCallback?.();
     }
 
