@@ -1,0 +1,44 @@
+{
+    "numParticles": 560,
+    "lifetime": 12,
+    "rate": 0.019,
+    "rate2": 0.03,
+    "colorMapAsset": "mote",
+    "blendType": 1,
+    "emitterExtents": [ 2.6, 2.6, 6 ],
+    "startAngle": 0,
+    "startAngle2": 360,
+    "colorGraph": {
+        "keys": [
+            [ 0, 0.85 ],
+            [ 0, 0.76 ],
+            [ 0, 0.62 ]
+        ]
+    },
+    "alphaGraph": {
+        "keys": [ 0, 0, 0.25, 1, 0.75, 1, 1, 0 ]
+    },
+    "alphaGraph2": {
+        "keys": [ 0, 0, 0.25, 0.45, 0.75, 0.45, 1, 0 ]
+    },
+    "scaleGraph": {
+        "keys": [ 0, 0.017 ]
+    },
+    "scaleGraph2": {
+        "keys": [ 0, 0.008 ]
+    },
+    "velocityGraph": {
+        "keys": [
+            [ 0, -0.035 ],
+            [ 0, -0.02 ],
+            [ 0, -0.035 ]
+        ]
+    },
+    "velocityGraph2": {
+        "keys": [
+            [ 0, 0.035 ],
+            [ 0, 0.025 ],
+            [ 0, 0.035 ]
+        ]
+    }
+}

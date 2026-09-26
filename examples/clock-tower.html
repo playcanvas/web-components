@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Clock Tower</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* The panel is a plate off the movement: iron japanned the frame's deep green, lined in
+               gold inside a brass rim, with brass rivets and gilt lettering. It sits bottom-left
+               because js/example.mjs owns bottom-right. --sky is the day's light, night to night,
+               in watercolor: indigo, madder at dawn, ochre, the ivory of noon. */
+            .clock-panel {
+                --brass: #c9a35c;
+                --gilt: #e8cf91;
+                --gilt-dim: #b89f68;
+                --plate: #16211b;
+                --rivet: radial-gradient(circle, #f6e2a8 0, #bb9043 1.4px, #4e3715 2.4px, transparent 3px);
+                --sky: linear-gradient(90deg, #141b30 0%, #1d2744 17%, #4f3b55 22%, #a35f52 26%,
+                    #d2a15c 33%, #eee0bd 50%, #d2a15c 67%, #a35f52 74%, #4f3b55 78%, #1d2744 83%,
+                    #141b30 100%);
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                box-sizing: border-box;
+                width: min(300px, calc(100vw - 32px));
+                padding: 15px 19px 18px;
+                background:
+                    var(--rivet) 6px 6px / 6px 6px no-repeat,
+                    var(--rivet) calc(100% - 6px) 6px / 6px 6px no-repeat,
+                    var(--rivet) 6px calc(100% - 6px) / 6px 6px no-repeat,
+                    var(--rivet) calc(100% - 6px) calc(100% - 6px) / 6px 6px no-repeat,
+                    linear-gradient(180deg, rgba(31, 46, 37, 0.97), rgba(14, 21, 17, 0.97));
+                border: 1px solid var(--brass);
+                border-radius: 5px;
+                /* the lining: a gold line a little inside the rim */
+                box-shadow: inset 0 0 0 3px rgba(9, 14, 11, 0.55), inset 0 0 0 4px rgba(232, 207, 145, 0.4),
+                    0 0 0 1px rgba(0, 0, 0, 0.55), 0 10px 28px rgba(0, 0, 0, 0.5);
+                color: var(--gilt);
+                font: 400 13px/1.4 'Palatino Linotype', Palatino, 'Book Antiqua', 'Iowan Old Style', Georgia, serif;
+            }
+
+            .clock-head {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 13px;
+            }
+
+            .clock-time {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                margin-right: auto;
+            }
+
+            .time-readout {
+                font-size: 30px;
+                line-height: 1;
+                font-variant-numeric: lining-nums tabular-nums;
+                letter-spacing: 0.01em;
+                text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+            }
+
+            .time-period {
+                margin: 0 0.3em;
+                font-size: 14px;
+                font-variant-caps: all-small-caps;
+                letter-spacing: 0.12em;
+                color: var(--gilt-dim);
+            }
+
+            .time-status {
+                font-size: 12px;
+                font-variant-caps: all-small-caps;
+                letter-spacing: 0.14em;
+                color: #a59a7d;
+                transition: color 0.2s;
+            }
+
+            .time-status.set {
+                color: #eeb45c;
+            }
+
+            /* Round enamel buttons in brass bezels */
+            .icon-button {
+                display: grid;
+                place-items: center;
+                flex: none;
+                width: 34px;
+                height: 34px;
+                padding: 0;
+                border: 1px solid var(--brass);
+                border-radius: 50%;
+                background: radial-gradient(circle at 50% 35%, #2d3e34, #111a15 72%);
+                box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.6);
+                color: var(--gilt);
+                cursor: pointer;
+                transition: filter 0.2s, opacity 0.2s;
+            }
+
+            .icon-button:hover:not(:disabled) {
+                filter: brightness(1.3);
+            }
+
+            .icon-button:disabled {
+                opacity: 0.4;
+                cursor: default;
+            }
+
+            .icon-button:focus-visible {
+                outline: 2px solid var(--gilt);
+                outline-offset: 2px;
+            }
+
+            .clock-panel svg {
+                width: 16px;
+                height: 16px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.75;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            /* The sound button shows the state it is in */
+            .icon-button[aria-pressed="false"] .sound-on,
+            .icon-button[aria-pressed="true"] .sound-off {
+                display: none;
+            }
+
+            /* The track is the sky, set in a brass channel, so the knob sits on the light it will
+               give. The knob's notch points down at the hour it is set to. */
+            .time-slider {
+                display: block;
+                width: 100%;
+                height: 18px;
+                margin: 0;
+                background: transparent;
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+            }
+
+            .time-slider:focus-visible {
+                outline: none;
+            }
+
+            .time-slider::-webkit-slider-runnable-track {
+                height: 8px;
+                border-radius: 1px;
+                background: var(--sky);
+                box-shadow: 0 0 0 1px var(--brass), 0 0 0 2px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.55);
+            }
+
+            .time-slider::-moz-range-track {
+                height: 8px;
+                border-radius: 1px;
+                background: var(--sky);
+                box-shadow: 0 0 0 1px var(--brass), 0 0 0 2px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.55);
+            }
+
+            .time-slider::-webkit-slider-thumb {
+                width: 18px;
+                height: 18px;
+                margin-top: -5px;
+                border-radius: 50%;
+                background:
+                    linear-gradient(#3b2a11, #3b2a11) 50% 100% / 2px 6px no-repeat,
+                    radial-gradient(circle at 38% 30%, #fff2cc 0, #dcb468 38%, #9a7031 80%, #5e421a 100%);
+                box-shadow: 0 0 0 1px rgba(40, 28, 10, 0.9), 0 2px 5px rgba(0, 0, 0, 0.6);
+                -webkit-appearance: none;
+            }
+
+            .time-slider::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+                border: 0;
+                border-radius: 50%;
+                background:
+                    linear-gradient(#3b2a11, #3b2a11) 50% 100% / 2px 6px no-repeat,
+                    radial-gradient(circle at 38% 30%, #fff2cc 0, #dcb468 38%, #9a7031 80%, #5e421a 100%);
+                box-shadow: 0 0 0 1px rgba(40, 28, 10, 0.9), 0 2px 5px rgba(0, 0, 0, 0.6);
+            }
+
+            .time-slider:focus-visible::-webkit-slider-thumb {
+                box-shadow: 0 0 0 1px rgba(40, 28, 10, 0.9), 0 0 0 3px var(--plate), 0 0 0 5px var(--gilt);
+            }
+
+            .time-slider:focus-visible::-moz-range-thumb {
+                box-shadow: 0 0 0 1px rgba(40, 28, 10, 0.9), 0 0 0 3px var(--plate), 0 0 0 5px var(--gilt);
+            }
+
+            /* An engraved scale under the track: a tick for every hour and a longer one at each
+               label, all centered on where the knob's center sits for that hour - it travels
+               between half its width in from either end. The hour ticks are an SVG, so each lands
+               exactly where it should: a repeating gradient puts 1px stops at fractional places
+               and the ticks come out bunched. */
+            .time-scale {
+                position: relative;
+                height: 22px;
+                margin-top: 5px;
+                background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' \
+                    viewBox='-0.5 0 241 4' preserveAspectRatio='none'><path stroke='%23e8cf91' \
+                    stroke-opacity='0.5' vector-effect='non-scaling-stroke' d='M0 0v4m10-4v4m10-4v4m10-4v4\
+                    m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4\
+                    m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4m10-4v4'/></svg>")
+                    8.5px 0 / calc(100% - 17px) 3px no-repeat;
+                font-size: 12px;
+                line-height: 1;
+                font-variant-caps: all-small-caps;
+                font-variant-numeric: lining-nums tabular-nums;
+                letter-spacing: 0.06em;
+                color: var(--gilt-dim);
+            }
+
+            .time-scale span {
+                position: absolute;
+                top: 0;
+                left: calc(9px + (100% - 18px) * var(--at));
+                padding-top: 9px;
+                transform: translateX(-50%);
+                white-space: nowrap;
+            }
+
+            .time-scale span::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: calc(50% - 0.5px);
+                width: 1px;
+                height: 6px;
+                background: var(--gilt-dim);
+            }
+
+            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
+            @media (max-width: 720px) {
+                .clock-panel {
+                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Every pixel is shaded under a shadowed sun and composited through raymarched fog, so
+             the pixel ratio is capped at 2 - a 3x display would pay half again for pixels it
+             cannot show -->
+        <pc-app max-pixel-ratio="2">
+            <!-- The models' geometry is Draco compressed -->
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/clock-tower.mjs"></pc-asset>
+            <pc-asset src="assets/models/clock-tower-room.glb" id="room"></pc-asset>
+            <pc-asset src="assets/models/clock-tower-mechanism.glb" id="mechanism"></pc-asset>
+            <!-- The room itself, rendered from the movement in Blender under the afternoon sun: what
+                 the brass and steel reflect, and the light the stone bounces back -->
+            <pc-asset src="assets/skies/clock-tower.hdr" id="room-light"></pc-asset>
+            <pc-asset src="assets/particles/mote.png" id="mote"></pc-asset>
+            <pc-asset src="assets/particles/dust.json" id="dust"></pc-asset>
+            <pc-asset src="assets/sounds/clock-tick.mp3" id="tick"></pc-asset>
+            <pc-asset src="assets/sounds/clock-tock.mp3" id="tock"></pc-asset>
+            <pc-asset src="assets/sounds/clock-bell.mp3" id="bell"></pc-asset>
+            <!-- Opal glass. Each pane is a plane facing out of the tower, drawn from both sides but
+                 lit only on its outer face: from inside you see the face the sun falls on, the
+                 hands' shadows and all. It casts no shadow, so the sunlight carries on into the
+                 room, shaped by the tracery. -->
+            <pc-material id="opal-glass" diffuse="#efe8d8" cull="none" gloss="0" use-metalness metalness="0"></pc-material>
+            <!-- A bulb: clear glass round a filament, on a brass cap. By day the glass shows its
+                 reflections and the dark filament inside - opacity fades the glass's color but
+                 not its reflections. At night towerDaylight brings up everything under a lamp
+                 that glows: the filament white hot, the glass round it. Both are far brighter
+                 than anything they light, as a real bulb is - that is what bloom spreads into
+                 a glow, where a bulb only as bright as its surroundings stays a flat white dot. -->
+            <pc-material id="bulb-glass" diffuse="#f7f3ea" opacity="0.3" blend-type="normal" opacity-fades-specular="false"
+                         depth-write="false" use-metalness metalness="0" gloss="0.9" emissive="#ffd9a8" emissive-intensity="60"></pc-material>
+            <pc-material id="filament" diffuse="#141414" emissive="#ffc27a" emissive-intensity="300"></pc-material>
+            <pc-material id="bulb-cap" diffuse="#b59052" use-metalness metalness="1" gloss="0.65"></pc-material>
+            <pc-scene>
+                <pc-sky asset="room-light" lighting type="none"></pc-sky>
+                <!-- Camera, low in a corner looking up past the movement at the dial. The orbit is
+                     kept within the room: short enough for the side walls, never swinging round to
+                     face away from the dial wall it would otherwise back through. -->
+                <pc-entity name="camera" position="1.3 1 1.6">
+                    <pc-camera fov="64" near-clip="0.05" far-clip="30" clear-color="#000000"></pc-camera>
+                    <pc-audio-listener></pc-audio-listener>
+                    <pc-script>
+                        <pc-script-instance name="cameraControls"
+                                            focus-point="-0.05 1.55 -0.5"
+                                            enable-fly="false"
+                                            enable-pan="false"
+                                            pitch-range="-50 22"
+                                            yaw-range="-120 120"
+                                            zoom-range="0.6 2.7"></pc-script-instance>
+                        <!-- The fog is what makes the light visible: the sun, or the moon, scatters
+                             in it along every ray it lights, and the lamps too at night. Its march
+                             stops at 9 m, the room's diagonal, which lets 16 steps sample it
+                             every half meter. Bloom keeps to few, tight blur levels, so a bulb or
+                             the sunlit dial glows close round itself instead of hazing the room. -->
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": "aces", "samples": 4, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
+                            "bloom": { "enabled": true, "intensity": 0.05, "blurLevel": 5 },
+                            "vignette": { "enabled": true, "intensity": 0.35, "inner": 0.55, "outer": 1.3, "curvature": 0.5 },
+                            "volumetricFog": {
+                                "enabled": true, "light": "entity:sun", "localOmniLights": true, "localSpotLights": true,
+                                "tint": [1, 0.95, 0.88], "density": 0.08, "heightFalloff": 0, "anisotropy": 0.6,
+                                "maxDistance": 9, "steps": 16, "localSteps": 12, "scale": 0.5
+                            }
+                        }'></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Sun by day and moon by night: towerDaylight below moves and colors it -->
+                <pc-entity name="sun">
+                    <pc-light type="directional" intensity="4" cast-shadows shadow-type="pcf5-32f"
+                              shadow-distance="12" shadow-resolution="4096" shadow-bias="0.1"
+                              normal-offset-bias="0.02"></pc-light>
+                </pc-entity>
+                <!-- The room, its ambient occlusion baked into the model, which is why the camera
+                     runs no SSAO: that would shade the same corners again, and dim the glowing dial
+                     round its tracery. Its work lamp hangs on a cord from the ceiling, and pc-node
+                     reaches into the model for it: the lamp's light and bulb hang from the node, and
+                     the node gets a script that swings it when the bells shake the tower. -->
+                <pc-model name="room" asset="room">
+                    <pc-node name="work-lamp">
+                        <pc-script>
+                            <pc-script-instance name="lampSway" chimes="entity:belfry"></pc-script-instance>
+                        </pc-script>
+                        <pc-entity name="work-light" position="0 -3.63 0" tags="lamp">
+                            <pc-light type="spot" color="#ffd9a0" intensity="7" range="5" inner-cone-angle="25"
+                                      outer-cone-angle="58" cast-shadows shadow-resolution="1024"
+                                      normal-offset-bias="0.02" volumetric-scattering="2.5"></pc-light>
+                            <!-- The spot only shines down, so a small light of its own lights the
+                                 inside of the shade -->
+                            <pc-entity name="work-glow" position="0 0.02 0">
+                                <pc-light type="omni" color="#ffd9a0" intensity="1.5" range="0.4" volumetric-scattering="0.5"></pc-light>
+                            </pc-entity>
+                            <pc-entity name="work-bulb" scale="0.07 0.07 0.07">
+                                <pc-render type="sphere" material="bulb-glass" cast-shadows="false"></pc-render>
+                            </pc-entity>
+                            <pc-entity name="work-filament" rotation="0 0 90" scale="0.003 0.022 0.003">
+                                <pc-render type="cylinder" material="filament" cast-shadows="false"></pc-render>
+                            </pc-entity>
+                            <pc-entity name="work-cap" position="0 0.042 0" scale="0.024 0.026 0.024">
+                                <pc-render type="cylinder" material="bulb-cap" cast-shadows="false"></pc-render>
+                            </pc-entity>
+                        </pc-entity>
+                    </pc-node>
+                </pc-model>
+                <!-- The clock: the movement, the dial and the rod between them are one model, which
+                     towerClock runs. The ticks come from the escapement, one sound for each of its
+                     two pallets. -->
+                <pc-entity name="clock">
+                    <pc-script>
+                        <pc-script-instance name="towerClock"></pc-script-instance>
+                    </pc-script>
+                    <pc-model asset="mechanism"></pc-model>
+                    <pc-entity name="escapement" position="0.125 1.3 -0.35">
+                        <pc-sound positional ref-distance="1.5" max-distance="30" volume="0.5">
+                            <pc-sound-slot name="tick" asset="tick" overlap></pc-sound-slot>
+                            <pc-sound-slot name="tock" asset="tock" overlap></pc-sound-slot>
+                        </pc-sound>
+                    </pc-entity>
+                </pc-entity>
+                <!-- The bells hang in the belfry above the hatch, all rung from one strike recorded
+                     at E: the quarter bells are pitched to G#, F#, E and B, and the hour bell an
+                     octave down -->
+                <pc-entity name="belfry" position="2.45 8.5 1.8">
+                    <pc-sound positional ref-distance="4" max-distance="60" volume="0.8">
+                        <pc-sound-slot name="bell-1" asset="bell" pitch="1.26" overlap></pc-sound-slot>
+                        <pc-sound-slot name="bell-2" asset="bell" pitch="1.1225" overlap></pc-sound-slot>
+                        <pc-sound-slot name="bell-3" asset="bell" overlap></pc-sound-slot>
+                        <pc-sound-slot name="bell-4" asset="bell" pitch="0.7492" overlap></pc-sound-slot>
+                        <pc-sound-slot name="hour" asset="bell" pitch="0.5" volume="1.4" overlap></pc-sound-slot>
+                    </pc-sound>
+                    <pc-script>
+                        <pc-script-instance name="towerChimes" clock="entity:clock"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Glass: the dial and the two lancet windows -->
+                <pc-entity name="dial-glass" position="0 3.4 -3.5" rotation="-90 0 0" scale="3.6 1 3.6">
+                    <pc-render type="plane" material="opal-glass" cast-shadows="false"></pc-render>
+                </pc-entity>
+                <pc-entity name="east-glass" position="-3.5 2.95 -1.3" rotation="0 0 90" scale="1.6 1 0.5">
+                    <pc-render type="plane" material="opal-glass" cast-shadows="false"></pc-render>
+                </pc-entity>
+                <pc-entity name="west-glass" position="3.5 2.95 -1.3" rotation="0 0 -90" scale="1.6 1 0.5">
+                    <pc-render type="plane" material="opal-glass" cast-shadows="false"></pc-render>
+                </pc-entity>
+                <!-- The four lamps in the reveal that light the dial for the town at night. Like
+                     the work lamp, each is tagged for towerDaylight to find. -->
+                <pc-entity name="dial-lamps">
+                    <pc-entity name="dial-lamp-1" position="1.117 4.517 -3.28" tags="lamp">
+                        <pc-light type="omni" color="#ffcf94" intensity="1.2" range="1.6" volumetric-scattering="0.4"></pc-light>
+                        <pc-entity name="dial-bulb-1" scale="0.05 0.05 0.05">
+                            <pc-render type="sphere" material="bulb-glass" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                        <pc-entity name="dial-filament-1" rotation="0 0 90" scale="0.0025 0.016 0.0025">
+                            <pc-render type="cylinder" material="filament" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                    </pc-entity>
+                    <pc-entity name="dial-lamp-2" position="-1.117 4.517 -3.28" tags="lamp">
+                        <pc-light type="omni" color="#ffcf94" intensity="1.2" range="1.6" volumetric-scattering="0.4"></pc-light>
+                        <pc-entity name="dial-bulb-2" scale="0.05 0.05 0.05">
+                            <pc-render type="sphere" material="bulb-glass" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                        <pc-entity name="dial-filament-2" rotation="0 0 90" scale="0.0025 0.016 0.0025">
+                            <pc-render type="cylinder" material="filament" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                    </pc-entity>
+                    <pc-entity name="dial-lamp-3" position="-1.117 2.283 -3.28" tags="lamp">
+                        <pc-light type="omni" color="#ffcf94" intensity="1.2" range="1.6" volumetric-scattering="0.4"></pc-light>
+                        <pc-entity name="dial-bulb-3" scale="0.05 0.05 0.05">
+                            <pc-render type="sphere" material="bulb-glass" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                        <pc-entity name="dial-filament-3" rotation="0 0 90" scale="0.0025 0.016 0.0025">
+                            <pc-render type="cylinder" material="filament" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                    </pc-entity>
+                    <pc-entity name="dial-lamp-4" position="1.117 2.283 -3.28" tags="lamp">
+                        <pc-light type="omni" color="#ffcf94" intensity="1.2" range="1.6" volumetric-scattering="0.4"></pc-light>
+                        <pc-entity name="dial-bulb-4" scale="0.05 0.05 0.05">
+                            <pc-render type="sphere" material="bulb-glass" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                        <pc-entity name="dial-filament-4" rotation="0 0 90" scale="0.0025 0.016 0.0025">
+                            <pc-render type="cylinder" material="filament" cast-shadows="false"></pc-render>
+                        </pc-entity>
+                    </pc-entity>
+                </pc-entity>
+                <!-- Dust in the sunbeam: beamDust keeps the emitter in the beam through the dial,
+                     and lets it run only while the sun shines squarely through -->
+                <pc-entity name="dust">
+                    <pc-particle-system asset="dust"></pc-particle-system>
+                    <pc-script>
+                        <pc-script-instance name="beamDust" light="entity:sun" origin="0 3.4 -3.3"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Lights the room for the time on the dial -->
+                <pc-entity name="daylight">
+                    <pc-script>
+                        <pc-script-instance name="towerDaylight" clock="entity:clock" sun="entity:sun"
+                                            camera="entity:camera" glass="entity:dial-glass"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="clock-panel">
+            <div class="clock-head">
+                <div class="clock-time">
+                    <!-- The slider reads out the time itself, so the readout stays quiet rather
+                         than announcing every minute -->
+                    <output class="time-readout" id="time-readout" for="time-slider" aria-live="off">--:--</output>
+                    <span class="time-status" id="time-status">Local time</span>
+                </div>
+                <button type="button" class="icon-button" id="local-time" disabled
+                        aria-label="Back to local time" title="Back to local time">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 2.6-6.4L3 8.3"/><path d="M3 3.5v4.8h4.8"/><path d="M12 7.5V12l3 1.8"/>
+                    </svg>
+                </button>
+                <button type="button" class="icon-button" id="sound-toggle" aria-pressed="true"
+                        aria-label="Sound" title="Sound">
+                    <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+                    </svg>
+                    <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/>
+                    </svg>
+                </button>
+            </div>
+            <input class="time-slider" id="time-slider" type="range" min="0" max="1439" step="1"
+                   aria-label="Time on the dial">
+            <!-- Relabeled in the reader's own clock, 12 or 24 hour, by js/clock-tower.mjs -->
+            <div class="time-scale" aria-hidden="true">
+                <span style="--at: 0" data-hour="0">00</span>
+                <span style="--at: 0.25" data-hour="6">06</span>
+                <span style="--at: 0.5" data-hour="12">12</span>
+                <span style="--at: 0.75" data-hour="18">18</span>
+                <span style="--at: 1" data-hour="24">24</span>
+            </div>
+        </div>
+        <script type="module" src="js/clock-tower.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
