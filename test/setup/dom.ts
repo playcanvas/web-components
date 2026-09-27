@@ -91,8 +91,9 @@ HTMLCanvasElement.prototype.getContext = function getContext() {
 /**
  * jsdom already reports 1, which is also the ratio the canvas assertions in
  * test/integration/environment.test.ts are written against. Declared writable because AppElement
- * leaves device.maxPixelRatio uncapped by default, so this is what actually decides the canvas
- * size, and a test covering `max-pixel-ratio` has to be able to move it.
+ * hands the device the smaller of its `max-pixel-ratio` cap and this value, and the cap is
+ * Infinity by default, so this is what actually decides the canvas size - and a test covering
+ * `max-pixel-ratio` has to be able to move it.
  */
 Object.defineProperty(window, 'devicePixelRatio', {
     configurable: true,
@@ -107,6 +108,9 @@ Object.defineProperty(window, 'devicePixelRatio', {
 //   only sizing that happens. That is exactly what these tests need: deterministic dimensions
 //   with no observer callbacks firing between assertions. Resize-driven syncing is exercised
 //   through the max-pixel-ratio setter, which shares the same code path.
+// - matchMedia: absent in jsdom, and AppElement guards its use - without it, the device's pixel
+//   ratio is evaluated only at boot and when max-pixel-ratio changes, never on a change of the
+//   display's own ratio. Tests that move the window between displays stub it themselves.
 // - navigator.xr: absent means XrManager reports supported === false, which is the correct
 //   headless answer. A truthy stub would push it down paths jsdom cannot honor.
 // - AudioContext: absent means SoundManager's lazy context getter returns null. Verified that

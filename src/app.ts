@@ -223,6 +223,38 @@ class AppElement extends AsyncElement {
     private _resizeObserver: ResizeObserver | null = null;
 
     /**
+     * The pixel ratio last handed to the graphics device, evaluated by {@link _applyPixelRatio}.
+     */
+    private _appliedPixelRatio = 0;
+
+    /**
+     * Matches the display's pixel ratio at the time it was armed, and reports when it stops
+     * matching: the window moved to a display of differing density, or the page was zoomed, neither
+     * of which necessarily resizes the element. Armed at boot and re-armed on each change, then
+     * removed on teardown. `null` where matchMedia is unavailable (jsdom), where the device's ratio
+     * is only evaluated at boot and when `max-pixel-ratio` changes.
+     */
+    private _pixelRatioQuery: MediaQueryList | null = null;
+
+    /**
+     * Follows a change in the display's pixel ratio: re-evaluates the device's ratio against the new
+     * one, and resizes the drawing buffer to match. A ratio assigned to the device directly, as
+     * engine code managing render quality commonly does, is kept - only the buffer follows.
+     */
+    private _onPixelRatioChange = () => {
+        const device = this._app?.graphicsDevice;
+        if (!device) {
+            return;
+        }
+
+        this._watchPixelRatio();
+        if (device.maxPixelRatio === this._appliedPixelRatio) {
+            this._applyPixelRatio(device);
+        }
+        this._syncCanvasSize();
+    };
+
+    /**
      * The PlayCanvas application instance. `null` until the element is ready, and again once it
      * has been removed from the document — await {@link whenReady} or the element's `ready()`
      * promise before accessing it.
@@ -352,10 +384,10 @@ class AppElement extends AsyncElement {
             return;
         }
 
-        // Assigned rather than resolved to a number here: the engine caps against the live
-        // window.devicePixelRatio on every resize, so an uncapped Infinity keeps following the
-        // display when a window moves between monitors of differing density.
-        device.maxPixelRatio = this._maxPixelRatio;
+        // Handed the ratio in effect rather than the cap, then kept in step with the display's own
+        // ratio as it changes - see _applyPixelRatio
+        this._applyPixelRatio(device);
+        this._watchPixelRatio();
 
         const createOptions = new AppOptions();
         createOptions.graphicsDevice = device;
@@ -578,9 +610,10 @@ class AppElement extends AsyncElement {
         this._hierarchyReady = false;
         this._resetReady();
 
-        // Stop tracking the element's size
+        // Stop tracking the element's size and the display's pixel ratio
         this._resizeObserver?.disconnect();
         this._resizeObserver = null;
+        this._unwatchPixelRatio();
 
         // Remove the canvas
         if (this._canvas && this.contains(this._canvas)) {
@@ -601,6 +634,38 @@ class AppElement extends AsyncElement {
         this.app.updateCanvasSize();
         const { width, height } = this.app.graphicsDevice;
         this._pointer.resize(width, height);
+    }
+
+    /**
+     * Hands the graphics device the pixel ratio the application renders at: the smaller of the cap
+     * and the display's own ratio. The engine takes that minimum itself when it sizes the canvas,
+     * but reads `maxPixelRatio` back as the ratio in effect when it maps pointer positions for UI
+     * drags and sizes an XR session's framebuffer. Handed the uncapped default of `Infinity`, the
+     * engine turns every screen-space drag position into NaN, and no scrollbar or scroll view can
+     * be dragged.
+     *
+     * @param device - The graphics device.
+     */
+    private _applyPixelRatio(device: GraphicsDevice) {
+        this._appliedPixelRatio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+        device.maxPixelRatio = this._appliedPixelRatio;
+    }
+
+    /**
+     * Arms {@link _pixelRatioQuery} on the display's current pixel ratio, replacing any query armed
+     * on an earlier one.
+     */
+    private _watchPixelRatio() {
+        this._unwatchPixelRatio();
+        if (typeof window.matchMedia === 'function') {
+            this._pixelRatioQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+            this._pixelRatioQuery.addEventListener('change', this._onPixelRatioChange);
+        }
+    }
+
+    private _unwatchPixelRatio() {
+        this._pixelRatioQuery?.removeEventListener('change', this._onPixelRatioChange);
+        this._pixelRatioQuery = null;
     }
 
     /**
@@ -877,7 +942,7 @@ class AppElement extends AsyncElement {
     set maxPixelRatio(value: number) {
         this._maxPixelRatio = value;
         if (this.app) {
-            this.app.graphicsDevice.maxPixelRatio = value;
+            this._applyPixelRatio(this.app.graphicsDevice);
             this._syncCanvasSize();
         }
     }
