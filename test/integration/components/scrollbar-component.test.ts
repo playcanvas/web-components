@@ -1,4 +1,4 @@
-import type { ScrollbarComponent } from 'playcanvas';
+import type { ElementComponent, ScrollbarComponent } from 'playcanvas';
 import { Entity } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
@@ -79,6 +79,35 @@ describe('<pc-scrollbar>', () => {
 
             scrollbar.removeAttribute('handle-size');
             expect(scrollbar.component!.handleSize).toBe(0);
+        });
+    });
+
+    describe('dragging', () => {
+        it('moves the handle with the pointer on a screen-space screen', async () => {
+            const { app } = await bootApp(`
+                <pc-entity name="screen">
+                    <pc-screen screen-space></pc-screen>
+                    <pc-entity name="track">
+                        <pc-element width="20" height="400"></pc-element>
+                        <pc-scrollbar orientation="vertical" handle-size="0.5" handle="handle"></pc-scrollbar>
+                        <pc-entity name="handle">
+                            <pc-element anchor="0 1 1 1" pivot="1 1" use-input></pc-element>
+                        </pc-entity>
+                    </pc-entity>
+                </pc-entity>
+            `);
+            const scrollbar = (app.root.findByName('track') as Entity).scrollbar!;
+            const handle = (app.root.findByName('handle') as Entity).element as ElementComponent;
+
+            // Fired on the handle's element as the element input would, in CSS pixels. The engine
+            // maps them onto the screen by the graphics device's maxPixelRatio, so this relies on
+            // pc-app handing the device the ratio in effect: its uncapped default of Infinity would
+            // turn every position into NaN, and the drag would never start.
+            handle.fire('mousedown', { x: 10, y: 100 });
+            handle.fire('mousemove', { x: 10, y: 200 });
+
+            // 100px down the 200px the half-size handle can travel on a 1x display
+            expect(scrollbar.value).toBeCloseTo(0.5);
         });
     });
 });

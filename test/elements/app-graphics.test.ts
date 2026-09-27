@@ -33,8 +33,8 @@ describe('<pc-app> graphics attributes', () => {
         const element = document.createElement('pc-app');
 
         // Infinity rather than window.devicePixelRatio: the cap is compared against the live ratio
-        // on every resize, so not capping at all is what keeps a window that moves between displays
-        // of differing density rendering at the density it is actually on.
+        // whenever that changes, so not capping at all is what keeps a window that moves between
+        // displays of differing density rendering at the density it is actually on.
         expect(element.maxPixelRatio).toBe(Infinity);
 
         element.setAttribute('max-pixel-ratio', '2');
