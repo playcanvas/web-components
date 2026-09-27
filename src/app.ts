@@ -900,7 +900,8 @@ class AppElement extends AsyncElement {
      * `onclick`, or a handler property such as `onpointerenter`.
      * - `always` picks for every pointer event. Listeners the element cannot see need it: one on
      * the document or on another element outside the scene, or a framework's delegated handler,
-     * such as React's `onClick`.
+     * such as React's `onPointerMove`. React's `onClick` does not need it, because React also
+     * sets the `onclick` property of the element it is on.
      * - `none` never picks, so no pointer events are dispatched on entities.
      *
      * Applies from the next pointer event.
