@@ -223,8 +223,17 @@
 
         <script type="module">
             import { whenReady } from '@playcanvas/web-components';
+            import { GSPLAT_RENDERER_RASTER_CPU_SORT } from 'playcanvas';
 
             const { app } = await whenReady('pc-app');
+
+            // Sort the splat on the CPU. The GPU-sort renderer, WebGPU's default, projects
+            // splats with the camera's standard perspective and misses the off-axis frustum
+            // the tracking script installs through calculateProjection, so as soon as the
+            // head moves she renders as if through an ordinary camera and the window effect
+            // is lost. The CPU-sort renderer draws her with the camera's shader uniforms,
+            // which do carry that frustum.
+            app.scene.gsplat.renderer = GSPLAT_RENDERER_RASTER_CPU_SORT;
 
             // Re-evaluate the splat's view-dependent color far more often than the engine
             // does by default. The default waits for the viewing angle to a node to change by
