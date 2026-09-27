@@ -1,10 +1,11 @@
-import type { Asset, GraphicsDevice, GraphNode, Entity } from 'playcanvas';
+import type { Asset, GraphNode, Entity } from 'playcanvas';
 import {
     AppBase,
     AppOptions,
     createGraphicsDevice,
     ElementInput,
     FILLMODE_NONE,
+    GraphicsDevice,
     Keyboard,
     Mouse,
     RESOLUTION_AUTO,
@@ -223,9 +224,11 @@ class AppElement extends AsyncElement {
     private _resizeObserver: ResizeObserver | null = null;
 
     /**
-     * The pixel ratio last handed to the graphics device, evaluated by {@link _applyPixelRatio}.
+     * Whether anything but this element has assigned the graphics device's `maxPixelRatio` since
+     * the element last applied its own ratio, as recorded by {@link _trackPixelRatioAssignments}. A
+     * display change leaves such a ratio alone, and a `max-pixel-ratio` write takes the device back.
      */
-    private _appliedPixelRatio = 0;
+    private _pixelRatioAssigned = false;
 
     /**
      * Matches the display's pixel ratio at the time it was armed, and reports when it stops
@@ -248,7 +251,7 @@ class AppElement extends AsyncElement {
         }
 
         this._watchPixelRatio();
-        if (device.maxPixelRatio === this._appliedPixelRatio) {
+        if (!this._pixelRatioAssigned) {
             this._applyPixelRatio(device);
         }
         this._syncCanvasSize();
@@ -386,6 +389,7 @@ class AppElement extends AsyncElement {
 
         // Handed the ratio in effect rather than the cap, then kept in step with the display's own
         // ratio as it changes - see _applyPixelRatio
+        this._trackPixelRatioAssignments(device);
         this._applyPixelRatio(device);
         this._watchPixelRatio();
 
@@ -647,8 +651,38 @@ class AppElement extends AsyncElement {
      * @param device - The graphics device.
      */
     private _applyPixelRatio(device: GraphicsDevice) {
-        this._appliedPixelRatio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
-        device.maxPixelRatio = this._appliedPixelRatio;
+        device.maxPixelRatio = Math.min(this._maxPixelRatio, window.devicePixelRatio);
+
+        // The write above goes through the tracking accessor like any other, so clearing the record
+        // after it is what marks the ratio as this element's own
+        this._pixelRatioAssigned = false;
+    }
+
+    /**
+     * Records every assignment to the graphics device's `maxPixelRatio` from here on, so a display
+     * change never overwrites a ratio the application chose. A comparison of values cannot tell such
+     * a ratio from this element's own when the two are equal - a light quality setting of 1 on a 1x
+     * display, say. The engine declares the property as an accessor on GraphicsDevice; this
+     * shadows it on the device itself with one whose setter also keeps the record. The engine's own
+     * writes after this point are recorded too, as when WebGPU recreates a lost device and resets
+     * the ratio to 1.
+     *
+     * @param device - The graphics device.
+     */
+    private _trackPixelRatioAssignments(device: GraphicsDevice) {
+        const accessor = Object.getOwnPropertyDescriptor(GraphicsDevice.prototype, 'maxPixelRatio');
+        const set = accessor?.set;
+        if (!accessor?.get || !set) {
+            return;
+        }
+
+        Object.defineProperty(device, 'maxPixelRatio', {
+            ...accessor,
+            set: (value: number) => {
+                this._pixelRatioAssigned = true;
+                set.call(device, value);
+            }
+        });
     }
 
     /**

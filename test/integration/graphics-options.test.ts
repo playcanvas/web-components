@@ -137,6 +137,49 @@ describe('<pc-app> graphics options', () => {
         expect(display.watched).toEqual(['(resolution: 1.5dppx)']);
     });
 
+    it('keeps an assigned pixel ratio that equals the one in effect', async () => {
+        const display = stubDisplay(1);
+
+        const { app } = await bootApp();
+
+        // A light quality setting on a 1x display assigns the ratio the device already holds
+        app.graphicsDevice.maxPixelRatio = 1;
+        display.moveTo(2);
+
+        expect(app.graphicsDevice.maxPixelRatio).toBe(1);
+        expect(app.graphicsDevice.width).toBe(800);
+        expect(app.graphicsDevice.height).toBe(600);
+    });
+
+    it('keeps an assigned cap that equals the display density', async () => {
+        const display = stubDisplay(2);
+
+        const { app } = await bootApp();
+
+        // Math.min(devicePixelRatio, 2) on a 2x display, which still caps a denser one
+        app.graphicsDevice.maxPixelRatio = 2;
+        display.moveTo(3);
+
+        expect(app.graphicsDevice.maxPixelRatio).toBe(2);
+        expect(app.graphicsDevice.width).toBe(1600);
+        expect(app.graphicsDevice.height).toBe(1200);
+    });
+
+    it('follows the display again once max-pixel-ratio is written', async () => {
+        const display = stubDisplay(1);
+
+        const { appElement, app } = await bootApp();
+        app.graphicsDevice.maxPixelRatio = 1;
+
+        // The element's own cap takes the device back from the assignment
+        appElement.setAttribute('max-pixel-ratio', '4');
+        display.moveTo(2);
+
+        expect(app.graphicsDevice.maxPixelRatio).toBe(2);
+        expect(app.graphicsDevice.width).toBe(1600);
+        expect(app.graphicsDevice.height).toBe(1200);
+    });
+
     it('stops following the display once disconnected', async () => {
         const display = stubDisplay(1);
 
