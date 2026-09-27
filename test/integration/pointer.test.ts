@@ -845,6 +845,33 @@ describe('pc-app pointer picking', () => {
             expect(documentClick).toHaveBeenCalledTimes(1);
             expect(documentClick.mock.calls[0][0].target, 'the click bubbled from the entity').toBe(element);
         });
+
+        it('the onclick handler property alone makes the click worth dispatching', async () => {
+            // React sets a no-op onclick on every element rendered with an onClick prop, and runs
+            // the prop from a listener on its root, which the library cannot see - the document
+            // listener stands in for it. The property alone makes React's onClick work under
+            // picking="auto", without making moves worth picking
+            const { appElement, get } = await bootApp(`
+                <pc-entity name="camera"><pc-camera></pc-camera></pc-entity>
+                <pc-entity name="target"></pc-entity>
+            `);
+            const element = get<EntityElement>('pc-entity[name="target"]');
+            const canvas = appElement.querySelector('canvas')!;
+            const documentClick = vi.fn();
+            document.addEventListener('click', documentClick);
+            const calls = stubPicker(appElement, [[hit(element.entity!)], [hit(element.entity!)]]);
+
+            element.onclick = vi.fn();
+            canvas.dispatchEvent(move(400, 300));
+            canvas.dispatchEvent(down());
+            canvas.dispatchEvent(up());
+            await flush();
+            document.removeEventListener('click', documentClick);
+
+            expect(calls.async, 'the press and the release are picked, the move is not').toBe(2);
+            expect(documentClick).toHaveBeenCalledTimes(1);
+            expect(documentClick.mock.calls[0][0].target, 'the click bubbled from the entity').toBe(element);
+        });
     });
 
     describe('multi-camera', () => {
