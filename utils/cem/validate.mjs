@@ -100,6 +100,8 @@ if (manifest) {
     expectAttribute('pc-camera', 'clear-color', { default: '0.75 0.75 0.75 1' });
     expectAttribute('pc-camera', 'rect', { default: '0 0 1 1' });
     expectAttribute('pc-scene', 'gravity', { default: '0 -9.81 0' });
+    expectAttribute('pc-scene', 'fog-color', { default: '0 0 0' });
+    expectAttribute('pc-scene', 'fog-start', { type: 'number', default: '1', fieldName: 'fogStart' });
     expectAttribute('pc-scene', 'lighting-max-lights', { type: 'number', default: '255', fieldName: 'lightingMaxLights' });
     expectAttribute('pc-scene', 'gsplat-use-tonemap', { type: 'boolean', default: 'true', fieldName: 'gsplatUseTonemap' });
     // Engine 2.22.1 switched its LOD mode default from error to distance
