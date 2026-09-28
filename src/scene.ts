@@ -370,9 +370,9 @@ class SceneElement extends AsyncElement {
     /**
      * Sets how LOD levels are chosen for streamed Gaussian splats, within the splat budget.
      * `distance` orders detail by camera distance alone and uses the least memory. `error`
-     * spends the budget where it removes the most approximation error, which lifts sparse
+     * spends the same budget where it removes the most approximation error, which lifts sparse
      * regions such as sky and distant background that `distance` leaves coarse, but keeps
-     * noticeably more splat data in memory. Defaults to `distance`.
+     * noticeably more of the streamed data resident in memory. Defaults to `distance`.
      * @param value - The Gaussian splat LOD mode.
      */
     set gsplatLodMode(value: 'error' | 'distance') {
