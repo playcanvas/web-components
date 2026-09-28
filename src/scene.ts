@@ -56,7 +56,7 @@ class SceneElement extends AsyncElement {
     /**
      * The Gaussian splat LOD selection mode.
      */
-    private _gsplatLodMode: 'error' | 'distance' = 'error';
+    private _gsplatLodMode: 'error' | 'distance' = 'distance';
 
     /**
      * The target number of Gaussian splats rendered across the scene.
@@ -368,9 +368,11 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets how LOD levels are chosen for streamed Gaussian splats. `error` spends the global splat
-     * budget where it removes the most approximation error; `distance` orders detail by camera
-     * distance alone. Defaults to `error`.
+     * Sets how LOD levels are chosen for streamed Gaussian splats, within the splat budget.
+     * `distance` orders detail by camera distance alone and uses the least memory. `error`
+     * spends the same budget where it removes the most approximation error, which lifts sparse
+     * regions such as sky and distant background that `distance` leaves coarse, but keeps
+     * noticeably more of the streamed data resident in memory. Defaults to `distance`.
      * @param value - The Gaussian splat LOD mode.
      */
     set gsplatLodMode(value: 'error' | 'distance') {
@@ -381,7 +383,7 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Gets the Gaussian splat LOD selection mode.
+     * Gets how LOD levels are chosen for streamed Gaussian splats.
      * @returns The Gaussian splat LOD mode.
      */
     get gsplatLodMode() {
@@ -549,7 +551,7 @@ class SceneElement extends AsyncElement {
                 this.fogEnd = parseNumber(newValue, 1000, name);
                 break;
             case 'gsplat-lod-mode':
-                this.gsplatLodMode = parseEnum(newValue, ['error', 'distance'], 'error', name);
+                this.gsplatLodMode = parseEnum(newValue, ['error', 'distance'], 'distance', name);
                 break;
             case 'gsplat-splat-budget':
                 this.gsplatSplatBudget = parseNumber(newValue, 1_000_000, name);

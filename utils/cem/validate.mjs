@@ -102,6 +102,9 @@ if (manifest) {
     expectAttribute('pc-scene', 'gravity', { default: '0 -9.81 0' });
     expectAttribute('pc-scene', 'lighting-max-lights', { type: 'number', default: '255', fieldName: 'lightingMaxLights' });
     expectAttribute('pc-scene', 'gsplat-use-tonemap', { type: 'boolean', default: 'true', fieldName: 'gsplatUseTonemap' });
+    // Engine 2.22.1 switched its LOD mode default from error to distance
+    // (playcanvas/engine#9326), and the element writes the engine's own
+    expectEnum('pc-scene', 'gsplat-lod-mode', 2, 'distance');
 
     // The engine keeps the credentials flag in its shared HTTP client, not on the application, so
     // the tooltip has to say that one <pc-app> sets it for the whole page
