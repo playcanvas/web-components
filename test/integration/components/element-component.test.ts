@@ -67,9 +67,9 @@ const textCases: [attribute: string, property: string, value: string, expected: 
 
 /**
  * Elements whose entities place them, each exposed to a different way the engine's element setup
- * can move them. The engine positions an element from its margins, which a new component seeds
- * with its own defaults rather than from its entity - and a `<pc-entity>` is always positioned
- * before its element is added.
+ * can move them. The engine positions an element from its margins, so a new component has to take
+ * them from its entity's position - and a `<pc-entity>` is always positioned before its element is
+ * added.
  */
 const placed: [name: string, element: string][] = [
     // The default 32 x 32 size is the engine's own, so writing it syncs nothing from the position
