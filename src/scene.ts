@@ -36,7 +36,7 @@ class SceneElement extends AsyncElement {
     /**
      * The color of the fog.
      */
-    private _fogColor = new Color(1, 1, 1);
+    private _fogColor = new Color(0, 0, 0);
 
     /**
      * The density of the fog.
@@ -46,7 +46,7 @@ class SceneElement extends AsyncElement {
     /**
      * The start distance of the fog.
      */
-    private _fogStart = 0;
+    private _fogStart = 1;
 
     /**
      * The end distance of the fog.
@@ -292,7 +292,7 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets the fog color of the scene.
+     * Sets the fog color of the scene. Defaults to black (`0 0 0`).
      * @param value - The fog color.
      */
     set fogColor(value: Color) {
@@ -311,7 +311,7 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets the fog density of the scene.
+     * Sets the fog density of the scene. Defaults to 0.
      * @param value - The fog density.
      */
     set fogDensity(value: number) {
@@ -330,7 +330,7 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets the fog start distance of the scene.
+     * Sets the fog start distance of the scene. Defaults to 1.
      * @param value - The fog start distance.
      */
     set fogStart(value: number) {
@@ -349,7 +349,7 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets the fog end distance of the scene.
+     * Sets the fog end distance of the scene. Defaults to 1000.
      * @param value - The fog end distance.
      */
     set fogEnd(value: number) {
@@ -539,13 +539,13 @@ class SceneElement extends AsyncElement {
                 this.fog = parseEnum(newValue, ['none', 'linear', 'exp', 'exp2'], 'none', name);
                 break;
             case 'fog-color':
-                this.fogColor = parseColor(newValue, Color.WHITE, name);
+                this.fogColor = parseColor(newValue, Color.BLACK, name);
                 break;
             case 'fog-density':
                 this.fogDensity = parseNumber(newValue, 0, name);
                 break;
             case 'fog-start':
-                this.fogStart = parseNumber(newValue, 0, name);
+                this.fogStart = parseNumber(newValue, 1, name);
                 break;
             case 'fog-end':
                 this.fogEnd = parseNumber(newValue, 1000, name);
