@@ -16,7 +16,8 @@
         <link rel="stylesheet" href="css/example.css">
         <style>
             /* Glass recipe copied from example.css's .example-button; sits bottom-left because
-               js/example.mjs owns bottom-right */
+               js/example.mjs owns bottom-right, and example.css docks it along the bottom edge of a
+               narrow screen */
             .lights-panel {
                 position: absolute;
                 left: max(16px, env(safe-area-inset-left));
@@ -67,13 +68,6 @@
                 color: rgba(255, 255, 255, 0.5);
                 font-size: 11px;
                 font-weight: 400;
-            }
-
-            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
-            @media (max-width: 720px) {
-                .lights-panel {
-                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
-                }
             }
         </style>
     </head>
@@ -310,7 +304,7 @@
         </pc-app>
         <!-- No control shares an id with an entity name: entity: references resolve
              document-wide, and an id match wins over an entity-name match -->
-        <div class="lights-panel">
+        <div class="lights-panel example-panel">
             <label><input type="checkbox" id="area-lights-toggle" checked> Area lights</label>
             <p class="hint">Off, every rect light falls back to a punctual spot at its center: the
                 same lights, without their size.</p>

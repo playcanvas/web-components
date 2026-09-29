@@ -17,8 +17,9 @@
         <style>
             /* The panel is a plate off the movement: iron japanned the frame's deep green, lined in
                gold inside a brass rim, with brass rivets and gilt lettering. It sits bottom-left
-               because js/example.mjs owns bottom-right. --sky is the day's light, night to night,
-               in watercolor: indigo, madder at dawn, ochre, the ivory of noon. */
+               because js/example.mjs owns bottom-right, and css/example.css docks it along the
+               bottom edge of a narrow screen. --sky is the day's light, night to night, in
+               watercolor: indigo, madder at dawn, ochre, the ivory of noon. */
             .clock-panel {
                 --brass: #c9a35c;
                 --gilt: #e8cf91;
@@ -242,10 +243,16 @@
                 background: var(--gilt-dim);
             }
 
-            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
+            /* Docked along the bottom edge of a narrow screen, the plate runs off the screen's
+               sides and bottom, so only its top edge keeps its rivets and its lining */
             @media (max-width: 720px) {
                 .clock-panel {
-                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+                    background:
+                        var(--rivet) 6px 6px / 6px 6px no-repeat,
+                        var(--rivet) calc(100% - 6px) 6px / 6px 6px no-repeat,
+                        linear-gradient(180deg, rgba(31, 46, 37, 0.97), rgba(14, 21, 17, 0.97));
+                    box-shadow: inset 0 3px 0 rgba(9, 14, 11, 0.55), inset 0 4px 0 rgba(232, 207, 145, 0.4),
+                        0 0 0 1px rgba(0, 0, 0, 0.55), 0 10px 28px rgba(0, 0, 0, 0.5);
                 }
             }
         </style>
@@ -453,7 +460,7 @@
                 </pc-entity>
             </pc-scene>
         </pc-app>
-        <div class="clock-panel">
+        <div class="clock-panel example-panel">
             <div class="clock-head">
                 <div class="clock-time">
                     <!-- The slider reads out the time itself, so the readout stays quiet rather

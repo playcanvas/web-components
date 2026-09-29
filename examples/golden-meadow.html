@@ -16,7 +16,8 @@
         <link rel="stylesheet" href="css/example.css">
         <style>
             /* Late sun through smoked glass: a warm, dark pane with the evening's gold in its
-               accents. It sits bottom-left because js/example.mjs owns bottom-right. */
+               accents. It sits bottom-left because js/example.mjs owns bottom-right, and css/example.css
+               docks it along the bottom edge of a narrow screen. */
             pc-app {
                 --pc-loading-bar-color: #f2c36b;
                 --pc-loading-bar-background: rgba(242, 195, 107, 0.14);
@@ -151,13 +152,6 @@
                 margin: 0;
                 accent-color: var(--gold);
             }
-
-            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
-            @media (max-width: 720px) {
-                .meadow-panel {
-                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
-                }
-            }
         </style>
     </head>
     <body>
@@ -248,7 +242,7 @@
                 </pc-entity>
             </pc-scene>
         </pc-app>
-        <div class="meadow-panel">
+        <div class="meadow-panel example-panel">
             <div class="meadow-head">
                 <svg class="meadow-mark" viewBox="0 0 34 34" aria-hidden="true">
                     <defs>

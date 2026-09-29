@@ -16,7 +16,8 @@
         <link rel="stylesheet" href="css/example.css">
         <style>
             /* Cascade panel. Glass recipe copied from example.css's .example-button, applied
-               once to the panel; sits bottom-left because js/example.mjs owns bottom-right. */
+               once to the panel; sits bottom-left because js/example.mjs owns bottom-right, and
+               example.css docks it along the bottom edge of a narrow screen. */
             .shadow-panel {
                 position: absolute;
                 left: max(16px, env(safe-area-inset-left));
@@ -152,13 +153,6 @@
                 font-weight: 400;
                 line-height: 1.35;
             }
-
-            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
-            @media (max-width: 720px) {
-                .shadow-panel {
-                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
-                }
-            }
         </style>
     </head>
     <body>
@@ -225,7 +219,7 @@
         </pc-app>
         <!-- No control shares an id with an entity name: entity: references resolve
              document-wide, and an id match wins over an entity-name match -->
-        <div class="shadow-panel">
+        <div class="shadow-panel example-panel">
             <span class="panel-caption">Cascade split distances (m)</span>
             <div class="split-bar" id="split-bar"></div>
             <label>Cascades

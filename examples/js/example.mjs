@@ -100,6 +100,17 @@ container.appendChild(
 
 document.body.appendChild(container);
 
+// On a narrow screen, css/example.css docks a page's own control panel along the bottom edge and
+// lifts the buttons on top of it, by the height published here
+const panel = document.querySelector('body > .example-panel');
+if (panel) {
+    const publishHeight = () => {
+        container.style.setProperty('--example-panel-height', `${panel.offsetHeight}px`);
+    };
+    publishHeight();
+    new ResizeObserver(publishHeight).observe(panel);
+}
+
 // Fade the buttons out after a few seconds without user input, and bring them back on
 // any pointer or keyboard activity
 const IDLE_FADE_MS = 3500;
