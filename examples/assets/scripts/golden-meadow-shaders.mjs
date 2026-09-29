@@ -151,6 +151,7 @@ const grassTransformGLSL = /* glsl */ `
     uniform highp sampler2D meadowHeightMap;
     uniform vec4 meadowHeightParams;
     uniform vec4 meadowWind;            // x, y: the wind's heading; z: its strength; w: time
+    uniform vec4 meadowDrift;           // x, y: how far the gusts have rolled; z, w: the air
     uniform vec3 meadowEye;
 
     uniform vec4 grassShape;            // x: tallest blade; y: widest; z: density radius; w: tile size
@@ -277,7 +278,7 @@ const grassTransformGLSL = /* glsl */ `
         // flutters on top of them at its own pace
         vec2 windDir = meadowWind.xy;
         float time = meadowWind.w;
-        vec2 gustAt = rootXZ - windDir * time * 5.5;
+        vec2 gustAt = rootXZ - meadowDrift.xy * 5.5;
         float gust = textureLod(meadowNoiseMap, gustAt * (1.0 / 47.0), 0.0).r * 0.7 + textureLod(meadowNoiseMap, gustAt * (1.0 / 13.0) + vec2(0.5), 0.0).g * 0.3;
         gust = smoothstep(0.3, 0.75, gust);
         float phase = time * mix(1.7, 2.6, r.x) + r.y * 6.2831853 - dot(rootXZ, windDir) * 0.4;
@@ -382,6 +383,7 @@ const grassTransformWGSL = /* wgsl */ `
     var meadowHeightMap: texture_2d<uff>;
     uniform meadowHeightParams: vec4f;
     uniform meadowWind: vec4f;
+    uniform meadowDrift: vec4f;
     uniform meadowEye: vec3f;
 
     uniform grassShape: vec4f;
@@ -495,7 +497,7 @@ const grassTransformWGSL = /* wgsl */ `
 
         let windDir: vec2f = uniform.meadowWind.xy;
         let time: f32 = uniform.meadowWind.w;
-        let gustAt: vec2f = rootXZ - windDir * time * 5.5;
+        let gustAt: vec2f = rootXZ - uniform.meadowDrift.xy * 5.5;
         var gust: f32 = textureSampleLevel(meadowNoiseMap, meadowNoiseMapSampler, gustAt * (1.0 / 47.0), 0.0).r * 0.7 + textureSampleLevel(meadowNoiseMap, meadowNoiseMapSampler, gustAt * (1.0 / 13.0) + vec2f(0.5), 0.0).g * 0.3;
         gust = smoothstep(0.3, 0.75, gust);
         let phase: f32 = time * mix(1.7, 2.6, r.x) + r.y * 6.2831853 - dot(rootXZ, windDir) * 0.4;
@@ -718,6 +720,7 @@ export const terrainChunks = {
             uniform vec3 meadowDryBase;
             uniform vec3 meadowDryTip;
             uniform vec4 meadowWind;
+            uniform vec4 meadowDrift;
         `,
         fogPS: aerialGLSL,
         diffusePS: /* glsl */ `
@@ -732,7 +735,7 @@ export const terrainChunks = {
 
                 // Seen from afar the sward is a mottled carpet, and the gusts roll across it as
                 // waves of paler grass, where the wind shows the blades' sides
-                vec2 gustAt = xz - meadowWind.xy * meadowWind.w * 5.5;
+                vec2 gustAt = xz - meadowDrift.xy * 5.5;
                 float gust = texture(meadowNoiseMap, gustAt * (1.0 / 47.0)).r * 0.7 + texture(meadowNoiseMap, gustAt * (1.0 / 13.0) + vec2(0.5)).g * 0.3;
                 gust = smoothstep(0.3, 0.75, gust) * meadowWind.z;
                 vec3 canopy = mix(mix(meadowLushBase, meadowLushTip, 0.72), mix(meadowDryBase, meadowDryTip, 0.72), dry);
@@ -767,6 +770,7 @@ export const terrainChunks = {
             uniform meadowDryBase: vec3f;
             uniform meadowDryTip: vec3f;
             uniform meadowWind: vec4f;
+            uniform meadowDrift: vec4f;
         `,
         fogPS: aerialWGSL,
         diffusePS: /* wgsl */ `
@@ -779,7 +783,7 @@ export const terrainChunks = {
                 let path: f32 = textureSample(meadowPathMap, meadowPathMapSampler, (xz - uniform.meadowPathParams.xy) * uniform.meadowPathParams.z).r * uniform.meadowPathParams.w;
                 let onPath: f32 = 1.0 - smoothstep(0.45, 1.3, path);
 
-                let gustAt: vec2f = xz - uniform.meadowWind.xy * uniform.meadowWind.w * 5.5;
+                let gustAt: vec2f = xz - uniform.meadowDrift.xy * 5.5;
                 var gust: f32 = textureSample(meadowNoiseMap, meadowNoiseMapSampler, gustAt * (1.0 / 47.0)).r * 0.7 + textureSample(meadowNoiseMap, meadowNoiseMapSampler, gustAt * (1.0 / 13.0) + vec2f(0.5)).g * 0.3;
                 gust = smoothstep(0.3, 0.75, gust) * uniform.meadowWind.z;
                 var canopy: vec3f = mix(mix(uniform.meadowLushBase, uniform.meadowLushTip, 0.72), mix(uniform.meadowDryBase, uniform.meadowDryTip, 0.72), dry);
@@ -822,7 +826,7 @@ export const cloudFragmentGLSL = /* glsl */ `
     #include "tonemappingPS"
 
     uniform sampler2D meadowNoiseMap;
-    uniform vec4 meadowWind;
+    uniform vec4 meadowDrift;
     uniform vec3 view_position;
     uniform vec3 cloudSunDirection;
     uniform vec3 cloudSunColor;
@@ -846,7 +850,7 @@ export const cloudFragmentGLSL = /* glsl */ `
         }
 
         // Where the view ray meets the layer, drifting with the wind aloft
-        vec2 p = view_position.xz + dir.xz * (2200.0 / (dir.y + 0.04)) - meadowWind.xy * meadowWind.w * 9.0;
+        vec2 p = view_position.xz + dir.xz * (2200.0 / (dir.y + 0.04)) - meadowDrift.xy * 9.0;
         float density = cloudDensity(p);
         if (density < 0.003) {
             discard;
@@ -890,7 +894,7 @@ export const cloudFragmentWGSL = /* wgsl */ `
 
     var meadowNoiseMap: texture_2d<f32>;
     var meadowNoiseMapSampler: sampler;
-    uniform meadowWind: vec4f;
+    uniform meadowDrift: vec4f;
     uniform view_position: vec3f;
     uniform cloudSunDirection: vec3f;
     uniform cloudSunColor: vec3f;
@@ -911,7 +915,7 @@ export const cloudFragmentWGSL = /* wgsl */ `
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         var output: FragmentOutput;
         let dir: vec3f = normalize(input.vDirection);
-        let p: vec2f = uniform.view_position.xz + dir.xz * (2200.0 / (max(dir.y, 0.0) + 0.04)) - uniform.meadowWind.xy * uniform.meadowWind.w * 9.0;
+        let p: vec2f = uniform.view_position.xz + dir.xz * (2200.0 / (max(dir.y, 0.0) + 0.04)) - uniform.meadowDrift.xy * 9.0;
         let density: f32 = cloudDensity(p);
         let shade: f32 = cloudDensity(p + uniform.cloudSunDirection.xz * 420.0);
         if (dir.y < 0.005 || density < 0.003) {
@@ -943,6 +947,7 @@ export const pollenVertexGLSL = /* glsl */ `
     uniform mat4 matrix_view;
     uniform vec3 view_position;
     uniform vec4 meadowWind;
+    uniform vec4 meadowDrift;
     uniform vec3 pollenBox;
     uniform vec3 pollenSunDirection;
     varying vec2 vCorner;
@@ -951,7 +956,7 @@ export const pollenVertexGLSL = /* glsl */ `
     void main(void) {
         float time = meadowWind.w;
         float phase = vertex_position.w;
-        vec3 drift = vec3(meadowWind.x, 0.0, meadowWind.y) * time * (0.35 + meadowWind.z * 0.9);
+        vec3 drift = vec3(meadowDrift.z, 0.0, meadowDrift.w);
         drift += vec3(sin(time * 0.31 + phase * 6.28), sin(time * 0.53 + phase * 11.0) * 0.6, cos(time * 0.27 + phase * 4.1)) * 0.35;
         vec3 p = pollenSeed.xyz * pollenBox + drift;
         vec3 origin = view_position - pollenBox * vec3(0.5, 0.45, 0.5);
@@ -996,6 +1001,7 @@ export const pollenVertexWGSL = /* wgsl */ `
     uniform matrix_view: mat4x4f;
     uniform view_position: vec3f;
     uniform meadowWind: vec4f;
+    uniform meadowDrift: vec4f;
     uniform pollenBox: vec3f;
     uniform pollenSunDirection: vec3f;
     varying vCorner: vec2f;
@@ -1006,7 +1012,7 @@ export const pollenVertexWGSL = /* wgsl */ `
         var output: VertexOutput;
         let time: f32 = uniform.meadowWind.w;
         let phase: f32 = vertex_position.w;
-        var drift: vec3f = vec3f(uniform.meadowWind.x, 0.0, uniform.meadowWind.y) * time * (0.35 + uniform.meadowWind.z * 0.9);
+        var drift: vec3f = vec3f(uniform.meadowDrift.z, 0.0, uniform.meadowDrift.w);
         drift = drift + vec3f(sin(time * 0.31 + phase * 6.28), sin(time * 0.53 + phase * 11.0) * 0.6, cos(time * 0.27 + phase * 4.1)) * 0.35;
         let box: vec3f = uniform.pollenBox;
         let origin: vec3f = uniform.view_position - box * vec3f(0.5, 0.45, 0.5);

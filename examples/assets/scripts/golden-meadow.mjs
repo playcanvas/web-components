@@ -469,14 +469,13 @@ const sampleNoise = (noise, u, v, channel) => {
  * @param {Meadow} meadow - The meadow.
  * @param {number} x - World x.
  * @param {number} z - World z.
- * @param {number} time - The wind's clock, in seconds.
- * @param {number} windX - The wind's heading in x.
- * @param {number} windZ - The wind's heading in z.
+ * @param {number} rolledX - How far the gusts have rolled in x, in meters at 1 m/s.
+ * @param {number} rolledZ - How far the gusts have rolled in z, in meters at 1 m/s.
  * @returns {number} The gust.
  */
-const gustAt = (meadow, x, z, time, windX, windZ) => {
-    const gx = x - windX * time * 5.5;
-    const gz = z - windZ * time * 5.5;
+const gustAt = (meadow, x, z, rolledX, rolledZ) => {
+    const gx = x - rolledX * 5.5;
+    const gz = z - rolledZ * 5.5;
     const broad = sampleNoise(meadow.noise, gx / 47, gz / 47, 0);
     const fine = sampleNoise(meadow.noise, gx / 13 + 0.5, gz / 13 + 0.5, 1);
     return smoothstep(0.3, 0.75, broad * 0.7 + fine * 0.3);
@@ -539,6 +538,13 @@ export class MeadowWind extends Script {
 
     _wind = new Float32Array(4);
 
+    /**
+     * How far the wind has carried things: x and z for its gusts, which roll on at a steady
+     * pace, and x and z for the air itself, and whatever floats on it, which moves faster the
+     * harder the wind blows.
+     */
+    _drift = new Float32Array(4);
+
     /** The gust being heard, following the one passing over the listener a moment behind. */
     _gust = 0.5;
 
@@ -553,14 +559,25 @@ export class MeadowWind extends Script {
         this._wind[1] = -Math.cos(a);
         this._wind[2] = this.strength;
         this._wind[3] = this._time;
-        this.app.graphicsDevice.scope.resolve('meadowWind').setValue(this._wind);
+
+        // Added up a frame at a time, so that turning the wind or changing its strength changes
+        // how fast things drift from then on, rather than moving everything at once
+        const airSpeed = 0.35 + 0.9 * Math.max(this.strength, 0);
+        this._drift[0] += this._wind[0] * dt;
+        this._drift[1] += this._wind[1] * dt;
+        this._drift[2] += this._wind[0] * airSpeed * dt;
+        this._drift[3] += this._wind[1] * airSpeed * dt;
+
+        const scope = this.app.graphicsDevice.scope;
+        scope.resolve('meadowWind').setValue(this._wind);
+        scope.resolve('meadowDrift').setValue(this._drift);
 
         // The wind's sound: a light air barely stirs the grass, a gale roars through it, and each
         // gust swells it gently as it passes
         const slot = this.sound?.sound?.slot('wind');
         if (slot) {
             const at = this.listener?.getPosition();
-            const gust = at ? gustAt(this._meadow, at.x, at.z, this._time, this._wind[0], this._wind[1]) : 0.5;
+            const gust = at ? gustAt(this._meadow, at.x, at.z, this._drift[0], this._drift[1]) : 0.5;
             this._gust += (gust - this._gust) * (1 - Math.exp(-dt / 0.8));
             const level = Math.min(Math.pow(Math.max(this.strength, 0), 1.3), 1.25);
             slot.volume = this.loudness * level * (0.4 + 0.6 * this._gust);
@@ -1073,11 +1090,11 @@ const growTree = (rng) => {
             const k1 = (k + 1) % sides;
             bark.indices.push(
                 first + k,
-                first + sides + k,
-                first + k1,
                 first + k1,
                 first + sides + k,
-                first + sides + k1
+                first + k1,
+                first + sides + k1,
+                first + sides + k
             );
         }
     };
