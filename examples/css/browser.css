@@ -4,6 +4,11 @@
     box-sizing: border-box;
 }
 
+/* Outranks the display every control here sets, so hiding one is just the attribute */
+[hidden] {
+    display: none !important;
+}
+
 :root {
     color-scheme: dark;
 
@@ -427,8 +432,23 @@ body {
 .title-bar-nav,
 .title-bar-actions {
     display: flex;
+    align-items: center;
     gap: 4px;
     flex: none;
+}
+
+/* The actions are a popover too - the narrow screen's menu, below - so in the bar they undo the
+   UA's popover styling. Author styles outrank the UA's, its display: none included. */
+.title-bar-actions {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    overflow: visible;
 }
 
 .title-bar-button {
@@ -442,8 +462,20 @@ body {
     border-radius: var(--radius-m);
     background: transparent;
     color: var(--color-text-dim);
+    text-decoration: none;
     cursor: pointer;
     transition: background-color 0.15s, color 0.15s;
+}
+
+/* An action's name. In the bar it is only read out, and the title is its tooltip; the menu
+   shows it. */
+.title-bar-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 .title-bar-button:hover {
@@ -473,8 +505,58 @@ body {
     flex: none;
 }
 
+/* A way into XR, in the accent: it only shows when the device can enter it, and then it is the
+   thing to press */
+.title-bar-xr-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    height: 28px;
+    padding: 0 10px 0 7px;
+    border: 1px solid rgba(255, 102, 0, 0.45);
+    border-radius: var(--radius-m);
+    background: var(--color-accent-soft);
+    color: var(--color-accent-bright);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.title-bar-xr-button:hover {
+    border-color: var(--color-accent);
+    background: rgba(255, 102, 0, 0.2);
+}
+
+/* Masks, so the icons take the button's color */
+.xr-icon {
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask: center / 18px 18px no-repeat;
+    mask: center / 18px 18px no-repeat;
+}
+
+.xr-icon.icon-ar {
+    -webkit-mask-image: url("../img/ar.svg");
+    mask-image: url("../img/ar.svg");
+}
+
+.xr-icon.icon-vr {
+    -webkit-mask-image: url("../img/vr.svg");
+    mask-image: url("../img/vr.svg");
+}
+
 /* Hide menu toggle on desktop - it lives in the title bar on mobile */
 .menu-toggle {
+    display: none;
+}
+
+/* Only a narrow screen puts the actions behind a menu */
+.more-toggle {
     display: none;
 }
 
@@ -584,6 +666,67 @@ body {
     .example-category,
     .example-separator {
         display: none;
+    }
+}
+
+/* Too narrow for a row of actions: they drop down from the bar's right edge instead, as a menu
+   in which each shows its name. Browsers without popovers keep them in the bar. */
+@supports selector(:popover-open) {
+    @media (max-width: 540px) {
+        .more-toggle {
+            display: flex;
+        }
+
+        .title-bar-actions {
+            position: fixed;
+            inset: auto;
+            top: calc(var(--titlebar-height) + env(safe-area-inset-top) + 4px);
+            right: max(8px, env(safe-area-inset-right));
+            flex-direction: column;
+            align-items: stretch;
+            gap: 2px;
+            min-width: 220px;
+            padding: 6px;
+            background: var(--color-surface-raised);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-l);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+            color: var(--color-text);
+        }
+
+        .title-bar-actions:not(:popover-open) {
+            display: none;
+        }
+
+        .title-bar-actions .title-bar-button {
+            justify-content: flex-start;
+            gap: 12px;
+            width: auto;
+            height: 40px;
+            padding: 0 12px;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .title-bar-actions .title-bar-button svg {
+            flex: none;
+            color: var(--color-text-dim);
+        }
+
+        .title-bar-actions .title-bar-label {
+            position: static;
+            width: auto;
+            height: auto;
+            overflow: visible;
+            clip-path: none;
+        }
+
+        .title-bar-actions .title-bar-divider {
+            width: auto;
+            height: 1px;
+            margin: 4px 6px;
+        }
     }
 }
 

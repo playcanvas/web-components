@@ -137,8 +137,8 @@ describe('transformSource', () => {
 describe('collectSources', () => {
     /**
      * A miniature of the real graph: a page that loads a stylesheet, two scripts and the shared
-     * example chrome; chrome that imports a second module; two scripts that share a third; and one
-     * binary asset that must stay on the deployed site.
+     * example chrome; two scripts that share a third; and one binary asset that must stay on the
+     * deployed site.
      */
     const TREE: Record<string, string> = {
         'index.html': [
@@ -149,8 +149,7 @@ describe('collectSources', () => {
             '<script type="module" src="js/example.mjs"></script>'
         ].join('\n'),
         'css/example.css': '.icon { mask-image: url("../img/ar.svg"); }',
-        'js/example.mjs': "import { openInStackBlitz } from './stackblitz.mjs';",
-        'js/stackblitz.mjs': 'export const openInStackBlitz = () => {};',
+        'js/example.mjs': "import { whenReady } from '@playcanvas/web-components';",
         'assets/scripts/a.mjs': "import { shared } from './shared.mjs';",
         'assets/scripts/b.mjs': "import { shared } from './shared.mjs';",
         'assets/scripts/shared.mjs': 'export const shared = 1;'
@@ -178,22 +177,21 @@ describe('collectSources', () => {
             'assets/scripts/b.mjs',
             'assets/scripts/shared.mjs',
             'css/example.css',
-            'js/example.mjs',
-            'js/stackblitz.mjs'
+            'js/example.mjs'
         ]);
     });
 
     /**
-     * The graph is recursive in practice, not just in principle: every page loads js/example.mjs,
-     * which imports js/stackblitz.mjs. A one-level walk would package the chrome and leave it
-     * importing a module that is not there.
+     * The graph is recursive in practice, not just in principle: AR Optic Blast and AR Wiener
+     * Storm load scripts that import assets/scripts/face-tracking.mjs, which neither page names. A
+     * one-level walk would package the scripts and leave them importing a module that is not there.
      */
     it('follows imports of imports', async () => {
         const { read } = reader();
 
         const sources = await collectSources(TREE['index.html'], read);
 
-        expect(sources['js/stackblitz.mjs']).toBe(TREE['js/stackblitz.mjs']);
+        expect(Object.keys(sources)).toContain('assets/scripts/shared.mjs');
     });
 
     it('resolves an import specifier against the importing module', async () => {
@@ -370,8 +368,8 @@ describe('examples/*.html', () => {
 
     /**
      * The chrome is the one thing deliberately left out, and leaving it out has to hold for the
-     * whole corpus: neither the module nor js/stackblitz.mjs, which only it imports, may survive
-     * into a project - and no page may keep a tag loading either.
+     * whole corpus: neither the module nor js/stackblitz.mjs, the browser's builder of these
+     * projects, may survive into one - and no page may keep a tag loading either.
      */
     describe('carries none of the examples site chrome', () => {
         test.for(pages)('%s', async (page) => {
@@ -379,8 +377,7 @@ describe('examples/*.html', () => {
 
             expect(Object.keys(project)).not.toContain('js/example.mjs');
             expect(Object.keys(project)).not.toContain('js/stackblitz.mjs');
-            // The name survives in prose on two pages, whose panels explain why they sit clear of
-            // buttons that used to be there - so match the tag, not the string
+            // Prose on a page may name the module, so match the tag, not the string
             expect(project['index.html']).not.toMatch(/<script[^>]*js\/example\.mjs/);
         });
     });
