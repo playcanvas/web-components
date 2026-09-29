@@ -31,6 +31,15 @@
         <link rel="manifest" href="manifest.json">
 
         <link rel="stylesheet" href="css/browser.css">
+
+        <!-- A page embeds an example with its controls by framing the browser at it, as in
+             examples/#basic-shapes.html. Framed, the browser shows just that example under its
+             title bar. Decided here, before the first paint, so the sidebar never flashes up. -->
+        <script>
+            if (window.self !== window.top) {
+                document.documentElement.classList.add('embedded');
+            }
+        </script>
     </head>
     <body>
         <aside class="sidebar" id="sidebar" tabindex="-1">

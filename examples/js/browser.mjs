@@ -50,6 +50,9 @@ class ExampleBrowser {
         this.activePath = null;
         this.loadTimeout = null;
 
+        // Framed by another page, the browser shows the one example it was given - see index.html
+        this.embedded = document.documentElement.classList.contains('embedded');
+
         // Whether the frame holds the active example yet, rather than the one it is replacing
         this.frameLoaded = false;
 
@@ -75,8 +78,12 @@ class ExampleBrowser {
         this.createExampleList();
         this.setupSearch();
         this.setupTitleBar();
-        this.setupKeyboard();
-        this.setupFocus();
+        // An embed has nothing to step through, and the page around it keeps its keys and its
+        // focus until the example is clicked
+        if (!this.embedded) {
+            this.setupKeyboard();
+            this.setupFocus();
+        }
         this.setupMobileMenu();
         this.loadInitialExample();
     }
@@ -230,7 +237,9 @@ class ExampleBrowser {
         this.exampleCategory.textContent = example?.category ?? '';
         this.exampleName.textContent = example?.name ?? '';
         this.frame.title = example ? `Example: ${example.name}` : 'Example';
-        this.standaloneLink.href = example?.path ?? '#';
+        // An embed opens the whole browser at its example, rather than the example on its own
+        const openPath = this.embedded ? `#${example?.path}` : example?.path;
+        this.standaloneLink.href = example ? openPath : '#';
         this.sourceLink.href = example ? `${SOURCE_URL}${example.path}` : '#';
         if (example) {
             document.title = `${example.name} - PlayCanvas Web Components Examples`;
@@ -302,6 +311,12 @@ class ExampleBrowser {
                 openInStackBlitz(new URL(this.activePath, window.location.href).href);
             }
         });
+
+        if (this.embedded) {
+            const label = 'Open in the examples browser';
+            this.standaloneLink.title = label;
+            this.standaloneLink.querySelector('.title-bar-label').textContent = label;
+        }
 
         // The frame fills the screen rather than the shell: the example on its own, until Esc
         this.fullscreenButton.hidden = !document.fullscreenEnabled;

@@ -669,15 +669,30 @@ body {
     }
 }
 
-/* Too narrow for a row of actions: they drop down from the bar's right edge instead, as a menu
-   in which each shows its name. Browsers without popovers keep them in the bar. */
+/* Framed by another page, the browser is one example under its title bar: no sidebar to browse
+   with, and no neighbors to step to. That leaves the bar room for its row of actions even on a
+   phone, so an embed never needs the menu below. index.html sets the class. */
+.embedded body {
+    grid-template-columns: 1fr;
+}
+
+.embedded .sidebar,
+.embedded .sidebar-overlay,
+.embedded .menu-toggle,
+.embedded .title-bar-nav,
+.embedded .title-bar-nav + .title-bar-divider {
+    display: none;
+}
+
+/* Too narrow for the browser's row of actions: they drop down from the bar's right edge instead,
+   as a menu in which each shows its name. Browsers without popovers keep them in the bar. */
 @supports selector(:popover-open) {
     @media (max-width: 540px) {
-        .more-toggle {
+        :root:not(.embedded) .more-toggle {
             display: flex;
         }
 
-        .title-bar-actions {
+        :root:not(.embedded) .title-bar-actions {
             position: fixed;
             inset: auto;
             top: calc(var(--titlebar-height) + env(safe-area-inset-top) + 4px);
@@ -686,6 +701,9 @@ body {
             align-items: stretch;
             gap: 2px;
             min-width: 220px;
+            /* A screen too short for the menu scrolls it rather than cutting it off */
+            max-height: calc(100dvh - var(--titlebar-height) - env(safe-area-inset-top) - 12px);
+            overflow-y: auto;
             padding: 6px;
             background: var(--color-surface-raised);
             border: 1px solid var(--color-border);
@@ -694,11 +712,12 @@ body {
             color: var(--color-text);
         }
 
-        .title-bar-actions:not(:popover-open) {
+        :root:not(.embedded) .title-bar-actions:not(:popover-open) {
             display: none;
         }
 
-        .title-bar-actions .title-bar-button {
+        :root:not(.embedded) .title-bar-actions .title-bar-button {
+            flex: none;
             justify-content: flex-start;
             gap: 12px;
             width: auto;
@@ -709,12 +728,12 @@ body {
             font-size: 14px;
         }
 
-        .title-bar-actions .title-bar-button svg {
+        :root:not(.embedded) .title-bar-actions .title-bar-button svg {
             flex: none;
             color: var(--color-text-dim);
         }
 
-        .title-bar-actions .title-bar-label {
+        :root:not(.embedded) .title-bar-actions .title-bar-label {
             position: static;
             width: auto;
             height: auto;
@@ -722,7 +741,7 @@ body {
             clip-path: none;
         }
 
-        .title-bar-actions .title-bar-divider {
+        :root:not(.embedded) .title-bar-actions .title-bar-divider {
             width: auto;
             height: 1px;
             margin: 4px 6px;
