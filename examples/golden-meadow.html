@@ -16,8 +16,8 @@
         <link rel="stylesheet" href="css/example.css">
         <style>
             /* Late sun through smoked glass: a warm, dark pane with the evening's gold in its
-               accents. It sits bottom-left, and css/example.css docks it along the bottom edge of a
-               narrow screen. */
+               accents. It sits bottom-left, css/example.css docks it along the bottom edge of a
+               narrow screen, and a short screen folds it away - see the end of this sheet. */
             pc-app {
                 --pc-loading-bar-color: #f2c36b;
                 --pc-loading-bar-background: rgba(242, 195, 107, 0.14);
@@ -161,6 +161,80 @@
                 margin: 0;
                 accent-color: var(--gold);
             }
+
+            .meadow-fold {
+                display: none;
+            }
+
+            .meadow-fold svg {
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.75;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                transition: transform 0.2s;
+            }
+
+            .meadow-fold[aria-expanded="true"] svg {
+                transform: rotate(180deg);
+            }
+
+            /* A short screen - an embed, a phone on its side - would be mostly panel. So there
+               the panel sits a little tighter, and starts folded away: a pill in the corner with
+               the mark and the title, the fold button that opens it, and the sound toggle, since
+               the meadow's sound is the one thing no one should have to hunt for. */
+            @media (max-height: 440px) {
+                .meadow-panel {
+                    padding: 10px 14px;
+                }
+
+                .meadow-head {
+                    margin-bottom: 8px;
+                }
+
+                .meadow-mark {
+                    width: 28px;
+                    height: 28px;
+                }
+
+                .meadow-title {
+                    font-size: 18px;
+                }
+
+                .meadow-button {
+                    width: 30px;
+                    height: 30px;
+                }
+
+                .meadow-control {
+                    margin-top: 4px;
+                }
+
+                .meadow-fold {
+                    display: grid;
+                }
+
+                .meadow-panel:has(.meadow-fold[aria-expanded="false"]) :is(.meadow-hint, .meadow-controls, .meadow-buttons > :not(.meadow-fold, #sound-toggle)) {
+                    display: none;
+                }
+
+                .meadow-panel:has(.meadow-fold[aria-expanded="false"]) .meadow-head {
+                    margin-bottom: 0;
+                }
+
+                /* Folded, it stays in its corner even where css/example.css would dock it, and
+                   the whole pill opens it */
+                body > .meadow-panel:has(.meadow-fold[aria-expanded="false"]) {
+                    left: max(16px, env(safe-area-inset-left));
+                    right: auto;
+                    bottom: max(16px, env(safe-area-inset-bottom));
+                    width: auto;
+                    padding: 6px 6px 6px 10px;
+                    border-width: 1px;
+                    border-radius: 999px;
+                    cursor: pointer;
+                }
+            }
         </style>
     </head>
     <body>
@@ -287,18 +361,24 @@
                         <svg class="effects-on" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1c.4 3.3 2.7 5.6 6 6-3.3.4-5.6 2.7-6 6-.4-3.3-2.7-5.6-6-6 3.3-.4 5.6-2.7 6-6z"/></svg>
                         <svg class="effects-off" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5c.4 3 2.5 5.1 5.5 5.5-3 .4-5.1 2.5-5.5 5.5-.4-3-2.5-5.1-5.5-5.5 3-.4 5.1-2.5 5.5-5.5z"/></svg>
                     </button>
+                    <!-- Only on a short screen, where the panel starts folded away -->
+                    <button type="button" class="meadow-button meadow-fold" id="meadow-fold" aria-expanded="false" aria-controls="meadow-controls" aria-label="Controls" title="Controls">
+                        <svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 8.5 7 4.5l4 4"/></svg>
+                    </button>
                 </div>
             </div>
-            <label class="meadow-control">
-                <span>Sun</span>
-                <input type="range" id="sun-slider" min="2" max="40" step="0.5" value="9">
-                <output id="sun-value" for="sun-slider">Golden hour</output>
-            </label>
-            <label class="meadow-control">
-                <span>Wind</span>
-                <input type="range" id="wind-slider" min="0" max="1.2" step="0.05" value="0.6">
-                <output id="wind-value" for="wind-slider">Breeze</output>
-            </label>
+            <div class="meadow-controls" id="meadow-controls">
+                <label class="meadow-control">
+                    <span>Sun</span>
+                    <input type="range" id="sun-slider" min="2" max="40" step="0.5" value="9">
+                    <output id="sun-value" for="sun-slider">Golden hour</output>
+                </label>
+                <label class="meadow-control">
+                    <span>Wind</span>
+                    <input type="range" id="wind-slider" min="0" max="1.2" step="0.05" value="0.6">
+                    <output id="wind-value" for="wind-slider">Breeze</output>
+                </label>
+            </div>
         </div>
         <script type="module" src="js/golden-meadow.mjs"></script>
         <script type="module" src="js/example.mjs"></script>

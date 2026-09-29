@@ -31,6 +31,7 @@ const windValue = document.getElementById('wind-value');
 const walkToggle = document.getElementById('walk-toggle');
 const soundToggle = document.getElementById('sound-toggle');
 const effectsToggle = document.getElementById('effects-toggle');
+const fold = document.getElementById('meadow-fold');
 
 // The camera frame's finishing touches, which the effects toggle turns on and off together. Its
 // tone mapping stays on either way, so the meadow keeps its colors without them
@@ -106,6 +107,20 @@ effectsToggle.addEventListener('click', () => {
         attributes[effect].enabled = on;
     }
     frame.setAttribute('attributes', JSON.stringify(attributes));
+});
+
+// Only a short screen shows the fold button, and folds the panel while it reads false
+fold.addEventListener('click', () => {
+    fold.setAttribute('aria-expanded', String(fold.getAttribute('aria-expanded') !== 'true'));
+});
+
+// Folded, the rest of the pill opens the panel too, not just the fold button - a far easier target
+// on a phone. The pill's buttons keep their own jobs.
+panel.addEventListener('click', (event) => {
+    const folded = fold.getAttribute('aria-expanded') === 'false' && getComputedStyle(fold).display !== 'none';
+    if (folded && !event.target.closest('button')) {
+        fold.click();
+    }
 });
 
 // Show the panel once the meadow is growing
