@@ -32,7 +32,7 @@
                 left: max(16px, env(safe-area-inset-left));
                 bottom: max(16px, env(safe-area-inset-bottom));
                 box-sizing: border-box;
-                width: min(320px, calc(100vw - 32px));
+                width: min(368px, calc(100vw - 32px));
                 padding: 16px 18px 14px;
                 background: linear-gradient(180deg, rgba(40, 32, 20, 0.62), rgba(18, 16, 12, 0.76));
                 border: 1px solid var(--rim);
@@ -99,7 +99,9 @@
                 border-color: var(--gold);
             }
 
-            #sound-toggle {
+            .meadow-buttons {
+                display: flex;
+                gap: 6px;
                 margin-left: auto;
             }
 
@@ -126,8 +128,15 @@
                 stroke-linejoin: round;
             }
 
-            .meadow-button[aria-pressed="true"] :is(.walk-play, .sound-off),
-            .meadow-button[aria-pressed="false"] :is(.walk-pause, .sound-on) {
+            .meadow-button .effects-off {
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.5;
+                stroke-linejoin: round;
+            }
+
+            .meadow-button[aria-pressed="true"] :is(.walk-play, .sound-off, .effects-off),
+            .meadow-button[aria-pressed="false"] :is(.walk-pause, .sound-on, .effects-on) {
                 display: none;
             }
 
@@ -260,18 +269,25 @@
                     <h1 class="meadow-title">Golden Meadow</h1>
                     <p class="meadow-hint">Drag to look around</p>
                 </div>
-                <button type="button" class="meadow-button" id="sound-toggle" aria-pressed="true" aria-label="Sound" title="Sound">
-                    <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
-                    </svg>
-                    <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/>
-                    </svg>
-                </button>
-                <button type="button" class="meadow-button" id="walk-toggle" aria-pressed="true" aria-label="Walk" title="Walk">
-                    <svg class="walk-pause" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" rx="1"/><rect x="8.5" y="1" width="3.5" height="12" rx="1"/></svg>
-                    <svg class="walk-play" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11a.6.6 0 0 0 .9.5l9-5.5a.6.6 0 0 0 0-1l-9-5.5a.6.6 0 0 0-.9.5z"/></svg>
-                </button>
+                <div class="meadow-buttons">
+                    <button type="button" class="meadow-button" id="sound-toggle" aria-pressed="true" aria-label="Sound" title="Sound">
+                        <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+                        </svg>
+                        <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="meadow-button" id="walk-toggle" aria-pressed="true" aria-label="Walk" title="Walk">
+                        <svg class="walk-pause" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" rx="1"/><rect x="8.5" y="1" width="3.5" height="12" rx="1"/></svg>
+                        <svg class="walk-play" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11a.6.6 0 0 0 .9.5l9-5.5a.6.6 0 0 0 0-1l-9-5.5a.6.6 0 0 0-.9.5z"/></svg>
+                    </button>
+                    <!-- The camera frame's effects: antialiasing, bloom, depth of field and vignette -->
+                    <button type="button" class="meadow-button" id="effects-toggle" aria-pressed="true" aria-label="Post effects" title="Post effects">
+                        <svg class="effects-on" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1c.4 3.3 2.7 5.6 6 6-3.3.4-5.6 2.7-6 6-.4-3.3-2.7-5.6-6-6 3.3-.4 5.6-2.7 6-6z"/></svg>
+                        <svg class="effects-off" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1.5c.4 3 2.5 5.1 5.5 5.5-3 .4-5.1 2.5-5.5 5.5-.4-3-2.5-5.1-5.5-5.5 3-.4 5.1-2.5 5.5-5.5z"/></svg>
+                    </button>
+                </div>
             </div>
             <label class="meadow-control">
                 <span>Sun</span>

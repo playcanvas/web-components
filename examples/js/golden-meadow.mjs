@@ -12,12 +12,18 @@ const scene = document.querySelector('pc-scene');
 const sky = document.querySelector('pc-script-instance[name="proceduralSky"]');
 const wind = document.querySelector('pc-script-instance[name="meadowWind"]');
 const glide = document.querySelector('pc-script-instance[name="meadowGlide"]');
+const frame = document.querySelector('pc-script-instance[name="cameraFrame"]');
 const sunSlider = document.getElementById('sun-slider');
 const sunValue = document.getElementById('sun-value');
 const windSlider = document.getElementById('wind-slider');
 const windValue = document.getElementById('wind-value');
 const walkToggle = document.getElementById('walk-toggle');
 const soundToggle = document.getElementById('sound-toggle');
+const effectsToggle = document.getElementById('effects-toggle');
+
+// The camera frame's finishing touches, which the effects toggle turns on and off together. Its
+// tone mapping stays on either way, so the meadow keeps its colors without them
+const effects = ['taa', 'bloom', 'dof', 'vignette'];
 
 /**
  * Names the time of day by how high the sun stands.
@@ -79,6 +85,16 @@ walkToggle.addEventListener('click', () => {
     const walking = walkToggle.getAttribute('aria-pressed') !== 'true';
     walkToggle.setAttribute('aria-pressed', String(walking));
     glide.setAttribute('paused', String(!walking));
+});
+
+effectsToggle.addEventListener('click', () => {
+    const on = effectsToggle.getAttribute('aria-pressed') !== 'true';
+    effectsToggle.setAttribute('aria-pressed', String(on));
+    const attributes = JSON.parse(frame.getAttribute('attributes'));
+    for (const effect of effects) {
+        attributes[effect].enabled = on;
+    }
+    frame.setAttribute('attributes', JSON.stringify(attributes));
 });
 
 // Show the panel once the meadow is growing
