@@ -118,8 +118,9 @@ const AREA_LIGHT_LUT_LENGTH = 64 * 64 * 4;
  *
  * @elementSummary The `<pc-app>` element creates a PlayCanvas application and the canvas it renders
  * into, and is the root of every scene. It holds the `<pc-asset>`, `<pc-material>`, `<pc-wasm>` and
- * `<pc-scene>` elements, loads the area light lookup tables from one of its assets, and the page's
- * CSS sizes it, as it would a `<video>`.
+ * `<pc-scene>` elements, loads the area light lookup tables from one of its assets, sets how
+ * fast the application and its physics simulation run, and the page's CSS sizes it, as it would a
+ * `<video>`.
  *
  * @fires {ProgressEvent} progress - Fired while the application preloads its assets. `loaded` and
  * `total` are asset counts, not bytes, and an asset that fails to load still counts as loaded.
@@ -157,6 +158,10 @@ class AppElement extends AsyncElement {
     private _loadingBar = true;
 
     private _withCredentials = false;
+
+    private _timeScale = 1;
+
+    private _physicsTimeScale = 1;
 
     /**
      * Set once the graphics options above have been handed to `createGraphicsDevice`, after which
@@ -469,6 +474,14 @@ class AppElement extends AsyncElement {
         // <pc-app> without the attribute must not switch it off for the first
         if (this._withCredentials) {
             app.loader.withCredentials = true;
+        }
+
+        // Before any entity exists, and so before app.start() initializes scripts: a script that
+        // reads these in initialize() sees the element's values rather than the engine defaults
+        app.timeScale = this._timeScale;
+        const rigidbody = app.systems.rigidbody;
+        if (rigidbody) {
+            rigidbody.timeScale = this._physicsTimeScale;
         }
 
         // FILLMODE_NONE leaves the canvas's CSS sizing alone (the engine's other fill modes
@@ -990,6 +1003,29 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Sets the scale on the time the physics simulation advances by each frame: below 1 is slow
+     * motion, above 1 speeds it up and 0 pauses it while the rest of the application keeps
+     * running. Applied on top of `time-scale`. Defaults to 1.
+     * @param value - The physics time scale.
+     */
+    set physicsTimeScale(value: number) {
+        this._physicsTimeScale = value;
+        const rigidbody = this._app?.systems.rigidbody;
+        if (rigidbody) {
+            rigidbody.timeScale = value;
+        }
+    }
+
+    /**
+     * Gets the scale on the time the physics simulation advances by each frame, applied on top of
+     * `time-scale`: 0 pauses physics alone while the rest of the application keeps running.
+     * @returns The physics time scale.
+     */
+    get physicsTimeScale() {
+        return this._physicsTimeScale;
+    }
+
+    /**
      * Sets when the application picks the scene under the pointer, which it does to dispatch
      * pointer events on entity elements. Picking renders the scene again, so by default it only
      * happens while something listens:
@@ -1040,6 +1076,29 @@ class AppElement extends AsyncElement {
     }
 
     /**
+     * Sets the scale on the time the application advances by each frame. Scripts, animation and
+     * physics all advance by the scaled time, so below 1 is slow motion, above 1 speeds it up and
+     * 0 pauses all three together. To pause or slow down physics alone, use `physics-time-scale`.
+     * Defaults to 1.
+     * @param value - The time scale.
+     */
+    set timeScale(value: number) {
+        this._timeScale = value;
+        if (this._app) {
+            this._app.timeScale = value;
+        }
+    }
+
+    /**
+     * Gets the scale on the time the application advances by each frame. Scripts, animation and
+     * physics all advance by the scaled time, so 0 pauses all three together.
+     * @returns The time scale.
+     */
+    get timeScale() {
+        return this._timeScale;
+    }
+
+    /**
      * Sets whether asset requests send credentials (cookies and HTTP authentication) to other
      * origins, which the asset server must allow through CORS. The engine keeps this in its shared
      * HTTP client, so it applies to every application on the page. Defaults to `false`.
@@ -1072,8 +1131,10 @@ class AppElement extends AsyncElement {
             'depth-buffer',
             'loading-bar',
             'max-pixel-ratio',
+            'physics-time-scale',
             'picking',
             'stencil-buffer',
+            'time-scale',
             'with-credentials'
         ];
     }
@@ -1101,11 +1162,17 @@ class AppElement extends AsyncElement {
             case 'max-pixel-ratio':
                 this.maxPixelRatio = parseNumber(newValue, Infinity, name);
                 break;
+            case 'physics-time-scale':
+                this.physicsTimeScale = parseNumber(newValue, 1, name);
+                break;
             case 'picking':
                 this.picking = parseEnum(newValue, ['auto', 'always', 'none'], 'auto', name);
                 break;
             case 'stencil-buffer':
                 this.stencilBuffer = parseBool(newValue, true);
+                break;
+            case 'time-scale':
+                this.timeScale = parseNumber(newValue, 1, name);
                 break;
             case 'with-credentials':
                 this.withCredentials = parseBool(newValue, false);

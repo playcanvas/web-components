@@ -108,6 +108,12 @@ if (manifest) {
     // (playcanvas/engine#9326), and the element writes the engine's own
     expectEnum('pc-scene', 'gsplat-lod-mode', 2, 'distance');
 
+    // Time scales control how fast the whole application runs rather than describing a scene, so
+    // both live on <pc-app>, while gravity stays a per-scene setting as in the engine's scene data
+    expectAttribute('pc-app', 'time-scale', { type: 'number', default: '1', fieldName: 'timeScale' });
+    expectAttribute('pc-app', 'physics-time-scale', { type: 'number', default: '1', fieldName: 'physicsTimeScale' });
+    check(!attribute('pc-scene', 'physics-time-scale'), "pc-scene should not declare 'physics-time-scale', which belongs to pc-app");
+
     // The engine keeps the credentials flag in its shared HTTP client, not on the application, so
     // the tooltip has to say that one <pc-app> sets it for the whole page
     check((attribute('pc-app', 'with-credentials')?.description ?? '').includes('every application on the page'),

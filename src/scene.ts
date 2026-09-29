@@ -17,7 +17,7 @@ import { ListenerRegistry } from './pointer-events';
  * delegated listener for the whole scene: read `event.target` to find the entity element hit.
  *
  * @elementSummary The `<pc-scene>` element holds the entity hierarchy the application renders,
- * along with scene-wide fog, exposure, Gaussian splat, clustered lighting and physics settings.
+ * along with scene-wide fog, exposure, Gaussian splat, clustered lighting and gravity settings.
  * Must be a direct child of `<pc-app>`.
  *
  * @category Application
@@ -82,11 +82,6 @@ class SceneElement extends AsyncElement {
      * The maximum number of lights clustered lighting uses in a frame.
      */
     private _lightingMaxLights = 255;
-
-    /**
-     * The scale on the time the physics simulation advances by each frame.
-     */
-    private _physicsTimeScale = 1;
 
     private _scene: Scene | null = null;
 
@@ -224,7 +219,6 @@ class SceneElement extends AsyncElement {
             this._scene.lighting.maxLights = this._lightingMaxLights;
 
             this._applyGravity(this._gravity);
-            this._applyPhysicsTimeScale(this._physicsTimeScale);
         }
     }
 
@@ -237,18 +231,6 @@ class SceneElement extends AsyncElement {
      */
     private _applyGravity(value: Vec3) {
         this.closestApp?.app?.systems.rigidbody?.gravity.copy(value);
-    }
-
-    /**
-     * Applies the physics time scale to the rigid body system, resolved like the gravity.
-     *
-     * @param value - The time scale to apply.
-     */
-    private _applyPhysicsTimeScale(value: number) {
-        const rigidbody = this.closestApp?.app?.systems.rigidbody;
-        if (rigidbody) {
-            rigidbody.timeScale = value;
-        }
     }
 
     /**
@@ -491,27 +473,6 @@ class SceneElement extends AsyncElement {
         return this._lightingMaxLights;
     }
 
-    /**
-     * Sets the scale on the time the physics simulation advances by each frame: below 1 is slow
-     * motion, above 1 speeds it up and 0 pauses it while the rest of the application keeps
-     * running. Applied on top of the application's own time scale. Defaults to 1.
-     * @param value - The physics time scale.
-     */
-    set physicsTimeScale(value: number) {
-        this._physicsTimeScale = value;
-        if (this._scene) {
-            this._applyPhysicsTimeScale(value);
-        }
-    }
-
-    /**
-     * Gets the scale on the time the physics simulation advances by each frame.
-     * @returns The physics time scale.
-     */
-    get physicsTimeScale() {
-        return this._physicsTimeScale;
-    }
-
     static get observedAttributes() {
         return [
             'exposure',
@@ -525,8 +486,7 @@ class SceneElement extends AsyncElement {
             'gsplat-use-fog',
             'gsplat-use-tonemap',
             'gravity',
-            'lighting-max-lights',
-            'physics-time-scale'
+            'lighting-max-lights'
         ];
     }
 
@@ -567,9 +527,6 @@ class SceneElement extends AsyncElement {
                 break;
             case 'lighting-max-lights':
                 this.lightingMaxLights = parseNumber(newValue, 255, name);
-                break;
-            case 'physics-time-scale':
-                this.physicsTimeScale = parseNumber(newValue, 1, name);
                 break;
             // ... handle other attributes as well
         }
