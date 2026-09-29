@@ -16,11 +16,11 @@
         <link rel="stylesheet" href="css/example.css">
         <style>
             /* Transport bar. Glass recipe copied from example.css's .example-button, applied once
-               to the panel; sits bottom-left because js/example.mjs owns bottom-right. */
+               to the panel. */
             .anim-bar {
                 position: absolute;
                 left: max(16px, env(safe-area-inset-left));
-                right: calc(max(16px, env(safe-area-inset-right)) + 240px);
+                right: max(16px, env(safe-area-inset-right));
                 bottom: max(16px, env(safe-area-inset-bottom));
                 display: flex;
                 align-items: center;
@@ -212,11 +212,9 @@
                 color: rgba(255, 255, 255, 0.7);
             }
 
-            /* Too narrow to share the bottom edge with example.mjs's buttons - sit above them */
+            /* Too narrow for one row: the scrubber takes a row of its own, under the controls */
             @media (max-width: 720px) {
                 .anim-bar {
-                    right: max(16px, env(safe-area-inset-right));
-                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 48px);
                     max-width: none;
                     flex-wrap: wrap;
                     padding: 6px 8px;

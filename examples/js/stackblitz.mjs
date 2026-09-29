@@ -82,14 +82,14 @@ function resolvePath(ref, dir) {
 }
 
 /**
- * Drops the tag that loads js/example.mjs, the chrome the examples site wraps around every page:
- * fullscreen, AR/VR entry, the button that produced this project, and a link to the page's source
- * on GitHub. None of it is part of the example, and in a project none of it is much use either -
- * the StackBlitz and view-source buttons act on the site, and the XR ones only appear when
- * app.xr.isAvailable() says so, which a preview iframe never does.
+ * Drops the tag that loads js/example.mjs, the chrome the examples site adds to every page: the
+ * way into AR or VR, offered on the page itself or through the examples browser's title bar, and
+ * the ?ministats overlay. None of it is part of the example, and in a project none of it is much
+ * use either - the XR entry only appears when app.xr.isAvailable() says so, which a preview iframe
+ * never does.
  *
- * Applied before the source walk, so the chrome module and everything it imports - this file
- * included - stay out of the project rather than being packaged and then left unused.
+ * Applied before the source walk, so the chrome module and anything it imports stay out of the
+ * project rather than being packaged and then left unused.
  * @param {string} html - The example's HTML source.
  * @returns {string} The HTML without the chrome tag.
  */
@@ -284,12 +284,13 @@ function postToStackBlitz({ title, description, files }, target) {
 }
 
 /**
- * Opens the current example as an editable StackBlitz project. The project carries the example's
- * own source - its HTML, stylesheet and modules, but not the site's shared chrome - and installs
+ * Opens an example as an editable StackBlitz project. The project carries the example's own
+ * source - its HTML, stylesheet and modules, but not the site's shared chrome - and installs
  * `playcanvas` and `@playcanvas/web-components` (plus any other packages the example imports) from
  * npm, while binary assets continue to load from the deployed examples site.
+ * @param {string} url - The example page's URL.
  */
-export async function openInStackBlitz() {
+export async function openInStackBlitz(url) {
     // Open the tab synchronously so the browser attributes it to the user's click; the form
     // submission below then navigates it once the project has been assembled
     const target = `stackblitz-${Date.now()}`;
@@ -297,16 +298,16 @@ export async function openInStackBlitz() {
 
     try {
         const [html, rootPkg] = await Promise.all([
-            fetch(window.location.href).then((r) => r.text()),
-            fetch('../package.json').then((r) => (r.ok ? r.json() : {}))
+            fetch(url).then((r) => r.text()),
+            fetch(new URL('../package.json', url)).then((r) => (r.ok ? r.json() : {}))
         ]);
 
         const page = stripSiteChrome(html);
 
-        // Example pages sit at the root of examples/, so an example-relative path is also relative
-        // to this page
+        // Example pages sit at the root of examples/, so an example-relative path resolves
+        // against the page's own URL
         const sources = await collectSources(page, (path) =>
-            fetch(path)
+            fetch(new URL(path, url))
                 .then((r) => (r.ok ? r.text() : null))
                 .catch(() => null)
         );
@@ -317,11 +318,11 @@ export async function openInStackBlitz() {
             files[path] = transformSource(source, path, packaged);
         }
 
-        const slug = window.location.pathname
+        const slug = new URL(url).pathname
             .split('/')
             .pop()
             .replace(/\.html$/, '');
-        const title = document.title;
+        const title = new DOMParser().parseFromString(html, 'text/html').title;
         // Read across every file, not just the page: a packaged module can be the only thing that
         // names a package, as the mediapipe examples do when they load their wasm out of node_modules
         const packages = new Set(Object.values(files).flatMap((contents) => [...collectPackages(contents)]));

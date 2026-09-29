@@ -32,18 +32,13 @@ pc-app {
     height: 100dvh;
 }
 
+/* A row of buttons in a corner: a page's own, like Reset, or on a page opened by itself, the way
+   into XR that js/example.mjs adds */
 .example-button-container {
     position: absolute;
     right: max(16px, env(safe-area-inset-right));
     display: flex;
     gap: 8px;
-    transition: opacity 0.5s ease;
-}
-
-/* Faded out but still hit-testable, so a press aimed at the buttons lands on them instead of
-   falling through to the scene behind - the page helper spends that press on revealing them */
-.example-button-container.faded {
-    opacity: 0;
 }
 
 .example-button-container.bottom-right {
@@ -119,31 +114,11 @@ pc-app {
     mask-image: url("../img/vr.svg");
 }
 
-.example-button.icon.icon-fs-enter::before {
-    -webkit-mask-image: url("../img/fullscreen-enter.svg");
-    mask-image: url("../img/fullscreen-enter.svg");
-}
-
-.example-button.icon.icon-fs-exit::before {
-    -webkit-mask-image: url("../img/fullscreen-exit.svg");
-    mask-image: url("../img/fullscreen-exit.svg");
-}
-
-.example-button.icon.icon-source::before {
-    -webkit-mask-image: url("../img/code.svg");
-    mask-image: url("../img/code.svg");
-}
-
-.example-button.icon.icon-stackblitz::before {
-    -webkit-mask-image: url("../img/stackblitz.svg");
-    mask-image: url("../img/stackblitz.svg");
-}
-
-/* A page's own control panel, marked with this class. The page styles and places it, bottom-left
-   as the buttons own bottom-right, but on a narrow screen it docks along the bottom edge: full
-   width, its controls kept to a comfortable width in the middle and clear of the notch and the
-   home indicator. It keeps its own look, top border and top corners. body > outranks the page's
-   rules for its panel, which come after this file. */
+/* A page's own control panel, marked with this class. The page styles and places it, but on a
+   narrow screen it docks along the bottom edge: full width, its controls kept to a comfortable
+   width in the middle and clear of the notch and the home indicator. It keeps its own look, top
+   border and top corners. body > outranks the page's rules for its panel, which come after this
+   file. */
 @media (max-width: 720px) {
     body > .example-panel {
         left: 0;
@@ -160,8 +135,8 @@ pc-app {
         border-bottom-left-radius: 0;
     }
 
-    /* The buttons ride on top of the docked panel, lifted by its height, which js/example.mjs
-       publishes */
+    /* The way into XR on a page opened by itself rides on top of the docked panel, lifted by its
+       height, which js/example.mjs publishes */
     body:has(> .example-panel) .example-button-container.bottom-right {
         bottom: calc(var(--example-panel-height) + 12px);
     }

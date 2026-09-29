@@ -124,9 +124,7 @@
             }
 
             @media (pointer: coarse) {
-                /* Clear of the bottom of the screen by the height of the shell's own controls,
-                   which sit in that right corner - a thumb reaching for the throttle would
-                   otherwise land on the view-source button. */
+                /* A row up from the bottom of the screen, leaving that row to Reset */
                 .touch {
                     display: flex;
                     position: absolute;
@@ -143,8 +141,7 @@
                 }
 
                 /* Reset gives up the top row, which the readout needs in full - side by side the
-                   two are wider than a phone. The bottom left corner is the one spot left: the
-                   shell's own controls hold the right of that row, and the pads sit above it. */
+                   two are wider than a phone - for the bottom left corner, under the pads */
                 .example-button-container.top-right {
                     top: auto;
                     right: auto;

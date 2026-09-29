@@ -31,6 +31,15 @@
         <link rel="manifest" href="manifest.json">
 
         <link rel="stylesheet" href="css/browser.css">
+
+        <!-- A page embeds an example with its controls by framing the browser at it, as in
+             examples/#basic-shapes.html. Framed, the browser shows just that example under its
+             title bar. Decided here, before the first paint, so the sidebar never flashes up. -->
+        <script>
+            if (window.self !== window.top) {
+                document.documentElement.classList.add('embedded');
+            }
+        </script>
     </head>
     <body>
         <aside class="sidebar" id="sidebar" tabindex="-1">
@@ -70,6 +79,13 @@
                 <h1 id="example-title" class="example-title" aria-live="polite" tabindex="-1">
                     <span class="example-category" id="example-category"></span><span class="example-separator" aria-hidden="true">/</span><span class="example-name" id="example-name"></span>
                 </h1>
+                <!-- The example's ways into XR, each shown only while this device can enter it -->
+                <button type="button" class="title-bar-xr-button" data-xr="AR" aria-label="Enter AR" title="Enter AR" hidden>
+                    <span class="xr-icon icon-ar" aria-hidden="true"></span>AR
+                </button>
+                <button type="button" class="title-bar-xr-button" data-xr="VR" aria-label="Enter VR" title="Enter VR" hidden>
+                    <span class="xr-icon icon-vr" aria-hidden="true"></span>VR
+                </button>
                 <div class="title-bar-nav">
                     <button type="button" id="prev-example" class="title-bar-button" aria-label="Previous example" aria-keyshortcuts="[" title="Previous example">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -83,22 +99,53 @@
                     </button>
                 </div>
                 <div class="title-bar-divider" role="presentation"></div>
-                <div class="title-bar-actions">
-                    <button type="button" id="title-qr-button" class="title-bar-button" aria-label="Show QR code for this example" title="View QR code for mobile">
+                <!-- The example's actions: a row of icons, or on a narrow screen a menu behind this
+                     button, where each action shows its name -->
+                <button type="button" class="more-toggle title-bar-button" popovertarget="title-bar-actions" aria-label="More actions" title="More actions">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <circle cx="5" cy="12" r="1"/>
+                        <circle cx="12" cy="12" r="1"/>
+                        <circle cx="19" cy="12" r="1"/>
+                    </svg>
+                </button>
+                <div class="title-bar-actions" id="title-bar-actions" popover>
+                    <a id="source-link" class="title-bar-button" target="_blank" rel="noopener" title="View source on GitHub">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                        <span class="title-bar-label">View source on GitHub</span>
+                    </a>
+                    <button type="button" id="stackblitz-button" class="title-bar-button" title="Edit on StackBlitz">
+                        <svg width="16" height="16" viewBox="-2 -1 28 26" aria-hidden="true">
+                            <path d="M10.797 14.182H3.635L16.728 0l-3.525 9.818h7.162L7.272 24l3.525-9.818Z" fill="currentColor"/>
+                        </svg>
+                        <span class="title-bar-label">Edit on StackBlitz</span>
+                    </button>
+                    <div class="title-bar-divider" role="presentation"></div>
+                    <button type="button" id="title-qr-button" class="title-bar-button" title="View QR code for mobile">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                             <rect x="3" y="3" width="7" height="7"/>
                             <rect x="14" y="3" width="7" height="7"/>
                             <rect x="14" y="14" width="7" height="7"/>
                             <rect x="3" y="14" width="7" height="7"/>
                         </svg>
+                        <span class="title-bar-label">Show QR code</span>
                     </button>
-                    <a id="standalone-link" class="title-bar-button" target="_blank" rel="noopener" aria-label="Open example in a new tab" title="Open in new tab">
+                    <a id="standalone-link" class="title-bar-button" target="_blank" rel="noopener" title="Open in new tab">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
                             <polyline points="15 3 21 3 21 9"/>
                             <line x1="10" y1="14" x2="21" y2="3"/>
                         </svg>
+                        <span class="title-bar-label">Open in new tab</span>
                     </a>
+                    <button type="button" id="fullscreen-button" class="title-bar-button" title="Fullscreen" hidden>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                        </svg>
+                        <span class="title-bar-label">Fullscreen</span>
+                    </button>
                 </div>
             </header>
             <iframe id="example-frame" title="Example" allow="fullscreen; xr-spatial-tracking;"></iframe>

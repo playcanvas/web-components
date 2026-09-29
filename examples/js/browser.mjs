@@ -1,6 +1,9 @@
 import { examples } from './example-list.mjs';
 import { setupNavigation } from './navigation.mjs';
 import { showQRCode } from './qr-code.mjs';
+import { openInStackBlitz } from './stackblitz.mjs';
+
+const SOURCE_URL = 'https://github.com/playcanvas/web-components/blob/main/examples/';
 
 const QR_ICON = `
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -38,16 +41,34 @@ class ExampleBrowser {
         this.nextButton = document.getElementById('next-example');
         this.qrButton = document.getElementById('title-qr-button');
         this.standaloneLink = document.getElementById('standalone-link');
+        this.sourceLink = document.getElementById('source-link');
+        this.stackBlitzButton = document.getElementById('stackblitz-button');
+        this.fullscreenButton = document.getElementById('fullscreen-button');
+        this.actions = document.getElementById('title-bar-actions');
+        this.xrButtons = [...document.querySelectorAll('.title-bar-xr-button')];
 
         this.activePath = null;
         this.loadTimeout = null;
+
+        // Framed by another page, the browser shows the one example it was given - see index.html
+        this.embedded = document.documentElement.classList.contains('embedded');
+
+        // Whether the frame holds the active example yet, rather than the one it is replacing
+        this.frameLoaded = false;
 
         // Per-example render state used by the search filter and prev/next navigation
         this.entries = [];
 
         // Fires for every cross-document navigation in the frame, including those driven by
         // contentWindow.location.replace()
-        this.frame.addEventListener('load', () => this.endLoading());
+        this.frame.addEventListener('load', () => {
+            this.endLoading();
+            this.frameLoaded = true;
+            this.updateXrButtons();
+        });
+
+        // An example that can enter XR says so whenever that changes - see js/example.mjs
+        this.frame.addEventListener('examplexr', () => this.updateXrButtons());
 
         this.updateURL = setupNavigation((path) => {
             this.loadExample(path);
@@ -57,18 +78,36 @@ class ExampleBrowser {
         this.createExampleList();
         this.setupSearch();
         this.setupTitleBar();
-        this.setupKeyboard();
-        this.setupFocus();
+        // An embed has nothing to step through, and the page around it keeps its keys and its
+        // focus until the example is clicked
+        if (!this.embedded) {
+            this.setupKeyboard();
+            this.setupFocus();
+        }
         this.setupMobileMenu();
         this.loadInitialExample();
     }
 
     loadExample(path) {
         this.beginLoading();
+        this.frameLoaded = false;
+        this.updateXrButtons();
         // Use location.replace() rather than setting the iframe's src: it swaps the iframe's
         // history entry instead of pushing a new one, so browser back/forward only steps through
         // the hash entries
         this.frame.contentWindow.location.replace(new URL(path, window.location.href));
+    }
+
+    /**
+     * Shows the ways into XR the example in the frame offers right now. They are read off the
+     * example itself, and only once it has loaded: until then the frame can still hold the
+     * example being replaced, and word from that one would bring its buttons back.
+     */
+    updateXrButtons() {
+        const available = (this.frameLoaded && this.frame.contentWindow.exampleXr?.available) || [];
+        this.xrButtons.forEach((button) => {
+            button.hidden = !available.includes(button.dataset.xr);
+        });
     }
 
     beginLoading() {
@@ -176,8 +215,8 @@ class ExampleBrowser {
 
     /**
      * The single place all active-example UI syncs: sidebar row, title bar, document title,
-     * iframe title and the standalone link. Called from row clicks, prev/next, popstate and the
-     * initial load.
+     * iframe title and the standalone and source links. Called from row clicks, prev/next,
+     * popstate and the initial load.
      * @param {string} path - The path of the example to mark active.
      */
     setActiveExample(path) {
@@ -198,7 +237,10 @@ class ExampleBrowser {
         this.exampleCategory.textContent = example?.category ?? '';
         this.exampleName.textContent = example?.name ?? '';
         this.frame.title = example ? `Example: ${example.name}` : 'Example';
-        this.standaloneLink.href = example?.path ?? '#';
+        // An embed opens the whole browser at its example, rather than the example on its own
+        const openPath = this.embedded ? `#${example?.path}` : example?.path;
+        this.standaloneLink.href = example ? openPath : '#';
+        this.sourceLink.href = example ? `${SOURCE_URL}${example.path}` : '#';
         if (example) {
             document.title = `${example.name} - PlayCanvas Web Components Examples`;
         }
@@ -264,6 +306,43 @@ class ExampleBrowser {
                 showQRCode(example.path, example.name);
             }
         });
+        this.stackBlitzButton.addEventListener('click', () => {
+            if (this.activePath) {
+                openInStackBlitz(new URL(this.activePath, window.location.href).href);
+            }
+        });
+
+        if (this.embedded) {
+            const label = 'Open in the examples browser';
+            this.standaloneLink.title = label;
+            this.standaloneLink.querySelector('.title-bar-label').textContent = label;
+        }
+
+        // The frame fills the screen rather than the shell: the example on its own, until Esc
+        this.fullscreenButton.hidden = !document.fullscreenEnabled;
+        this.fullscreenButton.addEventListener('click', () => this.frame.requestFullscreen());
+
+        // Entered from inside the click, so the session the example asks for carries the press:
+        // user activation reaches a frame of the same origin
+        this.xrButtons.forEach((button) => {
+            button.addEventListener('click', () => this.frame.contentWindow.exampleXr?.enter(button.dataset.xr));
+        });
+
+        // On a narrow screen the actions are a menu, which an action taken should close - and so
+        // should the screen widening, which puts them back in the bar
+        this.actions.addEventListener('click', (e) => {
+            if (e.target instanceof Element && e.target.closest('.title-bar-button')) {
+                this.closeMenu();
+            }
+        });
+        window.matchMedia('(max-width: 540px)').addEventListener('change', () => this.closeMenu());
+    }
+
+    closeMenu() {
+        // Without popovers there is no menu, and :popover-open would not even parse
+        if (typeof this.actions.hidePopover === 'function' && this.actions.matches(':popover-open')) {
+            this.actions.hidePopover();
+        }
     }
 
     setupSearch() {
