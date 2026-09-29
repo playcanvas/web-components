@@ -27,6 +27,7 @@ export const examples = [
     { name: 'Solar System', path: 'solar-system.html', category: 'Showcases' },
     { name: 'Falling Blocks', path: 'falling-blocks.html', category: 'Showcases' },
     { name: 'Clock Tower', path: 'clock-tower.html', category: 'Showcases' },
+    { name: 'Golden Meadow', path: 'golden-meadow.html', category: 'Showcases' },
     // Getting Started
     { name: 'Spinning Cube', path: 'spinning-cube.html', category: 'Getting Started' },
     { name: 'Spinning Cube (DOM API)', path: 'spinning-cube-dom-api.html', category: 'Getting Started' },
