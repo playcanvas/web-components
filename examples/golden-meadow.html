@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Golden Meadow</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Late sun through smoked glass: a warm, dark pane with the evening's gold in its
+               accents. It sits bottom-left because js/example.mjs owns bottom-right. */
+            pc-app {
+                --pc-loading-bar-color: #f2c36b;
+                --pc-loading-bar-background: rgba(242, 195, 107, 0.14);
+            }
+
+            .meadow-panel {
+                --gold: #f2c36b;
+                --straw: #f7e7c6;
+                --muted: rgba(247, 231, 198, 0.62);
+                --rim: rgba(242, 195, 107, 0.24);
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                box-sizing: border-box;
+                width: min(320px, calc(100vw - 32px));
+                padding: 16px 18px 14px;
+                background: linear-gradient(180deg, rgba(40, 32, 20, 0.62), rgba(18, 16, 12, 0.76));
+                border: 1px solid var(--rim);
+                border-radius: 14px;
+                box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 236, 196, 0.08);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                color: var(--straw);
+                font: 400 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+                transition: opacity 1.2s ease, transform 1.2s ease;
+            }
+
+            /* Hidden until js/golden-meadow.mjs has the meadow ready */
+            .meadow-panel:not(.ready) {
+                opacity: 0;
+                transform: translateY(8px);
+                pointer-events: none;
+            }
+
+            .meadow-head {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+
+            .meadow-mark {
+                flex: none;
+                width: 34px;
+                height: 34px;
+                filter: drop-shadow(0 0 8px rgba(242, 180, 80, 0.55));
+            }
+
+            .meadow-title {
+                margin: 0;
+                font: 400 21px/1.1 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+                letter-spacing: 0.01em;
+                color: #fbe9c4;
+                white-space: nowrap;
+            }
+
+            .meadow-hint {
+                margin: 3px 0 0;
+                font-size: 12.5px;
+                color: var(--muted);
+            }
+
+            .meadow-button {
+                display: grid;
+                place-items: center;
+                flex: none;
+                width: 34px;
+                height: 34px;
+                padding: 0;
+                border: 1px solid var(--rim);
+                border-radius: 50%;
+                background: rgba(0, 0, 0, 0.22);
+                color: var(--straw);
+                cursor: pointer;
+                transition: border-color 0.2s;
+            }
+
+            .meadow-button:hover {
+                border-color: var(--gold);
+            }
+
+            #sound-toggle {
+                margin-left: auto;
+            }
+
+            .meadow-button:focus-visible,
+            .meadow-control input:focus-visible {
+                outline: 2px solid var(--gold);
+                outline-offset: 2px;
+            }
+
+            .meadow-button svg {
+                width: 14px;
+                height: 14px;
+                fill: currentColor;
+            }
+
+            .meadow-button .sound-on,
+            .meadow-button .sound-off {
+                width: 16px;
+                height: 16px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 1.75;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            .meadow-button[aria-pressed="true"] :is(.walk-play, .sound-off),
+            .meadow-button[aria-pressed="false"] :is(.walk-pause, .sound-on) {
+                display: none;
+            }
+
+            .meadow-control {
+                display: grid;
+                grid-template-columns: 40px 1fr 84px;
+                align-items: center;
+                gap: 10px;
+                margin-top: 6px;
+                font-size: 13px;
+            }
+
+            .meadow-control output {
+                text-align: right;
+                color: var(--muted);
+                font-size: 12px;
+                white-space: nowrap;
+            }
+
+            .meadow-control input {
+                width: 100%;
+                margin: 0;
+                accent-color: var(--gold);
+            }
+
+            /* Lift clear of the buttons js/example.mjs stacks in the bottom-right */
+            @media (max-width: 720px) {
+                .meadow-panel {
+                    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- A few hundred thousand blades of grass are a lot of vertices to shade, so the pixel
+             ratio is capped: the temporal antialiasing smooths the blades out more cheaply than
+             more pixels would -->
+        <pc-app max-pixel-ratio="1.5">
+            <!-- Scripts: two from the engine, and the meadow's own -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/sky/procedural-sky.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/golden-meadow.mjs"></pc-asset>
+            <!-- The sound of the meadow: crickets, a skylark and a distant blackbird, and the
+                 wind in the grass -->
+            <pc-asset src="assets/sounds/meadow-evening.mp3" id="meadow-evening"></pc-asset>
+            <pc-asset src="assets/sounds/meadow-wind.mp3" id="meadow-wind"></pc-asset>
+            <!-- The haze that turns the far hills blue -->
+            <pc-scene fog="exp" fog-color="#8fa4c0" fog-density="0.0008">
+                <!-- The camera walks the meadow at eye height, with meadowGlide, and the camera
+                     frame finishes the picture as a film camera would: temporal antialiasing to
+                     settle the shimmer of thin blades, a shallow depth of field focused a few
+                     paces ahead, and a little bloom where the low sun catches -->
+                <pc-entity name="camera">
+                    <pc-camera fov="50" near-clip="0.05" far-clip="4000"></pc-camera>
+                    <pc-audio-listener></pc-audio-listener>
+                    <pc-script>
+                        <pc-script-instance name="meadowGlide"></pc-script-instance>
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": "aces", "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
+                            "taa": { "enabled": true },
+                            "bloom": { "enabled": true, "intensity": 0.006, "blurLevel": 8 },
+                            "dof": { "enabled": true, "highQuality": false, "nearBlur": true, "focusDistance": 7, "focusRange": 6, "blurRadius": 3 },
+                            "vignette": { "enabled": true, "intensity": 0.35, "inner": 0.55, "outer": 1.25, "curvature": 0.5 }
+                        }'></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- The sun: proceduralSky below points and colors it -->
+                <pc-entity name="sun">
+                    <pc-light type="directional" intensity="3.2" cast-shadows shadow-resolution="2048" num-cascades="4" shadow-distance="400"
+                              shadow-bias="0.2" normal-offset-bias="0.05" shadow-type="pcf3-32f"></pc-light>
+                </pc-entity>
+                <!-- The engine's procedural sky, an hour before sunset -->
+                <pc-entity name="sky">
+                    <pc-script>
+                        <pc-script-instance name="proceduralSky" sun-light="entity:sun" azimuth="250" elevation="9" turbidity="4"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Clouds, and the haze below them that the land fades into with distance -->
+                <pc-entity name="clouds">
+                    <pc-script>
+                        <pc-script-instance name="meadowSky" sun="entity:sun"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- The meadow's sound, all around you: the evening's crickets and birds, and the
+                     wind in the grass, which meadowWind turns up and down -->
+                <pc-entity name="ambience">
+                    <pc-sound positional="false">
+                        <pc-sound-slot name="evening" asset="meadow-evening" volume="0.6" loop auto-play></pc-sound-slot>
+                        <pc-sound-slot name="wind" asset="meadow-wind" volume="0" loop auto-play></pc-sound-slot>
+                    </pc-sound>
+                </pc-entity>
+                <!-- The wind, which the grass, the clouds and the pollen all drift on, heard from
+                     where the camera stands -->
+                <pc-entity name="wind">
+                    <pc-script>
+                        <pc-script-instance name="meadowWind" heading="60" strength="0.6" sound="entity:ambience" listener="entity:camera"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- The land, and the grass on it -->
+                <pc-entity name="terrain">
+                    <pc-script>
+                        <pc-script-instance name="meadowTerrain"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <pc-entity name="trees">
+                    <pc-script>
+                        <pc-script-instance name="meadowTrees"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <pc-entity name="grass">
+                    <pc-script>
+                        <pc-script-instance name="meadowGrass" camera="entity:camera"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <pc-entity name="pollen">
+                    <pc-script>
+                        <pc-script-instance name="meadowPollen" sun="entity:sun"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="meadow-panel">
+            <div class="meadow-head">
+                <svg class="meadow-mark" viewBox="0 0 34 34" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="mark-sun" cx="0.5" cy="0.5" r="0.5">
+                            <stop offset="0" stop-color="#fff3d0"/>
+                            <stop offset="0.6" stop-color="#f7c465"/>
+                            <stop offset="1" stop-color="#e08a2e"/>
+                        </radialGradient>
+                    </defs>
+                    <circle cx="17" cy="15" r="9" fill="url(#mark-sun)"/>
+                    <path d="M5 33 C6 27 8 23 11 18 M10 33 C11 27 13 23 16 20 M16 33 C17 28 19 24 23 21 M21 33 C22 28 25 25 29 23 M26 33 C27 30 29 28 32 27"
+                          stroke="#c9a14f" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+                </svg>
+                <div>
+                    <h1 class="meadow-title">Golden Meadow</h1>
+                    <p class="meadow-hint">Drag to look around</p>
+                </div>
+                <button type="button" class="meadow-button" id="sound-toggle" aria-pressed="true" aria-label="Sound" title="Sound">
+                    <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+                    </svg>
+                    <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/>
+                    </svg>
+                </button>
+                <button type="button" class="meadow-button" id="walk-toggle" aria-pressed="true" aria-label="Walk" title="Walk">
+                    <svg class="walk-pause" viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="1" width="3.5" height="12" rx="1"/><rect x="8.5" y="1" width="3.5" height="12" rx="1"/></svg>
+                    <svg class="walk-play" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11a.6.6 0 0 0 .9.5l9-5.5a.6.6 0 0 0 0-1l-9-5.5a.6.6 0 0 0-.9.5z"/></svg>
+                </button>
+            </div>
+            <label class="meadow-control">
+                <span>Sun</span>
+                <input type="range" id="sun-slider" min="2" max="40" step="0.5" value="9">
+                <output id="sun-value" for="sun-slider">Golden hour</output>
+            </label>
+            <label class="meadow-control">
+                <span>Wind</span>
+                <input type="range" id="wind-slider" min="0" max="1.2" step="0.05" value="0.6">
+                <output id="wind-value" for="wind-slider">Breeze</output>
+            </label>
+        </div>
+        <script type="module" src="js/golden-meadow.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
