@@ -132,8 +132,8 @@ describe('misplaced elements', () => {
 
     it('applies settings to a pc-scene nested inside a wrapper element', async () => {
         // pc-scene requires a descendant relationship, not a direct child. pc-asset and pc-material
-        // require a direct child because app.ts collects them with `:scope > `; nothing queries
-        // pc-scene, so there is no mechanical reason to restrict it.
+        // require a direct child because app.ts collects them with `:scope > `; its boot sweep
+        // collects pc-scene at any depth, so there is no mechanical reason to restrict it.
         const { get, appElement } = await bootUnsettled('<div><pc-scene fog="exp2" gravity="0 -5 0"></pc-scene></div>');
         const scene = get<SceneElement>('pc-scene');
 
@@ -146,8 +146,8 @@ describe('misplaced elements', () => {
     it('configures nothing when a pc-scene is removed while the app is still booting', async () => {
         // connectedCallback captures its pc-app, then awaits readiness. Removing the element inside
         // that window used to leave it configuring - and becoming ready against - an app it was no
-        // longer attached to. The guard also covers the re-parent case, where taking the Scene from
-        // the captured app while _applyGravity resolved the new one would split the two.
+        // longer attached to. Removed before the app exists, it is gone before the boot sweep that
+        // would configure it, and the guard keeps it from becoming ready against that app.
         const handle = mount('<pc-app backend="null"><pc-scene fog="exp2" gravity="0 -5 0"></pc-scene></pc-app>');
         const appElement = handle.get<AppElement>('pc-app');
         const scene = handle.get<SceneElement>('pc-scene');
@@ -161,5 +161,29 @@ describe('misplaced elements', () => {
         expect(scene.scene, 'no Scene is captured').toBeNull();
         expect(appElement.app?.scene.fog.type, 'fog is left at its default').toBe('none');
         expect(appElement.app?.systems.rigidbody?.gravity.y, 'gravity is left at its default').toBeCloseTo(-9.81);
+    });
+
+    it('configures only the running app a pc-scene is re-parented into from one still booting', async () => {
+        // Moved into a running app, the scene configures it on the spot. The app it left must
+        // neither configure it when its boot sweep runs nor announce its readiness when it boots.
+        const { container, appElement: running } = await bootUnsettled('');
+
+        const booting = document.createElement('pc-app') as AppElement;
+        booting.setAttribute('backend', 'null');
+        booting.innerHTML = '<pc-scene fog="exp2" gravity="0 -5 0"></pc-scene>';
+        container.appendChild(booting);
+        const scene = booting.querySelector<SceneElement>('pc-scene')!;
+
+        // Synchronous, so the booting app has not created its application yet
+        running.appendChild(scene);
+        expect(running.app?.scene.fog.type, 'the running app is configured on the spot').toBe('exp2');
+
+        await readyWithin(booting);
+        await readyWithin(scene);
+
+        expect(scene.scene, 'the Scene is the running app\'s').toBe(running.app?.scene);
+        expect(running.app?.systems.rigidbody?.gravity.y).toBe(-5);
+        expect(booting.app?.scene.fog.type, 'the app it left keeps its default fog').toBe('none');
+        expect(booting.app?.systems.rigidbody?.gravity.y, 'and its default gravity').toBeCloseTo(-9.81);
     });
 });
