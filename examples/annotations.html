@@ -23,6 +23,7 @@
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/annotations.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/shadow-catcher.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-controllers.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/xr/xr-menu.mjs"></pc-asset>
@@ -37,13 +38,20 @@
                 <pc-sky asset="shanghai" type="dome" center="0 0.1 0" scale="50 50 50" lighting></pc-sky>
                 <!-- Camera (with XR support) -->
                 <pc-entity name="camera-root">
-                    <pc-entity name="camera" position="0 1.75 8">
-                        <pc-camera tonemap="aces2"></pc-camera>
+                    <pc-entity name="camera" position="8 3.3 9.5">
+                        <pc-camera></pc-camera>
                         <pc-script>
                             <pc-script-instance name="cameraControls"
-                                                focus-point="0 1.75 0"
+                                                focus-point="1.2 1.6 0"
                                                 pitch-range="-90 0"
                                                 zoom-range="5 25"></pc-script-instance>
+                            <pc-script-instance name="cameraFrame" attributes='{
+                                "rendering": { "toneMapping": "aces2", "samples": 4, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
+                                "ssao": { "type": "combine", "blurEnabled": true, "intensity": 0.8, "radius": 1.2, "samples": 16, "power": 3, "minAngle": 20, "scale": 1 },
+                                "bloom": { "enabled": true, "intensity": 0.03, "blurLevel": 5 },
+                                "grading": { "enabled": true, "brightness": 1, "contrast": 1.05, "saturation": 1.05 },
+                                "vignette": { "enabled": true, "inner": 0.55, "outer": 1.4, "curvature": 0.6, "intensity": 0.35 }
+                            }'></pc-script-instance>
                         </pc-script>
                     </pc-entity>
                     <pc-script>
