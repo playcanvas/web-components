@@ -179,11 +179,12 @@
                 transform: rotate(180deg);
             }
 
-            /* A short screen - an embed, a phone on its side - would be mostly panel. So there
-               the panel sits a little tighter, and starts folded away: a pill in the corner with
-               the mark and the title, the fold button that opens it, and the sound toggle, since
-               the meadow's sound is the one thing no one should have to hunt for. */
-            @media (max-height: 440px) {
+            /* On a short screen the panel takes too much of the picture: a phone on its side, or
+               any embed - the User Manual's views are never more than 494px tall. So there the
+               panel sits a little tighter, and starts folded away: a pill in the corner with the
+               mark and the title, the fold button that opens it, and the sound toggle, since the
+               meadow's sound is the one thing no one should have to hunt for. */
+            @media (max-height: 520px) {
                 .meadow-panel {
                     padding: 10px 14px;
                 }
