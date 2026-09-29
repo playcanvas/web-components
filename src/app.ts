@@ -72,6 +72,7 @@ import { LoadingBar } from './loading-bar';
 import type { MaterialElement } from './material';
 import { parseBool, parseEnum, parseNumber } from './parse';
 import { PointerController } from './pointer-controller';
+import type { SceneElement } from './scene';
 import type { WasmElement } from './wasm';
 
 /**
@@ -498,6 +499,16 @@ class AppElement extends AsyncElement {
         if (typeof ResizeObserver !== 'undefined') {
             this._resizeObserver = new ResizeObserver(() => this._syncCanvasSize());
             this._resizeObserver.observe(this);
+        }
+
+        // Attach every pc-scene first, so its settings are in place for everything that follows -
+        // above all app.start(), which runs every script's initialize(). A scene may sit inside a
+        // wrapper element, so this sweeps descendants, leaving any a nested pc-app owns to it.
+        const sceneElements = this.querySelectorAll<SceneElement>('pc-scene');
+        for (const sceneElement of Array.from(sceneElements)) {
+            if (sceneElement.closestApp === this) {
+                sceneElement._attach(app);
+            }
         }
 
         // Get all pc-asset elements that are direct children of the pc-app element

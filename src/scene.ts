@@ -1,4 +1,4 @@
-import type { Scene } from 'playcanvas';
+import type { AppBase, Scene } from 'playcanvas';
 import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
@@ -94,8 +94,8 @@ class SceneElement extends AsyncElement {
     readonly _pointerListeners = new ListenerRegistry(this);
 
     /**
-     * The PlayCanvas scene instance. `null` until the element is ready — await
-     * {@link whenReady} or the element's `ready()` promise before accessing it.
+     * The PlayCanvas scene instance. `null` until the containing application has been created —
+     * await {@link whenReady} or the element's `ready()` promise before accessing it.
      * @returns The scene instance, or `null`.
      */
     get scene(): Scene | null {
@@ -169,26 +169,32 @@ class SceneElement extends AsyncElement {
             return;
         }
 
+        // A scene present when the application boots is attached by the boot sweep, before
+        // app.start() runs every script's initialize(). One connected once the application exists -
+        // inserted at runtime - attaches here, synchronously: the entity elements below it connect
+        // after it, in tree order, so its settings are in place before their scripts initialize.
+        const app = appElement.app;
+        if (app) {
+            this._attach(app);
+        }
+
         await appElement.ready();
 
         // The element may have been removed or re-parented while waiting for the app. Matches the
         // guard in AssetElement and MaterialElement, but compares closestApp rather than
         // parentElement because pc-scene resolves its app by ancestor rather than direct child.
-        // Without this, a scene re-parented mid-await would take its Scene from the app it started
-        // under while _applyGravity resolved the app it ended up under, splitting the two.
+        // Readiness belongs to the app the element is attached to now, and a re-insertion runs a
+        // connectedCallback of its own that announces it.
         if (!this.isConnected || this.closestApp !== appElement) {
             return;
         }
 
-        // The application is gone if the tree was torn down while we awaited readiness. There is
-        // nothing to configure and nothing the author can act on, so this stays silent.
-        const app = appElement.app;
-        if (!app) {
+        // The scene is gone if the tree was torn down while we awaited readiness - the application
+        // a re-inserted tree boots attaches it afresh. There is nothing the author can act on, so
+        // this stays silent.
+        if (!this._scene) {
             return;
         }
-
-        this._scene = app.scene;
-        this._updateSceneSettings();
 
         this._onReady();
     }
@@ -199,6 +205,19 @@ class SceneElement extends AsyncElement {
         // element announces the scene it acquires then, not the one it lost here.
         this._scene = null;
         this._resetReady();
+    }
+
+    /**
+     * Attaches the element to the application's scene and applies every setting it holds. Called
+     * by the containing `<pc-app>` element during its boot sweep, before the application starts,
+     * and on connection for elements inserted once the application exists.
+     *
+     * @param app - The application whose scene the element configures.
+     * @internal
+     */
+    _attach(app: AppBase) {
+        this._scene = app.scene;
+        this._updateSceneSettings();
     }
 
     private _updateSceneSettings() {
