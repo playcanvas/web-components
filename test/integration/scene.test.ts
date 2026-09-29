@@ -8,8 +8,7 @@ import { useGuard } from '../helpers/guard';
 
 /**
  * One row per scene setting the element writes: a label and how to read it from a scene. Gravity
- * and the physics time scale are left out because the element writes them to the rigid body
- * system rather than the scene.
+ * is left out because the element writes it to the rigid body system rather than the scene.
  */
 const settings: [label: string, read: (scene: Scene) => unknown][] = [
     ['exposure', (scene) => scene.exposure],
@@ -102,7 +101,7 @@ describe('<pc-scene>', () => {
         });
     });
 
-    describe('Fog, Gaussian splat, lighting and physics attributes', () => {
+    describe('Fog, Gaussian splat and lighting attributes', () => {
         /**
          * One row per attribute: the attribute, how to read the engine value it drives, a
          * non-default value, what the engine must report for it, and the engine default that
@@ -122,8 +121,7 @@ describe('<pc-scene>', () => {
             ['fog-end', (app) => app.scene.fog.end, '500', 500, 1000],
             ['gsplat-use-fog', (app) => app.scene.gsplat.useFog, 'false', false, true],
             ['gsplat-use-tonemap', (app) => app.scene.gsplat.useTonemap, 'false', false, true],
-            ['lighting-max-lights', (app) => app.scene.lighting.maxLights, '512', 512, 255],
-            ['physics-time-scale', (app) => app.systems.rigidbody!.timeScale, '0.5', 0.5, 1]
+            ['lighting-max-lights', (app) => app.scene.lighting.maxLights, '512', 512, 255]
         ];
 
         it('leaves the engine defaults in place when omitted', async () => {
