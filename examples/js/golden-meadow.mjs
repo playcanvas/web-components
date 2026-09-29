@@ -5,7 +5,18 @@
  * own markup does - a script instance's attributes are live, so the sky, the wind and the walk
  * follow along as they change.
  */
+import { RenderPassDownsample } from 'playcanvas';
+
 import { whenReady } from '@playcanvas/web-components';
+
+// Works around an engine bug, until a release fixes it: setSourceTexture stores the texture where
+// the draw never reads it. With TAA on, the camera frame retargets its half resolution copy of the
+// scene to the TAA output every frame, but the copy keeps sampling the raw, jittered frame - and
+// the bloom and the low quality depth of field blur that copy, so the blurred distance shimmers.
+RenderPassDownsample.prototype.setSourceTexture = function (value) {
+    this.sourceTexture = value;
+    this.options.resizeSource = value;
+};
 
 const panel = document.querySelector('.meadow-panel');
 const scene = document.querySelector('pc-scene');
