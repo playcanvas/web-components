@@ -1,5 +1,5 @@
 import type { AppBase, Asset } from 'playcanvas';
-import { Texture } from 'playcanvas';
+import { Quat, Texture } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { AssetElement } from '../../src/asset';
@@ -36,6 +36,27 @@ describe('<pc-sky>', () => {
 
     const settleTask = () => new Promise((resolve) => {
         setTimeout(resolve, 0);
+    });
+
+    it('applies the rotation authored in markup when it generates the skybox', async () => {
+        const { app, get } = await bootApp(
+            `${SKY_ASSETS}<pc-scene><pc-sky asset="sky-a" rotation="0 90 0"></pc-sky></pc-scene>`
+        );
+        const sky = get<SkyElement>('pc-sky');
+        const assetA = get<AssetElement>('pc-asset[id="sky-a"]').asset!;
+
+        // The rotation was parsed before the sky had a scene to write it to. The load parks on
+        // app readiness before it subscribes; a macrotask lets it land.
+        await settleTask();
+        finishTextureLoad(assetA, app);
+        expect(app.scene.skybox, 'the skybox was generated').toBeTruthy();
+        expect(app.scene.skyboxRotation, 'with the authored rotation').toEqual(new Quat().setFromEulerAngles(0, 90, 0));
+
+        sky.setAttribute('rotation', '0 45 0');
+        expect(app.scene.skyboxRotation, 'and a later change applies directly').toEqual(
+            new Quat().setFromEulerAngles(0, 45, 0)
+        );
+        expect(uncaught.seen).toEqual([]);
     });
 
     it('generates the skybox only from the newest asset when a superseded load settles later', async () => {

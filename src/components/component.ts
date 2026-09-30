@@ -54,7 +54,8 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
 
     /**
      * Returns the data the component is created with. Overridden by subclasses to supply the
-     * initial values of their cached properties.
+     * initial values of their cached properties. The element's `enabled` state is not among them:
+     * the base class adds it when it creates the component.
      *
      * @returns The initial component data.
      */
@@ -97,9 +98,17 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
             return;
         }
 
+        // The enabled state travels in the creation data: the `enabled` setter only reaches a
+        // component that already exists, and creating the component enabled to disable it
+        // afterwards would run its onEnable first. It goes last, so the element's state also
+        // overrides an `enabled` key in a particle system's config.
+        //
         // The name passed by the subclass selects the engine system that creates its T - a
         // pairing the type system cannot express, so it is asserted this once
-        this._component = entity.addComponent(this._componentName, this.getInitialComponentData()) as T | null;
+        this._component = entity.addComponent(this._componentName, {
+            ...this.getInitialComponentData(),
+            enabled: this._enabled
+        }) as T | null;
     }
 
     private async _addComponent() {

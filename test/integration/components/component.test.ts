@@ -12,6 +12,7 @@ import type { ModelElement } from '../../../src/model';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
 import { expectNeverReady, readyWithin } from '../../helpers/ready';
+import { COMPONENT_TAGS } from '../../helpers/tags';
 
 /**
  * The smallest valid glTF with one named node, per name. instantiateRenderEntity() returns a real
@@ -277,6 +278,47 @@ describe('component hosting', () => {
             await readyWithin(model);
 
             expect(Object.keys(sounds.component!.slots), 'the slot outlived the swap').toContain('blip');
+        });
+    });
+});
+
+/**
+ * The `enabled` attribute every component element inherits from ComponentElement. The element's
+ * state is the component's from creation onward: a component authored `enabled="false"` is created
+ * disabled, where it used to be created enabled while the element reported `false`.
+ */
+describe('component elements', () => {
+    const { uncaught, warnings } = useGuard();
+
+    describe('[enabled]', () => {
+        it.for(COMPONENT_TAGS)('creates the %s component disabled when authored false', async (tag) => {
+            const { get } = await bootApp(`<pc-entity name="host"><${tag} enabled="false"></${tag}></pc-entity>`);
+            const element = get<ComponentElement>(tag);
+
+            expect(element.enabled).toBe(false);
+            expect(element.component, 'the component exists').toBeTruthy();
+            expect(element.component!.enabled, 'created disabled').toBe(false);
+
+            element.removeAttribute('enabled');
+            expect(element.component!.enabled, 'enabled with the element').toBe(true);
+
+            // An enabled pc-audio-listener becomes the engine's current listener, which reaches for
+            // the Web Audio API that jsdom lacks - the engine warns about that once per file
+            warnings.allow('No support for Web Audio API found');
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('creates a re-inserted component with the state set while the element was out', async () => {
+            const { get } = await bootApp('<pc-entity name="host"><pc-light></pc-light></pc-entity>');
+            const host = get<EntityElement>('pc-entity');
+            const light = get<LightComponentElement>('pc-light');
+
+            light.remove();
+            light.enabled = false;
+            host.appendChild(light);
+            await readyWithin(light);
+
+            expect(light.component!.enabled, 'the new component was created disabled').toBe(false);
         });
     });
 });

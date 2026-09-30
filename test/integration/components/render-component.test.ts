@@ -1,5 +1,12 @@
 import type { RenderComponent } from 'playcanvas';
-import { Entity, SHADOW_CASCADE_0, SHADOW_CASCADE_1, SHADOW_CASCADE_2, SHADOW_CASCADE_3 } from 'playcanvas';
+import {
+    Entity,
+    LAYERID_WORLD,
+    SHADOW_CASCADE_0,
+    SHADOW_CASCADE_1,
+    SHADOW_CASCADE_2,
+    SHADOW_CASCADE_3
+} from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { RenderComponentElement } from '../../../src/components/render-component';
@@ -50,6 +57,20 @@ describe('<pc-render>', () => {
 
             expect(component.material).toBe(engine.material);
             expect(component.meshInstances[0].material).toBe(engine.material);
+        });
+    });
+
+    describe('[enabled]', () => {
+        it('keeps the mesh out of the layers until the element is enabled', async () => {
+            const { app, get } = await bootApp(scene('enabled="false"'));
+            const element = get<RenderComponentElement>('pc-render');
+            const world = app.scene.layers.getLayerById(LAYERID_WORLD)!;
+            const [meshInstance] = element.component!.meshInstances;
+
+            expect(world.meshInstances, 'not drawn while disabled').not.toContain(meshInstance);
+
+            element.removeAttribute('enabled');
+            expect(world.meshInstances, 'drawn once enabled').toContain(meshInstance);
         });
     });
 

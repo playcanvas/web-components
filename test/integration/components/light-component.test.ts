@@ -2,6 +2,7 @@ import type { LightComponent } from 'playcanvas';
 import {
     Color,
     Entity,
+    LAYERID_WORLD,
     LIGHTSHAPE_DISK,
     LIGHTSHAPE_PUNCTUAL,
     LIGHTSHAPE_RECT,
@@ -89,6 +90,19 @@ describe('<pc-light>', () => {
                     .soft(engineValue(element, property), `${attribute} vs a bare engine light`)
                     .toEqual(engineValue(engine, property));
             }
+        });
+    });
+
+    describe('[enabled]', () => {
+        it('keeps the light out of the layers until the element is enabled', async () => {
+            const { app, get } = await bootApp(scene('enabled="false"'));
+            const element = get<LightComponentElement>('pc-light');
+            const world = app.scene.layers.getLayerById(LAYERID_WORLD)!;
+
+            expect(world.hasLight(element.component!.light), 'not lighting while disabled').toBe(false);
+
+            element.removeAttribute('enabled');
+            expect(world.hasLight(element.component!.light), 'lighting once enabled').toBe(true);
         });
     });
 
