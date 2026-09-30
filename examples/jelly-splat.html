@@ -76,37 +76,47 @@
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="assets/scripts/jelly-splat.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/turntable.mjs"></pc-asset>
             <!-- 'Tyrannosaurus Rex' by Alfred Duemlein (https://superspl.at/scene/d281a49d),
                  CC BY 4.0 - a toy on a round base -->
             <pc-asset src="assets/splats/tyrannosaurus-rex.sog" id="dinosaur"></pc-asset>
             <!-- Scene -->
             <pc-scene>
-                <!-- Camera -->
-                <pc-entity name="camera" position="1.8 1.5 3.77">
+                <!-- Camera. Its yaw is locked, so a sideways drag spins the dinosaur instead of
+                     orbiting, while dragging up and down still tilts the view and the wheel zooms -->
+                <pc-entity name="camera" position="1.832 1.512 3.809">
                     <pc-camera clear-color="black"></pc-camera>
                     <pc-script>
                         <pc-script-instance name="cameraControls"
                                             enable-fly="false"
                                             enable-pan="false"
-                                            focus-point="-0.2 1 -0.13"
+                                            focus-point="0.07 1 0.03"
                                             pitch-range="-80 10"
+                                            yaw-range="25 25"
                                             zoom-range="1 10"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
-                <!-- Dinosaur. The capture is in arbitrary units, so it is scaled to stand 2 m tall,
-                     a size the jelly's stiffness and gravity suit. The script glues its base to
-                     the floor at y = 0, placing it there, and holds the bottom 4% of it still:
-                     the disc, up to its top, with the feet free above it. -->
-                <pc-entity name="dinosaur" position="0 0.77 0" rotation="0 0 180" scale="0.075 0.075 0.075">
-                    <pc-gsplat asset="dinosaur"></pc-gsplat>
+                <!-- Turntable, centered on the dinosaur's disc. The jelly's anchor is carried by the
+                     dinosaur's parent, so spinning the turntable swings the body round after it. -->
+                <pc-entity name="turntable" position="0.07 0 0.03">
                     <pc-script>
-                        <pc-script-instance name="jellySplat" anchor-band="0.04" floppiness="0.37"></pc-script-instance>
+                        <pc-script-instance name="turntable"></pc-script-instance>
                     </pc-script>
+                    <!-- Dinosaur. The capture is in arbitrary units, so it is scaled to stand 2 m
+                         tall, a size the jelly's stiffness and gravity suit. The script glues its
+                         base to the floor at y = 0, placing it there, and holds the bottom 4% of it
+                         still: the disc, up to its top, with the feet free above it. -->
+                    <pc-entity name="dinosaur" position="-0.07 0.77 -0.03" rotation="0 0 180" scale="0.075 0.075 0.075">
+                        <pc-gsplat asset="dinosaur"></pc-gsplat>
+                        <pc-script>
+                            <pc-script-instance name="jellySplat" anchor-band="0.04" floppiness="0.37"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
                 </pc-entity>
             </pc-scene>
         </pc-app>
         <div class="jelly-panel example-panel">
-            <span class="panel-caption">Drag the dinosaur to pull it</span>
+            <span class="panel-caption">Drag the dinosaur to pull it, or beside it to spin it</span>
             <label for="floppiness">Floppiness</label>
             <input id="floppiness" type="range" min="0" max="1" step="0.01" value="0.37">
         </div>
@@ -117,13 +127,21 @@
         <script type="module">
             import { whenReady } from '@playcanvas/web-components';
 
-            const jelly = await whenReady('pc-script-instance[name="jellySplat"]');
+            const [jelly, turntable] = await Promise.all([
+                whenReady('pc-script-instance[name="jellySplat"]'),
+                whenReady('pc-script-instance[name="turntable"]')
+            ]);
 
             // The slider drives the script's floppiness attribute, from firm (0) to very floppy (1)
             document.getElementById('floppiness').addEventListener('input', (event) => {
                 jelly.setAttribute('floppiness', event.target.value);
             });
-            document.getElementById('reset').addEventListener('click', () => jelly.script.reset());
+
+            // the turntable first, so the jelly's rest pose goes back where it started
+            document.getElementById('reset').addEventListener('click', () => {
+                turntable.script.reset();
+                jelly.script.reset();
+            });
         </script>
     </body>
 </html>

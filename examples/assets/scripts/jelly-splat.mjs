@@ -1,6 +1,7 @@
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST,
+    Mat4,
     PIXELFORMAT_RGBA32F,
     Quat,
     Script,
@@ -416,6 +417,8 @@ class JellySplat extends Script {
 
     _refit = false;
 
+    _mountMoving = false;
+
     _grab = null;
 
     /**
@@ -447,14 +450,29 @@ class JellySplat extends Script {
     }
 
     update(dt) {
-        if ((!this._built && !this._build()) || !this._awake) {
+        if (!this._built && !this._build()) {
+            return;
+        }
+
+        // the held nodes are carried by the entity's parent, and a moving one keeps them awake
+        this._mountTransform(this._mountNow);
+        const mountMoved = this._pinned && !this._mountNow.equals(this._mountAt);
+        if (mountMoved) {
+            this.wake();
+        }
+        if (!this._awake) {
             return;
         }
 
         this._accum = Math.min(this._accum + dt, 4 * STEP);
-        while (this._accum >= STEP) {
-            this._simulate(STEP, this.damping);
-            this._accum -= STEP;
+        const steps = Math.floor(this._accum / STEP);
+        this._accum -= steps * STEP;
+        this._prepareMount(mountMoved && steps > 0, steps);
+        for (let s = 0; s < steps; s++) {
+            this._simulate(STEP, this.damping, s, steps);
+        }
+        if (steps > 0 || !this._pinned) {
+            this._mountAt.copy(this._mountNow);
         }
 
         // An anchored body goes nowhere, so its entity stays put. Moving it would also turn the
@@ -480,14 +498,22 @@ class JellySplat extends Script {
     }
 
     /**
-     * Puts the body back in its rest pose, still, and glued to its mount if anchor is set.
+     * Puts the body back in its rest pose, still, and glued to its mount if anchor is set. The
+     * rest pose goes wherever the entity's parent has carried the mount.
      */
     reset() {
         if (!this._built) {
             return;
         }
-        this._pos.set(this._stand);
-        this._prev.set(this._stand);
+        this._mountTransform(this._mountAt);
+        for (const n of this._sim) {
+            v1.set(this._stand[n * 3], this._stand[n * 3 + 1], this._stand[n * 3 + 2]);
+            this._mountAt.transformPoint(v1, v2);
+            this._pos[n * 3] = v2.x;
+            this._pos[n * 3 + 1] = v2.y;
+            this._pos[n * 3 + 2] = v2.z;
+        }
+        this._prev.set(this._pos);
         this._vel.fill(0);
         this._fit.set(0, 0, 0, 1);
         this._grab = null;
@@ -523,6 +549,16 @@ class JellySplat extends Script {
         this._sampleSurface(centers, solid);
         this._placeOnMount(solid);
         this._growBounds(gsplat);
+
+        // The anchor is carried by the entity's parent: the held nodes follow its world transform
+        // relative to the one it has now, so spinning or moving the parent moves the mount
+        const parent = this.entity.parent;
+        this._mountInverse = parent ? parent.getWorldTransform().clone().invert() : new Mat4();
+        this._mountAt = new Mat4();
+        this._mountNow = new Mat4();
+        this._mountDelta = new Mat4();
+        this._heldFrom = new Float64Array(this._anchorNodes.length * 3);
+        this._heldTo = new Float64Array(this._anchorNodes.length * 3);
 
         this._tex = new Texture(this.app.graphicsDevice, {
             name: 'JellyNodes',
@@ -1003,14 +1039,48 @@ class JellySplat extends Script {
         }
     }
 
-    _simulate(dt, damping) {
+    // the mount's motion so far: the parent's world transform relative to the one it had when
+    // the body was built
+    _mountTransform(out) {
+        const parent = this.entity.parent;
+        return parent ? out.mul2(parent.getWorldTransform(), this._mountInverse) : out.setIdentity();
+    }
+
+    // Where the held nodes go over this frame's steps, from the mount transform they are at to the
+    // current one, and the mount's motion over those steps, which damping works relative to
+    _prepareMount(moving, steps) {
+        this._mountMoving = moving;
+        if (!moving) {
+            return;
+        }
+        const held = this._anchorNodes;
+        const stand = this._stand;
+        for (let k = 0; k < held.length; k++) {
+            const n = held[k] * 3;
+            v1.set(stand[n], stand[n + 1], stand[n + 2]);
+            this._mountAt.transformPoint(v1, v2);
+            this._heldFrom[k * 3] = v2.x;
+            this._heldFrom[k * 3 + 1] = v2.y;
+            this._heldFrom[k * 3 + 2] = v2.z;
+            this._mountNow.transformPoint(v1, v2);
+            this._heldTo[k * 3] = v2.x;
+            this._heldTo[k * 3 + 1] = v2.y;
+            this._heldTo[k * 3 + 2] = v2.z;
+        }
+        this._mountDelta.copy(this._mountAt).invert();
+        this._mountDelta.mul2(this._mountNow, this._mountDelta);
+        this._mountDeltaTime = steps * STEP;
+    }
+
+    // one fixed step, the step-th of this frame's steps, which a moving mount is interpolated over
+    _simulate(dt, damping, step = 0, steps = 1) {
         const sdt = dt / SUBSTEPS;
         const pos = this._pos;
         const prev = this._prev;
         const vel = this._vel;
         const sim = this._sim;
         const w = this._invMass;
-        for (let step = 0; step < SUBSTEPS; step++) {
+        for (let sub = 0; sub < SUBSTEPS; sub++) {
             for (let n = 0; n < sim.length; n++) {
                 const i = sim[n] * 3;
                 prev[i] = pos[i];
@@ -1021,6 +1091,18 @@ class JellySplat extends Script {
                     pos[i] += vel[i] * sdt;
                     pos[i + 1] += vel[i + 1] * sdt;
                     pos[i + 2] += vel[i + 2] * sdt;
+                }
+            }
+            if (this._mountMoving) {
+                const t = (step + (sub + 1) / SUBSTEPS) / steps;
+                const held = this._anchorNodes;
+                const from = this._heldFrom;
+                const to = this._heldTo;
+                for (let k = 0; k < held.length; k++) {
+                    const i = held[k] * 3;
+                    pos[i] = from[k * 3] + (to[k * 3] - from[k * 3]) * t;
+                    pos[i + 1] = from[k * 3 + 1] + (to[k * 3 + 1] - from[k * 3 + 1]) * t;
+                    pos[i + 2] = from[k * 3 + 2] + (to[k * 3 + 2] - from[k * 3 + 2]) * t;
                 }
             }
             this._solveEdges(sdt);
@@ -1185,7 +1267,8 @@ class JellySplat extends Script {
     }
 
     // Damps the motion that is not the body's best fit rigid motion, so wobbles die out while
-    // falling and tumbling are left alone. Held by its anchor, all of its motion is deformation.
+    // falling and tumbling are left alone. Held by its anchor, all of its motion is deformation,
+    // apart from what its mount does: it is damped towards moving with the mount.
     _damp(dt, damping) {
         const k = 1 - Math.exp(-damping * dt);
         const pos = this._pos;
@@ -1194,11 +1277,22 @@ class JellySplat extends Script {
         const mass = this._mass;
         const sim = this._sim;
         if (this._pinned) {
+            const time = this._mountDeltaTime;
             for (let n = 0; n < sim.length; n++) {
                 const i = sim[n] * 3;
-                vel[i] *= 1 - k;
-                vel[i + 1] *= 1 - k;
-                vel[i + 2] *= 1 - k;
+                let mx = 0;
+                let my = 0;
+                let mz = 0;
+                if (this._mountMoving) {
+                    v1.set(pos[i], pos[i + 1], pos[i + 2]);
+                    this._mountDelta.transformPoint(v1, v2);
+                    mx = (v2.x - v1.x) / time;
+                    my = (v2.y - v1.y) / time;
+                    mz = (v2.z - v1.z) / time;
+                }
+                vel[i] += k * (mx - vel[i]);
+                vel[i + 1] += k * (my - vel[i + 1]);
+                vel[i + 2] += k * (mz - vel[i + 2]);
             }
             return;
         }
