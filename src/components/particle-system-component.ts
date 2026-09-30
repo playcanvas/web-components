@@ -1,8 +1,75 @@
 import type { Asset, ParticleSystemComponent } from 'playcanvas';
+import { Curve, CurveSet, Vec3 } from 'playcanvas';
 
 import { AssetBinding, useAsset } from '../asset-binding';
 
 import { ComponentElement } from './component';
+
+/**
+ * The config properties the engine builds from their JSON form when it creates the component: a
+ * `Vec3` from an array, a `Curve` or `CurveSet` from a `{ type, keys }` object. The setters behind
+ * them take only the built types, so a config applied to a component that already exists - a lazy
+ * config that finishes loading, or an `asset` changed at runtime - is built here first. Mirrors
+ * `_propertyTypes` in the engine's `ParticleSystemComponentSystem`.
+ */
+const CONFIG_TYPES: Partial<Record<string, 'vec3' | 'curve' | 'curveset'>> = {
+    emitterExtents: 'vec3',
+    emitterExtentsInner: 'vec3',
+    particleNormal: 'vec3',
+    wrapBounds: 'vec3',
+    localVelocityGraph: 'curveset',
+    localVelocityGraph2: 'curveset',
+    velocityGraph: 'curveset',
+    velocityGraph2: 'curveset',
+    colorGraph: 'curveset',
+    colorGraph2: 'curveset',
+    alphaGraph: 'curve',
+    alphaGraph2: 'curve',
+    rotationSpeedGraph: 'curve',
+    rotationSpeedGraph2: 'curve',
+    radialSpeedGraph: 'curve',
+    radialSpeedGraph2: 'curve',
+    scaleGraph: 'curve',
+    scaleGraph2: 'curve'
+};
+
+/**
+ * Builds a config value from its JSON form exactly as the engine does when it creates the
+ * component. A value that is already built, or has no JSON form, passes through.
+ *
+ * @param key - The config property.
+ * @param value - The value as it appears in the config.
+ * @returns The value to assign to the component.
+ */
+const buildConfigValue = (key: string, value: any) => {
+    if (value === null || value === undefined) {
+        return value;
+    }
+
+    switch (CONFIG_TYPES[key]) {
+        case 'vec3':
+            return Array.isArray(value) ? new Vec3(value[0], value[1], value[2]) : value;
+        case 'curve': {
+            if (value instanceof Curve) {
+                return value;
+            }
+            const curve = new Curve(value.keys);
+            curve.type = value.type;
+            return curve;
+        }
+        case 'curveset': {
+            if (value instanceof CurveSet) {
+                return value;
+            }
+            const curveSet = new CurveSet(value.keys);
+            curveSet.type = value.type;
+            return curveSet;
+        }
+    }
+
+    // The component keeps a layer list of its own rather than sharing the config's array
+    return key === 'layers' && Array.isArray(value) ? value.slice() : value;
+};
 
 /**
  * The ParticleSystemComponentElement interface provides properties and methods for manipulating
@@ -42,6 +109,7 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
             return {};
         }
 
+        // The engine builds the config's JSON-form values itself when it creates the component
         this._resolveColorMap(asset.resource);
         return asset.resource;
     }
@@ -93,10 +161,12 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
 
         this._resolveColorMap(resource);
 
-        // Set all the config properties on the component
+        // Set the config properties on the component, built from their JSON form as the engine
+        // builds creation data. `enabled` is left out: the element's attribute owns it, as it
+        // does when the component is created.
         for (const key in resource) {
-            if (Object.hasOwn(resource, key)) {
-                (this.component as any)[key] = resource[key];
+            if (Object.hasOwn(resource, key) && key !== 'enabled') {
+                (this.component as any)[key] = buildConfigValue(key, resource[key]);
             }
         }
     }

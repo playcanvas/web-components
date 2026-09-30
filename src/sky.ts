@@ -96,6 +96,7 @@ class SkyElement extends AsyncElement {
         this._scene.sky.center = this._center;
         this._scene.skyboxIntensity = this._intensity;
         this._scene.skyboxMip = this._mipLevel;
+        this._scene.skyboxRotation = new Quat().setFromEulerAngles(this._rotation);
     }
 
     private async _loadSkybox() {

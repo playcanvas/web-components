@@ -138,6 +138,51 @@ describe('<pc-script>', () => {
         expect(uncaught.seen).toEqual([]);
     });
 
+    describe('[enabled]', () => {
+        /** Counts its lifecycle calls, so a script running under a disabled component would show. */
+        class Counter extends Script {
+            static scriptName = 'counter';
+
+            initialized = 0;
+
+            updates = 0;
+
+            initialize() {
+                this.initialized++;
+            }
+
+            update() {
+                this.updates++;
+            }
+        }
+
+        it('runs none of its scripts until the element is enabled', async () => {
+            const { app, appElement, step } = await bootApp();
+            app.scripts.add(Counter);
+
+            // Inserted at runtime, because the script must be registered before the script
+            // element creates its instance
+            const host = document.createElement('pc-entity');
+            host.innerHTML =
+                '<pc-script enabled="false"><pc-script-instance name="counter"></pc-script-instance></pc-script>';
+            appElement.appendChild(host);
+
+            const scriptsElement = host.querySelector<ScriptComponentElement>('pc-script')!;
+            const scriptElement = host.querySelector<ScriptInstanceElement>('pc-script-instance')!;
+            await readyWithin(scriptElement);
+            const script = scriptElement.script as Counter;
+
+            step();
+            expect(script.initialized, 'not initialized while disabled').toBe(0);
+            expect(script.updates, 'nor updated').toBe(0);
+
+            scriptsElement.removeAttribute('enabled');
+            step();
+            expect(script.initialized, 'initialized once enabled').toBe(1);
+            expect(script.updates, 'and updated').toBe(1);
+        });
+    });
+
     describe('entity: references', () => {
         /**
          * Boots an app with the probe registered and its target carrying an `entity:` reference

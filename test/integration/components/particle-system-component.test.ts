@@ -1,7 +1,9 @@
-import type { Asset } from 'playcanvas';
+import type { AppBase, Asset, NullGraphicsDevice, ParticleSystemComponent } from 'playcanvas';
+import { Curve, CURVE_LINEAR, CURVE_STEP, CurveSet, Entity, Vec3 } from 'playcanvas';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AssetElement } from '../../../src/asset';
+import type { ParticleSystemComponentElement } from '../../../src/components/particle-system-component';
 import type { EntityElement } from '../../../src/entity';
 import { bootApp } from '../../helpers/app';
 import { useGuard } from '../../helpers/guard';
@@ -19,6 +21,83 @@ const jsonSrc = (config: Record<string, unknown>) =>
 
 /** The engine's ParticleSystemComponent default, proving a config was NOT applied. */
 const DEFAULT_LIFETIME = 50;
+
+/**
+ * A curve in the JSON form a config carries it in. The seed keeps each property's keys distinct,
+ * so a value landing on the wrong property would show.
+ *
+ * @param seed - A value unique to the property.
+ * @returns The curve's JSON form.
+ */
+const curveJson = (seed: number) => ({ type: CURVE_LINEAR, keys: [0, seed, 1, seed + 1] });
+
+/**
+ * A curve set in the JSON form a config carries it in. The seed keeps each property's keys
+ * distinct.
+ *
+ * @param seed - A value unique to the property.
+ * @returns The curve set's JSON form.
+ */
+const curveSetJson = (seed: number) => ({
+    type: CURVE_STEP,
+    keys: [
+        [0, seed],
+        [0, seed + 1],
+        [0, seed + 2]
+    ]
+});
+
+/**
+ * Every config property the engine builds from its JSON form when it creates a component: the
+ * property, its JSON form, and the type the engine builds from it.
+ */
+const JSON_FORM: [property: string, json: unknown, built: typeof Vec3 | typeof Curve | typeof CurveSet][] = [
+    ['emitterExtents', [1, 2, 3], Vec3],
+    ['emitterExtentsInner', [0.5, 1, 1.5], Vec3],
+    ['particleNormal', [0, 0, 1], Vec3],
+    ['wrapBounds', [4, 5, 6], Vec3],
+    ['localVelocityGraph', curveSetJson(1), CurveSet],
+    ['localVelocityGraph2', curveSetJson(2), CurveSet],
+    ['velocityGraph', curveSetJson(3), CurveSet],
+    ['velocityGraph2', curveSetJson(4), CurveSet],
+    ['colorGraph', curveSetJson(5), CurveSet],
+    ['colorGraph2', curveSetJson(6), CurveSet],
+    ['alphaGraph', curveJson(1), Curve],
+    ['alphaGraph2', curveJson(2), Curve],
+    ['rotationSpeedGraph', curveJson(3), Curve],
+    ['rotationSpeedGraph2', curveJson(4), Curve],
+    ['radialSpeedGraph', curveJson(5), Curve],
+    ['radialSpeedGraph2', curveJson(6), Curve],
+    ['scaleGraph', curveJson(7), Curve],
+    ['scaleGraph2', curveJson(8), Curve]
+];
+
+/** A config carrying every property in {@link JSON_FORM}, in its JSON form. */
+const JSON_FORM_CONFIG = Object.fromEntries(JSON_FORM.map(([property, json]) => [property, json]));
+
+/** Reads an engine component property named by a table row. */
+const engineValue = (component: ParticleSystemComponent, property: string) =>
+    (component as unknown as Record<string, unknown>)[property];
+
+/**
+ * Asserts that {@link JSON_FORM_CONFIG}, applied to a component that already existed, came out
+ * exactly as the engine builds it into a component it creates itself: every JSON-form property of
+ * the built type, and equal.
+ *
+ * @param app - The booted application.
+ * @param late - The component the config was applied to.
+ */
+const expectBuiltAsCreated = (app: AppBase, late: ParticleSystemComponent) => {
+    const bare = new Entity('bare', app);
+    app.root.addChild(bare);
+    const created = bare.addComponent('particlesystem', JSON_FORM_CONFIG) as ParticleSystemComponent;
+
+    for (const [property, , built] of JSON_FORM) {
+        const expected = engineValue(created, property);
+        expect.soft(expected, `${property} as creation builds it`).toBeInstanceOf(built);
+        expect.soft(engineValue(late, property), property).toStrictEqual(expected);
+    }
+};
 
 /** Two lazy configs whose loads the tests park and settle in a chosen order. */
 const RACE_ASSETS = `
@@ -202,6 +281,76 @@ describe('<pc-particle-system>', () => {
                 get<AssetElement>('pc-asset[id="flame"]').asset!.id
             );
             expect(uncaught.seen).toEqual([]);
+        });
+
+        it('builds a lazy config from its JSON form once it loads, as creation does', async () => {
+            const { app, get } = await bootApp(`
+                <pc-asset id="cfg" type="json" src="${jsonSrc(JSON_FORM_CONFIG)}" lazy></pc-asset>
+                <pc-entity name="fx"><pc-particle-system asset="cfg"></pc-particle-system></pc-entity>
+            `);
+            const component = get('pc-particle-system').component!;
+            const cfg = get<AssetElement>('pc-asset[id="cfg"]').asset!;
+
+            // Pinned, because the resource loader caches by URL: a second asset with the same
+            // src would arrive already loaded and take the creation path instead
+            expect(cfg.loaded, 'the component exists before its config').toBe(false);
+
+            await vi.waitFor(() => expect(cfg.loaded).toBe(true));
+            expectBuiltAsCreated(app, component);
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('builds a config selected at runtime from its JSON form, as creation does', async () => {
+            const { app, get } = await bootApp(`
+                <pc-asset id="cfg" type="json" src="${jsonSrc(JSON_FORM_CONFIG)}"></pc-asset>
+                <pc-entity name="fx"><pc-particle-system></pc-particle-system></pc-entity>
+            `);
+            const element = get('pc-particle-system');
+
+            // The config has already loaded, so selecting it applies it before setAttribute returns
+            element.setAttribute('asset', 'cfg');
+            expectBuiltAsCreated(app, element.component!);
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('keeps a real emitter running through a late config', async () => {
+            // The null device disables particle systems, so a component never builds an emitter
+            // there and an unbuilt config value sits in it unread. Lifting the flag gives the
+            // component a real emitter, which is where unbuilt values used to throw: a raw vec3 in
+            // the bounds update that runs every frame and on each rebuild, and a raw curve in the
+            // graph rebuild. The reported error was the first of those:
+            // "this.emitterExtents.equals is not a function".
+            const { app, get, step } = await bootApp(RACE_ASSETS);
+            (app.graphicsDevice as NullGraphicsDevice).disableParticleSystem = false;
+            const parked = parkLoads(app);
+
+            const element = await mountParticleSystem(get('pc-entity'), 'cfg-a');
+            expect(element.component!.emitter, 'the component runs a real emitter').toBeTruthy();
+
+            parked.get('cfg-a.json')!(null, JSON_FORM_CONFIG);
+            step();
+            step();
+
+            expect(element.component!.emitterExtents).toEqual(new Vec3(1, 2, 3));
+            expect(uncaught.seen).toEqual([]);
+        });
+
+        it('leaves enabled to the element when a config carries its own', async () => {
+            const { get } = await bootApp(`
+                <pc-asset id="cfg" type="json" src="${jsonSrc({ enabled: false, lifetime: 5 })}"></pc-asset>
+                <pc-entity name="created"><pc-particle-system asset="cfg"></pc-particle-system></pc-entity>
+                <pc-entity name="late"><pc-particle-system></pc-particle-system></pc-entity>
+            `);
+            const created = get<ParticleSystemComponentElement>('[name="created"] > pc-particle-system');
+            const late = get<ParticleSystemComponentElement>('[name="late"] > pc-particle-system');
+            late.setAttribute('asset', 'cfg');
+
+            // The element's enabled attribute owns the state on both paths, as a script instance's
+            // attributes JSON leaves `enabled` to its element
+            for (const element of [created, late]) {
+                expect(element.component!.lifetime, 'the config applied').toBe(5);
+                expect(element.component!.enabled, 'all but its enabled key').toBe(true);
+            }
         });
     });
 });
