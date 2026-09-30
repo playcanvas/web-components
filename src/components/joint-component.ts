@@ -184,12 +184,12 @@ class JointComponentElement extends ComponentElement<JointComponent> {
     private _motorSpeed = 0;
 
     /**
-     * The maximum swing of the joint around the joint frame's Y axis.
+     * The maximum swing of the joint's primary axis towards the joint frame's Y axis.
      */
     private _swingLimitY = 45;
 
     /**
-     * The maximum swing of the joint around the joint frame's Z axis.
+     * The maximum swing of the joint's primary axis towards the joint frame's Z axis.
      */
     private _swingLimitZ = 45;
 
@@ -800,8 +800,8 @@ class JointComponentElement extends ComponentElement<JointComponent> {
     }
 
     /**
-     * Sets the maximum swing of a ball joint around the joint frame's Y axis in degrees, applied
-     * when enable-limits is set.
+     * Sets how far a ball joint's primary (X) axis may swing towards the joint frame's Y axis (a
+     * rotation about Z), as a half-angle in degrees, applied when enable-limits is set.
      * @param value - The Y axis swing limit.
      */
     set swingLimitY(value: number) {
@@ -812,7 +812,7 @@ class JointComponentElement extends ComponentElement<JointComponent> {
     }
 
     /**
-     * Gets the maximum swing of the joint around the joint frame's Y axis.
+     * Gets the maximum swing of the joint's primary axis towards the joint frame's Y axis.
      * @returns The Y axis swing limit.
      */
     get swingLimitY() {
@@ -820,8 +820,8 @@ class JointComponentElement extends ComponentElement<JointComponent> {
     }
 
     /**
-     * Sets the maximum swing of a ball joint around the joint frame's Z axis in degrees, applied
-     * when enable-limits is set.
+     * Sets how far a ball joint's primary (X) axis may swing towards the joint frame's Z axis (a
+     * rotation about Y), as a half-angle in degrees, applied when enable-limits is set.
      * @param value - The Z axis swing limit.
      */
     set swingLimitZ(value: number) {
@@ -832,7 +832,7 @@ class JointComponentElement extends ComponentElement<JointComponent> {
     }
 
     /**
-     * Gets the maximum swing of the joint around the joint frame's Z axis.
+     * Gets the maximum swing of the joint's primary axis towards the joint frame's Z axis.
      * @returns The Z axis swing limit.
      */
     get swingLimitZ() {

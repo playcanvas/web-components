@@ -131,9 +131,9 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
     }
 
     /**
-     * Sets how the screen's `resolution` and `referenceResolution` are weighted against each other
-     * when `scaleMode` is `blend`, from 0 (follow the resolution) to 1 (follow the reference
-     * resolution). Ignored while `scaleMode` is `none`.
+     * Sets how the canvas's width and height, each measured against `referenceResolution`, are
+     * weighted against each other when `scaleMode` is `blend`, from 0 (scale by the width alone)
+     * to 1 (scale by the height alone). Ignored while `scaleMode` is `none`.
      * @param value - The scale blend factor.
      */
     set scaleBlend(value: number) {
@@ -144,7 +144,7 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
     }
 
     /**
-     * Gets how the screen's resolutions are weighted against each other.
+     * Gets how the canvas's width and height are weighted against each other.
      * @returns The scale blend factor.
      */
     get scaleBlend() {
@@ -153,9 +153,10 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
 
     /**
      * Sets how the screen scales its contents. `none` renders at `resolution` and ignores
-     * `referenceResolution`; `blend` scales between the two, weighted by `scaleBlend`, which is what
-     * keeps a UI laid out at one resolution usable at another. Requires `screenSpace` - the engine
-     * forces `none` on a world-space screen, which does not support scaling.
+     * `referenceResolution`; `blend` scales them from `referenceResolution` to fit the canvas's
+     * width, its height or a mix of the two, as `scaleBlend` sets, which is what keeps a UI laid
+     * out at one resolution usable at another. Requires `screenSpace` - the engine forces `none`
+     * on a world-space screen, which does not support scaling.
      * @param value - The scale mode ('none' or 'blend').
      */
     set scaleMode(value: 'none' | 'blend') {
