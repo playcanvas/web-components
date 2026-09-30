@@ -311,6 +311,14 @@ const COMPLIANCE_FLOPPY = 0.34;
 // How softly grabbed nodes follow the pointer
 const GRAB_COMPLIANCE = 0.0005;
 
+// How far the pointer can pull the body, as a fraction of its size. The limit is what keeps the
+// body inside its grown culling bounds.
+const PULL_LIMIT = 0.5;
+
+// Resources whose bounds have been grown already, so a second body sharing one doesn't grow them
+// again
+const grownResources = new WeakSet();
+
 const v1 = new Vec3();
 const v2 = new Vec3();
 const q1 = new Quat();
@@ -428,10 +436,12 @@ class JellySplat extends Script {
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
-        // capture phase, ahead of the camera controls
+        // capture phase, ahead of the camera controls. A cancelled pointer, like a touch the
+        // browser takes over, lets go the same as one that is lifted.
         window.addEventListener('pointerdown', this._onPointerDown, true);
         window.addEventListener('pointermove', this._onPointerMove, true);
         window.addEventListener('pointerup', this._onPointerUp, true);
+        window.addEventListener('pointercancel', this._onPointerUp, true);
         this.on('destroy', () => this._cleanup());
     }
 
@@ -511,6 +521,7 @@ class JellySplat extends Script {
         this._buildBody(solid);
         this._sampleSurface(centers, solid);
         this._placeOnMount(solid);
+        this._growBounds(gsplat);
 
         this._tex = new Texture(this.app.graphicsDevice, {
             name: 'JellyNodes',
@@ -702,6 +713,8 @@ class JellySplat extends Script {
         const world = this.entity.getWorldTransform();
         const scale = world.getScale();
         this._cellSizeWorld = this._h * (Math.abs(scale.x) + Math.abs(scale.y) + Math.abs(scale.z)) / 3;
+        // the lattice's longest side, in world units
+        this._size = this._cellSizeWorld * this.resolution;
 
         // node positions at rest, in model space and in world space
         this._restModel = new Float64Array(numNodes * 3);
@@ -873,6 +886,22 @@ class JellySplat extends Script {
             }
         }
         this._anchorNodes = Int32Array.from(anchors);
+    }
+
+    // Grows the splat's culling bounds by the body's size on every side, which covers everywhere
+    // it can reach: a pull is limited to half its size, the swing back after one is no bigger,
+    // and even the floppiest sag stays within the rest. Engine 2.22 culls a unified splat on
+    // WebGPU with a sphere around its resource's bounds, which ignores customAabb and is only
+    // read when the work buffer is rebuilt, so the resource's box is grown in place, ahead of the
+    // first rebuild, and customAabb is set to match for the rest of the engine.
+    _growBounds(gsplat) {
+        const aabb = gsplat.resource.aabb;
+        if (!grownResources.has(gsplat.resource)) {
+            grownResources.add(gsplat.resource);
+            const grow = this._h * this.resolution;
+            aabb.halfExtents.add(v1.set(grow, grow, grow));
+        }
+        gsplat.customAabb = aabb;
     }
 
     // trilinear embedding of splat centers in the lattice: 8 node indices and weights each
@@ -1394,6 +1423,13 @@ class JellySplat extends Script {
         if (Math.abs(denom) > 1e-6) {
             const t = v1.sub2(grab.point, ray.origin).dot(grab.normal) / denom;
             grab.target.copy(ray.dir).mulScalar(t).add(ray.origin);
+
+            // no further than the pull limit, which keeps the body inside its culling bounds
+            const limit = PULL_LIMIT * this._size;
+            const pull = v1.sub2(grab.target, grab.point).length();
+            if (pull > limit) {
+                grab.target.copy(grab.point).add(v1.mulScalar(limit / pull));
+            }
         }
         e.stopImmediatePropagation();
     }
@@ -1409,6 +1445,7 @@ class JellySplat extends Script {
         window.removeEventListener('pointerdown', this._onPointerDown, true);
         window.removeEventListener('pointermove', this._onPointerMove, true);
         window.removeEventListener('pointerup', this._onPointerUp, true);
+        window.removeEventListener('pointercancel', this._onPointerUp, true);
         const gsplat = this.entity.gsplat;
         if (gsplat) {
             gsplat.setWorkBufferModifier(null);
