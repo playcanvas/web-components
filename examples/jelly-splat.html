@@ -72,10 +72,7 @@
         </style>
     </head>
     <body>
-        <!-- Blending the splats is most of the frame, and they gain nothing from antialiasing,
-             which multiplies that work by 4. The pixel ratio cap stops a phone at 3x from drawing
-             2.25x the pixels of 2x for no visible gain. -->
-        <pc-app antialias="false" max-pixel-ratio="2">
+        <pc-app antialias="false" backend="webgl2" depth-buffer="false" max-pixel-ratio="1" stencil-buffer="false">
             <!-- Assets -->
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
             <pc-asset src="assets/scripts/jelly-splat.mjs"></pc-asset>
