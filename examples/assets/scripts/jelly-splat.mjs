@@ -304,9 +304,9 @@ const SUBSTEPS = 8;
 
 // The edge compliance (the inverse of stiffness) at floppiness 0 and 1, spaced logarithmically in
 // between. The body's total mass is 1, whatever its size; at the floppy end a body 2 m tall
-// slumps under its own weight but still stands, and much beyond it collapses.
+// slumps under its own weight but still stands, and a little beyond it collapses.
 const COMPLIANCE_FIRM = 0.0005;
-const COMPLIANCE_FLOPPY = 0.34;
+const COMPLIANCE_FLOPPY = 0.45;
 
 // How softly grabbed nodes follow the pointer
 const GRAB_COMPLIANCE = 0.0005;
@@ -401,7 +401,7 @@ class JellySplat extends Script {
      */
     anchorBand = 0.12;
 
-    _floppiness = 0.38;
+    _floppiness = 0.37;
 
     _built = false;
 
