@@ -305,8 +305,8 @@ const SUBSTEPS = 8;
 // The edge compliance (the inverse of stiffness) at floppiness 0 and 1, spaced logarithmically in
 // between. The body's total mass is 1, whatever its size; at the floppy end a body 2 m tall
 // slumps under its own weight but still stands, and a little beyond it collapses.
-const COMPLIANCE_FIRM = 0.0005;
-const COMPLIANCE_FLOPPY = 0.45;
+const COMPLIANCE_FIRM = 0.0006;
+const COMPLIANCE_FLOPPY = 0.55;
 
 // How softly grabbed nodes follow the pointer
 const GRAB_COMPLIANCE = 0.0005;
@@ -395,7 +395,8 @@ class JellySplat extends Script {
 
     /**
      * How much of the body is held still when anchored, as a fraction of its extent away from
-     * the mount. Whole lattice cells are held, so the still part can reach up to a cell further.
+     * the mount. When the mount's direction runs along one of the splat's axes, just this much is
+     * held; otherwise whole lattice cells are, so the still part can reach up to a cell further.
      * @type {number}
      * @attribute
      */
@@ -590,6 +591,28 @@ class JellySplat extends Script {
         for (let a = 0; a < 3; a++) {
             this._cells[a] = Math.max(1, Math.ceil((max[a] - min[a] + 2 * margin) / h - 1e-6));
             this._origin[a] = (min[a] + max[a]) * 0.5 - this._cells[a] * h * 0.5;
+        }
+
+        // When the mount's direction runs along a lattice axis, as it does for a splat standing
+        // upright or facing a wall, the lattice is shifted along it (and grown by a cell to still
+        // cover the splat) so a layer of nodes lies on the top of the anchor band. Holding that
+        // layer and everything below it then holds just the band, not up to a whole cell more.
+        this._bandLayer = null;
+        const mountAxis = this.mount === 'wall' ? Vec3.BACK : Vec3.UP;
+        const world = this.entity.getWorldTransform();
+        const columns = [world.getX(new Vec3()), world.getY(new Vec3()), world.getZ(new Vec3())];
+        for (let a = 0; a < 3; a++) {
+            const along = columns[a].normalize().dot(mountAxis);
+            if (Math.abs(along) > 0.999) {
+                const nearest = along > 0 ? min[a] : max[a];
+                const top = nearest + Math.sign(along) * this.anchorBand * (max[a] - min[a]);
+                const offset = (((top - this._origin[a]) % h) + h) % h;
+                if (offset > 1e-6 * h) {
+                    this._origin[a] -= h - offset;
+                    this._cells[a]++;
+                }
+                this._bandLayer = { axis: a, coordinate: top };
+            }
         }
         this._dims = this._cells.map(c => c + 1);
 
@@ -849,7 +872,8 @@ class JellySplat extends Script {
     // The rest pose moved along the mount axis (up for the floor, forward for a wall) until its
     // splat surface just touches the mount, and the nodes the anchor holds still: every corner
     // of each solid cell reaching into the band nearest the mount, so the splats in the band stay
-    // exactly still
+    // exactly still. With the lattice aligned to the band's top, the cells resting on it are
+    // left free, so nothing above the band is held.
     _placeOnMount(solid) {
         const axis = this.mount === 'wall' ? 2 : 1;
         const plane = axis === 1 ? this.floor : this.wall;
@@ -869,7 +893,16 @@ class JellySplat extends Script {
             this._embeddedPoint(this._contact, s, this._stand, p);
             far = Math.max(far, axis === 1 ? p.y : p.z);
         }
-        const band = plane + this.anchorBand * (far - plane);
+        // the top of the band: the node layer the lattice was aligned with, moved onto the mount
+        // like the rest pose, or else a fraction of the body's extent from the mount
+        let band = plane + this.anchorBand * (far - plane);
+        if (this._bandLayer) {
+            v1.set(this._origin[0], this._origin[1], this._origin[2]);
+            v1[['x', 'y', 'z'][this._bandLayer.axis]] = this._bandLayer.coordinate;
+            this.entity.getWorldTransform().transformPoint(v1, v2);
+            band = (axis === 1 ? v2.y : v2.z) + plane - near;
+        }
+        const tolerance = 0.01 * this._cellSizeWorld;
         const [cx, cy, cz] = this._cells;
         const anchors = new Set();
         for (let k = 0; k < cz; k++) {
@@ -879,7 +912,7 @@ class JellySplat extends Script {
                         continue;
                     }
                     const corners = [0, 1, 2, 3, 4, 5, 6, 7].map(b => this._cornerNode(i, j, k, b));
-                    if (corners.some(n => this._stand[n * 3 + axis] < band)) {
+                    if (corners.some(n => this._stand[n * 3 + axis] < band - tolerance)) {
                         corners.forEach(n => anchors.add(n));
                     }
                 }

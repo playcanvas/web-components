@@ -95,11 +95,12 @@
                 </pc-entity>
                 <!-- Dinosaur. The capture is in arbitrary units, so it is scaled to stand 2 m tall,
                      a size the jelly's stiffness and gravity suit. The script glues its base to
-                     the floor at y = 0, placing it there, and holds the base still. -->
+                     the floor at y = 0, placing it there, and holds the bottom 4% of it still:
+                     the disc, up to its top, with the feet free above it. -->
                 <pc-entity name="dinosaur" position="0 0.77 0" rotation="0 0 180" scale="0.075 0.075 0.075">
                     <pc-gsplat asset="dinosaur"></pc-gsplat>
                     <pc-script>
-                        <pc-script-instance name="jellySplat" floppiness="0.37"></pc-script-instance>
+                        <pc-script-instance name="jellySplat" anchor-band="0.04" floppiness="0.37"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
             </pc-scene>
