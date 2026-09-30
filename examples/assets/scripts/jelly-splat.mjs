@@ -159,7 +159,9 @@ void modifySplatColor(vec3 center, inout vec4 color) {
 `;
 
 const wgsl = /* wgsl */ `
-var uJellyNodes: texture_2d<f32>;
+// uff, the engine's unfilterable float, so the RGBA32F texture binds without the optional
+// float32-filterable feature. Declared as f32, the copy fails on devices that lack it.
+var uJellyNodes: texture_2d<uff>;
 uniform uJellyModelToGrid: mat4x4f;
 uniform uJellyDims: vec3f;
 
