@@ -37,6 +37,7 @@ export const examples = [
     { name: 'Splat Annotations', path: 'splat-annotations.html', category: 'Gaussian Splatting' },
     { name: 'Splat Flipbook', path: 'splat-flipbook.html', category: 'Gaussian Splatting' },
     { name: 'Splat Streaming', path: 'splat-streaming.html', category: 'Gaussian Splatting' },
+    { name: 'Jelly Splat', path: 'jelly-splat.html', category: 'Gaussian Splatting' },
     // Webcam AR
     { name: 'AR Avatar', path: 'ar-avatar.html', category: 'Webcam AR' },
     { name: 'AR Hand Gestures', path: 'ar-hand-gestures.html', category: 'Webcam AR' },

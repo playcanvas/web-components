@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Jelly Splat</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Floppiness panel. Glass recipe copied from example.css's .example-button, applied once
+               to the panel; sits bottom-left, and example.css docks it along the bottom edge of a
+               narrow screen. */
+            .jelly-panel {
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                display: grid;
+                grid-template-columns: auto 1fr;
+                align-items: center;
+                gap: 10px 12px;
+                box-sizing: border-box;
+                width: min(300px, calc(100vw - 32px));
+                padding: 12px 14px;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font: 600 12px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            @supports not (backdrop-filter: blur(12px)) {
+                .jelly-panel {
+                    background-color: rgba(18, 18, 18, 0.88);
+                }
+            }
+
+            .jelly-panel label {
+                cursor: pointer;
+            }
+
+            .jelly-panel input[type="range"] {
+                width: 100%;
+                height: 24px;
+                margin: 0;
+                accent-color: #f60;
+                cursor: pointer;
+            }
+
+            .jelly-panel input[type="range"]:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: 2px;
+            }
+
+            .panel-caption {
+                grid-column: 1 / 3;
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 11px;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/jelly-splat.mjs"></pc-asset>
+            <!-- 'Tyrannosaurus Rex' by Alfred Duemlein (https://superspl.at/scene/d281a49d),
+                 CC BY 4.0 - a toy on a round base -->
+            <pc-asset src="assets/splats/tyrannosaurus-rex.sog" id="dinosaur"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera -->
+                <pc-entity name="camera" position="1.8 1.5 3.77">
+                    <pc-camera clear-color="black"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="cameraControls"
+                                            enable-fly="false"
+                                            enable-pan="false"
+                                            focus-point="-0.2 1 -0.13"
+                                            pitch-range="-80 10"
+                                            zoom-range="1 10"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Dinosaur. The capture is in arbitrary units, so it is scaled to stand 2 m tall,
+                     a size the jelly's stiffness and gravity suit. The script glues its base to
+                     the floor at y = 0, placing it there, and holds the base still. -->
+                <pc-entity name="dinosaur" position="0 0.77 0" rotation="0 0 180" scale="0.075 0.075 0.075">
+                    <pc-gsplat asset="dinosaur"></pc-gsplat>
+                    <pc-script>
+                        <pc-script-instance name="jellySplat" floppiness="0.37"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="jelly-panel example-panel">
+            <span class="panel-caption">Drag the dinosaur to pull it</span>
+            <label for="floppiness">Floppiness</label>
+            <input id="floppiness" type="range" min="0" max="1" step="0.01" value="0.37">
+        </div>
+        <div class="example-button-container top-right">
+            <button class="example-button" id="reset">Reset</button>
+        </div>
+        <script type="module" src="js/example.mjs"></script>
+        <script type="module">
+            import { whenReady } from '@playcanvas/web-components';
+
+            const jelly = await whenReady('pc-script-instance[name="jellySplat"]');
+
+            // The slider drives the script's floppiness attribute, from firm (0) to very floppy (1)
+            document.getElementById('floppiness').addEventListener('input', (event) => {
+                jelly.setAttribute('floppiness', event.target.value);
+            });
+            document.getElementById('reset').addEventListener('click', () => jelly.script.reset());
+        </script>
+    </body>
+</html>
