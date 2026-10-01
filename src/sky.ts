@@ -86,17 +86,29 @@ class SkyElement extends AsyncElement {
             this._scene.envAtlas = envAtlas;
         }
 
-        const layer = this._scene.layers.getLayerById(LAYERID_SKYBOX);
-        if (layer) {
-            layer.enabled = this._type !== 'none';
-        }
-
-        this._scene.sky.type = this._type;
+        this._applyType();
         this._scene.sky.node.setLocalScale(this._scale);
         this._scene.sky.center = this._center;
         this._scene.skyboxIntensity = this._intensity;
         this._scene.skyboxMip = this._mipLevel;
         this._scene.skyboxRotation = new Quat().setFromEulerAngles(this._rotation);
+    }
+
+    /**
+     * Applies the type to the scene. `none` is this element's own value rather than an engine sky
+     * type: it hides the skybox by disabling its layer, and leaves the sky's projection as it was.
+     */
+    private _applyType() {
+        if (!this._scene) return;
+
+        const layer = this._scene.layers.getLayerById(LAYERID_SKYBOX);
+        if (layer) {
+            layer.enabled = this._type !== 'none';
+        }
+
+        if (this._type !== 'none') {
+            this._scene.sky.type = this._type;
+        }
     }
 
     private async _loadSkybox() {
@@ -288,13 +300,7 @@ class SkyElement extends AsyncElement {
      */
     set type(value: 'box' | 'dome' | 'infinite' | 'none') {
         this._type = value;
-        if (this._scene) {
-            this._scene.sky.type = this._type;
-            const layer = this._scene.layers.getLayerById(LAYERID_SKYBOX);
-            if (layer) {
-                layer.enabled = this._type !== 'none';
-            }
-        }
+        this._applyType();
     }
 
     /**
