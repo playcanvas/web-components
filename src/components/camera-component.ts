@@ -88,6 +88,8 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
     private _rect = new Vec4(0, 0, 1, 1);
 
+    private _sceneColorMap = false;
+
     private _scissorRect = new Vec4(0, 0, 1, 1);
 
     private _tonemap: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' = 'linear';
@@ -117,6 +119,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             orthoHeight: this._orthoHeight,
             priority: this._priority,
             rect: this._rect,
+            renderSceneColorMap: this._sceneColorMap,
             scissorRect: this._scissorRect,
             toneMapping: tonemaps.get(this._tonemap) ?? TONEMAP_LINEAR
         };
@@ -536,6 +539,31 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
     }
 
     /**
+     * Sets whether the camera renders a copy of the scene's color for its materials to sample,
+     * which refractive materials - such as glTF materials with transmission - need to show what
+     * is behind them. The copy is made every frame, so leave it off unless a material uses it. A
+     * camera rendered through the `cameraFrame` script takes this from that script's
+     * `rendering.sceneColorMap` instead. Defaults to `false`.
+     * @param value - Whether the camera renders the scene color map.
+     */
+    set sceneColorMap(value: boolean) {
+        this._sceneColorMap = value;
+        if (this.component) {
+            this.component.renderSceneColorMap = value;
+        }
+    }
+
+    /**
+     * Gets whether the camera renders a copy of the scene's color for its materials to sample,
+     * which refractive materials - such as glTF materials with transmission - need to show what
+     * is behind them.
+     * @returns Whether the camera renders the scene color map.
+     */
+    get sceneColorMap(): boolean {
+        return this._sceneColorMap;
+    }
+
+    /**
      * Sets the scissor rect of the camera.
      * @param value - The scissor rect.
      */
@@ -596,6 +624,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             'projection',
             'projection-offset',
             'rect',
+            'scene-color-map',
             'scissor-rect',
             'tonemap'
         ];
@@ -658,6 +687,9 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
                 break;
             case 'rect':
                 this.rect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
+                break;
+            case 'scene-color-map':
+                this.sceneColorMap = parseBool(newValue, false);
                 break;
             case 'scissor-rect':
                 this.scissorRect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
