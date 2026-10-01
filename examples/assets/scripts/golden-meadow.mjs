@@ -1225,8 +1225,11 @@ export class MeadowTrees extends Script {
         const meadow = getMeadow(this.app);
         const device = this.app.graphicsDevice;
 
+        const leafCanvas = paintLeaves(256);
         const leafTexture = new Texture(device, {
             name: 'meadow-leaves',
+            width: leafCanvas.width,
+            height: leafCanvas.height,
             format: PIXELFORMAT_SRGBA8,
             mipmaps: true,
             minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
@@ -1234,7 +1237,7 @@ export class MeadowTrees extends Script {
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
-        leafTexture.setSource(paintLeaves(256));
+        leafTexture.setSource(leafCanvas);
 
         const bark = new StandardMaterial();
         bark.name = 'meadow-bark';
