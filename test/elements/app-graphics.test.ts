@@ -64,6 +64,7 @@ describe('<pc-app> graphics attributes', () => {
         element.setAttribute('antialias', 'false');
         element.setAttribute('backend', 'webgl2');
         element.setAttribute('depth-buffer', 'false');
+        element.setAttribute('devtools', 'false');
         element.setAttribute('stencil-buffer', 'false');
 
         expect(warnings.seen).toEqual([]);
