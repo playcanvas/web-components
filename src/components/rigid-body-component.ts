@@ -37,6 +37,11 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
     private _friction = 0.5;
 
     /**
+     * The gravity scale of the rigidbody.
+     */
+    private _gravityScale = 1;
+
+    /**
      * The linear damping of the rigidbody.
      */
     private _linearDamping = 0;
@@ -76,6 +81,7 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
             angularDamping: this._angularDamping,
             angularFactor: this._angularFactor,
             friction: this._friction,
+            gravityScale: this._gravityScale,
             linearDamping: this._linearDamping,
             linearFactor: this._linearFactor,
             mass: this._mass,
@@ -154,6 +160,27 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
      */
     get friction() {
         return this._friction;
+    }
+
+    /**
+     * Sets the multiplier applied to the scene's gravity for this body: 1 falls normally, 0 ignores
+     * gravity and a negative value rises. Applies to `dynamic` bodies only. Defaults to 1.
+     * @param value - The gravity scale.
+     */
+    set gravityScale(value: number) {
+        this._gravityScale = value;
+        if (this.component) {
+            this.component.gravityScale = value;
+        }
+    }
+
+    /**
+     * Gets the multiplier applied to the scene's gravity for this body: 1 falls normally, 0 ignores
+     * gravity and a negative value rises.
+     * @returns The gravity scale.
+     */
+    get gravityScale() {
+        return this._gravityScale;
     }
 
     /**
@@ -287,6 +314,7 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
             'angular-damping',
             'angular-factor',
             'friction',
+            'gravity-scale',
             'linear-damping',
             'linear-factor',
             'mass',
@@ -308,6 +336,9 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
                 break;
             case 'friction':
                 this.friction = parseNumber(newValue, 0.5, name);
+                break;
+            case 'gravity-scale':
+                this.gravityScale = parseNumber(newValue, 1, name);
                 break;
             case 'linear-damping':
                 this.linearDamping = parseNumber(newValue, 0, name);
