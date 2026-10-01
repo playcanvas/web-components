@@ -77,6 +77,7 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['projection', 'projection', 'orthographic', PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE],
     ['projection-offset', 'projectionOffset', '0 0.5', new Vec2(0, 0.5), new Vec2(0, 0)],
     ['rect', 'rect', '0 0 0.5 1', new Vec4(0, 0, 0.5, 1), new Vec4(0, 0, 1, 1)],
+    ['scene-color-map', 'renderSceneColorMap', '', true, false],
     ['scissor-rect', 'scissorRect', '0 0 0.5 0.5', new Vec4(0, 0, 0.5, 0.5), new Vec4(0, 0, 1, 1)],
     // Used to be the one exception, writing TONEMAP_NONE: the two only differ once the scene
     // exposure leaves 1, which no attribute could reach at the time. pc-scene[exposure] can now,
@@ -158,6 +159,25 @@ describe('<pc-camera>', () => {
             expect(component.toneMapping).toBe(TONEMAP_LINEAR);
             expect(component.rect).toEqual(new Vec4(0, 0, 1, 1));
             expect(component.clearDepth).toBe(1);
+        });
+    });
+
+    describe('[scene-color-map]', () => {
+        /** The engine counts scene color map requests on the component. */
+        const requests = (component: CameraComponent) =>
+            (component as unknown as { _renderSceneColorMap: number })._renderSceneColorMap;
+
+        it('holds one request however often it is written, and releases it on removal', async () => {
+            const { get } = await bootApp(scene('scene-color-map'));
+            const camera = get<CameraComponentElement>('pc-camera');
+            expect(requests(camera.component!), 'requested at creation').toBe(1);
+
+            camera.setAttribute('scene-color-map', 'true');
+            camera.sceneColorMap = true;
+            expect(requests(camera.component!), 'later writes do not stack').toBe(1);
+
+            camera.removeAttribute('scene-color-map');
+            expect(requests(camera.component!), 'removal releases it').toBe(0);
         });
     });
 
