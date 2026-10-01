@@ -1,5 +1,5 @@
 import type { AppBase, Asset } from 'playcanvas';
-import { Quat, Texture } from 'playcanvas';
+import { LAYERID_SKYBOX, Quat, SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE, Texture } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import type { AssetElement } from '../../src/asset';
@@ -96,5 +96,44 @@ describe('<pc-sky>', () => {
         finishTextureLoad(assetA, app);
         expect(app.scene.skybox, 'the reload generated the skybox').toBeTruthy();
         expect(uncaught.seen).toEqual([]);
+    });
+
+    describe('[type]', () => {
+        it('hides the skybox for none without handing the engine a sky type it lacks', async () => {
+            const { app, get, render } = await bootApp(
+                `${SKY_ASSETS}<pc-scene><pc-sky asset="sky-a" type="none"></pc-sky></pc-scene>`
+            );
+            const assetA = get<AssetElement>('pc-asset[id="sky-a"]').asset!;
+
+            await settleTask();
+            finishTextureLoad(assetA, app);
+
+            // Rendering builds the sky mesh for the engine's type, which asserts on one it lacks
+            render();
+
+            expect(app.scene.layers.getLayerById(LAYERID_SKYBOX)!.enabled, 'the skybox is hidden').toBe(false);
+            expect(app.scene.sky.type, 'the sky keeps an engine type').toBe(SKYTYPE_INFINITE);
+            expect(app.scene.skybox, 'and the skybox still lights the scene').toBeTruthy();
+        });
+
+        it('switches between none and the sky types at runtime', async () => {
+            const { app, get } = await bootApp(
+                `${SKY_ASSETS}<pc-scene><pc-sky asset="sky-a" type="dome"></pc-sky></pc-scene>`
+            );
+            const sky = get<SkyElement>('pc-sky');
+            const layer = app.scene.layers.getLayerById(LAYERID_SKYBOX)!;
+
+            await settleTask();
+            finishTextureLoad(get<AssetElement>('pc-asset[id="sky-a"]').asset!, app);
+            expect(app.scene.sky.type).toBe(SKYTYPE_DOME);
+
+            sky.setAttribute('type', 'none');
+            expect(layer.enabled, 'none hides the skybox').toBe(false);
+            expect(app.scene.sky.type, 'and leaves the projection as it was').toBe(SKYTYPE_DOME);
+
+            sky.setAttribute('type', 'box');
+            expect(layer.enabled, 'a sky type shows it again').toBe(true);
+            expect(app.scene.sky.type).toBe(SKYTYPE_BOX);
+        });
     });
 });
