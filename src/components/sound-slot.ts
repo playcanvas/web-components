@@ -83,13 +83,15 @@ class SoundSlotElement extends AsyncElement {
         if (this._duration) {
             options.duration = this._duration;
         }
+        // Part of the options rather than assigned once the slot exists, so the engine's own
+        // autoPlay - which plays while the component and its entity are enabled - has it to play
+        const id = useAsset(this._asset)?.id;
+        if (id) {
+            options.asset = id;
+        }
 
         this._soundElement = soundElement;
         this.soundSlot = component.addSlot(this._name, options);
-        this.asset = this._asset;
-        if (this._autoPlay) {
-            this.soundSlot!.play();
-        }
 
         this._onReady();
     }
