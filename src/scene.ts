@@ -54,14 +54,14 @@ class SceneElement extends AsyncElement {
     private _fogEnd = 1000;
 
     /**
-     * The Gaussian splat LOD selection mode.
-     */
-    private _gsplatLodMode: 'error' | 'distance' = 'distance';
-
-    /**
-     * The target number of Gaussian splats rendered across the scene.
+     * The number of Gaussian splats rendered across the scene.
      */
     private _gsplatSplatBudget = 1_000_000;
+
+    /**
+     * How the Gaussian splat budget is used.
+     */
+    private _gsplatSplatBudgetMode: 'target' | 'limit' = 'target';
 
     /**
      * Whether Gaussian splats are fogged.
@@ -230,8 +230,8 @@ class SceneElement extends AsyncElement {
             this._scene.fog.start = this._fogStart;
             this._scene.fog.end = this._fogEnd;
 
-            this._scene.gsplat.lodMode = this._gsplatLodMode;
             this._scene.gsplat.splatBudget = this._gsplatSplatBudget;
+            this._scene.gsplat.splatBudgetMode = this._gsplatSplatBudgetMode;
             this._scene.gsplat.useFog = this._gsplatUseFog;
             this._scene.gsplat.useTonemap = this._gsplatUseTonemap;
 
@@ -369,32 +369,9 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Sets how LOD levels are chosen for streamed Gaussian splats, within the splat budget.
-     * `distance` orders detail by camera distance alone and uses the least memory. `error`
-     * spends the same budget where it removes the most approximation error, which lifts sparse
-     * regions such as sky and distant background that `distance` leaves coarse, but keeps
-     * noticeably more of the streamed data resident in memory. Defaults to `distance`.
-     * @param value - The Gaussian splat LOD mode.
-     */
-    set gsplatLodMode(value: 'error' | 'distance') {
-        this._gsplatLodMode = value;
-        if (this.scene) {
-            this.scene.gsplat.lodMode = value;
-        }
-    }
-
-    /**
-     * Gets how LOD levels are chosen for streamed Gaussian splats.
-     * @returns The Gaussian splat LOD mode.
-     */
-    get gsplatLodMode() {
-        return this._gsplatLodMode;
-    }
-
-    /**
-     * Sets the target number of splats rendered across all Gaussian splats in the scene. The
-     * Engine distributes this budget globally between streamed splat assets. Defaults to
-     * 1,000,000.
+     * Sets the number of splats rendered across all Gaussian splats in the scene, used as
+     * {@link gsplatSplatBudgetMode} directs. The Engine distributes this budget globally between
+     * streamed splat assets. 0 means no budget. Defaults to 1,000,000.
      * @param value - The scene-wide splat budget.
      */
     set gsplatSplatBudget(value: number) {
@@ -405,11 +382,34 @@ class SceneElement extends AsyncElement {
     }
 
     /**
-     * Gets the target number of splats rendered across the scene.
+     * Gets the number of splats rendered across the scene.
      * @returns The scene-wide splat budget.
      */
     get gsplatSplatBudget() {
         return this._gsplatSplatBudget;
+    }
+
+    /**
+     * Sets how the splat budget is used for streamed Gaussian splats. `target` raises detail
+     * until the budget is used up, wherever the camera is; the LOD distances of each `<pc-gsplat>`
+     * only shape how detail falls off and divides between splats. `limit` lets those distances
+     * decide the detail and only lowers it when they would exceed the budget, so a distant splat
+     * uses just the few splats its distance calls for. Defaults to `target`.
+     * @param value - The Gaussian splat budget mode.
+     */
+    set gsplatSplatBudgetMode(value: 'target' | 'limit') {
+        this._gsplatSplatBudgetMode = value;
+        if (this.scene) {
+            this.scene.gsplat.splatBudgetMode = value;
+        }
+    }
+
+    /**
+     * Gets how the splat budget is used for streamed Gaussian splats.
+     * @returns The Gaussian splat budget mode.
+     */
+    get gsplatSplatBudgetMode() {
+        return this._gsplatSplatBudgetMode;
     }
 
     /**
@@ -500,8 +500,8 @@ class SceneElement extends AsyncElement {
             'fog-density',
             'fog-start',
             'fog-end',
-            'gsplat-lod-mode',
             'gsplat-splat-budget',
+            'gsplat-splat-budget-mode',
             'gsplat-use-fog',
             'gsplat-use-tonemap',
             'gravity',
@@ -529,11 +529,11 @@ class SceneElement extends AsyncElement {
             case 'fog-end':
                 this.fogEnd = parseNumber(newValue, 1000, name);
                 break;
-            case 'gsplat-lod-mode':
-                this.gsplatLodMode = parseEnum(newValue, ['error', 'distance'], 'distance', name);
-                break;
             case 'gsplat-splat-budget':
                 this.gsplatSplatBudget = parseNumber(newValue, 1_000_000, name);
+                break;
+            case 'gsplat-splat-budget-mode':
+                this.gsplatSplatBudgetMode = parseEnum(newValue, ['target', 'limit'], 'target', name);
                 break;
             case 'gsplat-use-fog':
                 this.gsplatUseFog = parseBool(newValue, true);

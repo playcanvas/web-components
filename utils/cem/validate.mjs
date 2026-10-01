@@ -104,9 +104,9 @@ if (manifest) {
     expectAttribute('pc-scene', 'fog-start', { type: 'number', default: '1', fieldName: 'fogStart' });
     expectAttribute('pc-scene', 'lighting-max-lights', { type: 'number', default: '255', fieldName: 'lightingMaxLights' });
     expectAttribute('pc-scene', 'gsplat-use-tonemap', { type: 'boolean', default: 'true', fieldName: 'gsplatUseTonemap' });
-    // Engine 2.22.1 switched its LOD mode default from error to distance
-    // (playcanvas/engine#9326), and the element writes the engine's own
-    expectEnum('pc-scene', 'gsplat-lod-mode', 2, 'distance');
+    // Engine 2.23 replaced the LOD mode with a budget mode, and the element writes the engine's
+    // own default
+    expectEnum('pc-scene', 'gsplat-splat-budget-mode', 2, 'target');
 
     // Time scales control how fast the whole application runs rather than describing a scene, so
     // both live on <pc-app>, while gravity stays a per-scene setting as in the engine's scene data

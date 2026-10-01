@@ -84,8 +84,8 @@ describe('<pc-render>', () => {
             const engine = bare.addComponent('render', { type: 'torus' }) as RenderComponent;
 
             expect(component.type).toBe('torus');
-            expect(component.meshInstances[0].mesh.vertexBuffer.numVertices).toBe(
-                engine.meshInstances[0].mesh.vertexBuffer.numVertices
+            expect(component.meshInstances[0].mesh!.vertexBuffer.numVertices).toBe(
+                engine.meshInstances[0].mesh!.vertexBuffer.numVertices
             );
         });
 
