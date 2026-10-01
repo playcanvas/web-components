@@ -152,6 +152,8 @@ class AppElement extends AsyncElement {
 
     private _depthBuffer = true;
 
+    private _devtools = true;
+
     private _stencilBuffer = true;
 
     private _maxPixelRatio = Infinity;
@@ -165,9 +167,10 @@ class AppElement extends AsyncElement {
     private _physicsTimeScale = 1;
 
     /**
-     * Set once the graphics options above have been handed to `createGraphicsDevice`, after which
-     * writing any of them changes nothing. Guards the warning in {@link _warnIfBooted}, and is
-     * cleared on disconnect so a re-connected element boots from its current attributes.
+     * Set once the boot options above have been read - the graphics options handed to
+     * `createGraphicsDevice`, and `devtools` - after which writing any of them changes nothing.
+     * Guards the warning in {@link _warnIfBooted}, and is cleared on disconnect so a re-connected
+     * element boots from its current attributes.
      */
     private _optionsLocked = false;
 
@@ -344,6 +347,10 @@ class AppElement extends AsyncElement {
 
         this._optionsLocked = true;
 
+        // Read along with the graphics options rather than when the application is initialized
+        // below, so a write during device creation - which warns that it has no effect - has none
+        const devtools = this._devtools;
+
         // createGraphicsDevice appends its final null-device fallback to the array in place, so
         // the requested list is captured now for the failure message.
         const requested = deviceTypes.join(', ');
@@ -464,6 +471,7 @@ class AppElement extends AsyncElement {
         createOptions.lightmapper = Lightmapper;
         createOptions.batchManager = BatchManager;
         createOptions.xr = XrManager;
+        createOptions.devtools = devtools;
 
         const app = new AppBase(this._canvas);
         this._app = app;
@@ -850,9 +858,9 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Warns that a graphics option was written too late to have any effect. These options are read
-     * once, when the element connects and creates its graphics device, so a later write updates
-     * only the element's own property - silently, without this.
+     * Warns that a boot option was written too late to have any effect. These options are read
+     * once, when the element connects and boots the application, so a later write updates only the
+     * element's own property - silently, without this.
      *
      * @param name - The name of the option, as its attribute.
      */
@@ -961,6 +969,28 @@ class AppElement extends AsyncElement {
      */
     get depthBuffer() {
         return this._depthBuffer;
+    }
+
+    /**
+     * Sets whether the application announces itself to developer tools, such as the PlayCanvas
+     * Inspector browser extension, so they can find and inspect it. Set `false` to keep a
+     * production page from announcing itself. This is an opt-out, not a protection: code running on
+     * the page can still reach the application, through this element's `app` property for one.
+     * Read only when the application boots. Defaults to `true`.
+     * @param value - Whether the application announces itself to developer tools.
+     */
+    set devtools(value: boolean) {
+        this._warnIfBooted('devtools');
+        this._devtools = value;
+    }
+
+    /**
+     * Gets whether the application announces itself to developer tools, such as the PlayCanvas
+     * Inspector browser extension, so they can find and inspect it.
+     * @returns Whether the application announces itself to developer tools.
+     */
+    get devtools() {
+        return this._devtools;
     }
 
     /**
@@ -1139,6 +1169,7 @@ class AppElement extends AsyncElement {
             'area-light-luts',
             'backend',
             'depth-buffer',
+            'devtools',
             'loading-bar',
             'max-pixel-ratio',
             'physics-time-scale',
@@ -1165,6 +1196,9 @@ class AppElement extends AsyncElement {
                 break;
             case 'depth-buffer':
                 this.depthBuffer = parseBool(newValue, true);
+                break;
+            case 'devtools':
+                this.devtools = parseBool(newValue, true);
                 break;
             case 'loading-bar':
                 this.loadingBar = parseBool(newValue, true);

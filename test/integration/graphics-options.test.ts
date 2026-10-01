@@ -209,6 +209,7 @@ describe('<pc-app> graphics options', () => {
         appElement.setAttribute('alpha', 'false');
         appElement.setAttribute('backend', 'webgl2');
         appElement.setAttribute('depth-buffer', 'false');
+        appElement.setAttribute('devtools', 'false');
         appElement.setAttribute('stencil-buffer', 'false');
 
         // Written through the property rather than the attribute, so the guard covers the JS path
@@ -216,8 +217,8 @@ describe('<pc-app> graphics options', () => {
         appElement.antialias = false;
 
         warnings.expect(
-            /^Attribute '(alpha|antialias|backend|depth-buffer|stencil-buffer)' on <pc-app> is only read/,
-            5
+            /^Attribute '(alpha|antialias|backend|depth-buffer|devtools|stencil-buffer)' on <pc-app> is only read/,
+            6
         );
     });
 
