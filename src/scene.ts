@@ -2,8 +2,13 @@ import type { AppBase, Scene } from 'playcanvas';
 import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
+import type { OpacityDither } from './material';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
 import { ListenerRegistry } from './pointer-events';
+
+// Every material opacity dither but `none`, which is not a coverage pattern - the Engine rejects it
+// here, and `gsplat-stochastic` is what turns dithering off.
+const gsplatDithers: Exclude<OpacityDither, 'none'>[] = ['bayer2', 'bayer4', 'bayer8', 'bayer16', 'bluenoise', 'ignnoise'];
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
@@ -54,6 +59,11 @@ class SceneElement extends AsyncElement {
     private _fogEnd = 1000;
 
     /**
+     * The noise pattern stochastic Gaussian splats are dithered against.
+     */
+    private _gsplatDither: Exclude<OpacityDither, 'none'> = 'bluenoise';
+
+    /**
      * The number of Gaussian splats rendered across the scene.
      */
     private _gsplatSplatBudget = 1_000_000;
@@ -62,6 +72,11 @@ class SceneElement extends AsyncElement {
      * How the Gaussian splat budget is used.
      */
     private _gsplatSplatBudgetMode: 'target' | 'limit' = 'target';
+
+    /**
+     * Whether Gaussian splats render with stochastic alpha.
+     */
+    private _gsplatStochastic = false;
 
     /**
      * Whether Gaussian splats are fogged.
@@ -230,8 +245,10 @@ class SceneElement extends AsyncElement {
             this._scene.fog.start = this._fogStart;
             this._scene.fog.end = this._fogEnd;
 
+            this._scene.gsplat.dither = this._gsplatDither;
             this._scene.gsplat.splatBudget = this._gsplatSplatBudget;
             this._scene.gsplat.splatBudgetMode = this._gsplatSplatBudgetMode;
+            this._scene.gsplat.stochastic = this._gsplatStochastic;
             this._scene.gsplat.useFog = this._gsplatUseFog;
             this._scene.gsplat.useTonemap = this._gsplatUseTonemap;
 
@@ -369,6 +386,28 @@ class SceneElement extends AsyncElement {
     }
 
     /**
+     * Sets the noise pattern stochastic Gaussian splats dither their coverage against, ignored
+     * unless {@link gsplatStochastic} is set. Can be `bayer2`, `bayer4`, `bayer8`, `bayer16`,
+     * `bluenoise` or `ignnoise`. Defaults to `bluenoise`, which looks best under temporal
+     * anti-aliasing.
+     * @param value - The Gaussian splat dither pattern.
+     */
+    set gsplatDither(value: Exclude<OpacityDither, 'none'>) {
+        this._gsplatDither = value;
+        if (this.scene) {
+            this.scene.gsplat.dither = value;
+        }
+    }
+
+    /**
+     * Gets the noise pattern stochastic Gaussian splats dither their coverage against.
+     * @returns The Gaussian splat dither pattern.
+     */
+    get gsplatDither() {
+        return this._gsplatDither;
+    }
+
+    /**
      * Sets the number of splats rendered across all Gaussian splats in the scene, used as
      * {@link gsplatSplatBudgetMode} directs. The Engine distributes this budget globally between
      * streamed splat assets. 0 means no budget. Defaults to 1,000,000.
@@ -410,6 +449,29 @@ class SceneElement extends AsyncElement {
      */
     get gsplatSplatBudgetMode() {
         return this._gsplatSplatBudgetMode;
+    }
+
+    /**
+     * Sets whether Gaussian splats render with stochastic alpha on WebGPU: drawn unsorted, with
+     * dithered coverage and depth writes, rather than sorted and alpha blended. This skips the
+     * per-frame sort at the cost of noise, which temporal anti-aliasing on the camera smooths out.
+     * WebGL, which sorts splats on the CPU, ignores it. Defaults to `false`.
+     * @param value - Whether Gaussian splats render with stochastic alpha.
+     */
+    set gsplatStochastic(value: boolean) {
+        this._gsplatStochastic = value;
+        if (this.scene) {
+            this.scene.gsplat.stochastic = value;
+        }
+    }
+
+    /**
+     * Gets whether Gaussian splats render with stochastic alpha on WebGPU: drawn unsorted, with
+     * dithered coverage and depth writes, rather than sorted and alpha blended.
+     * @returns Whether Gaussian splats render with stochastic alpha.
+     */
+    get gsplatStochastic() {
+        return this._gsplatStochastic;
     }
 
     /**
@@ -500,8 +562,10 @@ class SceneElement extends AsyncElement {
             'fog-density',
             'fog-start',
             'fog-end',
+            'gsplat-dither',
             'gsplat-splat-budget',
             'gsplat-splat-budget-mode',
+            'gsplat-stochastic',
             'gsplat-use-fog',
             'gsplat-use-tonemap',
             'gravity',
@@ -529,11 +593,17 @@ class SceneElement extends AsyncElement {
             case 'fog-end':
                 this.fogEnd = parseNumber(newValue, 1000, name);
                 break;
+            case 'gsplat-dither':
+                this.gsplatDither = parseEnum(newValue, gsplatDithers, 'bluenoise', name);
+                break;
             case 'gsplat-splat-budget':
                 this.gsplatSplatBudget = parseNumber(newValue, 1_000_000, name);
                 break;
             case 'gsplat-splat-budget-mode':
                 this.gsplatSplatBudgetMode = parseEnum(newValue, ['target', 'limit'], 'target', name);
+                break;
+            case 'gsplat-stochastic':
+                this.gsplatStochastic = parseBool(newValue, false);
                 break;
             case 'gsplat-use-fog':
                 this.gsplatUseFog = parseBool(newValue, true);

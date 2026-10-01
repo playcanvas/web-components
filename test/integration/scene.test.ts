@@ -21,8 +21,10 @@ const settings: [label: string, read: (scene: Scene) => unknown][] = [
     ['fog.density', (scene) => scene.fog.density],
     ['fog.start', (scene) => scene.fog.start],
     ['fog.end', (scene) => scene.fog.end],
+    ['gsplat.dither', (scene) => scene.gsplat.dither],
     ['gsplat.splatBudget', (scene) => scene.gsplat.splatBudget],
     ['gsplat.splatBudgetMode', (scene) => scene.gsplat.splatBudgetMode],
+    ['gsplat.stochastic', (scene) => scene.gsplat.stochastic],
     ['gsplat.useFog', (scene) => scene.gsplat.useFog],
     ['gsplat.useTonemap', (scene) => scene.gsplat.useTonemap],
     ['lighting.maxLights', (scene) => scene.lighting.maxLights]
@@ -40,8 +42,10 @@ const cases: [attribute: string, read: (app: AppBase) => unknown, value: string,
     ['fog-density', (app) => app.scene.fog.density, '0.05', 0.05, 0],
     ['fog-start', (app) => app.scene.fog.start, '10', 10, 1],
     ['fog-end', (app) => app.scene.fog.end, '500', 500, 1000],
+    ['gsplat-dither', (app) => app.scene.gsplat.dither, 'bayer4', 'bayer4', 'bluenoise'],
     ['gsplat-splat-budget', (app) => app.scene.gsplat.splatBudget, '250000', 250_000, 1_000_000],
     ['gsplat-splat-budget-mode', (app) => app.scene.gsplat.splatBudgetMode, 'limit', 'limit', 'target'],
+    ['gsplat-stochastic', (app) => app.scene.gsplat.stochastic, '', true, false],
     ['gsplat-use-fog', (app) => app.scene.gsplat.useFog, 'false', false, true],
     ['gsplat-use-tonemap', (app) => app.scene.gsplat.useTonemap, 'false', false, true],
     ['gravity', (app) => app.systems.rigidbody!.gravity, '0 -5 0', new Vec3(0, -5, 0), new Vec3(0, -9.81, 0)],
@@ -198,6 +202,16 @@ describe('<pc-scene>', () => {
             warnings.expect("Invalid value 'near' for attribute 'fog-start'. Expected a finite number. Using '1'.");
             expect(app.scene.fog.color).toEqual(new Color(0, 0, 0));
             expect(app.scene.fog.start).toBe(1);
+        });
+
+        it('rejects none as a Gaussian splat dither pattern, which the engine does not accept', async () => {
+            const { app } = await bootApp('<pc-scene gsplat-stochastic gsplat-dither="none"></pc-scene>');
+
+            warnings.expect(
+                "Invalid value 'none' for attribute 'gsplat-dither'. Valid values: bayer2, bayer4, bayer8, bayer16, " +
+                    "bluenoise, ignnoise. Using 'bluenoise'."
+            );
+            expect(app.scene.gsplat.dither).toBe('bluenoise');
         });
     });
 
