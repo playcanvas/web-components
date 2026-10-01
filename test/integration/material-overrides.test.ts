@@ -168,7 +168,7 @@ describe('<pc-node> material-overrides', () => {
             const replacement = get<MaterialElement>('pc-material[id="smoked-glass"]').material!;
             const meshInstance = model.contentEntity!.render!.meshInstances[0];
 
-            expect(meshInstance.material.name).toBe('Glass-flatShaded');
+            expect(meshInstance.material!.name).toBe('Glass-flatShaded');
 
             node.materialOverrides = { 'name:Glass-flatShaded': 'smoked-glass' };
 
@@ -201,7 +201,7 @@ describe('<pc-node> material-overrides', () => {
 
             const trim = (model.entity!.findByName('Trim') as Entity).render!.meshInstances[0];
             expect(trim.material, "the descendant's CarPaint is out of scope").not.toBe(replacements.candyRed);
-            expect(trim.material.name).toBe('CarPaint');
+            expect(trim.material!.name).toBe('CarPaint');
             expect(node.state).toBe('bound');
             expect(uncaught.seen).toEqual([]);
         });
@@ -319,7 +319,7 @@ describe('<pc-node> material-overrides', () => {
             expect(after[0], 'the fresh hierarchy is new').not.toBe(before[0]);
             expect(after[0].material, 'the mapping reapplied to the fresh assignments').toBe(replacements.candyRed);
             expect(after[4].material).toBe(replacements.candyRed);
-            expect(after[2].material.name, 'unmatched fresh assignments stay authored').toBe('Glass');
+            expect(after[2].material!.name, 'unmatched fresh assignments stay authored').toBe('Glass');
             expect(uncaught.seen).toEqual([]);
         });
 
@@ -410,7 +410,7 @@ describe('<pc-node> material-overrides', () => {
                 "pc-node 'Mount' is bound to a node without an authored render component - material-overrides ignored"
             );
             const decorated = node.entity!.render!.meshInstances[0];
-            expect(decorated.material.name, 'the decoration-owned component is never a target').not.toBe(
+            expect(decorated.material!.name, 'the decoration-owned component is never a target').not.toBe(
                 'candy-red'
             );
             expect(decoration.isConnected).toBe(true);
@@ -493,7 +493,7 @@ describe('<pc-node> material-overrides', () => {
             expect(meshInstance.skinInstance, 'the swap preserves the skin instance').toBe(skinInstance);
 
             node.materialOverrides = null;
-            expect(meshInstance.material.name, 'restored').toBe('Skin');
+            expect(meshInstance.material!.name, 'restored').toBe('Skin');
             expect(meshInstance.skinInstance).toBe(skinInstance);
             expect(uncaught.seen).toEqual([]);
         });

@@ -24,7 +24,9 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
 
     private _castShadows = false;
 
-    private _lodFalloff = 1;
+    private _lodBaseDistance = 5;
+
+    private _lodMultiplier = 3;
 
     private _lodRangeMin = 0;
 
@@ -39,7 +41,8 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
         return {
             asset: useAsset(this._asset),
             castShadows: this._castShadows,
-            lodFalloff: this._lodFalloff,
+            lodBaseDistance: this._lodBaseDistance,
+            lodMultiplier: this._lodMultiplier,
             lodRangeMin: this._lodRangeMin,
             lodRangeMax: this._lodRangeMax
         };
@@ -94,25 +97,49 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
     }
 
     /**
-     * Sets how quickly this splat's quality falls off away from the camera. Higher values
-     * concentrate more of the scene-wide splat budget near the camera, while lower values spread
-     * detail more evenly. Clamped to the range 0 to 8. Defaults to 1. Only affects assets that
-     * contain LOD levels (e.g. `.lod-meta.json`).
-     * @param value - The LOD falloff exponent.
+     * Sets the camera distance of the first LOD transition, from LOD 0 to LOD 1. Parts of the
+     * splat closer than this use the finest LOD, and each further level starts at
+     * {@link lodMultiplier} times the previous distance. In world units, compensated for the
+     * camera's field of view. How these distances combine with the scene-wide splat budget is set
+     * by the `gsplat-splat-budget-mode` attribute of `<pc-scene>`. Clamped to a minimum of 0.1.
+     * Defaults to 5. Only affects assets that contain LOD levels (e.g. `.lod-meta.json`).
+     * @param value - The LOD base distance.
      */
-    set lodFalloff(value: number) {
-        this._lodFalloff = value;
+    set lodBaseDistance(value: number) {
+        this._lodBaseDistance = value;
         if (this.component) {
-            this.component.lodFalloff = value;
+            this.component.lodBaseDistance = value;
         }
     }
 
     /**
-     * Gets how quickly this splat's quality falls off away from the camera.
-     * @returns The LOD falloff exponent.
+     * Gets the camera distance of the first LOD transition.
+     * @returns The LOD base distance.
      */
-    get lodFalloff() {
-        return this._lodFalloff;
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * Sets the multiplier between successive LOD transition distances. Higher values keep finer
+     * detail further from the camera, at a higher memory cost; lower values switch to coarser
+     * levels sooner. Clamped to a minimum of 1.2. Defaults to 3. Only affects assets that contain
+     * LOD levels (e.g. `.lod-meta.json`).
+     * @param value - The LOD multiplier.
+     */
+    set lodMultiplier(value: number) {
+        this._lodMultiplier = value;
+        if (this.component) {
+            this.component.lodMultiplier = value;
+        }
+    }
+
+    /**
+     * Gets the multiplier between successive LOD transition distances.
+     * @returns The LOD multiplier.
+     */
+    get lodMultiplier() {
+        return this._lodMultiplier;
     }
 
     /**
@@ -159,7 +186,15 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'asset', 'cast-shadows', 'lod-falloff', 'lod-range-min', 'lod-range-max'];
+        return [
+            ...super.observedAttributes,
+            'asset',
+            'cast-shadows',
+            'lod-base-distance',
+            'lod-multiplier',
+            'lod-range-min',
+            'lod-range-max'
+        ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -172,8 +207,11 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
             case 'cast-shadows':
                 this.castShadows = parseBool(newValue, false);
                 break;
-            case 'lod-falloff':
-                this.lodFalloff = parseNumber(newValue, 1, name);
+            case 'lod-base-distance':
+                this.lodBaseDistance = parseNumber(newValue, 5, name);
+                break;
+            case 'lod-multiplier':
+                this.lodMultiplier = parseNumber(newValue, 3, name);
                 break;
             case 'lod-range-min':
                 this.lodRangeMin = parseNumber(newValue, 0, name);

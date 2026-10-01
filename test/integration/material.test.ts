@@ -67,7 +67,7 @@ describe('<pc-material> integration', () => {
         const { get } = await bootApp('<pc-material id="m" opacity="0.5" opacity-dither="bayer8"></pc-material>');
 
         const element = get<MaterialElement>('pc-material');
-        const material = element.material! as StandardMaterial & { alphaDither: number | null };
+        const material = element.material!;
         expect(material.alphaDither, 'the engine falls back to the opacity').toBe(0.5);
 
         element.setAttribute('alpha-dither', '0.25');

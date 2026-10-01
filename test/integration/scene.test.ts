@@ -1,4 +1,4 @@
-import type { AppBase } from 'playcanvas';
+import type { AppBase, GraphicsDevice } from 'playcanvas';
 import { Color, Scene, Script, Vec3 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
@@ -21,8 +21,8 @@ const settings: [label: string, read: (scene: Scene) => unknown][] = [
     ['fog.density', (scene) => scene.fog.density],
     ['fog.start', (scene) => scene.fog.start],
     ['fog.end', (scene) => scene.fog.end],
-    ['gsplat.lodMode', (scene) => scene.gsplat.lodMode],
     ['gsplat.splatBudget', (scene) => scene.gsplat.splatBudget],
+    ['gsplat.splatBudgetMode', (scene) => scene.gsplat.splatBudgetMode],
     ['gsplat.useFog', (scene) => scene.gsplat.useFog],
     ['gsplat.useTonemap', (scene) => scene.gsplat.useTonemap],
     ['lighting.maxLights', (scene) => scene.lighting.maxLights]
@@ -40,8 +40,8 @@ const cases: [attribute: string, read: (app: AppBase) => unknown, value: string,
     ['fog-density', (app) => app.scene.fog.density, '0.05', 0.05, 0],
     ['fog-start', (app) => app.scene.fog.start, '10', 10, 1],
     ['fog-end', (app) => app.scene.fog.end, '500', 500, 1000],
-    ['gsplat-lod-mode', (app) => app.scene.gsplat.lodMode, 'error', 'error', 'distance'],
     ['gsplat-splat-budget', (app) => app.scene.gsplat.splatBudget, '250000', 250_000, 1_000_000],
+    ['gsplat-splat-budget-mode', (app) => app.scene.gsplat.splatBudgetMode, 'limit', 'limit', 'target'],
     ['gsplat-use-fog', (app) => app.scene.gsplat.useFog, 'false', false, true],
     ['gsplat-use-tonemap', (app) => app.scene.gsplat.useTonemap, 'false', false, true],
     ['gravity', (app) => app.systems.rigidbody!.gravity, '0 -5 0', new Vec3(0, -5, 0), new Vec3(0, -9.81, 0)],
@@ -81,6 +81,10 @@ describe('<pc-scene>', () => {
             // element kept writing error, and the element wrote white fog starting at 0 over the
             // engine's black fog starting at 1. Nothing caught either.
             const bare = new Scene(app.graphicsDevice);
+            // The GSplat component system gives the application's scene its GSplat parameters, so
+            // the bare scene takes a fresh set of the same class
+            const GSplatParams = scene.gsplat.constructor as new (device: GraphicsDevice) => Scene['gsplat'];
+            bare.setGsplatParams(new GSplatParams(app.graphicsDevice));
             try {
                 for (const [label, read] of settings) {
                     expect.soft(read(scene), label).toEqual(read(bare));
@@ -96,51 +100,62 @@ describe('<pc-scene>', () => {
             const { app, get } = await bootApp('<pc-scene></pc-scene>');
             const scene = get<SceneElement>('pc-scene');
 
-            expect(scene.gsplatLodMode).toBe('distance');
             expect(scene.gsplatSplatBudget).toBe(1_000_000);
-            expect(app.scene.gsplat.lodMode).toBe('distance');
+            expect(scene.gsplatSplatBudgetMode).toBe('target');
             expect(app.scene.gsplat.splatBudget).toBe(1_000_000);
+            expect(app.scene.gsplat.splatBudgetMode).toBe('target');
         });
 
         it('applies initial values and subsequent changes to the Engine scene', async () => {
             const { app, get } = await bootApp(
-                '<pc-scene gsplat-lod-mode="error" gsplat-splat-budget="250000"></pc-scene>'
+                '<pc-scene gsplat-splat-budget="250000" gsplat-splat-budget-mode="limit"></pc-scene>'
             );
             const scene = get<SceneElement>('pc-scene');
 
-            expect(app.scene.gsplat.lodMode).toBe('error');
             expect(app.scene.gsplat.splatBudget).toBe(250_000);
+            expect(app.scene.gsplat.splatBudgetMode).toBe('limit');
 
-            scene.setAttribute('gsplat-lod-mode', 'distance');
             scene.setAttribute('gsplat-splat-budget', '500000');
-            expect(app.scene.gsplat.lodMode).toBe('distance');
+            scene.setAttribute('gsplat-splat-budget-mode', 'target');
             expect(app.scene.gsplat.splatBudget).toBe(500_000);
+            expect(app.scene.gsplat.splatBudgetMode).toBe('target');
         });
 
         it('restores the Engine defaults when removed', async () => {
             const { app, get } = await bootApp(
-                '<pc-scene gsplat-lod-mode="error" gsplat-splat-budget="250000"></pc-scene>'
+                '<pc-scene gsplat-splat-budget="250000" gsplat-splat-budget-mode="limit"></pc-scene>'
             );
             const scene = get<SceneElement>('pc-scene');
 
-            scene.removeAttribute('gsplat-lod-mode');
             scene.removeAttribute('gsplat-splat-budget');
+            scene.removeAttribute('gsplat-splat-budget-mode');
 
-            expect(app.scene.gsplat.lodMode).toBe('distance');
             expect(app.scene.gsplat.splatBudget).toBe(1_000_000);
+            expect(app.scene.gsplat.splatBudgetMode).toBe('target');
         });
 
         it('falls back to defaults and warns for invalid values', async () => {
-            const { app } = await bootApp('<pc-scene gsplat-lod-mode="nearest" gsplat-splat-budget="many"></pc-scene>');
-
-            warnings.expect(
-                "Invalid value 'nearest' for attribute 'gsplat-lod-mode'. Valid values: error, distance. Using 'distance'."
+            const { app } = await bootApp(
+                '<pc-scene gsplat-splat-budget="many" gsplat-splat-budget-mode="cap"></pc-scene>'
             );
+
             warnings.expect(
                 "Invalid value 'many' for attribute 'gsplat-splat-budget'. Expected a finite number. Using '1000000'."
             );
-            expect(app.scene.gsplat.lodMode).toBe('distance');
+            warnings.expect(
+                "Invalid value 'cap' for attribute 'gsplat-splat-budget-mode'. Valid values: target, limit. Using 'target'."
+            );
             expect(app.scene.gsplat.splatBudget).toBe(1_000_000);
+            expect(app.scene.gsplat.splatBudgetMode).toBe('target');
+        });
+
+        it('does not expose the removed LOD mode', async () => {
+            expect((customElements.get('pc-scene') as typeof SceneElement).observedAttributes).not.toContain(
+                'gsplat-lod-mode'
+            );
+
+            // The engine reports any write to its removed lodMode, which the guard would catch
+            await bootApp('<pc-scene gsplat-lod-mode="error"></pc-scene>');
         });
     });
 

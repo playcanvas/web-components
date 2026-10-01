@@ -129,11 +129,7 @@ const parallaxModes: ParallaxMode[] = ['offset', 'occlusion'];
  * the engine declares them.
  */
 type UndeclaredParameters = {
-    alphaDither: number | null;
-    heightMapBase: number;
     parallaxMode: string;
-    parallaxSamples: number;
-    parallaxShadowSamples: number;
 };
 
 const undeclared = (material: StandardMaterial) => material as StandardMaterial & UndeclaredParameters;
@@ -437,8 +433,9 @@ class MaterialElement extends HTMLElement {
         const material = new StandardMaterial();
         this.material = material;
 
-        // null leaves the dither alpha following opacity, as it does on a bare StandardMaterial
-        undeclared(material).alphaDither = this._alphaDither;
+        // null leaves the dither alpha following opacity, as it does on a bare StandardMaterial.
+        // The engine accepts it, though its declarations type the setter as taking a number.
+        material.alphaDither = this._alphaDither as number;
         material.alphaTest = this._alphaTest;
         material.alphaToCoverage = this._alphaToCoverage;
         material.aoIntensity = this._aoIntensity;
@@ -476,7 +473,7 @@ class MaterialElement extends HTMLElement {
         material.glossMapRotation = this._glossMapRotation;
         material.glossMapTiling = this._glossMapTiling;
         material.glossMapUv = this._glossMapUv;
-        undeclared(material).heightMapBase = this._heightMapBase;
+        material.heightMapBase = this._heightMapBase;
         material.heightMapChannel = this._heightMapChannel;
         material.heightMapFactor = this._heightMapFactor;
         material.heightMapOffset = this._heightMapOffset;
@@ -505,8 +502,8 @@ class MaterialElement extends HTMLElement {
         material.opacityMapTiling = this._opacityMapTiling;
         material.opacityMapUv = this._opacityMapUv;
         undeclared(material).parallaxMode = this._parallaxMode;
-        undeclared(material).parallaxSamples = this._parallaxSamples;
-        undeclared(material).parallaxShadowSamples = this._parallaxShadowSamples;
+        material.parallaxSamples = this._parallaxSamples;
+        material.parallaxShadowSamples = this._parallaxShadowSamples;
         material.slopeDepthBias = this._slopeDepthBias;
         material.specular = this._specular;
         material.specularityFactor = this._specularityFactor;
@@ -644,7 +641,8 @@ class MaterialElement extends HTMLElement {
     set alphaDither(value: number | null) {
         this._alphaDither = value;
         if (this.material) {
-            undeclared(this.material).alphaDither = value;
+            // null is accepted, see _createMaterial
+            this.material.alphaDither = value as number;
             this._scheduleUpdate();
         }
     }
@@ -1495,7 +1493,7 @@ class MaterialElement extends HTMLElement {
     set heightMapBase(value: number) {
         this._heightMapBase = value;
         if (this.material) {
-            undeclared(this.material).heightMapBase = value;
+            this.material.heightMapBase = value;
             this._scheduleUpdate();
         }
     }
@@ -2137,7 +2135,7 @@ class MaterialElement extends HTMLElement {
     set parallaxSamples(value: number) {
         this._parallaxSamples = value;
         if (this.material) {
-            undeclared(this.material).parallaxSamples = value;
+            this.material.parallaxSamples = value;
             this._scheduleUpdate();
         }
     }
@@ -2160,7 +2158,7 @@ class MaterialElement extends HTMLElement {
     set parallaxShadowSamples(value: number) {
         this._parallaxShadowSamples = value;
         if (this.material) {
-            undeclared(this.material).parallaxShadowSamples = value;
+            this.material.parallaxShadowSamples = value;
             this._scheduleUpdate();
         }
     }

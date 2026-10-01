@@ -9,7 +9,8 @@ import { useGuard } from '../../helpers/guard';
 const scene = (attributes = '') => `<pc-entity><pc-gsplat ${attributes}></pc-gsplat></pc-entity>`;
 
 const cases: [attribute: string, property: keyof GSplatComponent, value: string, expected: number][] = [
-    ['lod-falloff', 'lodFalloff', '2.5', 2.5],
+    ['lod-base-distance', 'lodBaseDistance', '20', 20],
+    ['lod-multiplier', 'lodMultiplier', '6', 6],
     ['lod-range-min', 'lodRangeMin', '2', 2],
     ['lod-range-max', 'lodRangeMax', '5', 5]
 ];
@@ -57,23 +58,26 @@ describe('<pc-gsplat>', () => {
         });
 
         it('falls back to defaults and warns for invalid numbers', async () => {
-            const { get } = await bootApp(scene('lod-falloff="fast" lod-range-min="fine"'));
+            const { get } = await bootApp(scene('lod-base-distance="near" lod-multiplier="steep" lod-range-min="fine"'));
             const component = get<GSplatComponentElement>('pc-gsplat').component!;
 
-            warnings.expect("Invalid value 'fast' for attribute 'lod-falloff'. Expected a finite number. Using '1'.");
+            warnings.expect("Invalid value 'near' for attribute 'lod-base-distance'. Expected a finite number. Using '5'.");
+            warnings.expect("Invalid value 'steep' for attribute 'lod-multiplier'. Expected a finite number. Using '3'.");
             warnings.expect("Invalid value 'fine' for attribute 'lod-range-min'. Expected a finite number. Using '0'.");
-            expect(component.lodFalloff).toBe(1);
+            expect(component.lodBaseDistance).toBe(5);
+            expect(component.lodMultiplier).toBe(3);
             expect(component.lodRangeMin).toBe(0);
         });
 
-        it('does not expose the removed distance controls', async () => {
-            expect(GSplatComponentElement.observedAttributes).not.toContain('lod-base-distance');
-            expect(GSplatComponentElement.observedAttributes).not.toContain('lod-multiplier');
+        it('does not expose the removed falloff control', async () => {
+            expect(GSplatComponentElement.observedAttributes).not.toContain('lod-falloff');
 
-            const { get } = await bootApp(scene('lod-base-distance="20" lod-multiplier="6"'));
+            // The engine reports any write to its removed lodFalloff, which the guard would catch
+            const { get } = await bootApp(scene('lod-falloff="4"'));
             const component = get<GSplatComponentElement>('pc-gsplat').component!;
 
-            expect(component.lodFalloff).toBe(1);
+            expect(component.lodBaseDistance).toBe(5);
+            expect(component.lodMultiplier).toBe(3);
         });
     });
 });

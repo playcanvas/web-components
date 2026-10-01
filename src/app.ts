@@ -351,7 +351,6 @@ class AppElement extends AsyncElement {
         let device: GraphicsDevice;
         try {
             device = await createGraphicsDevice(this._canvas, {
-                // @ts-expect-error PlayCanvas does not declare the graphics-device alpha option.
                 alpha: this._alpha,
                 antialias: this._antialias,
                 depth: this._depthBuffer,
