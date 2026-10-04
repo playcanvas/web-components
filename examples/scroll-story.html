@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Scroll Story</title>
+        <meta name="description" content="Loci One, a fictional spatial camera: a scroll-driven product story built with PlayCanvas Web Components.">
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/scroll-story.css">
+    </head>
+    <body>
+        <!-- The intro: the wordmark draws itself while the scene loads -->
+        <div class="intro" aria-hidden="true">
+            <svg class="wordmark" viewBox="-0.06 -0.06 3.56 1.12"><use href="#loci-strokes"></use></svg>
+            <p class="intro-status">Loading</p>
+        </div>
+
+        <!-- The stage. It is fixed behind the page and never scrolls: the page scrolls over it,
+             and js/scroll-story.mjs turns the scroll position into the camera's place along its
+             shots and the time of the model's one animation clip. Every pixel goes through
+             refraction, depth of field and six area lights, so the pixel ratio is capped
+             at 2 - a 3x phone would pay more than twice as much for pixels it cannot show. -->
+        <pc-app class="stage" area-light-luts="luts" max-pixel-ratio="2" loading-bar="false">
+            <!-- The model's geometry is Draco compressed -->
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
+
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/blurred-planar-reflection.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/scroll-story.mjs"></pc-asset>
+            <pc-asset src="assets/json/area-light-luts.json" id="luts"></pc-asset>
+            <!-- Loci One: body, controls, lens, twelve glass elements and iris, authored in
+                 Blender with the glTF material extensions the engine renders - transmission,
+                 volume, IOR, dispersion and iridescence for the glass, anisotropy for the turned
+                 metal, clearcoat, sheen and specular - and a single 12 second clip, "story",
+                 that the scroll scrubs -->
+            <pc-asset src="assets/models/loci-one.glb" id="loci"></pc-asset>
+            <!-- Image-based lighting: black, with a few soft reflection cards for the metal to show -
+                 authored by utils/scroll-story/studio.py, 184 KB -->
+            <pc-asset src="assets/skies/loci-studio.hdr" id="studio"></pc-asset>
+
+            <!-- Sound, generated with ElevenLabs (credits in assets/sounds/loci.txt). The ambient
+                 bed is the one large file, so it is lazy: it loads when sound is first turned on. -->
+            <pc-asset src="assets/sounds/loci-ambience.mp3" id="snd-ambience" lazy></pc-asset>
+            <pc-asset src="assets/sounds/loci-servo.mp3" id="snd-servo"></pc-asset>
+            <pc-asset src="assets/sounds/loci-blades.mp3" id="snd-blades"></pc-asset>
+            <pc-asset src="assets/sounds/loci-dial.mp3" id="snd-dial"></pc-asset>
+            <pc-asset src="assets/sounds/loci-shutter.mp3" id="snd-shutter"></pc-asset>
+            <pc-asset src="assets/sounds/loci-whoosh.mp3" id="snd-whoosh"></pc-asset>
+            <pc-asset src="assets/sounds/loci-tick.mp3" id="snd-tick"></pc-asset>
+
+            <!-- The floor's decals, made by utils/scroll-story/floor.py from the camera's footprint -->
+            <pc-asset src="assets/textures/loci-contact-shadow.png" id="contact-shadow-map"></pc-asset>
+            <pc-asset src="assets/textures/loci-light-pool.png" id="light-pool-map"></pc-asset>
+
+            <!-- The floor's surface, under the camera: replaced by the planar reflection -->
+            <pc-material id="floor" diffuse="#000000"></pc-material>
+            <!-- On top of it, a soft pool of light the camera stands in, and its contact shadow -->
+            <pc-material id="light-pool" diffuse="#000000" emissive="#fff4ea" emissive-map="light-pool-map" emissive-intensity="0.12" blend-type="additive" depth-write="false" use-lighting="false"></pc-material>
+            <pc-material id="contact-shadow" diffuse="#000000" opacity-map="contact-shadow-map" opacity-map-channel="a" blend-type="normal" depth-write="false" use-lighting="false"></pc-material>
+            <!-- The practical lights' faces: pure emission, the bar bright enough to bloom, the
+                 soft box an even strip -->
+            <pc-material id="light-bar" emissive="#f4f6ff" emissive-intensity="5" use-lighting="false"></pc-material>
+            <pc-material id="softbox" emissive="#f4f6ff" emissive-intensity="1.4" use-lighting="false"></pc-material>
+
+            <pc-scene>
+                <!-- The studio for reflections only: the frame is a black void lit by area lights -->
+                <pc-sky asset="studio" type="none" lighting intensity="1.35"></pc-sky>
+
+                <!-- Camera. cameraRail moves it; cameraFrame grades it, blooms the highlights, grabs
+                     the scene behind the glass for refraction, and racks focus shot to shot. -->
+                <pc-entity name="camera" id="camera" position="0.2 0.12 0.42">
+                    <pc-camera fov="24" near-clip="0.005" far-clip="12" clear-color="#000000"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": "neutral", "samples": 4, "sceneColorMap": true, "renderFormat": "rgba16", "renderFormatFallback0": "rg11b10", "renderFormatFallback1": "rgba8" },
+                            "bloom": { "enabled": true, "intensity": 0.03, "blurLevel": 12 },
+                            "vignette": { "enabled": true, "intensity": 0.45, "inner": 0.4, "outer": 1.15, "curvature": 0.6 },
+                            "grading": { "enabled": true, "contrast": 1.04, "saturation": 1 },
+                            "dof": { "enabled": true, "highQuality": true, "nearBlur": true, "focusDistance": 0.45, "focusRange": 0.05, "blurRadius": 2, "blurRings": 4, "blurRingPoints": 5 }
+                        }'></pc-script-instance>
+                        <pc-script-instance name="cameraRail"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+
+                <!-- Shots. Each is where the camera stands, what it looks at, where on screen that
+                     sits (offset, so the subject keeps clear of the copy beside it) and the lens.
+                     The page's sections name them, in the order the story reaches them; on a tall
+                     screen cameraRail backs off and lifts the subject above the copy. -->
+                <pc-entity id="shot-hero" position="-0.2135 0.1347 0.3668">
+                    <pc-script><pc-script-instance name="shot" target="-0.004 0.038 0.004" offset="0.32 -0.04" fov="24" blur="2.2"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-design" position="-0.2989 0.1627 0.1409">
+                    <pc-script><pc-script-instance name="shot" target="-0.01 0.052 0" offset="-0.32 -0.02" fov="24" blur="2.6"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-dial" position="-0.1135 0.1597 0.0971">
+                    <pc-script><pc-script-instance name="shot" target="-0.036 0.078 -0.002" offset="-0.3 -0.06" fov="22" blur="5"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-top" position="0.0192 0.3338 0.1467">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.074 0" offset="-0.32 0.02" fov="24" blur="3"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-glass-wide" position="0.1679 0.0478 0.3479">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.03 0.06" offset="0.3 -0.02" fov="24" blur="2.5"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-glass-row" position="0.2785 0.0387 0.8102">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.032 0.24" offset="0.32 0" fov="24" blur="1.8"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-glass-macro" position="0.123 0.0357 0.4708">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.032 0.31" offset="0.3 0" fov="22" blur="5.5"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-lens" position="0.2022 0.0962 0.3448">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.032 0.05" offset="-0.32 -0.02" fov="22" blur="3"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-lens-front" position="-0.012 0.0315 0.268">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.0315 0.058" offset="-0.3 0" fov="18" blur="2"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-iris" position="-0.012 0.0315 0.085">
+                    <pc-script><pc-script-instance name="shot" target="-0.012 0.0315 0.04" offset="0 0" fov="30" blur="1"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-yours" position="0.2344 0.1295 0.365">
+                    <pc-script><pc-script-instance name="shot" target="0 0.038 0.004" offset="0.32 -0.04" fov="24" blur="2.2"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity id="shot-yours-end" position="0.4033 0.1895 0.252">
+                    <pc-script><pc-script-instance name="shot" target="0 0.035 0" offset="0.32 0" fov="24" blur="2.4"></pc-script-instance></pc-script>
+                </pc-entity>
+
+                <!-- Loci One. Its animation never plays: clipScrubber holds it at the time the
+                     scroll position gives. The strip light that sweeps the top plate rides the
+                     model's own animated "sweep-rig" node, so it is scrubbed with everything else. -->
+                <pc-model id="loci-model" asset="loci">
+                    <pc-anim activate="false"></pc-anim>
+                    <pc-script><pc-script-instance name="clipScrubber"></pc-script-instance></pc-script>
+                    <pc-node name="sweep-rig">
+                        <pc-entity scale="0.024 1 0.5">
+                            <pc-light type="spot" shape="rect" color="#fff4ea" intensity="8" range="1.2" inner-cone-angle="50" outer-cone-angle="85"></pc-light>
+                        </pc-entity>
+                    </pc-node>
+                </pc-model>
+
+                <!-- The studio. Rect area lights are soft boxes and strip lights: each light's entity
+                     scale is its size, and aimLight turns it to face the camera body. -->
+                <pc-entity name="key" position="-0.34 0.42 0.3" scale="0.55 1 0.38">
+                    <pc-light type="spot" shape="rect" color="#fff7f0" intensity="3.4" range="3" inner-cone-angle="55" outer-cone-angle="88"></pc-light>
+                    <pc-script><pc-script-instance name="aimLight" target="0 0.04 0"></pc-script-instance></pc-script>
+                </pc-entity>
+                <pc-entity name="fill" position="0.46 0.18 0.32" scale="0.7 1 0.5">
+                    <pc-light type="spot" shape="rect" color="#fff6ee" intensity="0.6" range="3" inner-cone-angle="55" outer-cone-angle="88"></pc-light>
+                    <pc-script><pc-script-instance name="aimLight" target="0 0.04 0"></pc-script-instance></pc-script>
+                </pc-entity>
+
+                <!-- Practical lights standing behind the camera, which you see as well as feel: a
+                     tall strip soft box at the back left - the bright band the glass elements are
+                     seen against, and bend - and a light bar at the back right. Each is something to
+                     look at and, at the same place, an area light the same size. -->
+                <pc-entity name="softbox" position="-0.58 0.46 -0.72" rotation="0 38 0">
+                    <pc-entity rotation="90 0 0" scale="0.14 1 0.9"><pc-render type="plane" material="softbox"></pc-render></pc-entity>
+                    <pc-entity scale="0.14 1 0.9">
+                        <pc-light type="spot" shape="rect" color="#f4f6ff" intensity="8" range="3" inner-cone-angle="55" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="aimLight" target="0 0.04 0"></pc-script-instance></pc-script>
+                    </pc-entity>
+                </pc-entity>
+                <pc-entity name="bar-right" position="0.62 0.5 -0.62">
+                    <pc-entity scale="0.024 1 0.024"><pc-render type="box" material="light-bar"></pc-render></pc-entity>
+                    <pc-entity scale="0.024 1 1">
+                        <pc-light type="spot" shape="rect" color="#f2f5ff" intensity="7" range="3" inner-cone-angle="55" outer-cone-angle="88"></pc-light>
+                        <pc-script><pc-script-instance name="aimLight" target="0 0.04 0"></pc-script-instance></pc-script>
+                    </pc-entity>
+                </pc-entity>
+                <pc-entity name="top-strip" position="0 0.4 0.12" scale="0.62 1 0.04">
+                    <pc-light type="spot" shape="rect" color="#ffffff" intensity="5" range="3" inner-cone-angle="55" outer-cone-angle="88"></pc-light>
+                    <pc-script><pc-script-instance name="aimLight" target="0 0.06 0"></pc-script-instance></pc-script>
+                </pc-entity>
+
+                <!-- The page's sound, not placed in the scene. The loops run silent and
+                     js/scroll-story.mjs turns them up as the lens moves - the servo with the
+                     elements, the blade rustle with the iris - so they follow the scroll; the
+                     one-shots fire at the dials' detents, the shutter and chapter changes. -->
+                <pc-entity name="sound">
+                    <pc-sound positional="false">
+                        <pc-sound-slot name="ambience" loop volume="0.45"></pc-sound-slot>
+                        <pc-sound-slot name="servo" asset="snd-servo" loop volume="0"></pc-sound-slot>
+                        <pc-sound-slot name="blades" asset="snd-blades" loop volume="0"></pc-sound-slot>
+                        <pc-sound-slot name="dial" asset="snd-dial" overlap volume="0.42"></pc-sound-slot>
+                        <pc-sound-slot name="shutter" asset="snd-shutter" volume="0.7"></pc-sound-slot>
+                        <pc-sound-slot name="whoosh" asset="snd-whoosh" overlap volume="0.22"></pc-sound-slot>
+                        <pc-sound-slot name="tick" asset="snd-tick" overlap volume="0.16"></pc-sound-slot>
+                    </pc-sound>
+                </pc-entity>
+
+                <!-- Decals just above the floor: the pool of light, then the contact shadow -->
+                <pc-entity name="light-pool" position="0 0.0004 0.03" scale="1.2 1 1.2">
+                    <pc-render type="plane" material="light-pool" cast-shadows="false" receive-shadows="false"></pc-render>
+                </pc-entity>
+                <pc-entity name="contact-shadow" position="0 0.0008 0" scale="0.4 1 0.24">
+                    <pc-render type="plane" material="contact-shadow" cast-shadows="false" receive-shadows="false"></pc-render>
+                </pc-entity>
+
+                <!-- The floor: a dark mirror, on a layer of its own so the reflection's camera can
+                     leave it out of what it mirrors -->
+                <pc-entity name="floor" scale="8 1 8">
+                    <pc-render type="plane" material="floor"></pc-render>
+                    <pc-script>
+                        <pc-script-instance name="groundLayer" camera="entity:camera"></pc-script-instance>
+                        <pc-script-instance name="blurredPlanarReflection" main-camera="entity:camera" resolution="0.5" blur-amount="0.7" intensity="0.42" fade-strength="1.6" angle-fade="0.35" height-range="0.25" fade-color="#000000"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+
+        <!-- Darkens the side of the frame the current chapter's copy is on -->
+        <div class="shade" aria-hidden="true"></div>
+
+        <!-- Site chrome: wordmark, chapters, sound, pre-order -->
+        <header class="masthead">
+            <a class="brand" href="#top" aria-label="Loci, back to top">
+                <svg class="wordmark" viewBox="-0.06 -0.06 3.56 1.12" aria-hidden="true">
+                    <defs>
+                        <!-- The same strokes as the model's badge and the backdrop's light tubes -->
+                        <g id="loci-strokes" fill="none" stroke="currentColor" stroke-width="0.085" stroke-linecap="round" stroke-linejoin="round">
+                            <path pathLength="1" d="M0 0V1H0.56"></path>
+                            <path pathLength="1" d="M1.36 0A0.5 0.5 0 1 1 1.36 1A0.5 0.5 0 1 1 1.36 0"></path>
+                            <path pathLength="1" d="M3.0516 0.1654A0.5 0.5 0 1 0 3.0516 0.8346"></path>
+                            <path pathLength="1" d="M3.44 0V1"></path>
+                        </g>
+                    </defs>
+                    <use href="#loci-strokes"></use>
+                </svg>
+            </a>
+            <nav class="chapters" aria-label="Chapters">
+                <a href="#design">Design</a>
+                <a href="#optics">Optics</a>
+                <a href="#aperture">Aperture</a>
+                <a href="#specs">Specs</a>
+            </nav>
+            <div class="masthead-actions">
+                <button class="sound-toggle" type="button" aria-pressed="false">
+                    <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span class="sound-label">Sound</span>
+                </button>
+                <a class="button button-small" href="#yours">Pre-order</a>
+            </div>
+        </header>
+
+        <!-- Progress through the chapters, at the right edge -->
+        <ol class="progress" aria-hidden="true">
+            <li data-for="top"><span>00</span></li>
+            <li data-for="design"><span>01</span></li>
+            <li data-for="optics"><span>02</span></li>
+            <li data-for="aperture"><span>03</span></li>
+            <li data-for="yours specs"><span>04</span></li>
+        </ol>
+
+        <!-- Labels pinned to points on the lens's glass. Each follows its anchor node in the model
+             across the screen while the clip time is inside data-time. -->
+        <div class="callouts" aria-hidden="true">
+            <div class="callout" data-anchor="anchor-coating" data-time="4.7 6.05"><b>Nano-crystal coat</b><span>Front element</span></div>
+            <div class="callout" data-anchor="anchor-fluorite" data-time="4.9 6.1"><b>Fluorite</b><span>Cemented doublet</span></div>
+            <div class="callout" data-anchor="anchor-ed" data-time="5.1 6.15"><b>Extra-low dispersion</b><span>Two elements</span></div>
+            <div class="callout" data-anchor="anchor-aspherical" data-time="5.3 6.2"><b>Aspherical</b><span>Both surfaces</span></div>
+        </div>
+
+        <!-- The page's own iris: it closes over the frame as the lens's does, and opens again on
+             the last chapter. js/scroll-story.mjs builds the blades. -->
+        <svg class="iris-veil" viewBox="-1 -1 2 2" aria-hidden="true" preserveAspectRatio="xMidYMid slice"></svg>
+
+        <!-- The story. Elements with data-shot are the timeline's beats: each is reached when it
+             crosses the middle of the screen, and names the shot the camera settles on there and
+             the clip time the model shows (data-time, seconds). data-veil closes the page's iris,
+             and data-softbox is a lighting cue: how far up the back soft box is. So the page's
+             layout is the film's timing - change a chapter's height in the CSS and its pacing
+             changes with it. -->
+        <main class="story">
+            <section id="top" class="chapter chapter-hero">
+                <i class="beat" style="--at: 0%" data-shot="shot-hero" data-time="0"></i>
+                <i class="beat" style="--at: 80%" data-shot="shot-hero" data-time="0.9"></i>
+                <div class="copy copy-hero">
+                    <p class="eyebrow">Introducing Loci One</p>
+                    <h1>Don't take photos.<br><em>Take places.</em></h1>
+                    <p class="lede">The first camera that captures depth at every pixel. Each frame is a place you can step back into.</p>
+                    <a class="scroll-cue" href="#design"><span>Scroll</span><i aria-hidden="true"></i></a>
+                </div>
+            </section>
+
+            <section id="design" class="chapter" data-side="right">
+                <i class="beat" style="--at: 6%" data-shot="shot-design" data-time="1.0"></i>
+                <i class="beat" style="--at: 46%" data-shot="shot-dial" data-time="2.2"></i>
+                <i class="beat" style="--at: 88%" data-shot="shot-top" data-time="3.0"></i>
+                <div class="copy">
+                    <p class="eyebrow"><span>01</span> Design</p>
+                    <h2>Machined from a single block of aluminum.</h2>
+                    <p>A body milled from one billet, anodized graphite, finished by hand with diamond-cut chamfers that catch every light in the room. Every dial lands on a detent you can feel.</p>
+                    <dl class="stats">
+                        <div><dt>Weight</dt><dd>382<small>g</small></dd></div>
+                        <div><dt>Body</dt><dd>128<small>×</small>76<small>×</small>38<small>mm</small></dd></div>
+                        <div><dt>Sealing</dt><dd>IP53</dd></div>
+                    </dl>
+                </div>
+            </section>
+
+            <section id="optics" class="chapter chapter-long" data-side="left">
+                <i class="beat" style="--at: 4%" data-shot="shot-glass-wide" data-time="3.0"></i>
+                <i class="beat" style="--at: 40%" data-shot="shot-glass-row" data-time="4.9" data-softbox="1"></i>
+                <i class="beat" style="--at: 74%" data-shot="shot-glass-macro" data-time="5.6" data-softbox="1"></i>
+                <i class="beat" style="--at: 96%" data-shot="shot-lens" data-time="6.1" data-softbox="0.5"></i>
+                <div class="copy">
+                    <p class="eyebrow"><span>02</span> Optics</p>
+                    <h2>Twelve elements. <em>Zero compromise.</em></h2>
+                    <p>A 35 mm f/1.4 with fluorite, extra-low-dispersion and aspherical glass, every surface multi-coated so flare stays out and color stays true.</p>
+                    <dl class="stats">
+                        <div><dt>Focal length</dt><dd>35<small>mm</small></dd></div>
+                        <div><dt>Maximum aperture</dt><dd><small>f/</small>1.4</dd></div>
+                        <div><dt>Construction</dt><dd>12<small>in</small>9</dd></div>
+                    </dl>
+                </div>
+            </section>
+
+            <section id="aperture" class="chapter" data-side="right">
+                <i class="beat" style="--at: 8%" data-shot="shot-lens" data-time="6.6"></i>
+                <i class="beat" style="--at: 42%" data-shot="shot-lens-front" data-time="7.5"></i>
+                <i class="beat" style="--at: 82%" data-shot="shot-iris" data-time="8.75" data-veil="0.15"></i>
+                <i class="beat" style="--at: 100%" data-shot="shot-iris" data-time="9.2" data-veil="1"></i>
+                <div class="copy">
+                    <p class="eyebrow"><span>03</span> Aperture</p>
+                    <h2>Nine blades. <em>Perfectly round light.</em></h2>
+                    <p>Rounded blades hold a circular opening from f/1.4 all the way down, so highlights out of focus melt into soft, even bokeh.</p>
+                    <dl class="stats">
+                        <div><dt>Range</dt><dd><small>f/</small>1.4<small>–</small>16</dd></div>
+                        <div><dt>Blades</dt><dd>9<small>rounded</small></dd></div>
+                    </dl>
+                </div>
+            </section>
+
+            <section id="yours" class="chapter chapter-final" data-side="left">
+                <i class="beat" style="--at: 4%" data-shot="shot-yours" data-time="9.9" data-veil="1"></i>
+                <i class="beat" style="--at: 34%" data-shot="shot-yours" data-time="10.4"></i>
+                <div class="copy">
+                    <p class="eyebrow"><span>04</span> Yours</p>
+                    <h2>Loci One.</h2>
+                    <p>Three finishes, one lens, every place you will ever want to go back to.</p>
+                    <fieldset class="finishes">
+                        <legend>Finish</legend>
+                        <label><input type="radio" name="finish" value="graphite" checked><span class="swatch" style="--swatch: #4a4b4f"></span>Graphite</label>
+                        <label><input type="radio" name="finish" value="silver"><span class="swatch" style="--swatch: #c9cacd"></span>Silver</label>
+                        <label><input type="radio" name="finish" value="sand"><span class="swatch" style="--swatch: #b59a77"></span>Sand</label>
+                    </fieldset>
+                    <div class="buy">
+                        <a class="button" href="#yours">Pre-order <span class="price">$2,490</span></a>
+                        <p class="ships">Ships spring 2027</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="specs" class="chapter chapter-specs" data-side="left">
+                <i class="beat" style="--at: 70%" data-shot="shot-yours-end" data-time="12"></i>
+                <div class="copy">
+                    <p class="eyebrow">Technical specifications</p>
+                    <dl class="specs">
+                        <div><dt>Sensor</dt><dd>61 MP full frame with a 1.2 M point depth array</dd></div>
+                        <div><dt>Capture</dt><dd>8K spatial stills, 6K spatial video at 30 fps</dd></div>
+                        <div><dt>Depth</dt><dd>0.3 to 40 m, ±1 mm at 2 m</dd></div>
+                        <div><dt>Lens</dt><dd>35 mm f/1.4, 12 elements in 9 groups</dd></div>
+                        <div><dt>Storage</dt><dd>1 TB internal, CFexpress Type B</dd></div>
+                        <div><dt>Battery</dt><dd>420 spatial frames</dd></div>
+                    </dl>
+                </div>
+            </section>
+        </main>
+
+        <footer class="colophon">
+            <p>Loci One is a fictional camera. This page is a <a href="https://github.com/playcanvas/web-components">PlayCanvas Web Components</a> example: the camera, its lights, its lens and the scroll-driven story are all declared in its HTML.</p>
+        </footer>
+
+        <script type="module" src="js/scroll-story.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

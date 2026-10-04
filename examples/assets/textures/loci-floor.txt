@@ -1,0 +1,6 @@
+loci-contact-shadow.png and loci-light-pool.png: the Scroll Story floor's two decals, generated
+for this repo with numpy from the Loci One camera's real footprint - a soft contact shadow where
+the body and lens meet the floor (black, density in alpha, for a 0.40 x 0.24 m plane), and a broad
+radial pool of light for an additive plane 1.2 m across.
+
+CC0 / public domain.

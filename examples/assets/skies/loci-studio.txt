@@ -1,0 +1,7 @@
+loci-studio.hdr: a product photographer's lighting environment authored for this repo's Scroll
+Story example - black, with five soft-edged reflection cards (a long low band and an overhead card
+behind, a strip either side, a soft front card) - written as a 1024x512 Radiance HDR by a numpy
+script. The page uses it for image-based lighting only, so polished metal shows clean gradient
+highlights while rough surfaces, which average the whole sphere, stay dark.
+
+CC0 / public domain.

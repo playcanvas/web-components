@@ -1,0 +1,14 @@
+Loci One, a fictional spatial camera, modeled for this repo's Scroll Story example entirely from
+code: a Blender 5.2 script builds the body, controls, lens barrel, twelve glass elements and
+nine-blade iris with bmesh, keys one 12 second animation clip ("story") that the page scrubs, and
+exports this file.
+
+Materials use the glTF extensions the engine renders: KHR_materials_transmission, _volume, _ior,
+_dispersion and _iridescence for the glass, _anisotropy for the turned aluminum, _clearcoat for the
+enamel, _sheen for the leatherette, _specular and _emissive_strength. Geometry is Draco compressed;
+the two tiling normal maps (leatherette grain, brushing) are generated with numpy.
+
+Real size, in meters: the body is 128 x 76 x 38 mm, the lens a 35 mm f/1.4 with its elements stacked
+by a small solver so neighbors never touch.
+
+CC0 / public domain.
