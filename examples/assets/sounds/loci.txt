@@ -1,0 +1,12 @@
+Scroll Story sounds, generated for this example with ElevenLabs (https://elevenlabs.io):
+the ambient bed with ElevenLabs Music (music_v2_5), the camera's mechanical effects with ElevenLabs
+Sound Effects (eleven_text_to_sound_v2), then trimmed, normalized and - for the loops - given a
+baked-in crossfade by utils/scroll-story/sound.mjs.
+
+- loci-ambience.mp3: ambient bed, loops
+- loci-servo.mp3: lens servo whir, loops; its level follows how fast the lens is moving
+- loci-blades.mp3: iris blade friction, loops; its level follows the blades
+- loci-dial.mp3: a dial detent, played at each stop the dials turn through
+- loci-shutter.mp3: the shutter, as the iris closes
+- loci-whoosh.mp3: chapter changes
+- loci-tick.mp3: the interface
