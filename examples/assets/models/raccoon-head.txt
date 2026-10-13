@@ -1,0 +1,15 @@
+Raccoon head from Google's MediaPipe Face Virtual Avatar Demo, by MediaPipe Preview on CodePen:
+
+https://codepen.io/mediapipe-preview/pen/oNPKmEy
+
+The demo loaded the model from https://assets.codepen.io/9177687/raccoon_head.glb, which is
+no longer available. The demo's code is Copyright 2023 The MediaPipe Authors, under the Apache
+License 2.0 (https://www.apache.org/licenses/LICENSE-2.0). No separate license is stated for
+the model.
+
+Changes made for this example, with glTF-Transform: the ears and hair were simplified to about
+half their triangles and the tufts to about a quarter (the head keeps all of its triangles and
+its 52 face blendshape morph targets), the two materials were merged into one, the two
+4096x4096 JPEG textures were resized to 512x512 PNGs, and the geometry was quantized
+(KHR_mesh_quantization) and compressed with meshoptimizer (EXT_meshopt_compression), taking the
+file from 9.2 MB to 631 KB.
