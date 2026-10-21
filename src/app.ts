@@ -1118,8 +1118,11 @@ class AppElement extends AsyncElement {
     /**
      * Sets the scale on the time the application advances by each frame. Scripts, animation and
      * physics all advance by the scaled time, so below 1 is slow motion, above 1 speeds it up and
-     * 0 pauses all three together. To pause or slow down physics alone, use `physics-time-scale`.
-     * Defaults to 1.
+     * 0 freezes everything that advances with time. It does not pause scripts: their `update` and
+     * `postUpdate` methods are still called every frame with a `dt` of 0, so input handling,
+     * spawning and any other logic that is not multiplied by `dt` carries on. Give gameplay code
+     * its own pause check. To pause or slow down physics alone, use `physics-time-scale`. Defaults
+     * to 1.
      * @param value - The time scale.
      */
     set timeScale(value: number) {
@@ -1131,7 +1134,8 @@ class AppElement extends AsyncElement {
 
     /**
      * Gets the scale on the time the application advances by each frame. Scripts, animation and
-     * physics all advance by the scaled time, so 0 pauses all three together.
+     * physics all advance by the scaled time, so 0 freezes everything that advances with time,
+     * while scripts keep running with a `dt` of 0.
      * @returns The time scale.
      */
     get timeScale() {
