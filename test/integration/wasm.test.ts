@@ -21,8 +21,29 @@ const stubWasmModule = () => {
     return { setConfig, getInstance };
 };
 
+/**
+ * Stubs the engine's wasm loader for a module that fails to load: no instance ever arrives, and
+ * `fail` reports the failure the way the engine does - only to the error handler of the
+ * configuration the load started with, the first one set.
+ *
+ * The engine never loads a failed module again, so a failure lasts for the rest of this file, and
+ * each test that fails a module gives it a name of its own.
+ */
+const stubFailingWasmModule = () => {
+    const configs: Parameters<typeof WasmModule.setConfig>[1][] = [];
+    const setConfig = vi.spyOn(WasmModule, 'setConfig').mockImplementation((_name, config) => {
+        configs.push(config);
+    });
+    const getInstance = vi.spyOn(WasmModule, 'getInstance').mockImplementation(() => undefined);
+    const fail = (error: string) => {
+        expect(configs.length, 'no module load has started').toBeGreaterThan(0);
+        configs[0]?.errorHandler?.(error);
+    };
+    return { setConfig, getInstance, fail };
+};
+
 describe('<pc-wasm>', () => {
-    const { warnings } = useGuard();
+    const { errors, warnings } = useGuard();
 
     it('loads the configured module, becomes ready and lets the app boot', async () => {
         const { setConfig, getInstance } = stubWasmModule();
@@ -37,7 +58,8 @@ describe('<pc-wasm>', () => {
         expect(setConfig).toHaveBeenCalledWith('Ammo', {
             glueUrl: 'ammo.wasm.js',
             wasmUrl: 'ammo.wasm.wasm',
-            fallbackUrl: 'ammo.js'
+            fallbackUrl: 'ammo.js',
+            errorHandler: expect.any(Function)
         });
         expect(getInstance).toHaveBeenCalledTimes(1);
 
@@ -73,7 +95,8 @@ describe('<pc-wasm>', () => {
         expect(setConfig).toHaveBeenCalledWith('Ammo', {
             glueUrl: 'glue.js',
             wasmUrl: 'ammo.wasm',
-            fallbackUrl: 'fallback.js'
+            fallbackUrl: 'fallback.js',
+            errorHandler: expect.any(Function)
         });
     });
 
@@ -100,5 +123,113 @@ describe('<pc-wasm>', () => {
         await readyWithin(moduleElement);
         expect(setConfig).toHaveBeenCalledTimes(1);
         expect(getInstance).toHaveBeenCalledTimes(1);
+    });
+
+    it('fires error, settles and lets the app boot when the module fails to load', async () => {
+        const { fail } = stubFailingWasmModule();
+        const handle = mount(
+            '<pc-app backend="null">' +
+                '<pc-wasm name="Missing" glue="missing.wasm.js" wasm="missing.wasm" fallback="missing.js"></pc-wasm>' +
+                '</pc-app>'
+        );
+        const appElement = handle.get<AppElement>('pc-app');
+        const moduleElement = handle.get<WasmElement>('pc-wasm');
+        const events: ErrorEvent[] = [];
+        moduleElement.addEventListener('error', (event) => events.push(event as ErrorEvent));
+
+        // The app waits for the module until the engine reports the failure
+        await expectNeverReady(appElement);
+        fail("Failed to load script='missing.wasm.js'");
+
+        // Both used to wait forever: the engine never calls back a module that failed to load
+        await readyWithin(moduleElement);
+        await readyWithin(appElement);
+        expect(events.map((event) => event.message)).toEqual(["Failed to load script='missing.wasm.js'"]);
+        expect(events[0].bubbles).toBe(false);
+        errors.expect("pc-wasm failed to load module 'Missing' - Failed to load script='missing.wasm.js'");
+    });
+
+    it('fires error once when the engine reports the failure twice', async () => {
+        const { fail } = stubFailingWasmModule();
+        const handle = mount('<pc-wasm name="Aborted" glue="aborted.wasm.js" wasm="aborted.wasm"></pc-wasm>');
+        const moduleElement = handle.get<WasmElement>('pc-wasm');
+        const messages: string[] = [];
+        moduleElement.addEventListener('error', (event) => messages.push((event as ErrorEvent).message));
+
+        // The engine reports a binary that fails to load twice
+        fail('wasm module aborted.');
+        fail('wasm module aborted.');
+
+        await readyWithin(moduleElement);
+        expect(messages).toEqual(['wasm module aborted.']);
+        errors.expect("pc-wasm failed to load module 'Aborted'");
+    });
+
+    it('fails every element waiting for the module, not only the one whose load the engine started', async () => {
+        const { fail } = stubFailingWasmModule();
+        const handle = mount(
+            '<pc-wasm name="Shared" glue="shared.wasm.js" wasm="shared.wasm"></pc-wasm>' +
+                '<pc-wasm name="Shared" glue="shared.wasm.js" wasm="shared.wasm"></pc-wasm>'
+        );
+        const moduleElements = handle.all<WasmElement>('pc-wasm');
+        const failed: EventTarget[] = [];
+
+        // error does not bubble, so one capture listener observes both elements
+        handle.container.addEventListener('error', (event) => failed.push(event.target!), true);
+        fail("Failed to load script='shared.wasm.js'");
+
+        await Promise.all(moduleElements.map((element) => readyWithin(element)));
+        expect(failed).toEqual(moduleElements);
+        errors.expect("pc-wasm failed to load module 'Shared'", 2);
+    });
+
+    it('fails a later element for a failed module straight away, without asking the engine again', async () => {
+        const { setConfig, getInstance, fail } = stubFailingWasmModule();
+        const handle = mount('<pc-wasm name="Gone" glue="gone.wasm.js" wasm="gone.wasm"></pc-wasm>');
+        fail("Failed to load script='gone.wasm.js'");
+        await readyWithin(handle.get<WasmElement>('pc-wasm'));
+        errors.expect("pc-wasm failed to load module 'Gone'");
+
+        // The engine never loads a failed module again, even from other URLs, so an app that asks
+        // for it later would otherwise wait for it forever
+        const laterApp = document.createElement('pc-app');
+        laterApp.setAttribute('backend', 'null');
+        laterApp.innerHTML = '<pc-wasm name="Gone" glue="fixed.wasm.js" wasm="fixed.wasm"></pc-wasm>';
+        const messages: string[] = [];
+        laterApp.firstElementChild!.addEventListener('error', (event) => {
+            messages.push((event as ErrorEvent).message);
+        });
+        handle.container.appendChild(laterApp);
+
+        await readyWithin(laterApp);
+        expect(messages).toEqual(["Failed to load script='gone.wasm.js'"]);
+        expect(setConfig).toHaveBeenCalledTimes(1);
+        expect(getInstance).toHaveBeenCalledTimes(1);
+        errors.expect("pc-wasm failed to load module 'Gone'");
+    });
+
+    // Last in the file: it fails Ammo itself, and a failed module stays failed for the rest of it
+    it("boots the app without physics when Ammo's binary fails to load after its glue ran", async () => {
+        const globals = window as unknown as Record<string, unknown>;
+        const { getInstance, fail } = stubFailingWasmModule();
+
+        // Ammo's glue script publishes the module as a global as soon as it runs, before its
+        // binary has loaded
+        getInstance.mockImplementation((name) => {
+            globals[name] = {};
+        });
+        const handle = mount(
+            '<pc-app backend="null">' +
+                '<pc-wasm name="Ammo" glue="ammo.wasm.js" wasm="missing.wasm" fallback="ammo.js"></pc-wasm>' +
+                '</pc-app>'
+        );
+        expect(globals.Ammo).toEqual({});
+        fail('wasm module aborted.');
+
+        // The engine takes any defined Ammo for a loaded one: creating the physics world from the
+        // half-loaded module threw out of app.start(), and the app never became ready
+        await readyWithin(handle.get<AppElement>('pc-app'));
+        expect(globals.Ammo).toBeUndefined();
+        errors.expect("pc-wasm failed to load module 'Ammo' - wasm module aborted.");
     });
 });

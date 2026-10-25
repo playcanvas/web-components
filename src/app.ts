@@ -321,7 +321,8 @@ class AppElement extends AsyncElement {
         // Get all pc-wasm elements that are direct children of the pc-app element
         const wasmElements = this.querySelectorAll<WasmElement>(':scope > pc-wasm');
 
-        // Wait for all modules to load
+        // Wait for all modules to settle. A module that fails to load reports it on its own
+        // element and settles anyway, so the app boots without it.
         await Promise.all(Array.from(wasmElements).map((element) => element._getLoadPromise()));
 
         // The element may have been removed while the modules loaded. Nothing beyond the loading

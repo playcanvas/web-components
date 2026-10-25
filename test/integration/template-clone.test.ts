@@ -254,7 +254,8 @@ describe('a <template>-cloned subtree', () => {
         expect(setConfig).toHaveBeenCalledWith('Ammo', {
             glueUrl: 'ammo.wasm.js',
             wasmUrl: 'ammo.wasm.wasm',
-            fallbackUrl: 'ammo.js'
+            fallbackUrl: 'ammo.js',
+            errorHandler: expect.any(Function)
         });
         expect(getInstance, 'the module was requested exactly once').toHaveBeenCalledTimes(1);
         await readyWithin(handle.get<WasmElement>('pc-wasm'));
