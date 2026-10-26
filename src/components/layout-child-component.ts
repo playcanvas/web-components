@@ -236,6 +236,6 @@ class LayoutChildComponentElement extends ComponentElement<LayoutChildComponent>
     }
 }
 
-customElements.define('pc-layout-child', LayoutChildComponentElement);
+globalThis.customElements?.define('pc-layout-child', LayoutChildComponentElement);
 
 export { LayoutChildComponentElement };

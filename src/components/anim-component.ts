@@ -722,7 +722,7 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
     }
 }
 
-customElements.define('pc-anim', AnimComponentElement);
+globalThis.customElements?.define('pc-anim', AnimComponentElement);
 
 export { AnimComponentElement };
 export type { ContainerWithAnimations };

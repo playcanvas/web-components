@@ -315,6 +315,6 @@ class CollisionComponentElement extends ComponentElement<CollisionComponent> {
     }
 }
 
-customElements.define('pc-collision', CollisionComponentElement);
+globalThis.customElements?.define('pc-collision', CollisionComponentElement);
 
 export { CollisionComponentElement };

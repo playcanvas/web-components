@@ -469,7 +469,7 @@ class ModelElement extends EntityOwnerElement {
     }
 }
 
-customElements.define('pc-model', ModelElement);
+globalThis.customElements?.define('pc-model', ModelElement);
 
 export { ModelElement };
 export type { HierarchyMaterial, HierarchyNode };

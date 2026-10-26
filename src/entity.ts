@@ -133,6 +133,6 @@ class EntityElement extends EntityOwnerElement {
     }
 }
 
-customElements.define('pc-entity', EntityElement);
+globalThis.customElements?.define('pc-entity', EntityElement);
 
 export { EntityElement };

@@ -1011,7 +1011,7 @@ class NodeElement extends EntityBaseElement {
     }
 }
 
-customElements.define('pc-node', NodeElement);
+globalThis.customElements?.define('pc-node', NodeElement);
 
 export { NodeElement };
 export type { MaterialOverrides };

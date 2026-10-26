@@ -32,6 +32,6 @@ class AudioListenerComponentElement extends ComponentElement<AudioListenerCompon
     }
 }
 
-customElements.define('pc-audio-listener', AudioListenerComponentElement);
+globalThis.customElements?.define('pc-audio-listener', AudioListenerComponentElement);
 
 export { AudioListenerComponentElement };

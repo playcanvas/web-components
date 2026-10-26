@@ -233,6 +233,6 @@ class ScreenComponentElement extends ComponentElement<ScreenComponent> {
     }
 }
 
-customElements.define('pc-screen', ScreenComponentElement);
+globalThis.customElements?.define('pc-screen', ScreenComponentElement);
 
 export { ScreenComponentElement };

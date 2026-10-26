@@ -235,6 +235,6 @@ class SoundComponentElement extends ComponentElement<SoundComponent> {
     }
 }
 
-customElements.define('pc-sound', SoundComponentElement);
+globalThis.customElements?.define('pc-sound', SoundComponentElement);
 
 export { SoundComponentElement };

@@ -1013,6 +1013,6 @@ class JointComponentElement extends ComponentElement<JointComponent> {
     }
 }
 
-customElements.define('pc-joint', JointComponentElement);
+globalThis.customElements?.define('pc-joint', JointComponentElement);
 
 export { JointComponentElement };

@@ -876,6 +876,6 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
     }
 }
 
-customElements.define('pc-script', ScriptComponentElement);
+globalThis.customElements?.define('pc-script', ScriptComponentElement);
 
 export { ScriptComponentElement };

@@ -27,6 +27,7 @@ import type { Texture } from 'playcanvas';
 
 import type { AppElement } from './app';
 import { AssetBinding } from './asset-binding';
+import { HTMLElement } from './html-element';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec2 } from './parse';
 
 /**
@@ -2806,6 +2807,6 @@ class MaterialElement extends HTMLElement {
     }
 }
 
-customElements.define('pc-material', MaterialElement);
+globalThis.customElements?.define('pc-material', MaterialElement);
 
 export { MaterialElement };

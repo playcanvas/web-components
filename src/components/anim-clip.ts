@@ -371,6 +371,6 @@ class AnimClipElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-anim-clip', AnimClipElement);
+globalThis.customElements?.define('pc-anim-clip', AnimClipElement);
 
 export { AnimClipElement };

@@ -163,6 +163,6 @@ class WasmElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-wasm', WasmElement);
+globalThis.customElements?.define('pc-wasm', WasmElement);
 
 export { WasmElement };

@@ -701,6 +701,6 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
     }
 }
 
-customElements.define('pc-camera', CameraComponentElement);
+globalThis.customElements?.define('pc-camera', CameraComponentElement);
 
 export { CameraComponentElement };

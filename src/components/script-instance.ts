@@ -213,6 +213,6 @@ class ScriptInstanceElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-script-instance', ScriptInstanceElement);
+globalThis.customElements?.define('pc-script-instance', ScriptInstanceElement);
 
 export { ScriptInstanceElement };

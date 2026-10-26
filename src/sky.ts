@@ -345,6 +345,6 @@ class SkyElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-sky', SkyElement);
+globalThis.customElements?.define('pc-sky', SkyElement);
 
 export { SkyElement };

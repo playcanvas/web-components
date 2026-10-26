@@ -465,6 +465,6 @@ class ScrollViewComponentElement extends ComponentElement<ScrollViewComponent> {
     }
 }
 
-customElements.define('pc-scroll-view', ScrollViewComponentElement);
+globalThis.customElements?.define('pc-scroll-view', ScrollViewComponentElement);
 
 export { ScrollViewComponentElement };
