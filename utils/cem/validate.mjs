@@ -358,6 +358,7 @@ if (manifest) {
     for (const name of ['load', 'error']) {
         check(events('pc-asset').includes(name), `pc-asset is missing the '${name}' event`);
     }
+    check(events('pc-wasm').includes('error'), "pc-wasm is missing the 'error' event");
     check(!events('pc-entity').includes('progress'), 'pc-entity should not have a progress event');
     // pc-app declares its own 'error' event, so 'load' is what remains of the leak canary
     check(!events('pc-app').includes('load'), "pc-app should not declare pc-asset's 'load' event");
