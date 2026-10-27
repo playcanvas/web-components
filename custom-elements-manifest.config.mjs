@@ -29,6 +29,7 @@ export default {
         'src/asset-binding.ts',
         'src/colors.ts',
         'src/entity-reference.ts',
+        'src/html-element.ts',
         'src/loading-bar.ts',
         'src/parse.ts',
         'src/pointer-controller.ts'

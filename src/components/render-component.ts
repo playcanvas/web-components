@@ -225,6 +225,6 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
     }
 }
 
-customElements.define('pc-render', RenderComponentElement);
+globalThis.customElements?.define('pc-render', RenderComponentElement);
 
 export { RenderComponentElement };

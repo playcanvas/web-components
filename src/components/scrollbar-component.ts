@@ -172,6 +172,6 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
     }
 }
 
-customElements.define('pc-scrollbar', ScrollbarComponentElement);
+globalThis.customElements?.define('pc-scrollbar', ScrollbarComponentElement);
 
 export { ScrollbarComponentElement };

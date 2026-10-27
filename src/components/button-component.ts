@@ -467,6 +467,6 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
     }
 }
 
-customElements.define('pc-button', ButtonComponentElement);
+globalThis.customElements?.define('pc-button', ButtonComponentElement);
 
 export { ButtonComponentElement };

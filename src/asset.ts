@@ -789,6 +789,6 @@ class AssetElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-asset', AssetElement);
+globalThis.customElements?.define('pc-asset', AssetElement);
 
 export { AssetElement };

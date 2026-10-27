@@ -312,6 +312,6 @@ class LayoutGroupComponentElement extends ComponentElement<LayoutGroupComponent>
     }
 }
 
-customElements.define('pc-layout-group', LayoutGroupComponentElement);
+globalThis.customElements?.define('pc-layout-group', LayoutGroupComponentElement);
 
 export { LayoutGroupComponentElement };

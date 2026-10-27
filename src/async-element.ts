@@ -1,5 +1,6 @@
 import type { AppElement } from './app';
 import type { EntityBaseElement } from './entity-base';
+import { HTMLElement } from './html-element';
 
 /**
  * Base class for all PlayCanvas Web Components that initialize asynchronously.

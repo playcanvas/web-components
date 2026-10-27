@@ -1230,6 +1230,6 @@ class AppElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-app', AppElement);
+globalThis.customElements?.define('pc-app', AppElement);
 
 export { AppElement };

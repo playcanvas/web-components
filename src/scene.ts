@@ -622,6 +622,6 @@ class SceneElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-scene', SceneElement);
+globalThis.customElements?.define('pc-scene', SceneElement);
 
 export { SceneElement };

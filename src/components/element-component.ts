@@ -1056,6 +1056,6 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
     }
 }
 
-customElements.define('pc-element', ElementComponentElement);
+globalThis.customElements?.define('pc-element', ElementComponentElement);
 
 export { ElementComponentElement };

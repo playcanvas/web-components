@@ -362,6 +362,6 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
     }
 }
 
-customElements.define('pc-rigid-body', RigidBodyComponentElement);
+globalThis.customElements?.define('pc-rigid-body', RigidBodyComponentElement);
 
 export { RigidBodyComponentElement };

@@ -248,6 +248,6 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
     }
 }
 
-customElements.define('pc-particle-system', ParticleSystemComponentElement);
+globalThis.customElements?.define('pc-particle-system', ParticleSystemComponentElement);
 
 export { ParticleSystemComponentElement };

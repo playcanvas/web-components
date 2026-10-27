@@ -4,7 +4,7 @@ Five tiers, four of which run in Node and need neither a build nor a browser.
 
 | Tier        | Command                    | Environment | Covers                                                                  |
 | ----------- | -------------------------- | ----------- | ----------------------------------------------------------------------- |
-| Unit        | `npm run test:unit`        | `node`      | The pure parsers in `src/parse.ts` and the `CSS_COLORS` table           |
+| Unit        | `npm run test:unit`        | `node`      | The parsers in `src/parse.ts`, `CSS_COLORS`, and importing with no DOM  |
 | Elements    | `npm run test:elements`    | `jsdom`     | Attribute and property surface, with no engine created                  |
 | Integration | `npm run test:integration` | `jsdom`     | A real `AppBase` on `NullGraphicsDevice`, via `<pc-app backend="null">` |
 | Examples    | `npm run test:examples`    | `node`\*    | `examples/` as a set: the catalog, and the markup of every page       |

@@ -331,6 +331,6 @@ class SoundSlotElement extends AsyncElement {
     }
 }
 
-customElements.define('pc-sound-slot', SoundSlotElement);
+globalThis.customElements?.define('pc-sound-slot', SoundSlotElement);
 
 export { SoundSlotElement };

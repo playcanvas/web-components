@@ -66,6 +66,9 @@
     "excludeInternal": true,
     "excludeNotDocumented": true,
     "externalSymbolLinkMappings": {
+        "@playcanvas/web-components": {
+            "HTMLElement": "https://developer.mozilla.org/docs/Web/API/HTMLElement"
+        },
         "playcanvas": {
             "AnimComponent": "https://api.playcanvas.com/engine/classes/AnimComponent.html",
             "AnimComponentLayer": "https://api.playcanvas.com/engine/classes/AnimComponentLayer.html",

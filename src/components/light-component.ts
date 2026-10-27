@@ -776,6 +776,6 @@ class LightComponentElement extends ComponentElement<LightComponent> {
     }
 }
 
-customElements.define('pc-light', LightComponentElement);
+globalThis.customElements?.define('pc-light', LightComponentElement);
 
 export { LightComponentElement };
