@@ -22,29 +22,10 @@ export default [
     },
     {
         files: ['**/*.ts'],
-        languageOptions: {
-            globals: {
-                ...globals.browser
-            }
-        },
         rules: {
             '@typescript-eslint/ban-ts-comment': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
             '@typescript-eslint/no-unused-vars': 'off'
-        }
-    },
-    {
-        files: ['src/index.ts'],
-        rules: {
-            '@typescript-eslint/consistent-type-definitions': ['error', 'interface']
-        }
-    },
-    {
-        files: ['test/**/*.ts', 'vitest.config.ts'],
-        languageOptions: {
-            globals: {
-                ...globals.node
-            }
         }
     }
 ];
