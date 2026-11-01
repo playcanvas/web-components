@@ -679,6 +679,64 @@ describe('<pc-anim>', () => {
             expect(anim.component!.baseLayer!.activeState).toBe('Run');
         });
 
+        it('keeps a clip through a move within the same pc-anim, without a rebuild', async () => {
+            const { get, step } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-model asset="m">
+                    <pc-anim>
+                        <pc-anim-clip name="Walk"></pc-anim-clip>
+                        <pc-anim-clip name="Run"></pc-anim-clip>
+                    </pc-anim>
+                </pc-model>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            const walk = anim.children[0] as AnimClipElement;
+            const layer = anim.component!.baseLayer!;
+            // Two steps: the first tick is consumed by the START transition
+            step(0.25);
+            step(0.25);
+            const before = layer.activeStateCurrentTime;
+            expect(before).toBeGreaterThan(0);
+
+            // Re-appending a child the element already holds moves it: its disconnectedCallback
+            // runs with it already back under the same parent
+            anim.appendChild(walk);
+            await settleTask();
+
+            await readyWithin(walk);
+            expect(anim.component!.baseLayer, 'the clip set was not rebuilt').toBe(layer);
+            expect(anim.clips, 'the assignment order stands').toEqual(['Walk', 'Run']);
+            expect(layer.activeState).toBe('Walk');
+            // The app ticks on rAF meanwhile, so the playhead may have moved on - but a
+            // re-resolved track would have restarted it from zero
+            expect(layer.activeStateCurrentTime, 'the playhead survived').toBeGreaterThanOrEqual(before);
+
+            walk.remove();
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Run']));
+        });
+
+        it('releases a clip moved and then removed in the same task', async () => {
+            const { get } = await bootApp(`
+                ${WALK_RUN_IDLE}
+                <pc-model asset="m">
+                    <pc-anim>
+                        <pc-anim-clip name="Walk"></pc-anim-clip>
+                        <pc-anim-clip name="Run"></pc-anim-clip>
+                    </pc-anim>
+                </pc-model>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+            const walk = anim.children[0] as AnimClipElement;
+
+            // The removal lands before the move's connectedCallback resumes from its await
+            anim.insertBefore(walk, null);
+            walk.remove();
+            await settleTask();
+
+            expect(anim.clips).toEqual(['Run']);
+            await expectNeverReady(walk);
+        });
+
         it('renames a clip in place', async () => {
             const { app, get, step } = await bootApp(`
                 <pc-asset id="solo" type="container" src="${animatedSrc('Walk')}"></pc-asset>

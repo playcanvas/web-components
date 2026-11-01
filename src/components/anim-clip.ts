@@ -34,9 +34,9 @@ class AnimClipElement extends AsyncElement {
      * The `<pc-anim>` this clip was adopted by, captured when the parent adopts the clip and on
      * connection.
      *
-     * `disconnectedCallback` cannot rediscover it: by the time the element is disconnected its
-     * `parentElement` is already `null`, so a lookup would both fail to find the component and
-     * emit a misleading "must be a direct child" warning for what is an ordinary removal.
+     * `disconnectedCallback` cannot rediscover it: by the time a removed element is disconnected
+     * its `parentElement` is already `null`, so a lookup would both fail to find the component
+     * and emit a misleading "must be a direct child" warning for what is an ordinary removal.
      */
     private _animElement: AnimComponentElement | null = null;
 
@@ -110,15 +110,27 @@ class AnimClipElement extends AsyncElement {
     }
 
     disconnectedCallback() {
-        // Invalidate any connectedCallback or track resolution still suspended on an await
+        // Invalidate any connectedCallback still suspended on an await
         this._connectionGeneration++;
+
+        // A move within the same <pc-anim> - appending or inserting a clip it already holds -
+        // runs this with the element already back in place. The clip still holds its state, so
+        // it keeps its track, its readiness and any resolution in flight, and the parent is not
+        // rebuilt (which would restart the active clip); the connectedCallback that follows
+        // finds it adopted.
+        const animElement = this._animElement;
+        if (animElement && this.parentElement === animElement && animElement._holdsClip(this)) {
+            return;
+        }
+
+        // Invalidate any track resolution still suspended on an await
         this._loadGeneration++;
         this._binding.cancel();
 
-        // Uses the cached parent rather than a fresh lookup, since parentElement is already null
-        // by now. The component itself is null if the whole <pc-app> is being torn down —
-        // parents disconnect first and have already removed the component.
-        this._animElement?._unregisterClip(this);
+        // Otherwise the cached parent, since a fresh lookup finds none. The component itself is
+        // null if the whole <pc-app> is being torn down — parents disconnect first and have
+        // already removed the component.
+        animElement?._unregisterClip(this);
         this._animElement = null;
         this._track = null;
         this._resetReady();

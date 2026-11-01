@@ -469,6 +469,17 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
     }
 
     /**
+     * Whether a clip element holds its state in the current clip set.
+     *
+     * @param clip - The clip element.
+     * @returns Whether the clip is assigned.
+     * @internal
+     */
+    _holdsClip(clip: AnimClipElement): boolean {
+        return this._assignedClips.get(clip.name) === clip;
+    }
+
+    /**
      * Releases a disconnected clip child. Rebuilds the set — a state cannot be removed from a
      * live graph — and the removal of the last child inside a `<pc-model>` flips the element
      * back to auto-assigning the model's clips.
