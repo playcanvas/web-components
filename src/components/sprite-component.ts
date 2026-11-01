@@ -374,8 +374,10 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
     }
 
     /**
-     * Sets the index of the frame to render, among the frame keys of the current sprite. An
-     * animated sprite's playing clip moves on from it. Defaults to 0.
+     * Sets the index of the frame to render, among the frame keys of the current sprite. On an
+     * animated sprite it moves the playing clip to that frame, which plays on from there - but a
+     * clip starting to play begins at its first frame, so a `frame` declared in markup has no
+     * effect on an animated sprite. Defaults to 0.
      * @param value - The frame index.
      */
     set frame(value: number) {
@@ -386,7 +388,8 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
     }
 
     /**
-     * Gets the index of the frame to render, among the frame keys of the current sprite.
+     * Gets the index of the frame to render, as last set - on an animated sprite the playing clip
+     * moves on from it, so `component.frame` is the frame on screen.
      * @returns The frame index.
      */
     get frame() {

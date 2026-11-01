@@ -171,8 +171,10 @@ class SpriteClipElement extends AsyncElement {
     }
 
     /**
-     * Sets the rate the clip plays at, in frames per second, where negative values play it
-     * backwards. Defaults to 0, which holds the first frame.
+     * Sets the rate the clip plays at, in frames per second, where a negative rate plays a
+     * looping clip backwards. A clip starts on its first frame whichever way it plays, so a
+     * looping clip at a negative rate wraps round to its last frame and counts down from there,
+     * while one that does not loop ends at once. Defaults to 0, which holds the first frame.
      * @param value - The frames per second.
      */
     set fps(value: number) {
@@ -183,8 +185,8 @@ class SpriteClipElement extends AsyncElement {
     }
 
     /**
-     * Gets the rate the clip plays at, in frames per second, where negative values play it
-     * backwards.
+     * Gets the rate the clip plays at, in frames per second, where a negative rate plays a
+     * looping clip backwards and ends one that does not loop at once.
      * @returns The frames per second.
      */
     get fps() {

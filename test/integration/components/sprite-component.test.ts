@@ -255,6 +255,41 @@ describe('<pc-sprite>', () => {
             expect(component.frame).toBe(0);
         });
 
+        it('plays a looping clip backwards at a negative rate, and ends a one-shot at once', async () => {
+            const { get, step } = await bootApp(scene('type="animated" clip="rewind"', `
+                <pc-sprite-clip name="rewind" asset="strip" fps="-4" loop></pc-sprite-clip>
+                <pc-sprite-clip name="once" asset="strip" fps="-4"></pc-sprite-clip>
+            `));
+            const element = get<SpriteComponentElement>('pc-sprite');
+            const component = element.component!;
+
+            const frames = [];
+            for (let i = 0; i < 4; i++) {
+                step(0.3);
+                frames.push(component.frame);
+            }
+            expect(frames, 'from its first frame it wraps round to the last and counts down').toEqual([2, 1, 0, 3]);
+
+            // A one-shot starts on its first frame too, so going backwards it has nowhere to go
+            element.clip = 'once';
+            step(0.3);
+            expect(component.clip('once').isPlaying).toBe(false);
+            expect(component.frame).toBe(0);
+        });
+
+        it('moves the playing clip to [frame], which plays on from there', async () => {
+            const { get, step } = await bootApp(scene('type="animated" clip="walk" frame="2"', CLIPS));
+            const element = get<SpriteComponentElement>('pc-sprite');
+            const component = element.component!;
+
+            expect(component.frame, 'a clip starting to play begins at its first frame').toBe(0);
+
+            element.frame = 2;
+            expect(component.frame).toBe(2);
+            step(0.3);
+            expect(component.frame).toBe(3);
+        });
+
         it('leaves the current clip playing when [clip] is removed', async () => {
             const { get } = await bootApp(scene('type="animated" clip="walk"', CLIPS));
             const element = get<SpriteComponentElement>('pc-sprite');
