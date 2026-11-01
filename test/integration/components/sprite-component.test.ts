@@ -440,6 +440,47 @@ describe('<pc-sprite>', () => {
             expect(sprite.component!.clip('walk')).toBeUndefined();
             expect(Object.keys(sprite.component!.clips)).toEqual(['jump']);
         });
+
+        it('keeps its clip through a move within the same pc-sprite', async () => {
+            const { get } = await bootApp(scene('type="animated" clip="walk"', CLIPS));
+            const element = get<SpriteComponentElement>('pc-sprite');
+            const walk = get<SpriteClipElement>('pc-sprite-clip[name="walk"]');
+            const engineClip = walk.spriteAnimationClip!;
+
+            // Re-appending a child the element already holds moves it: its disconnectedCallback
+            // runs with it already back under the same parent
+            element.appendChild(walk);
+            await new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+
+            expect(walk.spriteAnimationClip).toBe(engineClip);
+            await readyWithin(walk);
+            expect(engineClip.isPlaying).toBe(true);
+
+            walk.setAttribute('fps', '8');
+            expect(engineClip.fps).toBe(8);
+
+            walk.remove();
+            expect(element.component!.clip('walk')).toBeUndefined();
+            expect(engineClip.isPlaying).toBe(false);
+        });
+
+        it('releases a clip moved and then removed in the same task', async () => {
+            const { get } = await bootApp(scene('type="animated" clip="walk"', CLIPS));
+            const element = get<SpriteComponentElement>('pc-sprite');
+            const walk = get<SpriteClipElement>('pc-sprite-clip[name="walk"]');
+
+            // The removal lands before the move's connectedCallback resumes from its await
+            element.insertBefore(walk, null);
+            walk.remove();
+            await new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+
+            expect(element.component!.clip('walk')).toBeUndefined();
+            expect(walk.spriteAnimationClip).toBeNull();
+        });
     });
 
     describe('host cycles', () => {

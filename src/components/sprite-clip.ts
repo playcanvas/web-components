@@ -79,11 +79,18 @@ class SpriteClipElement extends AsyncElement {
         // Invalidate any connectedCallback still suspended on an await
         this._connectionGeneration++;
 
-        // Uses the cached parent rather than a fresh lookup, since parentElement is already null
-        // by now. The sync finds this element gone and releases its clip - unless the parent
-        // <pc-sprite> (or the whole <pc-app>) is being torn down, which disconnects the parent
-        // first and takes the component, and its clips, with it.
+        // A move within the same <pc-sprite> - appending or inserting a clip it already holds -
+        // runs this with the element already back in place. It is still the parent's clip, so it
+        // keeps both; the connectedCallback that follows finds it adopted.
         const spriteElement = this._spriteElement;
+        if (spriteElement && this.parentElement === spriteElement) {
+            return;
+        }
+
+        // Otherwise the cached parent, since a fresh lookup finds none. The sync finds this
+        // element gone and releases its clip - unless the parent <pc-sprite> (or the whole
+        // <pc-app>) is being torn down, which disconnects the parent first and takes the
+        // component, and its clips, with it.
         this._spriteElement = null;
         spriteElement?._syncClips();
         this._detach();
