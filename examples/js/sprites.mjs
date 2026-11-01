@@ -4,9 +4,10 @@
  * The arrow keys (or A and D) hop left and right, and Space (or W, or the up arrow) jumps; on a
  * touch screen the buttons along the bottom do the same. Everything on screen is a <pc-sprite>,
  * so the glue only moves entities and picks clips. The slime's `clip` attribute names what it is
- * doing - idle, hop, jump, fall or land - and `flip-x` turns it to face the way it goes. A coin
- * it touches switches to its one-shot `collect` clip and hides once that ends; collect them all
- * and they come back.
+ * doing - idle, hop, jump, fall or land - and `flip-x` turns it to face the way it goes. The
+ * coins are one coin cloned from a <template> into placeholders that only give their position. A
+ * coin the slime touches switches to its one-shot `collect` clip and hides once that ends; collect
+ * them all and they come back.
  *
  * The camera is orthographic, its height set so that one pixel of the atlas covers a whole number
  * of screen pixels, keeping every sprite pixel the same size.
@@ -41,6 +42,13 @@ const FOOT = 0.3;
 
 /** How long all the coins stay collected before they come back, in seconds. */
 const RESPAWN_TIME = 1.5;
+
+// Every coin is the same coin: the page declares it once, as a <template>, and each placeholder
+// takes a copy - before anything is awaited, so the coins start up with the rest of the scene
+const coinTemplate = document.getElementById('coin-template');
+for (const placeholder of document.querySelectorAll('pc-entity[name="coin"]')) {
+    placeholder.appendChild(coinTemplate.content.cloneNode(true));
+}
 
 const { app } = await whenReady('pc-app');
 const camera = await whenReady('pc-camera');

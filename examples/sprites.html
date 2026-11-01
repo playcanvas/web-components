@@ -286,79 +286,26 @@
                 <pc-entity name="decor" position="16.5 0 -0.5"><pc-sprite asset="decor" frame="0"></pc-sprite></pc-entity>
                 <pc-entity name="decor" position="21.5 0 -0.5"><pc-sprite asset="decor" frame="3"></pc-sprite></pc-entity>
                 <pc-entity name="decor" position="22.5 0 -0.5"><pc-sprite asset="decor" frame="5"></pc-sprite></pc-entity>
-                <!-- Coins: each spins until touched, then plays its one-shot collect clip -->
-                <pc-entity name="coin" position="-19 0.75 0.5">
+                <!-- Coins: one coin, declared once and cloned by js/sprites.mjs into each placeholder
+                     below. It spins until touched, then plays its one-shot collect clip. -->
+                <template id="coin-template">
                     <pc-sprite type="animated" clip="spin">
                         <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
                         <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
                     </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="-14 2.75 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="-9.5 4.75 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="-6.5 0.75 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="-4.5 3 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="-2.5 3 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="2 5 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="4.75 0.75 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="7 6.75 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="11.5 3.25 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="13.5 3.25 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
-                <pc-entity name="coin" position="19 2.75 0.5">
-                    <pc-sprite type="animated" clip="spin">
-                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
-                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
-                    </pc-sprite>
-                </pc-entity>
+                </template>
+                <pc-entity name="coin" position="-19 0.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-14 2.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-9.5 4.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-6.5 0.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-4.5 3 0.5"></pc-entity>
+                <pc-entity name="coin" position="-2.5 3 0.5"></pc-entity>
+                <pc-entity name="coin" position="2 5 0.5"></pc-entity>
+                <pc-entity name="coin" position="4.75 0.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="7 6.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="11.5 3.25 0.5"></pc-entity>
+                <pc-entity name="coin" position="13.5 3.25 0.5"></pc-entity>
+                <pc-entity name="coin" position="19 2.75 0.5"></pc-entity>
                 <!-- The slime's shadow, fading as it jumps -->
                 <pc-entity name="shadow" position="-18 0 0.9">
                     <pc-sprite asset="shadow" opacity="0.35"></pc-sprite>
