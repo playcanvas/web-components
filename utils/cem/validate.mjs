@@ -421,7 +421,8 @@ if (manifest) {
         ['pc-particle-system', ['component', 'pause', 'play', 'reset', 'stop', ...ASYNC_MEMBERS]],
         ['pc-scene', ['scene', ...ASYNC_MEMBERS]],
         ['pc-script-instance', ['script', ...ASYNC_MEMBERS]],
-        ['pc-sound-slot', ['soundSlot', ...ASYNC_MEMBERS]]
+        ['pc-sound-slot', ['soundSlot', ...ASYNC_MEMBERS]],
+        ['pc-sprite-clip', ['spriteAnimationClip', ...ASYNC_MEMBERS]]
     ]);
     for (const tag of COMPONENT_TAGS) {
         if (!EXTRA_MEMBERS.has(tag)) {

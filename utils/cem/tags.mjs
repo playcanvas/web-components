@@ -19,8 +19,8 @@
  *   `ComponentElement`'s constructor. That keeps the mapping recoverable by rule rather than by
  *   memory, in both directions.
  * - A repeatable child of a component element takes its parent's tag as a prefix: `pc-anim-clip`
- *   under `pc-anim`, `pc-sound-slot` under `pc-sound`, `pc-script-instance` under `pc-script`.
- *   Singular/plural pairs are not used - `pc-sounds` holding `pc-sound` put two live tags one
+ *   under `pc-anim`, `pc-sound-slot` under `pc-sound`, `pc-script-instance` under `pc-script`,
+ *   `pc-sprite-clip` under `pc-sprite`. Singular/plural pairs are not used - `pc-sounds` holding `pc-sound` put two live tags one
  *   character apart.
  */
 
@@ -30,7 +30,8 @@ export const TAGS = [
     'pc-collision', 'pc-element', 'pc-entity', 'pc-gsplat', 'pc-joint', 'pc-layout-child',
     'pc-layout-group', 'pc-light', 'pc-material', 'pc-model', 'pc-node', 'pc-particle-system',
     'pc-render', 'pc-rigid-body', 'pc-scene', 'pc-screen', 'pc-script', 'pc-script-instance',
-    'pc-scrollbar', 'pc-scroll-view', 'pc-sky', 'pc-sound', 'pc-sound-slot', 'pc-wasm'
+    'pc-scrollbar', 'pc-scroll-view', 'pc-sky', 'pc-sound', 'pc-sound-slot', 'pc-sprite',
+    'pc-sprite-clip', 'pc-wasm'
 ];
 
 /**
@@ -44,7 +45,7 @@ export const COMPONENT_TAGS = [
     'pc-anim', 'pc-audio-listener', 'pc-button', 'pc-camera', 'pc-collision', 'pc-element',
     'pc-gsplat', 'pc-joint', 'pc-layout-child', 'pc-layout-group', 'pc-light',
     'pc-particle-system', 'pc-render', 'pc-rigid-body', 'pc-screen', 'pc-script', 'pc-scrollbar',
-    'pc-scroll-view', 'pc-sound'
+    'pc-scroll-view', 'pc-sound', 'pc-sprite'
 ];
 
 /** `pc-material` extends `HTMLElement`, so it never becomes ready. */

@@ -53,6 +53,7 @@ export const examples = [
     // Graphics
     { name: 'Basic Shapes', path: 'basic-shapes.html', category: 'Graphics' },
     { name: 'Basic Particles', path: 'basic-particles.html', category: 'Graphics' },
+    { name: 'Sprites', path: 'sprites.html', category: 'Graphics' },
     { name: 'GLB Loader', path: 'glb-loader.html', category: 'Graphics' },
     { name: 'Shadow Cascades', path: 'shadow-cascades.html', category: 'Graphics' },
     { name: 'Area Lights', path: 'area-lights.html', category: 'Graphics' },
