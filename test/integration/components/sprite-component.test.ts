@@ -7,7 +7,9 @@ import type { SpriteClipElement } from '../../../src/components/sprite-clip';
 import type { SpriteComponentElement } from '../../../src/components/sprite-component';
 import type { EntityElement } from '../../../src/entity';
 import type { ModelElement } from '../../../src/model';
+import type { NodeElement } from '../../../src/node';
 import { bootApp } from '../../helpers/app';
+import { mount } from '../../helpers/dom';
 import { useGuard } from '../../helpers/guard';
 import { expectNeverReady, readyWithin } from '../../helpers/ready';
 
@@ -35,6 +37,15 @@ const CLIPS = `
     <pc-sprite-clip name="walk" asset="strip" fps="4" loop></pc-sprite-clip>
     <pc-sprite-clip name="jump" asset="pair" fps="4"></pc-sprite-clip>
 `;
+
+/** A one-node glTF as a data: URI, its node named `socket`; `generator` only tells two apart. */
+const model = (generator: string) =>
+    `data:application/json,${encodeURIComponent(JSON.stringify({
+        asset: { version: '2.0', generator },
+        scene: 0,
+        scenes: [{ nodes: [0] }],
+        nodes: [{ name: 'socket' }]
+    }))}`;
 
 /** Reads an engine component property named by a table row. */
 const engineValue = (component: SpriteComponent, property: string) =>
@@ -377,15 +388,92 @@ describe('<pc-sprite>', () => {
         });
     });
 
+    describe('clip ownership', () => {
+        it('releases a clip removed as soon as it is ready', async () => {
+            const { get } = mount(`<pc-app backend="null">${scene('type="animated" clip="walk"', CLIPS)}</pc-app>`);
+            const walk = get<SpriteClipElement>('pc-sprite-clip[name="walk"]');
+            // Readiness is announced while the parent adopts its clips, before the clip's own
+            // connectedCallback resumes - a removal in that window still has to reach the parent
+            walk.ready().then(() => walk.remove());
+
+            const sprite = await readyWithin(get<SpriteComponentElement>('pc-sprite'));
+            await new Promise((resolve) => {
+                setTimeout(resolve, 0);
+            });
+
+            expect(walk.isConnected).toBe(false);
+            expect(sprite.component!.clip('walk')).toBeUndefined();
+            expect(Object.keys(sprite.component!.clips)).toEqual(['jump']);
+        });
+    });
+
+    describe('host cycles', () => {
+        it('keeps its clips when the model hosting it reloads', async () => {
+            const { get } = await bootApp(`
+                ${ASSETS}
+                <pc-asset id="m" type="container" src="${model('first')}"></pc-asset>
+                <pc-asset id="m2" type="container" src="${model('second')}"></pc-asset>
+                <pc-model asset="m">
+                    <pc-sprite type="animated" clip="walk">${CLIPS}</pc-sprite>
+                </pc-model>
+            `);
+            const element = get<SpriteComponentElement>('pc-sprite');
+            const component = element.component!;
+            const walk = get<SpriteClipElement>('pc-sprite-clip[name="walk"]');
+            const engineClip = walk.spriteAnimationClip!;
+            const strip = get<AssetElement>('pc-asset[id="strip"]').asset!;
+            const loadListeners = () =>
+                (strip as unknown as { _callbacks: Map<string, unknown[]> })._callbacks.get('load')?.length ?? 0;
+            const listenersBefore = loadListeners();
+
+            // The model's host entity survives a reload, and the sprite component with it
+            const cycled = new Promise((resolve) => {
+                element.addEventListener('ready', resolve, { once: true });
+            });
+            get<ModelElement>('pc-model').setAttribute('asset', 'm2');
+            await cycled;
+
+            expect(element.component).toBe(component);
+            expect(walk.spriteAnimationClip).toBe(engineClip);
+            expect(component.clip('walk')).toBe(engineClip);
+            expect(component.currentClip).toBe(engineClip);
+            expect(engineClip.isPlaying).toBe(true);
+            expect(loadListeners(), 'no clip was added over the one already there').toBe(listenersBefore);
+        });
+
+        it('resets its clips while the hosting node is unbound, and readies them again on rebinding', async () => {
+            const { get } = await bootApp(`
+                ${ASSETS}
+                <pc-asset id="m" type="container" src="${model('first')}"></pc-asset>
+                <pc-model asset="m">
+                    <pc-node name="socket">
+                        <pc-sprite type="animated" clip="walk">${CLIPS}</pc-sprite>
+                    </pc-node>
+                </pc-model>
+            `);
+            const element = get<SpriteComponentElement>('pc-sprite');
+            const node = get<NodeElement>('pc-node');
+            const walk = get<SpriteClipElement>('pc-sprite-clip[name="walk"]');
+
+            node.setAttribute('name', 'elsewhere');
+            warnings.expect("pc-node 'elsewhere' not found in model 'm'");
+            await vi.waitFor(() => expect(element.component).toBeNull());
+            expect(walk.spriteAnimationClip, 'the destroyed component took its clips with it').toBeNull();
+            await expectNeverReady(walk);
+
+            const readied = new Promise((resolve) => {
+                walk.addEventListener('ready', resolve, { once: true });
+            });
+            node.setAttribute('name', 'socket');
+            await readied;
+
+            expect(walk.spriteAnimationClip).toBe(element.component!.clip('walk'));
+            expect(element.component!.currentClip.isPlaying).toBe(true);
+        });
+    });
+
     describe('inside pc-node', () => {
         it('re-adds its clips when the hosting node rebinds after a model swap', async () => {
-            const model = (generator: string) =>
-                `data:application/json,${encodeURIComponent(JSON.stringify({
-                    asset: { version: '2.0', generator },
-                    scene: 0,
-                    scenes: [{ nodes: [0] }],
-                    nodes: [{ name: 'socket' }]
-                }))}`;
             const { get } = await bootApp(`
                 ${ASSETS}
                 <pc-asset id="m" type="container" src="${model('first')}"></pc-asset>

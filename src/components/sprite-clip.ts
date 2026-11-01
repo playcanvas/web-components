@@ -102,12 +102,16 @@ class SpriteClipElement extends AsyncElement {
     }
 
     /**
-     * Takes the engine clip the owning `<pc-sprite>` created for this element.
+     * Takes the engine clip the owning `<pc-sprite>` created for this element. The owner is taken
+     * here too, not only once connectedCallback resumes: readiness resolves now, while the parent
+     * adopts its children, and a removal straight after it must still reach the parent.
      *
+     * @param owner - The `<pc-sprite>` that created the clip.
      * @param clip - The engine clip.
      * @internal
      */
-    _attach(clip: SpriteAnimationClip) {
+    _attach(owner: SpriteComponentElement, clip: SpriteAnimationClip) {
+        this._spriteElement = owner;
         this._spriteAnimationClip = clip;
         this._onReady();
     }

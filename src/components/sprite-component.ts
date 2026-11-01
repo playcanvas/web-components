@@ -35,6 +35,12 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
      */
     private _assignedClips = new Map<string, SpriteClipElement>();
 
+    /**
+     * The component the adopted clips were created on, which tells a component that survived a
+     * host readiness cycle from a fresh one.
+     */
+    private _clipsComponent: SpriteComponent | null = null;
+
     private _clip = '';
 
     private _color: Color = new Color(1, 1, 1, 1);
@@ -90,15 +96,47 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
     }
 
     protected initComponent() {
-        // A host readiness cycle runs this against a fresh component, so the adoption
-        // bookkeeping rebuilds from scratch
-        this._assignedClips.clear();
+        // A host readiness cycle runs this again. A model reloading its content keeps its host
+        // entity, and this component with it, so the adopted clips stand. A fresh component (a
+        // rebinding pc-node's) holds none of them: the children let go of the old clips and are
+        // adopted anew, announcing their readiness again.
+        if (this.component !== this._clipsComponent) {
+            this._forgetClips();
+            this._clipsComponent = this.component;
+        }
         this._syncClips();
     }
 
     disconnectedCallback() {
-        this._assignedClips.clear();
+        this._forgetClips();
+        this._clipsComponent = null;
         super.disconnectedCallback();
+    }
+
+    /**
+     * Re-evaluates this component against the host's current entity, as every component element
+     * does, and lets the clip children go too when the host no longer fronts one: a `<pc-node>`
+     * whose binding dissolved took the component, and its clips, with it.
+     *
+     * @internal
+     */
+    _hostCycled() {
+        super._hostCycled();
+        if (!this.component) {
+            this._forgetClips();
+            this._clipsComponent = null;
+        }
+    }
+
+    /**
+     * Detaches every adopted clip child, for a component that is gone or replaced - its engine
+     * clips went with it, so there is nothing to remove.
+     */
+    private _forgetClips() {
+        for (const clip of this._assignedClips.values()) {
+            clip._detach();
+        }
+        this._assignedClips.clear();
     }
 
     /**
@@ -161,6 +199,7 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
 
             this._assignedClips.set(clip.name, clip);
             clip._attach(
+                this,
                 component.addClip({
                     name: clip.name,
                     fps: clip.fps,
