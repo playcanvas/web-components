@@ -61,6 +61,9 @@ describe('teardown', () => {
                 <pc-render type="box"></pc-render>
                 <pc-sound><pc-sound-slot name="blip"></pc-sound-slot></pc-sound>
             </pc-entity>
+            <pc-entity name="sprite">
+                <pc-sprite type="animated" clip="walk"><pc-sprite-clip name="walk"></pc-sprite-clip></pc-sprite>
+            </pc-entity>
             <pc-model asset="teardown-m"></pc-model>
         `);
 
@@ -124,6 +127,22 @@ describe('teardown', () => {
         await settleTask();
 
         expect(uncaught.seen).toEqual([]);
+    });
+
+    it('does not throw when a pc-sprite-clip is added and removed within the same task', async () => {
+        // The pc-sound-slot shape above, for the other child that awaits its parent's readiness
+        const { get } = await bootApp('<pc-entity name="e"><pc-sprite type="animated"></pc-sprite></pc-entity>');
+        const sprite = get('pc-sprite');
+
+        const clip = document.createElement('pc-sprite-clip');
+        clip.setAttribute('name', 'walk');
+        sprite.appendChild(clip);
+        clip.remove();
+
+        await settleTask();
+
+        expect(uncaught.seen).toEqual([]);
+        expect((sprite as { component?: { clips: Record<string, unknown> } }).component!.clips).toEqual({});
     });
 
     it('removes the slot from the component when a pc-sound-slot is removed', async () => {

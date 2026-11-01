@@ -22,8 +22,8 @@
  *
  * @categoryDescription Components
  * The elements that add an engine component to the entity above them, and the repeatable children
- * three of them take: `<pc-anim-clip>` under `<pc-anim>`, `<pc-script-instance>` under
- * `<pc-script>` and `<pc-sound-slot>` under `<pc-sound>`.
+ * four of them take: `<pc-anim-clip>` under `<pc-anim>`, `<pc-script-instance>` under
+ * `<pc-script>`, `<pc-sound-slot>` under `<pc-sound>` and `<pc-sprite-clip>` under `<pc-sprite>`.
  *
  * @categoryDescription Base Classes
  * The classes the elements extend. None registers a tag of its own; each holds the members the
@@ -70,6 +70,8 @@ import { ScriptComponentElement } from './components/script-component';
 import { ScriptInstanceElement } from './components/script-instance';
 import { SoundComponentElement } from './components/sound-component';
 import { SoundSlotElement } from './components/sound-slot';
+import { SpriteComponentElement } from './components/sprite-component';
+import { SpriteClipElement } from './components/sprite-clip';
 import { GSplatComponentElement } from './components/gsplat-component';
 import { EntityBaseElement } from './entity-base';
 import { EntityOwnerElement } from './entity-owner';
@@ -124,6 +126,8 @@ declare global {
         'pc-sky': SkyElement;
         'pc-sound-slot': SoundSlotElement;
         'pc-sound': SoundComponentElement;
+        'pc-sprite-clip': SpriteClipElement;
+        'pc-sprite': SpriteComponentElement;
     }
 }
 
@@ -155,6 +159,8 @@ export {
     ScriptInstanceElement,
     SoundComponentElement,
     SoundSlotElement,
+    SpriteComponentElement,
+    SpriteClipElement,
     GSplatComponentElement,
     EntityBaseElement,
     EntityOwnerElement,

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Sprites</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* The coin count, top left: a dark plate in the sky's own ink */
+            .coin-count {
+                position: absolute;
+                top: max(16px, env(safe-area-inset-top));
+                left: max(16px, env(safe-area-inset-left));
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 14px 8px 10px;
+                background: rgba(22, 26, 60, 0.72);
+                border: 2px solid #f2b632;
+                border-radius: 6px;
+                box-shadow: 0 2px 0 #6b3a12, 0 6px 18px rgba(0, 0, 0, 0.35);
+                color: #fff3d0;
+                font: 700 18px/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+                transition: transform 0.15s;
+            }
+
+            .coin-count::before {
+                content: "";
+                width: 14px;
+                height: 16px;
+                border-radius: 50%;
+                background: radial-gradient(circle at 35% 35%, #fffbe8 0 18%, #ffe07a 19% 45%, #f2b632 46% 70%, #c27a1e 71%);
+                box-shadow: 0 0 0 2px #6b3a12;
+            }
+
+            .coin-count.bump {
+                transform: scale(1.12);
+            }
+
+            .controls-hint {
+                position: absolute;
+                bottom: max(16px, env(safe-area-inset-bottom));
+                left: 50%;
+                transform: translateX(-50%);
+                margin: 0;
+                color: rgba(255, 243, 208, 0.8);
+                font: 600 13px/1.4 system-ui, sans-serif;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+                white-space: nowrap;
+            }
+
+            .controls-hint kbd {
+                display: inline-block;
+                min-width: 1.4em;
+                padding: 1px 5px;
+                border: 1px solid rgba(255, 243, 208, 0.45);
+                border-bottom-width: 2px;
+                border-radius: 4px;
+                font: inherit;
+                text-align: center;
+            }
+
+            /* Touch controls: run left and right on the left thumb, jump on the right */
+            .touch-controls {
+                display: none;
+            }
+
+            @media (pointer: coarse) {
+                .controls-hint {
+                    display: none;
+                }
+
+                .touch-controls {
+                    display: block;
+                }
+            }
+
+            .touch-button {
+                position: absolute;
+                bottom: max(20px, env(safe-area-inset-bottom));
+                width: 64px;
+                height: 64px;
+                margin: 0;
+                padding: 0;
+                background: rgba(22, 26, 60, 0.55);
+                border: 2px solid rgba(255, 243, 208, 0.5);
+                border-radius: 50%;
+                color: #fff3d0;
+                font: 700 26px/1 system-ui, sans-serif;
+                touch-action: none;
+            }
+
+            .touch-button[aria-pressed="true"] {
+                background: rgba(242, 182, 50, 0.6);
+                border-color: #f2b632;
+            }
+
+            #touch-left {
+                left: max(20px, env(safe-area-inset-left));
+            }
+
+            #touch-right {
+                left: calc(max(20px, env(safe-area-inset-left)) + 80px);
+            }
+
+            #touch-jump {
+                right: max(20px, env(safe-area-inset-right));
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets: one texture atlas holding every frame, read pixel for pixel - no filtering,
+                 no mipmaps. Its frames are rectangles measured from the bottom left, each with the
+                 pivot it stands on; the platform's also has 9-slice borders, so its middle can
+                 repeat. -->
+            <pc-asset id="atlas" type="textureatlas" src="assets/sprites/sprites.png" srgb mipmaps="false" min-filter="nearest" mag-filter="nearest" data='{ "frames": {
+                "slime-idle-0": { "rect": [150, 164, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-1": { "rect": [175, 164, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-2": { "rect": [200, 164, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-3": { "rect": [225, 164, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-4": { "rect": [150, 139, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-5": { "rect": [175, 139, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-6": { "rect": [200, 139, 24, 24], "pivot": [0.5, 0] },
+                "slime-idle-7": { "rect": [225, 139, 24, 24], "pivot": [0.5, 0] },
+                "slime-hop-0": { "rect": [150, 114, 24, 24], "pivot": [0.5, 0] },
+                "slime-hop-1": { "rect": [175, 114, 24, 24], "pivot": [0.5, 0] },
+                "slime-hop-2": { "rect": [200, 114, 24, 24], "pivot": [0.5, 0] },
+                "slime-hop-3": { "rect": [225, 114, 24, 24], "pivot": [0.5, 0] },
+                "slime-hop-4": { "rect": [150, 89, 24, 24], "pivot": [0.5, 0] },
+                "slime-hop-5": { "rect": [175, 89, 24, 24], "pivot": [0.5, 0] },
+                "slime-jump-0": { "rect": [200, 89, 24, 24], "pivot": [0.5, 0] },
+                "slime-jump-1": { "rect": [225, 89, 24, 24], "pivot": [0.5, 0] },
+                "slime-jump-2": { "rect": [150, 64, 24, 24], "pivot": [0.5, 0] },
+                "slime-fall-0": { "rect": [175, 64, 24, 24], "pivot": [0.5, 0] },
+                "slime-fall-1": { "rect": [200, 64, 24, 24], "pivot": [0.5, 0] },
+                "slime-land-0": { "rect": [225, 64, 24, 24], "pivot": [0.5, 0] },
+                "slime-land-1": { "rect": [150, 39, 24, 24], "pivot": [0.5, 0] },
+                "coin-spin-0": { "rect": [238, 32, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-spin-1": { "rect": [238, 19, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-spin-2": { "rect": [0, 13, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-spin-3": { "rect": [150, 9, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-spin-4": { "rect": [163, 9, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-spin-5": { "rect": [176, 9, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-collect-0": { "rect": [232, 6, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-collect-1": { "rect": [0, 0, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-collect-2": { "rect": [189, 0, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-collect-3": { "rect": [202, 0, 12, 12], "pivot": [0.5, 0.5] },
+                "coin-collect-4": { "rect": [215, 0, 12, 12], "pivot": [0.5, 0.5] },
+                "platform": { "rect": [201, 46, 28, 16], "pivot": [0.5, 1], "border": [6, 0, 6, 0] },
+                "grass": { "rect": [232, 46, 16, 16], "pivot": [0.5, 1] },
+                "dirt": { "rect": [201, 27, 16, 16], "pivot": [0.5, 1] },
+                "sky": { "rect": [1, 27, 16, 160], "pivot": [0.5, 0] },
+                "night": { "rect": [220, 27, 16, 16], "pivot": [0.5, 0] },
+                "stars": { "rect": [20, 107, 128, 80], "pivot": [0.5, 0] },
+                "mountains": { "rect": [20, 56, 128, 48], "pivot": [0.5, 0] },
+                "hills": { "rect": [20, 13, 128, 40], "pivot": [0.5, 0] },
+                "moon": { "rect": [175, 39, 24, 24], "pivot": [0.5, 0.5] },
+                "cloud-0": { "rect": [150, 22, 48, 16], "pivot": [0.5, 0.5] },
+                "cloud-1": { "rect": [199, 13, 32, 12], "pivot": [0.5, 0.5] },
+                "tuft": { "rect": [51, 5, 9, 6], "pivot": [0.5, 0] },
+                "flower-red": { "rect": [245, 8, 7, 10], "pivot": [0.5, 0] },
+                "flower-yellow": { "rect": [13, 1, 7, 10], "pivot": [0.5, 0] },
+                "flower-blue": { "rect": [21, 1, 7, 10], "pivot": [0.5, 0] },
+                "mushroom": { "rect": [29, 2, 9, 9], "pivot": [0.5, 0] },
+                "rock": { "rect": [39, 5, 11, 6], "pivot": [0.5, 0] },
+                "shadow": { "rect": [61, 7, 16, 4], "pivot": [0.5, 0.5] }
+            } }'></pc-asset>
+            <!-- Sprites cut from the atlas: each is a run of frame keys, at 16 pixels per world unit.
+                 The tiled ones repeat their frame to fill whatever width a pc-sprite gives them. -->
+            <pc-asset id="slime-idle" type="sprite" atlas="atlas" frame-keys="slime-idle-0 slime-idle-1 slime-idle-2 slime-idle-3 slime-idle-4 slime-idle-5 slime-idle-6 slime-idle-7" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="slime-hop" type="sprite" atlas="atlas" frame-keys="slime-hop-0 slime-hop-1 slime-hop-2 slime-hop-3 slime-hop-4 slime-hop-5" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="slime-jump" type="sprite" atlas="atlas" frame-keys="slime-jump-0 slime-jump-1 slime-jump-2" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="slime-fall" type="sprite" atlas="atlas" frame-keys="slime-fall-0 slime-fall-1" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="slime-land" type="sprite" atlas="atlas" frame-keys="slime-land-0 slime-land-1" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="coin-spin" type="sprite" atlas="atlas" frame-keys="coin-spin-0 coin-spin-1 coin-spin-2 coin-spin-3 coin-spin-4 coin-spin-5" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="coin-collect" type="sprite" atlas="atlas" frame-keys="coin-collect-0 coin-collect-1 coin-collect-2 coin-collect-3 coin-collect-4" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="platform" type="sprite" atlas="atlas" frame-keys="platform" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="grass" type="sprite" atlas="atlas" frame-keys="grass" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="dirt" type="sprite" atlas="atlas" frame-keys="dirt" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="sky" type="sprite" atlas="atlas" frame-keys="sky" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="night" type="sprite" atlas="atlas" frame-keys="night" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="stars" type="sprite" atlas="atlas" frame-keys="stars" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="mountains" type="sprite" atlas="atlas" frame-keys="mountains" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="hills" type="sprite" atlas="atlas" frame-keys="hills" pixels-per-unit="16" render-mode="tiled"></pc-asset>
+            <pc-asset id="moon" type="sprite" atlas="atlas" frame-keys="moon" pixels-per-unit="16"></pc-asset>
+            <!-- Sprites with several frames to pick one from, rather than to play -->
+            <pc-asset id="clouds" type="sprite" atlas="atlas" frame-keys="cloud-0 cloud-1" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="decor" type="sprite" atlas="atlas" frame-keys="tuft flower-red flower-yellow flower-blue mushroom rock" pixels-per-unit="16"></pc-asset>
+            <pc-asset id="shadow" type="sprite" atlas="atlas" frame-keys="shadow" pixels-per-unit="16"></pc-asset>
+            <!-- Scene -->
+            <pc-scene>
+                <!-- Camera: orthographic, sized by js/sprites.mjs so each atlas pixel covers a
+                     whole number of screen pixels -->
+                <pc-entity name="camera" position="0 3 10">
+                    <pc-camera projection="orthographic" ortho-height="5" clear-color="#161a3c"></pc-camera>
+                </pc-entity>
+                <!-- Backdrop, back to front. Each layer follows the camera by its data-parallax
+                     fraction: the farther it is, the less it seems to move. The sky's gradient
+                     gives way to night, and the stars repeat up into it, however tall the view. -->
+                <pc-entity name="sky" position="0 1 -10" data-parallax="1">
+                    <pc-sprite asset="sky" width="96" height="10"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="night" position="0 11 -10" data-parallax="1">
+                    <pc-sprite asset="night" width="96" height="30"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="stars" position="0 5 -9.5" data-parallax="0.92">
+                    <pc-sprite asset="stars" width="96" height="30"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="moon" position="5.5 6.25 -9" data-parallax="0.94">
+                    <pc-sprite asset="moon"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="mountains" position="0 0.75 -8" data-parallax="0.75">
+                    <pc-sprite asset="mountains" width="96" height="3"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="cloud" position="-14 5.5 -7" data-parallax="0.6" data-drift="0.35">
+                    <pc-sprite asset="clouds" opacity="0.9"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="cloud" position="-3 6.5 -7" data-parallax="0.6" data-drift="0.25">
+                    <pc-sprite asset="clouds" frame="1" opacity="0.8"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="cloud" position="9 5 -7" data-parallax="0.6" data-drift="0.3">
+                    <pc-sprite asset="clouds" opacity="0.9"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="cloud" position="21 6.75 -7" data-parallax="0.6" data-drift="0.2">
+                    <pc-sprite asset="clouds" frame="1" opacity="0.8"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="hills" position="0 -0.25 -6" data-parallax="0.45">
+                    <pc-sprite asset="hills" width="96" height="2.5"></pc-sprite>
+                </pc-entity>
+                <!-- Ground: a strip of grass over a deep block of dirt, both repeating their tile -->
+                <pc-entity name="grass" position="0 0 0">
+                    <pc-sprite asset="grass" width="96" height="1"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="dirt" position="0 -1 0">
+                    <pc-sprite asset="dirt" width="96" height="12"></pc-sprite>
+                </pc-entity>
+                <!-- Platforms: one sprite at any width - the ends stay put, the middle repeats.
+                     js/sprites.mjs reads where each one stands to land the slime on it. -->
+                <pc-entity name="platform" position="-14 2 -1">
+                    <pc-sprite asset="platform" width="3.75"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="platform" position="-9.5 4 -1">
+                    <pc-sprite asset="platform" width="2.75"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="platform" position="-3.5 2.25 -1">
+                    <pc-sprite asset="platform" width="4.75"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="platform" position="2 4.25 -1">
+                    <pc-sprite asset="platform" width="3.75"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="platform" position="7 6 -1">
+                    <pc-sprite asset="platform" width="2.75"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="platform" position="12.5 2.5 -1">
+                    <pc-sprite asset="platform" width="4.75"></pc-sprite>
+                </pc-entity>
+                <pc-entity name="platform" position="19 2 -1">
+                    <pc-sprite asset="platform" width="2.75"></pc-sprite>
+                </pc-entity>
+                <!-- Decorations: one sprite, a different frame of it for each -->
+                <pc-entity name="decor" position="-22 0 -0.5"><pc-sprite asset="decor" frame="0"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-20.5 0 -0.5"><pc-sprite asset="decor" frame="1"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-17 0 -0.5"><pc-sprite asset="decor" frame="5"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-14.9 2 -0.5"><pc-sprite asset="decor" frame="0"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-11.5 0 -0.5"><pc-sprite asset="decor" frame="4"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-8 0 -0.5"><pc-sprite asset="decor" frame="3"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-7.4 0 -0.5"><pc-sprite asset="decor" frame="0"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="-1 0 -0.5"><pc-sprite asset="decor" frame="2"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="2.9 4.25 -0.5"><pc-sprite asset="decor" frame="3"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="3.5 0 -0.5"><pc-sprite asset="decor" frame="5"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="6 0 -0.5"><pc-sprite asset="decor" frame="1"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="9.5 0 -0.5"><pc-sprite asset="decor" frame="0"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="10.2 0 -0.5"><pc-sprite asset="decor" frame="2"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="14.4 2.5 -0.5"><pc-sprite asset="decor" frame="4"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="16.5 0 -0.5"><pc-sprite asset="decor" frame="0"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="21.5 0 -0.5"><pc-sprite asset="decor" frame="3"></pc-sprite></pc-entity>
+                <pc-entity name="decor" position="22.5 0 -0.5"><pc-sprite asset="decor" frame="5"></pc-sprite></pc-entity>
+                <!-- Coins: one coin, declared once and cloned by js/sprites.mjs into each placeholder
+                     below. It spins until touched, then plays its one-shot collect clip. -->
+                <template id="coin-template">
+                    <pc-sprite type="animated" clip="spin">
+                        <pc-sprite-clip name="spin" asset="coin-spin" fps="10" loop></pc-sprite-clip>
+                        <pc-sprite-clip name="collect" asset="coin-collect" fps="15"></pc-sprite-clip>
+                    </pc-sprite>
+                </template>
+                <pc-entity name="coin" position="-19 0.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-14 2.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-9.5 4.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-6.5 0.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="-4.5 3 0.5"></pc-entity>
+                <pc-entity name="coin" position="-2.5 3 0.5"></pc-entity>
+                <pc-entity name="coin" position="2 5 0.5"></pc-entity>
+                <pc-entity name="coin" position="4.75 0.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="7 6.75 0.5"></pc-entity>
+                <pc-entity name="coin" position="11.5 3.25 0.5"></pc-entity>
+                <pc-entity name="coin" position="13.5 3.25 0.5"></pc-entity>
+                <pc-entity name="coin" position="19 2.75 0.5"></pc-entity>
+                <!-- The slime's shadow, fading as it jumps -->
+                <pc-entity name="shadow" position="-18 0 0.9">
+                    <pc-sprite asset="shadow" opacity="0.35"></pc-sprite>
+                </pc-entity>
+                <!-- The slime: its clip attribute names what it is doing, and js/sprites.mjs
+                     switches it as the slime moves. flip-x turns it to face left. -->
+                <pc-entity name="slime" position="-18 0 1">
+                    <pc-sprite type="animated" clip="idle">
+                        <pc-sprite-clip name="idle" asset="slime-idle" fps="8" loop></pc-sprite-clip>
+                        <pc-sprite-clip name="hop" asset="slime-hop" fps="12" loop></pc-sprite-clip>
+                        <pc-sprite-clip name="jump" asset="slime-jump" fps="12"></pc-sprite-clip>
+                        <pc-sprite-clip name="fall" asset="slime-fall" fps="8" loop></pc-sprite-clip>
+                        <pc-sprite-clip name="land" asset="slime-land" fps="12"></pc-sprite-clip>
+                    </pc-sprite>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <output class="coin-count" id="coin-count" aria-live="polite">0 / 12</output>
+        <p class="controls-hint"><kbd>&larr;</kbd> <kbd>&rarr;</kbd> to hop, <kbd>Space</kbd> to jump</p>
+        <div class="touch-controls">
+            <button type="button" class="touch-button" id="touch-left" aria-label="Move left" aria-pressed="false">&#9664;</button>
+            <button type="button" class="touch-button" id="touch-right" aria-label="Move right" aria-pressed="false">&#9654;</button>
+            <button type="button" class="touch-button" id="touch-jump" aria-label="Jump" aria-pressed="false">&#9650;</button>
+        </div>
+        <script type="module" src="js/sprites.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

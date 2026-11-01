@@ -91,6 +91,19 @@ describe('misplaced elements', () => {
         await expectNeverReady(get<AsyncElement>('pc-sound-slot'));
     });
 
+    it('warns and never becomes ready when pc-sprite-clip is not a direct child of pc-sprite', async () => {
+        const { get } = await bootUnsettled(`
+            <pc-entity name="e">
+                <pc-sprite>
+                    <div><pc-sprite-clip name="walk"></pc-sprite-clip></div>
+                </pc-sprite>
+            </pc-entity>
+        `);
+
+        warnings.expect("pc-sprite-clip 'walk' must be a direct child of a pc-sprite element");
+        await expectNeverReady(get<AsyncElement>('pc-sprite-clip'));
+    });
+
     it('warns and never becomes ready when pc-anim-clip is not a direct child of pc-anim', async () => {
         const { get } = await bootUnsettled(`
             <pc-entity name="e">

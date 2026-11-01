@@ -99,6 +99,8 @@
             "StandardMaterial": "https://api.playcanvas.com/engine/classes/StandardMaterial.html",
             "SoundComponent": "https://api.playcanvas.com/engine/classes/SoundComponent.html",
             "SoundSlot": "https://api.playcanvas.com/engine/classes/SoundSlot.html",
+            "SpriteAnimationClip": "https://api.playcanvas.com/engine/classes/SpriteAnimationClip.html",
+            "SpriteComponent": "https://api.playcanvas.com/engine/classes/SpriteComponent.html",
             "Vec2": "https://api.playcanvas.com/engine/classes/Vec2.html",
             "Vec3": "https://api.playcanvas.com/engine/classes/Vec3.html",
             "Vec4": "https://api.playcanvas.com/engine/classes/Vec4.html"

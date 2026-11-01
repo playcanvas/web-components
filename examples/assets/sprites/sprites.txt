@@ -1,0 +1,7 @@
+sprites.png: the Sprites example's pixel art, drawn for this repo entirely from code - a Node
+script rasterizes every frame at 16 pixels per world unit and packs them into this one atlas: a
+slime (idle, hop, jump, fall and land), a spinning coin and the sparkle it leaves, a floating
+platform with 9-slice ends, tiling ground, sky, stars, mountains and pine hills, the moon, two
+clouds, and ground decorations.
+
+CC0 / public domain.

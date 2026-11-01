@@ -45,6 +45,10 @@ describe('attribute removal', () => {
         ['pc-scroll-view', 'vertical-scrollbar', 'verticalScrollbar', ''],
         ['pc-sound-slot', 'asset', 'asset', ''],
         ['pc-sound-slot', 'name', 'name', ''],
+        ['pc-sprite', 'asset', 'asset', ''],
+        ['pc-sprite', 'clip', 'clip', ''],
+        ['pc-sprite-clip', 'asset', 'asset', ''],
+        ['pc-sprite-clip', 'name', 'name', ''],
         ['pc-model', 'asset', 'asset', ''],
         ['pc-sky', 'asset', 'asset', ''],
 
@@ -72,6 +76,6 @@ describe('attribute removal', () => {
     it('covers every unparsed string attribute in the library', () => {
         // If a new `this.x = newValue ?? ''` branch is added without a case above, this fails.
         // Counted rather than enumerated, so it stays a one-line update rather than a second table.
-        expect(cases).toHaveLength(28);
+        expect(cases).toHaveLength(32);
     });
 });
