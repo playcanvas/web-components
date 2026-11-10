@@ -1,0 +1,12 @@
+platformer.png: the Sprites example's pixel art, drawn for this repo entirely from code - a Node
+script rasterizes every frame at 16 pixels per world unit and packs them into this one atlas: a
+slime (idle, hop, jump, fall and land), a spinning coin and the sparkle it leaves, a floating
+platform with 9-slice ends, tiling ground, sky, stars, mountains and pine hills, the moon, two
+clouds, and ground decorations.
+
+platformer.json: the sprite sheet of that atlas, in the layout TexturePacker's PlayCanvas exporter
+writes - each frame's rectangle and pivot, the platform's 9-slice borders, and the name of the
+image. The PlayCanvas Engine's Sprite Platformer example loads the same two files
+(examples/assets/sprites in https://github.com/playcanvas/engine).
+
+CC0 / public domain.
