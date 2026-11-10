@@ -1,5 +1,6 @@
 import type { LightComponent } from 'playcanvas';
 import {
+    BoundingBox,
     Color,
     Entity,
     LAYERID_WORLD,
@@ -9,7 +10,8 @@ import {
     LIGHTSHAPE_SPHERE,
     SHADOW_PCF1_32F,
     SHADOW_PCF3_32F,
-    SHADOW_VSM_16F
+    SHADOW_VSM_16F,
+    Vec3
 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
@@ -46,6 +48,7 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['range', 'range', '25', 25, 10],
     ['shadow-bias', 'shadowBias', '0.1', 0.1, 0.05],
     ['shadow-blocker-samples', 'shadowBlockerSamples', '8', 8, 16],
+    ['shadow-bounds', 'shadowBounds', '0 2 0 5 2 5', new BoundingBox(new Vec3(0, 2, 0), new Vec3(5, 2, 5)), null],
     ['shadow-distance', 'shadowDistance', '60', 60, 40],
     ['shadow-intensity', 'shadowIntensity', '0.6', 0.6, 1],
     ['shadow-resolution', 'shadowResolution', '2048', 2048, 1024],
@@ -165,6 +168,16 @@ describe('<pc-light>', () => {
             expect(component.shape).toBe(LIGHTSHAPE_PUNCTUAL);
             expect(component.intensity).toBe(1);
             expect(component.shadowBias).toBe(0.05);
+        });
+
+        it('leaves the shadow fitted to each camera when the shadow bounds are malformed', async () => {
+            // A box is its center and its half extents: 6 numbers, so a 3-number value is not one
+            const { get } = await bootApp(scene('shadow-bounds="0 2 0"'));
+
+            warnings.expect(
+                "Invalid value '0 2 0' for attribute 'shadow-bounds'. Expected 6 space-separated numbers. Using 'null'."
+            );
+            expect(get<LightComponentElement>('pc-light').component!.shadowBounds).toBeNull();
         });
 
         it('maps each light shape name to its own engine constant', async () => {

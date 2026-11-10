@@ -1,4 +1,4 @@
-import type { LightComponent } from 'playcanvas';
+import type { BoundingBox, LightComponent } from 'playcanvas';
 import {
     Color,
     LIGHTSHAPE_DISK,
@@ -16,7 +16,7 @@ import {
     SHADOW_VSM_32F
 } from 'playcanvas';
 
-import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';
+import { parseBool, parseBoundingBox, parseColor, parseEnum, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -87,6 +87,8 @@ class LightComponentElement extends ComponentElement<LightComponent> {
 
     private _shadowBias = 0.05;
 
+    private _shadowBounds: BoundingBox | null = null;
+
     private _shadowDistance = 40;
 
     private _shadowIntensity = 1;
@@ -143,6 +145,8 @@ class LightComponentElement extends ComponentElement<LightComponent> {
             range: this._range,
             shadowBias: this._shadowBias,
             shadowBlockerSamples: this._shadowBlockerSamples,
+            // The engine reads null as "no bounds": cascades fitted to each camera
+            shadowBounds: this._shadowBounds,
             shadowDistance: this._shadowDistance,
             shadowIntensity: this._shadowIntensity,
             shadowResolution: this._shadowResolution,
@@ -381,6 +385,31 @@ class LightComponentElement extends ComponentElement<LightComponent> {
      */
     get shadowBias() {
         return this._shadowBias;
+    }
+
+    /**
+     * Sets a world space box that the shadow of a `directional` light is fitted to, in place of
+     * cascades fitted to each camera. The whole shadow map then covers the box as seen from the
+     * light, which concentrates its resolution on part of a large scene. The box only needs to
+     * enclose the shadow casters: receivers further along the light, such as the ground below
+     * them, are still shadowed. While it is set, `num-cascades`, `shadow-distance`,
+     * `cascade-blend` and `cascade-distribution` are not used. Defaults to `null`, which fits
+     * the shadow to each camera as usual.
+     * @param value - The shadow bounds, or `null` for none.
+     */
+    set shadowBounds(value: BoundingBox | null) {
+        this._shadowBounds = value;
+        if (this.component) {
+            this.component.shadowBounds = value;
+        }
+    }
+
+    /**
+     * Gets the world space box that the shadow of a `directional` light is fitted to.
+     * @returns The shadow bounds, or `null` when there are none.
+     */
+    get shadowBounds() {
+        return this._shadowBounds;
     }
 
     /**
@@ -683,6 +712,7 @@ class LightComponentElement extends ComponentElement<LightComponent> {
             'range',
             'shadow-bias',
             'shadow-blocker-samples',
+            'shadow-bounds',
             'shadow-distance',
             'shadow-intensity',
             'shadow-resolution',
@@ -741,6 +771,9 @@ class LightComponentElement extends ComponentElement<LightComponent> {
                 break;
             case 'shadow-blocker-samples':
                 this.shadowBlockerSamples = parseNumber(newValue, 16, name);
+                break;
+            case 'shadow-bounds':
+                this.shadowBounds = parseBoundingBox(newValue, null, name);
                 break;
             case 'shadow-distance':
                 this.shadowDistance = parseNumber(newValue, 40, name);

@@ -14,6 +14,8 @@ import {
     TONEMAP_ACES,
     TONEMAP_HEJL,
     TONEMAP_NONE,
+    TONEMAP_AGX,
+    TONEMAP_AGX_PUNCHY,
     XRTYPE_AR,
     XRTYPE_VR
 } from 'playcanvas';
@@ -27,14 +29,23 @@ const projections = new Map<'perspective' | 'orthographic', number>([
     ['orthographic', PROJECTION_ORTHOGRAPHIC]
 ]);
 
-const tonemaps = new Map<'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral', number>([
+/**
+ * The tone mapping curves supported by the `<pc-camera>` element.
+ *
+ * @category Types
+ */
+export type Tonemap = 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' | 'agx' | 'agx-punchy';
+
+const tonemaps = new Map<Tonemap, number>([
     ['none', TONEMAP_NONE],
     ['linear', TONEMAP_LINEAR],
     ['filmic', TONEMAP_FILMIC],
     ['hejl', TONEMAP_HEJL],
     ['aces', TONEMAP_ACES],
     ['aces2', TONEMAP_ACES2],
-    ['neutral', TONEMAP_NEUTRAL]
+    ['neutral', TONEMAP_NEUTRAL],
+    ['agx', TONEMAP_AGX],
+    ['agx-punchy', TONEMAP_AGX_PUNCHY]
 ]);
 
 /**
@@ -92,7 +103,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
     private _scissorRect = new Vec4(0, 0, 1, 1);
 
-    private _tonemap: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' = 'linear';
+    private _tonemap: Tonemap = 'linear';
 
     /** @ignore */
     constructor() {
@@ -584,11 +595,12 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
     /**
      * Sets the tone mapping of the camera. Can be `none`, `linear`, `filmic`, `hejl`, `aces`,
-     * `aces2` or `neutral`. Defaults to `linear`, which applies the scene exposure and nothing
-     * else; `none` skips the exposure too.
+     * `aces2`, `neutral`, `agx` or `agx-punchy`. Defaults to `linear`, which applies the scene
+     * exposure and nothing else; `none` skips the exposure too. `agx` gives a neutral, flat look
+     * that suits color grading, and `agx-punchy` raises its contrast and saturation.
      * @param value - The tone mapping.
      */
-    set tonemap(value: 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral') {
+    set tonemap(value: Tonemap) {
         this._tonemap = value;
         if (this.component) {
             this.component.toneMapping = tonemaps.get(value) ?? TONEMAP_LINEAR;
@@ -599,7 +611,7 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
      * Gets the tone mapping of the camera.
      * @returns The tone mapping.
      */
-    get tonemap(): 'none' | 'linear' | 'filmic' | 'hejl' | 'aces' | 'aces2' | 'neutral' {
+    get tonemap(): Tonemap {
         return this._tonemap;
     }
 

@@ -1,8 +1,9 @@
-import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { BoundingBox, Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import {
     parseBool,
+    parseBoundingBox,
     parseColor,
     parseComponents,
     parseEnum,
@@ -376,6 +377,37 @@ describe('parse', () => {
             warnings.expect(
                 `Invalid value '${value}' for attribute 'rotation'. Expected 3 space-separated numbers. Using '[0, 0, 0, 1]'.`
             );
+        });
+    });
+
+    describe('parseBoundingBox', () => {
+        it('parses a center followed by half extents', () => {
+            const box = parseBoundingBox('0 2 0 5 2 5', null, 'shadow-bounds')!;
+
+            expect(box).toBeInstanceOf(BoundingBox);
+            expect(box.center).toEqual(new Vec3(0, 2, 0));
+            expect(box.halfExtents).toEqual(new Vec3(5, 2, 5));
+        });
+
+        it('returns the default when the attribute is absent, without warning', () => {
+            expect(parseBoundingBox(null, null, 'shadow-bounds')).toBeNull();
+            expect(warnings.seen).toEqual([]);
+        });
+
+        it.for(['0 2 0', '0 2 0 5 2 5 1', 'bad'])('falls back and warns for %o', (value) => {
+            expect(parseBoundingBox(value, null, 'shadow-bounds')).toBeNull();
+            warnings.expect(
+                `Invalid value '${value}' for attribute 'shadow-bounds'. Expected 6 space-separated numbers. Using 'null'.`
+            );
+        });
+
+        it('clones a box default rather than returning it', () => {
+            const fallback = new BoundingBox(new Vec3(1, 1, 1), new Vec3(2, 2, 2));
+            const box = parseBoundingBox(null, fallback, 'shadow-bounds');
+
+            expect(box).not.toBe(fallback);
+            expect(box.center).toEqual(fallback.center);
+            expect(box.halfExtents).toEqual(fallback.halfExtents);
         });
     });
 

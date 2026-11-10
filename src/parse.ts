@@ -13,7 +13,7 @@
  *   so they never warn.
  */
 
-import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { BoundingBox, Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { CSS_COLORS } from './colors';
 
@@ -42,7 +42,7 @@ export const parseComponents = (value: string, count: number): number[] | null =
  * @param value - The default value to clone (`null` is passed through).
  * @returns The cloned value.
  */
-const cloneDefault = <T extends Color | Quat | Vec2 | Vec3 | Vec4 | null>(value: T): T => {
+const cloneDefault = <T extends BoundingBox | Color | Quat | Vec2 | Vec3 | Vec4 | null>(value: T): T => {
     return (value === null ? null : value.clone()) as T;
 };
 
@@ -61,6 +61,37 @@ const cloneDefault = <T extends Color | Quat | Vec2 | Vec3 | Vec4 | null>(value:
  */
 export const parseBool = (value: string | null, defaultValue: boolean): boolean => {
     return value === null ? defaultValue : value !== 'false';
+};
+
+/**
+ * Parse a bounding box attribute value. The expected format is 6 space-separated numbers: the
+ * center of the box, then its half extents (e.g. '0 2 0 5 2 5'). Returns `defaultValue` (cloned,
+ * when it is a box) when the attribute is absent (`null`), or when the value is malformed — the
+ * latter also logs a warning.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param defaultValue - The value to use when the attribute is absent or invalid.
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The parsed BoundingBox object.
+ * @internal
+ */
+export const parseBoundingBox = <T extends BoundingBox | null>(
+    value: string | null,
+    defaultValue: T,
+    attribute: string
+): BoundingBox | T => {
+    if (value === null) {
+        return cloneDefault(defaultValue);
+    }
+    const components = parseComponents(value, 6);
+    if (!components) {
+        console.warn(
+            `Invalid value '${value}' for attribute '${attribute}'. Expected 6 space-separated numbers. Using '${defaultValue}'.`
+        );
+        return cloneDefault(defaultValue);
+    }
+    const [cx, cy, cz, hx, hy, hz] = components;
+    return new BoundingBox(new Vec3(cx, cy, cz), new Vec3(hx, hy, hz));
 };
 
 /**

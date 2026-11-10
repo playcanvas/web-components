@@ -136,6 +136,7 @@ if (manifest) {
     expectAttribute('pc-element', 'pivot', { default: '0 0' });
     expectAttribute('pc-element', 'width', { type: 'number', default: '32', fieldName: 'width' });
     expectAttribute('pc-element', 'height', { default: '32' });
+    expectAttribute('pc-element', 'letter-spacing', { type: 'number', default: '0', fieldName: 'letterSpacing' });
     expectAttribute('pc-layout-group', 'reverse-y', { type: 'boolean', default: 'true', fieldName: 'reverseY' });
     expectAttribute('pc-sound', 'positional', { type: 'boolean', default: 'true', fieldName: 'positional' });
     expectAttribute('pc-scrollbar', 'handle-size', { type: 'number', default: '0', fieldName: 'handleSize' });
@@ -146,6 +147,12 @@ if (manifest) {
     // A `null` default means "leave the engine value alone", so it is omitted
     check(attribute('pc-element', 'margin')?.default === undefined,
         'pc-element[margin] should have no default');
+
+    // A box, parsed by parseBoundingBox: no default either, and its syntax hint is published
+    check(attribute('pc-light', 'shadow-bounds')?.default === undefined,
+        'pc-light[shadow-bounds] should have no default');
+    check((attribute('pc-light', 'shadow-bounds')?.description ?? '').includes('6 space-separated numbers'),
+        `pc-light[shadow-bounds] does not describe its syntax: ${JSON.stringify(attribute('pc-light', 'shadow-bounds')?.description)}`);
 
     // The text styling attributes that do nothing without another attribute say so in the first
     // sentence, the only one that reaches the tooltip
@@ -217,7 +224,7 @@ if (manifest) {
     // Enums resolved from an inline array, and from a module-scope Map
     expectEnum('pc-render', 'type', 7, 'box');
     expectEnum('pc-light', 'type', 3, 'directional');
-    expectEnum('pc-camera', 'tonemap', 7, 'linear');
+    expectEnum('pc-camera', 'tonemap', 9, 'linear');
     expectEnum('pc-app', 'picking', 3, 'auto');
     expectEnum('pc-light', 'shadow-type', 9, 'pcf3-32f');
     expectEnum('pc-light', 'shape', 4, 'punctual');
@@ -548,8 +555,8 @@ if (vsCode) {
     const tonemap = vsCode.tags
         ?.find(tag => tag.name === 'pc-camera')?.attributes
         ?.find(item => item.name === 'tonemap');
-    check(tonemap?.values?.length === 7,
-        `VS Code custom data should offer 7 values for pc-camera[tonemap], found ${tonemap?.values?.length}`);
+    check(tonemap?.values?.length === 9,
+        `VS Code custom data should offer 9 values for pc-camera[tonemap], found ${tonemap?.values?.length}`);
 
     const tooltip = tag => (typeof tag.description === 'string' ? tag.description : tag.description?.value ?? '');
 
