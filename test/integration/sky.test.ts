@@ -111,29 +111,56 @@ describe('<pc-sky>', () => {
             // Rendering builds the sky mesh for the engine's type, which asserts on one it lacks
             render();
 
-            expect(app.scene.layers.getLayerById(LAYERID_SKYBOX)!.enabled, 'the skybox is hidden').toBe(false);
+            expect(app.scene.sky.enabled, 'the sky is disabled').toBe(false);
+            expect(app.scene.sky.skyMesh, 'so it builds no mesh').toBeNull();
             expect(app.scene.sky.type, 'the sky keeps an engine type').toBe(SKYTYPE_INFINITE);
             expect(app.scene.skybox, 'and the skybox still lights the scene').toBeTruthy();
+            // The layer belongs to the scene, and may hold more than the sky
+            expect(app.scene.layers.getLayerById(LAYERID_SKYBOX)!.enabled, 'the skybox layer is left on').toBe(true);
         });
 
         it('switches between none and the sky types at runtime', async () => {
-            const { app, get } = await bootApp(
+            const { app, get, render } = await bootApp(
                 `${SKY_ASSETS}<pc-scene><pc-sky asset="sky-a" type="dome"></pc-sky></pc-scene>`
             );
             const sky = get<SkyElement>('pc-sky');
-            const layer = app.scene.layers.getLayerById(LAYERID_SKYBOX)!;
 
             await settleTask();
             finishTextureLoad(get<AssetElement>('pc-asset[id="sky-a"]').asset!, app);
             expect(app.scene.sky.type).toBe(SKYTYPE_DOME);
 
+            // The engine builds the sky's mesh as it renders
+            render();
+            expect(app.scene.sky.skyMesh, 'a sky type builds the mesh').not.toBeNull();
+
             sky.setAttribute('type', 'none');
-            expect(layer.enabled, 'none hides the skybox').toBe(false);
+            expect(app.scene.sky.enabled, 'none hides the skybox').toBe(false);
+            expect(app.scene.sky.skyMesh, 'and releases its mesh').toBeNull();
             expect(app.scene.sky.type, 'and leaves the projection as it was').toBe(SKYTYPE_DOME);
 
             sky.setAttribute('type', 'box');
-            expect(layer.enabled, 'a sky type shows it again').toBe(true);
+            expect(app.scene.sky.enabled, 'a sky type shows it again').toBe(true);
             expect(app.scene.sky.type).toBe(SKYTYPE_BOX);
+
+            render();
+            expect(app.scene.sky.skyMesh, 'with a mesh').not.toBeNull();
+        });
+
+        it('hands the scene back its sky when a hidden one is removed', async () => {
+            const { app, get } = await bootApp(
+                `${SKY_ASSETS}<pc-scene><pc-sky asset="sky-a" type="none"></pc-sky></pc-scene>`
+            );
+            const sky = get<SkyElement>('pc-sky');
+
+            await settleTask();
+            finishTextureLoad(get<AssetElement>('pc-asset[id="sky-a"]').asset!, app);
+            expect(app.scene.sky.enabled).toBe(false);
+
+            sky.remove();
+
+            // Hiding the sky was this element's doing, so a skybox assigned by other means shows
+            expect(app.scene.skybox, 'the skybox it generated is released').toBeNull();
+            expect(app.scene.sky.enabled, 'and the sky is enabled again').toBe(true);
         });
     });
 });

@@ -1,5 +1,5 @@
 import type { Asset, Scene, Texture } from 'playcanvas';
-import { EnvLighting, LAYERID_SKYBOX, Quat, Vec3 } from 'playcanvas';
+import { EnvLighting, Quat, Vec3 } from 'playcanvas';
 
 import type { AppElement } from './app';
 import { AssetBinding, useAsset } from './asset-binding';
@@ -96,19 +96,20 @@ class SkyElement extends AsyncElement {
 
     /**
      * Applies the type to the scene. `none` is this element's own value rather than an engine sky
-     * type: it hides the skybox by disabling its layer, and leaves the sky's projection as it was.
+     * type: it disables the scene's sky, which then builds no mesh or shader while the skybox
+     * still lights the scene, and leaves the sky's projection as it was.
      */
     private _applyType() {
         if (!this._scene) return;
 
-        const layer = this._scene.layers.getLayerById(LAYERID_SKYBOX);
-        if (layer) {
-            layer.enabled = this._type !== 'none';
-        }
+        const sky = this._scene.sky;
 
+        // The type first: a sky that is still hidden takes it without building a mesh, so showing
+        // it builds the mesh once
         if (this._type !== 'none') {
-            this._scene.sky.type = this._type;
+            sky.type = this._type;
         }
+        sky.enabled = this._type !== 'none';
     }
 
     private async _loadSkybox() {
@@ -161,6 +162,10 @@ class SkyElement extends AsyncElement {
         scene.skybox = null;
         scene.envAtlas?.destroy();
         scene.envAtlas = null;
+
+        // A hidden sky is this element's doing too: without it the scene's sky is the engine's
+        // again, there for a skybox assigned by other means
+        scene.sky.enabled = true;
     }
 
     /**
@@ -295,7 +300,9 @@ class SkyElement extends AsyncElement {
     }
 
     /**
-     * Sets the type of the skybox.
+     * Sets the type of the skybox: `infinite` for a background at infinity, `box` or `dome` to
+     * project it onto a mesh the scene sits in, or `none` to hide it while it still lights the
+     * scene. Defaults to `infinite`.
      * @param value - The type.
      */
     set type(value: 'box' | 'dome' | 'infinite' | 'none') {
