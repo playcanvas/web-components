@@ -1,3 +1,4 @@
+import { MeshoptDecoder } from 'meshoptimizer/decoder';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     ADDRESS_MIRRORED_REPEAT,
@@ -11,11 +12,10 @@ import {
     FILTER_NEAREST_MIPMAP_NEAREST,
     SPRITE_RENDERMODE_SIMPLE,
     SPRITE_RENDERMODE_SLICED,
-    SPRITE_RENDERMODE_TILED
+    SPRITE_RENDERMODE_TILED,
+    meshoptInitialize
 } from 'playcanvas';
 import type { Texture, TextureAtlas } from 'playcanvas';
-
-import { MeshoptDecoder } from '../lib/meshopt_decoder.module.js';
 
 import { findAsset } from './asset-binding';
 import { AsyncElement } from './async-element';
@@ -126,36 +126,11 @@ const extToType = new Map([
     ['webp', 'texture']
 ]);
 
-// provide buffer view callback so we can handle models compressed with MeshOptimizer
-// https://github.com/zeux/meshoptimizer
-const processBufferView = (
-    gltfBuffer: any,
-    buffers: any[],
-    continuation: (err: string | null, result: any) => void
-) => {
-    if (gltfBuffer.extensions && gltfBuffer.extensions.EXT_meshopt_compression) {
-        const extensionDef = gltfBuffer.extensions.EXT_meshopt_compression;
-
-        Promise.all([MeshoptDecoder.ready, buffers[extensionDef.buffer]]).then((promiseResult) => {
-            const buffer = promiseResult[1];
-
-            const byteOffset = extensionDef.byteOffset || 0;
-            const byteLength = extensionDef.byteLength || 0;
-
-            const count = extensionDef.count;
-            const stride = extensionDef.byteStride;
-
-            const result = new Uint8Array(count * stride);
-            const source = new Uint8Array(buffer.buffer, buffer.byteOffset + byteOffset, byteLength);
-
-            MeshoptDecoder.decodeGltfBuffer(result, count, stride, source, extensionDef.mode, extensionDef.filter);
-
-            continuation(null, result);
-        });
-    } else {
-        continuation(null, null);
-    }
-};
+// Give the engine the decoder for models compressed with meshoptimizer, so they load without
+// any setup. This only stores the decoder: nothing is decoded until such a model loads. An
+// application that wants its own decoder, or to decode on workers, calls meshoptInitialize
+// itself after importing this library, and that call takes over.
+meshoptInitialize({ decoder: MeshoptDecoder });
 
 /**
  * The AssetElement interface provides properties and methods for manipulating
@@ -331,14 +306,7 @@ class AssetElement extends AsyncElement {
         const data = this._buildData(type);
         const assetType = type as ConstructorParameters<typeof Asset>[1];
 
-        if (assetType === 'container') {
-            this.asset = new Asset(id, assetType, { url: src }, undefined, {
-                // @ts-expect-error PlayCanvas does not declare the container bufferView hook.
-                bufferView: {
-                    processAsync: processBufferView.bind(this)
-                }
-            });
-        } else if (assetType === 'sprite') {
+        if (assetType === 'sprite') {
             // Sprite assets have no file of their own; their data references a texture atlas asset.
             this.asset = new Asset(id, assetType, undefined, data);
         } else {
