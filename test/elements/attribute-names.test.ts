@@ -86,6 +86,32 @@ describe('renamed attributes', () => {
         });
     });
 
+    describe('<pc-sky> enabled', () => {
+        it("replaces the none sky type with the engine's enabled state", () => {
+            const element = document.createElement('pc-sky');
+
+            expect(element.enabled).toBe(true);
+
+            element.setAttribute('enabled', 'false');
+            expect(element.enabled).toBe(false);
+
+            element.removeAttribute('enabled');
+            expect(element.enabled).toBe(true);
+        });
+
+        it('warns on the none sky type and keeps the default', () => {
+            const element = document.createElement('pc-sky');
+
+            // What every page that lit its scene from a hidden sky used to say. It shows the sky
+            // now, so it must not pass in silence.
+            element.setAttribute('type', 'none');
+            expect(element.type).toBe('infinite');
+            warnings.expect(
+                "Invalid value 'none' for attribute 'type'. Valid values: box, dome, infinite. Using 'infinite'."
+            );
+        });
+    });
+
     it('no longer answers to the old names', () => {
         // A stale attribute is inert rather than an error: observedAttributes never sees it, so
         // nothing warns. That silence is why the rename needs the docs note - and why this asserts

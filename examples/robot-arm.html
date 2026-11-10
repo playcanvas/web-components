@@ -242,9 +242,9 @@
             <pc-material id="floor-mat" diffuse="#4d5157" metalness="0" roughness="0.78" use-metalness></pc-material>
             <!-- Scene. The fog hides the far edge of the (deliberately oversized) floor. -->
             <pc-scene fog="exp2" fog-color="#050608" fog-density="0.09">
-                <!-- Sky. type="none" keeps it out of frame while `lighting` still builds the
+                <!-- Sky. enabled="false" keeps it out of frame while `lighting` still builds the
                      environment atlas; trimmed because it blows the steel to white at full. -->
-                <pc-sky asset="studio" type="none" intensity="0.7" lighting></pc-sky>
+                <pc-sky asset="studio" enabled="false" intensity="0.7" lighting></pc-sky>
                 <!-- Camera. Far enough back for the folded `stow` pose to clear the frame. -->
                 <pc-entity name="camera" position="1.75 1.4 2.15">
                     <!-- cameraFrame renders to a linear HDR target, so this is a linear value -->
