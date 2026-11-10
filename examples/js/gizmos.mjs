@@ -67,6 +67,9 @@ const CAMERA_ATTRIBUTES = {
     orthoHeight: 'ortho-height'
 };
 
+/** Those of the attributes that are sizes rather than angles. */
+const SIZE_ATTRIBUTES = new Set(['range', 'near-clip', 'far-clip', 'ortho-height']);
+
 /** The icon of each kind of entity in the hierarchy. */
 const ICONS = {
     shape: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
@@ -158,8 +161,25 @@ let shiftHeld = false;
 
 // --- Writing back to the markup ---
 
-const number = (value, digits) => String(+value.toFixed(digits));
-const vector = (value, digits) => `${number(value.x, digits)} ${number(value.y, digits)} ${number(value.z, digits)}`;
+const formatPosition = value => String(+value.toFixed(3));
+const formatAngle = value => String(+value.toFixed(2));
+const formatRotation = value => String(+value.toFixed(1));
+
+/**
+ * Formats a size, such as a scale, a range or a clip distance. A size must not round away to
+ * nothing: a camera with a near clip of 0 or an entity with a scale of 0 cannot be drawn, and the
+ * handles that drag a size stop short of it. One too small for three decimals keeps its first
+ * significant digit.
+ *
+ * @param {number} value - The size.
+ * @returns {string} The size as an attribute value.
+ */
+const formatSize = (value) => {
+    const rounded = +value.toFixed(3);
+    return String(rounded === 0 && value !== 0 ? +value.toPrecision(1) : rounded);
+};
+
+const vector = (value, format) => `${format(value.x)} ${format(value.y)} ${format(value.z)}`;
 
 /**
  * Sets an attribute to what a gizmo has made of the property it declares, and notes that it
@@ -197,15 +217,16 @@ const read = (element) => {
     const { entity } = element;
     const values = new Map();
     values.set(element, {
-        position: vector(entity.getLocalPosition(), 3),
-        rotation: vector(entity.getLocalEulerAngles(), 1),
-        scale: vector(entity.getLocalScale(), 3)
+        position: vector(entity.getLocalPosition(), formatPosition),
+        rotation: vector(entity.getLocalEulerAngles(), formatRotation),
+        scale: vector(entity.getLocalScale(), formatSize)
     });
     for (const [child, attributes] of [[lightOf(element), LIGHT_ATTRIBUTES], [cameraOf(element), CAMERA_ATTRIBUTES]]) {
         if (child) {
             const record = {};
             for (const [property, name] of Object.entries(attributes)) {
-                record[name] = number(child.component[property], 2);
+                const format = SIZE_ATTRIBUTES.has(name) ? formatSize : formatAngle;
+                record[name] = format(child.component[property]);
             }
             values.set(child, record);
         }
