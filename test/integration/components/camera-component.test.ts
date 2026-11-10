@@ -8,6 +8,8 @@ import {
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
     TONEMAP_ACES,
+    TONEMAP_AGX,
+    TONEMAP_AGX_PUNCHY,
     TONEMAP_LINEAR,
     XRTYPE_AR,
     XRTYPE_VR
@@ -136,6 +138,17 @@ describe('<pc-camera>', () => {
             }
         });
 
+        it('maps the AgX tone mapping names to their own engine constants', async () => {
+            // Added by engine 2.24.0, and the reason the package needs that engine
+            const { get } = await bootApp(scene('tonemap="agx"'));
+            const camera = get<CameraComponentElement>('pc-camera');
+
+            expect(camera.component!.toneMapping).toBe(TONEMAP_AGX);
+
+            camera.setAttribute('tonemap', 'agx-punchy');
+            expect(camera.component!.toneMapping).toBe(TONEMAP_AGX_PUNCHY);
+        });
+
         it('falls back to the default and warns once per invalid value', async () => {
             const { get } = await bootApp(
                 scene('fov="wide" projection="isometric" tonemap="reinhard" rect="0 0" clear-depth="near"')
@@ -147,7 +160,7 @@ describe('<pc-camera>', () => {
                 "Invalid value 'isometric' for attribute 'projection'. Valid values: perspective, orthographic. Using 'perspective'."
             );
             warnings.expect(
-                "Invalid value 'reinhard' for attribute 'tonemap'. Valid values: none, linear, filmic, hejl, aces, aces2, neutral. Using 'linear'."
+                "Invalid value 'reinhard' for attribute 'tonemap'. Valid values: none, linear, filmic, hejl, aces, aces2, neutral, agx, agx-punchy. Using 'linear'."
             );
             warnings.expect(
                 "Invalid value '0 0' for attribute 'rect'. Expected 4 space-separated numbers. Using '[0, 0, 1, 1]'."

@@ -68,6 +68,8 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
     private _justify = false;
 
+    private _letterSpacing = 0;
+
     private _lineHeight = 32;
 
     private _margin: Vec4 | null = null;
@@ -148,6 +150,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             minFontSize: this._minFontSize,
             height: this._height,
             justify: this._justify,
+            letterSpacing: this._letterSpacing,
             lineHeight: this._lineHeight,
             mask: this._mask,
             // The engine reads null as "no limit"
@@ -430,6 +433,28 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     get justify() {
         return this._justify;
+    }
+
+    /**
+     * Sets the extra space between the letters of the text, as a fraction of the font size (text
+     * elements only). 0.1 adds a tenth of the font size between each pair of characters, like the
+     * CSS `letter-spacing` property, and a negative value tightens the text. It is added on top of
+     * `spacing`. Defaults to 0.
+     * @param value - The extra letter spacing.
+     */
+    set letterSpacing(value: number) {
+        this._letterSpacing = value;
+        if (this.component) {
+            this.component.letterSpacing = value;
+        }
+    }
+
+    /**
+     * Gets the extra space between the letters of the text, as a fraction of the font size.
+     * @returns The extra letter spacing.
+     */
+    get letterSpacing() {
+        return this._letterSpacing;
     }
 
     /**
@@ -920,6 +945,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
             'min-font-size',
             'height',
             'justify',
+            'letter-spacing',
             'line-height',
             'margin',
             'mask',
@@ -991,6 +1017,9 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
                 break;
             case 'justify':
                 this.justify = parseBool(newValue, false);
+                break;
+            case 'letter-spacing':
+                this.letterSpacing = parseNumber(newValue, 0, name);
                 break;
             case 'line-height':
                 this.lineHeight = parseNumber(newValue, 32, name);

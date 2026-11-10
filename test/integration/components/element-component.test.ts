@@ -56,6 +56,7 @@ const textScene = (elementAttributes = '') =>
 const textCases: [attribute: string, property: string, value: string, expected: unknown, restored: unknown][] = [
     ['alignment', 'alignment', '0 1', new Vec2(0, 1), new Vec2(0.5, 0.5)],
     ['justify', 'justify', '', true, false],
+    ['letter-spacing', 'letterSpacing', '0.1', 0.1, 0],
     // The engine reports "no limit" as -1 however it was set
     ['max-lines', 'maxLines', '3', 3, -1],
     ['outline-color', 'outlineColor', '1 0 0', new Color(1, 0, 0), new Color(0, 0, 0, 1)],

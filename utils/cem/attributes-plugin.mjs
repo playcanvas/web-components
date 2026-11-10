@@ -25,6 +25,7 @@
  */
 const PARSE_HELPERS = {
     parseBool: { type: 'boolean' },
+    parseBoundingBox: { type: 'string', format: 'bounds' },
     parseNumber: { type: 'number' },
     parseEnum: { type: 'enum' },
     parseFlags: { type: 'flags' },
@@ -36,6 +37,7 @@ const PARSE_HELPERS = {
 };
 
 const FORMAT_HINTS = {
+    bounds: 'Accepts 6 space-separated numbers: the center of the box, then its half extents.',
     color: 'Accepts a CSS color name, a hex color, or 3 or 4 space-separated numbers in the range 0 to 1.',
     quat: 'Accepts 3 space-separated Euler angles in degrees.',
     vec2: 'Accepts 2 space-separated numbers.',

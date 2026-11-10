@@ -174,6 +174,7 @@ export {
 
 export type { AddressMode, MagFilterMode, MinFilterMode } from './asset';
 export type { AsyncElementTagName } from './async-element';
+export type { Tonemap } from './components/camera-component';
 export type { FitMode } from './components/element-component';
 export type { JointType, MotionMode } from './components/joint-component';
 export type { LightShape } from './components/light-component';
