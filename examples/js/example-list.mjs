@@ -58,6 +58,7 @@ export const examples = [
     { name: 'Shadow Cascades', path: 'shadow-cascades.html', category: 'Graphics' },
     { name: 'Clipping Planes', path: 'clipping-planes.html', category: 'Graphics' },
     { name: 'Area Lights', path: 'area-lights.html', category: 'Graphics' },
+    { name: 'Gizmos', path: 'gizmos.html', category: 'Graphics' },
     { name: 'Video Texture', path: 'video-texture.html', category: 'Graphics' },
     { name: 'Video Recorder', path: 'video-recorder.html', category: 'Graphics' },
     // Animation

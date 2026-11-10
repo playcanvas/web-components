@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Gizmos</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* The editor's chrome: a toolbar and the scene's entities down the left, the selected
+               entity's markup bottom left. Glass recipe copied from example.css's
+               .example-button, applied once to each panel. */
+            .editor-glass {
+                position: absolute;
+                box-sizing: border-box;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font: 600 12px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            @supports not (backdrop-filter: blur(12px)) {
+                .editor-glass {
+                    background-color: rgba(18, 18, 18, 0.88);
+                }
+            }
+
+            /* Toolbar: the tools, then the switches that change how they drag */
+            .toolbar {
+                top: max(16px, env(safe-area-inset-top));
+                left: max(16px, env(safe-area-inset-left));
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                padding: 4px;
+            }
+
+            .toolbar button {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                min-width: 36px;
+                height: 36px;
+                padding: 0 8px;
+                border: 0;
+                border-radius: 6px;
+                background: none;
+                color: rgba(255, 255, 255, 0.7);
+                font: inherit;
+                cursor: pointer;
+            }
+
+            .toolbar button:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+
+            .toolbar button[aria-pressed="true"] {
+                background-color: #f60;
+                color: #fff;
+            }
+
+            .toolbar button:focus-visible,
+            .hierarchy button:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: 2px;
+            }
+
+            .toolbar svg,
+            .hierarchy svg {
+                width: 18px;
+                height: 18px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+                pointer-events: none;
+            }
+
+            .toolbar .divider {
+                align-self: stretch;
+                width: 1px;
+                margin: 4px;
+                background-color: rgba(255, 255, 255, 0.12);
+            }
+
+            /* Hierarchy: one row for each entity of the scene, filled in by js/gizmos.mjs. It
+               sits below the toolbar, which is 46px tall, by the gap every panel keeps from the
+               edge of the screen. */
+            .hierarchy {
+                top: calc(max(16px, env(safe-area-inset-top)) + 46px + 16px);
+                left: max(16px, env(safe-area-inset-left));
+                width: 172px;
+                padding: 10px 6px 6px;
+            }
+
+            .panel-caption {
+                display: block;
+                padding: 0 8px 8px;
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 11px;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            .hierarchy ul {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            .hierarchy button {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                width: 100%;
+                height: 28px;
+                padding: 0 8px;
+                border: 0;
+                border-radius: 6px;
+                background: none;
+                color: rgba(255, 255, 255, 0.8);
+                font: inherit;
+                font-weight: 500;
+                text-align: left;
+                cursor: pointer;
+            }
+
+            .hierarchy button:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .hierarchy button[aria-current="true"] {
+                background-color: rgba(255, 102, 0, 0.28);
+                color: #fff;
+            }
+
+            .hierarchy svg {
+                width: 15px;
+                height: 15px;
+                color: rgba(255, 255, 255, 0.55);
+            }
+
+            /* Inspector: the selected entity as it stands in the document. example.css docks it
+               along the bottom edge of a narrow screen. */
+            .inspector {
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                width: min(340px, calc(100vw - 32px));
+                padding: 12px 14px;
+            }
+
+            .inspector .panel-caption {
+                padding: 0 0 8px;
+            }
+
+            .markup {
+                font: 500 11px/1.6 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+                color: rgba(255, 255, 255, 0.5);
+                -webkit-user-select: text;
+                user-select: text;
+            }
+
+            /* One tag to a block. Where it wraps, it breaks between attributes and the rest
+               hangs indented. */
+            .markup div {
+                padding-left: 4ch;
+                text-indent: -4ch;
+            }
+
+            .markup div.child {
+                margin-left: 2ch;
+            }
+
+            .markup .pair {
+                display: inline-block;
+                text-indent: 0;
+                white-space: nowrap;
+            }
+
+            .inspector .tag {
+                color: #ff8533;
+            }
+
+            .inspector .attr {
+                color: rgba(255, 255, 255, 0.8);
+            }
+
+            .inspector .value {
+                color: #8fd0ff;
+            }
+
+            /* A value a gizmo has just written */
+            .inspector .value.changed {
+                color: #fff;
+                background-color: rgba(255, 102, 0, 0.45);
+                border-radius: 3px;
+            }
+
+            .inspector .hint {
+                margin: 0;
+                font-weight: 500;
+                line-height: 1.5;
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            /* The box the shot camera renders into while it is selected: js/gizmos.mjs fits the
+               camera's rect to it */
+            .shot-frame {
+                position: absolute;
+                right: max(16px, env(safe-area-inset-right));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                width: 26%;
+                height: 26%;
+                box-sizing: border-box;
+                border: 1px solid rgba(255, 255, 255, 0.6);
+                border-radius: 2px;
+                pointer-events: none;
+            }
+
+            .shot-frame span {
+                position: absolute;
+                left: 6px;
+                bottom: 6px;
+                padding: 3px 6px;
+                border-radius: 3px;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: #fff;
+                font: 600 11px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            /* The drag readout the transform gizmos add to the page */
+            .gizmo-readout {
+                font: 600 11px/1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+            }
+
+            /* The view cube sits top right. Its axes reach to 2px inside its box, so the box
+               goes that much closer to the edge than the panels do. */
+            #view-cube-container {
+                margin: calc(max(16px, env(safe-area-inset-top)) - 2px) calc(max(16px, env(safe-area-inset-right)) - 2px) 0 0;
+            }
+
+            /* On a narrow screen the toolbar spans the top, the view cube drops below it, and the
+               hierarchy goes: a tap on the scene selects just as well. The markup keeps to the
+               entity itself, leaving room for the scene. */
+            @media (max-width: 720px) {
+                .toolbar {
+                    right: max(16px, env(safe-area-inset-right));
+                    justify-content: space-between;
+                }
+
+                .toolbar button span {
+                    display: none;
+                }
+
+                .hierarchy,
+                .inspector .child {
+                    display: none;
+                }
+
+                #view-cube-container {
+                    margin-top: calc(max(16px, env(safe-area-inset-top)) + 46px + 16px - 2px);
+                }
+
+                /* Above the docked markup, by the height js/gizmos.mjs publishes */
+                .shot-frame {
+                    bottom: calc(var(--inspector-height, 0px) + 16px);
+                }
+            }
+
+            /* On a short screen, such as a phone held sideways, the hierarchy would run into the
+               markup below it, so it goes here too */
+            @media (max-height: 640px) {
+                .hierarchy,
+                .inspector .child {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Assets: the camera controls and the grid are scripts that ship with the engine -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/grid.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <!-- Materials -->
+            <pc-material id="slab" diffuse="#7f858e" gloss="0.55"></pc-material>
+            <pc-material id="orange" diffuse="#ff6600" gloss="0.6"></pc-material>
+            <pc-material id="teal" diffuse="#1fb5a8" gloss="0.85"></pc-material>
+            <pc-material id="cream" diffuse="#e9e2d0" gloss="0.4"></pc-material>
+            <pc-material id="gold" diffuse="#f2b632" gloss="0.6"></pc-material>
+            <pc-material id="violet" diffuse="#8a6cf0" gloss="0.7"></pc-material>
+            <pc-scene>
+                <!-- The studio lights the scene dimly, so the lights below do the work, and is
+                     never drawn -->
+                <pc-sky asset="studio" enabled="false" lighting intensity="0.3"></pc-sky>
+
+                <!-- The editor's own entities carry the editor tag, which keeps them out of the
+                     hierarchy and out of reach of the gizmos. js/gizmos.mjs adds the gizmos to
+                     this camera. -->
+                <pc-entity name="editor camera" tags="editor" position="5 3.7 6.15">
+                    <!-- Neutral tone mapping keeps the highlights of the lights from clipping -->
+                    <pc-camera clear-color="#3a404a" far-clip="200" tonemap="neutral"></pc-camera>
+                    <pc-script>
+                        <!-- The pitch range lets the view cube look straight down the y axis -->
+                        <pc-script-instance name="cameraControls" focus-point="0.35 0.3 0.6" pitch-range="-89.9 89.9" zoom-range="1.5 40" enable-fly="false"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <pc-entity name="grid" tags="editor">
+                    <pc-script>
+                        <pc-script-instance name="grid"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+
+                <!-- The scene to edit. The gizmos write what they change back to these
+                     attributes, so the markup is always the scene. -->
+                <pc-entity name="floor" position="0 -0.1 0" scale="5.4 0.2 5.4">
+                    <pc-render type="box" material="slab" cast-shadows="false"></pc-render>
+                </pc-entity>
+                <pc-entity name="crate" position="0 0.7 0" rotation="0 15 0" scale="1.4 1.4 1.4">
+                    <pc-render type="box" material="orange"></pc-render>
+                </pc-entity>
+                <pc-entity name="ball" position="1.3 0.55 -1.95" scale="1.1 1.1 1.1">
+                    <pc-render type="sphere" material="teal"></pc-render>
+                </pc-entity>
+                <pc-entity name="pillar" position="-2.2 1.1 0.2" scale="0.8 2.2 0.8">
+                    <pc-render type="cylinder" material="cream"></pc-render>
+                </pc-entity>
+                <pc-entity name="cone" position="2 0.65 0.9" scale="1 1.3 1">
+                    <pc-render type="cone" material="gold"></pc-render>
+                </pc-entity>
+                <pc-entity name="capsule" position="-0.6 0.35 2" rotation="0 0 90" scale="0.7 0.7 0.7">
+                    <pc-render type="capsule" material="violet"></pc-render>
+                </pc-entity>
+                <!-- A light shines along its entity's -y axis. The sun comes from the left of the
+                     view, so the shadows fall across the floor to the right. -->
+                <pc-entity name="sun" position="-1.6 2.8 -1.2" rotation="50 -50 0">
+                    <pc-light type="directional" intensity="1" cast-shadows shadow-distance="30" shadow-resolution="2048" shadow-bias="0.2" normal-offset-bias="0.05"></pc-light>
+                </pc-entity>
+                <pc-entity name="lamp" position="-1.9 0.9 1.3">
+                    <pc-light type="omni" color="1 0.72 0.4" intensity="3" range="4"></pc-light>
+                </pc-entity>
+                <pc-entity name="spot" position="2.1 2.7 -0.8" rotation="28 120 0">
+                    <pc-light type="spot" color="0.5 0.75 1" intensity="8" range="6" inner-cone-angle="18" outer-cone-angle="30" cast-shadows shadow-resolution="1024" shadow-bias="0.2" normal-offset-bias="0.05"></pc-light>
+                </pc-entity>
+                <!-- A second camera. It is off until selected, when js/gizmos.mjs has it render
+                     into the page's .shot-frame box, in front of the editor camera's view. -->
+                <pc-entity name="shot camera" position="3 1.5 -2.6" rotation="-11 134 0">
+                    <pc-camera enabled="false" priority="1" clear-color="#3a404a" fov="40" near-clip="0.5" far-clip="9" tonemap="neutral"></pc-camera>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="toolbar editor-glass" role="toolbar" aria-label="Gizmos">
+            <button type="button" data-tool="translate" title="Move (1)" aria-label="Move">
+                <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>
+            </button>
+            <button type="button" data-tool="rotate" title="Rotate (2)" aria-label="Rotate">
+                <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v4h-4"/></svg>
+            </button>
+            <button type="button" data-tool="scale" title="Scale (3)" aria-label="Scale">
+                <svg viewBox="0 0 24 24"><path d="M4 14h6v6H4zM14 4h6v6M20 4l-8 8"/></svg>
+            </button>
+            <button type="button" data-tool="resize" title="Resize the bounds (4)" aria-label="Resize the bounds">
+                <svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><path d="M10 10h4v4h-4z"/></svg>
+            </button>
+            <span class="divider"></span>
+            <button type="button" id="space" title="Drag along the world's axes or the entity's own (L)">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+                <span id="space-label">World</span>
+            </button>
+            <button type="button" id="snap" title="Snap to increments (hold Shift)" aria-pressed="false">
+                <svg viewBox="0 0 24 24"><path d="M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4zM6 8h4M14 8h4"/></svg>
+                <span>Snap</span>
+            </button>
+        </div>
+        <div class="hierarchy editor-glass">
+            <span class="panel-caption">Scene</span>
+            <ul id="entities"></ul>
+        </div>
+        <div class="inspector editor-glass example-panel">
+            <span class="panel-caption">Markup</span>
+            <p class="hint" id="hint">Click a shape, or the icon of a light or camera, to select it. Drag a gizmo to edit it, and its handles to resize it.</p>
+            <div class="markup" id="markup" hidden></div>
+        </div>
+        <div class="shot-frame" hidden><span>shot camera</span></div>
+        <script type="module" src="js/gizmos.mjs"></script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
