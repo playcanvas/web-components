@@ -1,4 +1,4 @@
-import type { CameraComponent } from 'playcanvas';
+import type { CameraComponent, Plane } from 'playcanvas';
 import {
     Color,
     Vec2,
@@ -20,7 +20,7 @@ import {
     XRTYPE_VR
 } from 'playcanvas';
 
-import { parseBool, parseColor, parseEnum, parseNumber, parseVec2, parseVec4 } from '../parse';
+import { parseBool, parseColor, parseEnum, parseNumber, parsePlanes, parseVec2, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -73,6 +73,10 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
     private _clearStencilBuffer = true;
 
+    private _clipIntersection = false;
+
+    private _clippingPlanes: Plane[] = [];
+
     private _cullFaces = true;
 
     private _farClip = 1000;
@@ -117,6 +121,8 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             clearDepth: this._clearDepth,
             clearDepthBuffer: this._clearDepthBuffer,
             clearStencilBuffer: this._clearStencilBuffer,
+            clipIntersection: this._clipIntersection,
+            clippingPlanes: this._clippingPlanes,
             cullFaces: this._cullFaces,
             farClip: this._farClip,
             flipFaces: this._flipFaces,
@@ -296,6 +302,51 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
      */
     get clearStencilBuffer(): boolean {
         return this._clearStencilBuffer;
+    }
+
+    /**
+     * Sets whether the clipping planes of the camera clip only what is behind all of them, in
+     * place of what is behind any of them: two planes then cut out a wedge, and three a corner.
+     * Defaults to false.
+     * @param value - Whether only what is behind all of the planes is clipped.
+     */
+    set clipIntersection(value: boolean) {
+        this._clipIntersection = value;
+        if (this.component) {
+            this.component.clipIntersection = value;
+        }
+    }
+
+    /**
+     * Gets whether the clipping planes of the camera clip only what is behind all of them, in
+     * place of what is behind any of them.
+     * @returns Whether only what is behind all of the planes is clipped.
+     */
+    get clipIntersection(): boolean {
+        return this._clipIntersection;
+    }
+
+    /**
+     * Sets the planes, in world space, that clip everything the camera renders, as a section
+     * view does. What is behind a plane, on the side its normal points away from, is not
+     * rendered. The planes do not clip shadows or screen space elements. Up to 8 planes are
+     * used. The planes are copied, so assign the array again to apply a change to one. Defaults
+     * to no planes.
+     * @param value - The clipping planes.
+     */
+    set clippingPlanes(value: Plane[]) {
+        this._clippingPlanes = value;
+        if (this.component) {
+            this.component.clippingPlanes = value;
+        }
+    }
+
+    /**
+     * Gets the planes, in world space, that clip everything the camera renders.
+     * @returns The clipping planes.
+     */
+    get clippingPlanes(): Plane[] {
+        return this._clippingPlanes;
     }
 
     /**
@@ -623,6 +674,8 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
             'clear-depth',
             'clear-depth-buffer',
             'clear-stencil-buffer',
+            'clip-intersection',
+            'clipping-planes',
             'cull-faces',
             'far-clip',
             'flip-faces',
@@ -660,6 +713,12 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
                 break;
             case 'clear-stencil-buffer':
                 this.clearStencilBuffer = parseBool(newValue, true);
+                break;
+            case 'clip-intersection':
+                this.clipIntersection = parseBool(newValue, false);
+                break;
+            case 'clipping-planes':
+                this.clippingPlanes = parsePlanes(newValue, name);
                 break;
             case 'cull-faces':
                 this.cullFaces = parseBool(newValue, true);

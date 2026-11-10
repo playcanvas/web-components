@@ -1,8 +1,8 @@
-import type { RenderComponent, StandardMaterial } from 'playcanvas';
+import type { Plane, RenderComponent, StandardMaterial } from 'playcanvas';
 import { SHADOW_CASCADE_0, SHADOW_CASCADE_1, SHADOW_CASCADE_2, SHADOW_CASCADE_3 } from 'playcanvas';
 
 import { MaterialElement } from '../material';
-import { parseBool, parseEnum, parseFlags } from '../parse';
+import { parseBool, parseEnum, parseFlags, parsePlanes } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -41,6 +41,10 @@ const ALL_CASCADES = SHADOW_CASCADE_0 | SHADOW_CASCADE_1 | SHADOW_CASCADE_2 | SH
 class RenderComponentElement extends ComponentElement<RenderComponent> {
     private _castShadows = true;
 
+    private _clipIntersection = false;
+
+    private _clippingPlanes: Plane[] = [];
+
     private _material = '';
 
     private _receiveShadows = true;
@@ -58,6 +62,8 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
         const data: Record<string, unknown> = {
             type: this._type,
             castShadows: this._castShadows,
+            clipIntersection: this._clipIntersection,
+            clippingPlanes: this._clippingPlanes,
             receiveShadows: this._receiveShadows,
             shadowCascadeMask: this._shadowCascadeMask
         };
@@ -117,6 +123,51 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
      */
     get castShadows(): boolean {
         return this._castShadows;
+    }
+
+    /**
+     * Sets whether the clipping planes of the render component clip only what is behind all of
+     * them, in place of what is behind any of them: two planes then cut out a wedge, and three a
+     * corner. Defaults to false.
+     * @param value - Whether only what is behind all of the planes is clipped.
+     */
+    set clipIntersection(value: boolean) {
+        this._clipIntersection = value;
+        if (this.component) {
+            this.component.clipIntersection = value;
+        }
+    }
+
+    /**
+     * Gets whether the clipping planes of the render component clip only what is behind all of
+     * them, in place of what is behind any of them.
+     * @returns Whether only what is behind all of the planes is clipped.
+     */
+    get clipIntersection(): boolean {
+        return this._clipIntersection;
+    }
+
+    /**
+     * Sets the planes, in world space, that cut the render component open, as a cutaway does.
+     * What is behind a plane, on the side its normal points away from, is not rendered, casts no
+     * shadow and cannot be picked. The rest of the scene stays whole. Up to 8 planes are used.
+     * The planes are copied, so assign the array again to apply a change to one. Defaults to no
+     * planes.
+     * @param value - The clipping planes.
+     */
+    set clippingPlanes(value: Plane[]) {
+        this._clippingPlanes = value;
+        if (this.component) {
+            this.component.clippingPlanes = value;
+        }
+    }
+
+    /**
+     * Gets the planes, in world space, that cut the render component open.
+     * @returns The clipping planes.
+     */
+    get clippingPlanes(): Plane[] {
+        return this._clippingPlanes;
     }
 
     /**
@@ -190,6 +241,8 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
         return [
             ...super.observedAttributes,
             'cast-shadows',
+            'clip-intersection',
+            'clipping-planes',
             'material',
             'receive-shadows',
             'shadow-cascade-mask',
@@ -203,6 +256,12 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
         switch (name) {
             case 'cast-shadows':
                 this.castShadows = parseBool(newValue, true);
+                break;
+            case 'clip-intersection':
+                this.clipIntersection = parseBool(newValue, false);
+                break;
+            case 'clipping-planes':
+                this.clippingPlanes = parsePlanes(newValue, name);
                 break;
             case 'material':
                 this.material = newValue ?? '';

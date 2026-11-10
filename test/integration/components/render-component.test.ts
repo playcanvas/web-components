@@ -2,10 +2,12 @@ import type { RenderComponent } from 'playcanvas';
 import {
     Entity,
     LAYERID_WORLD,
+    Plane,
     SHADOW_CASCADE_0,
     SHADOW_CASCADE_1,
     SHADOW_CASCADE_2,
-    SHADOW_CASCADE_3
+    SHADOW_CASCADE_3,
+    Vec3
 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
@@ -127,6 +129,53 @@ describe('<pc-render>', () => {
 
             expect(get<RenderComponentElement>('pc-render').component!.shadowCascadeMask).toBe(ALL_CASCADES);
             warnings.expect("Invalid value '0 4' for attribute 'shadow-cascade-mask'");
+        });
+    });
+
+    describe('[clipping-planes]', () => {
+        const wedge = [new Plane(new Vec3(0, -1, 0), 0), new Plane(new Vec3(0, 0, -1), 0)];
+
+        it('gives its planes and their mode to the component and its mesh instances', async () => {
+            const { get } = await bootApp(
+                '<pc-entity><pc-render clipping-planes="0 -1 0 0, 0 0 -1 0" clip-intersection></pc-render></pc-entity>'
+            );
+            const component = get<RenderComponentElement>('pc-render').component!;
+
+            expect(component.clippingPlanes).toEqual(wedge);
+            expect(component.clipIntersection).toBe(true);
+            for (const meshInstance of component.meshInstances) {
+                expect(meshInstance.clippingPlanes).toEqual(wedge);
+                expect(meshInstance.clipIntersection).toBe(true);
+            }
+        });
+
+        it('writes changes through and clips nothing once the attributes are removed', async () => {
+            const { get } = await bootApp('<pc-entity><pc-render></pc-render></pc-entity>');
+            const render = get<RenderComponentElement>('pc-render');
+
+            expect(render.component!.clippingPlanes, 'no planes by default').toEqual([]);
+            expect(render.component!.clipIntersection).toBe(false);
+
+            render.setAttribute('clipping-planes', '0 -1 0 0, 0 0 -1 0');
+            render.setAttribute('clip-intersection', '');
+            expect(render.component!.clippingPlanes).toEqual(wedge);
+            expect(render.component!.clipIntersection).toBe(true);
+
+            render.removeAttribute('clipping-planes');
+            render.removeAttribute('clip-intersection');
+            expect(render.component!.clippingPlanes).toEqual([]);
+            expect(render.component!.meshInstances[0].clippingPlanes).toEqual([]);
+            expect(render.component!.clipIntersection).toBe(false);
+        });
+
+        it('warns on a plane that is not 4 numbers and clips nothing', async () => {
+            // A normal without its distance, which is the half a plane is easiest to leave off
+            const { get } = await bootApp('<pc-entity><pc-render clipping-planes="0 -1 0"></pc-render></pc-entity>');
+
+            warnings.expect(
+                "Invalid value '0 -1 0' for attribute 'clipping-planes'. Expected planes separated by commas, each as 4 space-separated numbers. Using no planes."
+            );
+            expect(get<RenderComponentElement>('pc-render').component!.clippingPlanes).toEqual([]);
         });
     });
 });

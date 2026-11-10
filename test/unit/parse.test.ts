@@ -1,4 +1,4 @@
-import { BoundingBox, Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { BoundingBox, Color, Plane, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,6 +9,7 @@ import {
     parseEnum,
     parseFlags,
     parseNumber,
+    parsePlanes,
     parseQuat,
     parseTags,
     parseVec2,
@@ -378,6 +379,34 @@ describe('parse', () => {
                 `Invalid value '${value}' for attribute 'rotation'. Expected 3 space-separated numbers. Using '[0, 0, 0, 1]'.`
             );
         });
+    });
+
+    describe('parsePlanes', () => {
+        it('parses a normal followed by a distance', () => {
+            expect(parsePlanes('0 -1 0 3', 'clipping-planes')).toEqual([new Plane(new Vec3(0, -1, 0), 3)]);
+        });
+
+        it('parses planes separated by commas, whatever the spacing around them', () => {
+            expect(parsePlanes(' 0 -1 0 3 ,1 0 0 0', 'clipping-planes')).toEqual([
+                new Plane(new Vec3(0, -1, 0), 3),
+                new Plane(new Vec3(1, 0, 0), 0)
+            ]);
+        });
+
+        it.for([null, '', '  '])('returns no planes for %o, without warning', (value) => {
+            expect(parsePlanes(value, 'clipping-planes')).toEqual([]);
+            expect(warnings.seen).toEqual([]);
+        });
+
+        it.for(['0 -1 0', '0 -1 0 3 1', '0 -1 0 3,', '0 -1 0 3, bad'])(
+            'returns no planes and warns for %o',
+            (value) => {
+                expect(parsePlanes(value, 'clipping-planes')).toEqual([]);
+                warnings.expect(
+                    `Invalid value '${value}' for attribute 'clipping-planes'. Expected planes separated by commas, each as 4 space-separated numbers. Using no planes.`
+                );
+            }
+        );
     });
 
     describe('parseBoundingBox', () => {

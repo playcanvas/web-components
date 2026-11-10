@@ -1,0 +1,7 @@
+turbofan.glb: a cutaway model of a turbofan engine on an acrylic display stand, made for the
+PlayCanvas Engine's Clipping Planes example. Its parts are closed meshes, so that a clipping plane
+through one shows a solid cut face. The geometry is Draco compressed, the textures are Basis
+compressed (KTX2), and the blade rows are instanced.
+
+The file is the PlayCanvas Engine's copy (examples/assets/models/turbofan.glb in
+https://github.com/playcanvas/engine), MIT licensed.

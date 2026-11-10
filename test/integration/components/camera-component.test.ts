@@ -1,7 +1,9 @@
 import type { AppBase, CameraComponent } from 'playcanvas';
 import {
     Color,
+    Plane,
     Vec2,
+    Vec3,
     Vec4,
     GAMMA_NONE,
     GAMMA_SRGB,
@@ -66,6 +68,14 @@ const cases: [attribute: string, property: string, value: string, expected: unkn
     ['clear-depth', 'clearDepth', '0.5', 0.5, 1],
     ['clear-depth-buffer', 'clearDepthBuffer', 'false', false, true],
     ['clear-stencil-buffer', 'clearStencilBuffer', 'false', false, true],
+    ['clip-intersection', 'clipIntersection', '', true, false],
+    [
+        'clipping-planes',
+        'clippingPlanes',
+        '0 -1 0 3, 1 0 0 0',
+        [new Plane(new Vec3(0, -1, 0), 3), new Plane(new Vec3(1, 0, 0), 0)],
+        []
+    ],
     ['cull-faces', 'cullFaces', 'false', false, true],
     ['far-clip', 'farClip', '500', 500, 1000],
     ['flip-faces', 'flipFaces', '', true, false],

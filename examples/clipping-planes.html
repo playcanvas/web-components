@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Clipping Planes</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            /* Control panel. Glass recipe copied from example.css's .example-button, applied once
+               to the panel; sits bottom-left, and example.css docks it along the bottom edge of a
+               narrow screen. */
+            .cut-panel {
+                position: absolute;
+                left: max(16px, env(safe-area-inset-left));
+                bottom: max(16px, env(safe-area-inset-bottom));
+                display: grid;
+                grid-template-columns: auto 1fr auto;
+                align-items: center;
+                gap: 6px 10px;
+                box-sizing: border-box;
+                width: min(330px, calc(100vw - 32px));
+                padding: 12px 14px;
+                background-color: rgba(18, 18, 18, 0.66);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                color: rgba(255, 255, 255, 0.92);
+                font: 600 12px/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+            }
+
+            @supports not (backdrop-filter: blur(12px)) {
+                .cut-panel {
+                    background-color: rgba(18, 18, 18, 0.88);
+                }
+            }
+
+            .cut-panel label {
+                display: contents;
+                cursor: pointer;
+            }
+
+            /* Grayed out while the cut is off, when the planes they move clip nothing */
+            .cut-panel label.inert {
+                color: rgba(255, 255, 255, 0.4);
+                cursor: default;
+            }
+
+            .cut-panel .panel-caption {
+                grid-column: 1 / 4;
+                color: rgba(255, 255, 255, 0.55);
+                font-size: 11px;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+            }
+
+            .cut-panel .panel-caption:not(:first-child) {
+                margin-top: 8px;
+            }
+
+            .cut-panel input[type="range"] {
+                width: 100%;
+                height: 24px;
+                margin: 0;
+                accent-color: #f60;
+                cursor: pointer;
+            }
+
+            .cut-panel input[type="range"]:disabled {
+                accent-color: rgba(255, 255, 255, 0.25);
+                cursor: default;
+            }
+
+            /* A switch spans the two columns to the right of its label, and sits at their end */
+            .cut-panel input[type="checkbox"] {
+                grid-column: 2 / 4;
+                justify-self: end;
+                width: 18px;
+                height: 18px;
+                margin: 3px 0;
+                accent-color: #f60;
+                cursor: pointer;
+            }
+
+            .cut-panel select {
+                grid-column: 2 / 4;
+                height: 32px;
+                padding: 0 26px 0 10px;
+                border: 0;
+                border-radius: 6px;
+                background-color: rgba(255, 255, 255, 0.08);
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 7px center;
+                background-size: 12px;
+                color: inherit;
+                font: inherit;
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+            }
+
+            .cut-panel select:hover {
+                background-color: rgba(255, 255, 255, 0.14);
+            }
+
+            /* The popup list is drawn by the OS, so it needs its own colors */
+            .cut-panel select option {
+                background: #1b1b1b;
+                color: #fff;
+            }
+
+            .cut-panel select:focus-visible,
+            .cut-panel input:focus-visible {
+                outline: 2px solid #ff8533;
+                outline-offset: 2px;
+            }
+
+            .cut-value {
+                min-width: 40px;
+                font: 600 11px/1 ui-monospace, 'Cascadia Mono', Consolas, monospace;
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+                color: rgba(255, 255, 255, 0.7);
+            }
+        </style>
+    </head>
+    <body>
+        <pc-app>
+            <!-- Modules: the turbofan's geometry is Draco compressed, and its textures are Basis
+                 compressed -->
+            <pc-wasm name="DracoDecoderModule" glue="modules/draco/draco.wasm.js" wasm="modules/draco/draco.wasm.wasm" fallback="modules/draco/draco.js"></pc-wasm>
+            <pc-wasm name="Basis" glue="modules/basis/basis.wasm.js" wasm="modules/basis/basis.wasm.wasm" fallback="modules/basis/basis.js"></pc-wasm>
+            <!-- Assets -->
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-controls.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
+            <pc-asset src="../node_modules/playcanvas/scripts/esm/smaa.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/cutaway.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/rotate.mjs"></pc-asset>
+            <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
+            <pc-asset src="assets/models/turbofan.glb" id="turbofan"></pc-asset>
+            <!-- Materials -->
+            <pc-material id="floor" diffuse="0.06 0.065 0.075" gloss="0.45"></pc-material>
+            <!-- Scene: a studio. The floor fades into the backdrop through the fog, which takes
+                 the backdrop's color. -->
+            <pc-scene fog="linear" fog-color="0.2 0.21 0.24" fog-start="9" fog-end="24">
+                <!-- The studio lights the scene and is never drawn -->
+                <pc-sky asset="studio" enabled="false" lighting></pc-sky>
+                <!-- Camera. The camera frame clears its linear target with the color as given, so
+                     this is the fog color converted to linear. -->
+                <pc-entity name="camera" position="-4 3.9 4.9">
+                    <pc-camera clear-color="0.0331 0.0363 0.047" far-clip="100" fov="40"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="cameraControls" focus-point="0.2 1.35 0" scene-size="6" pitch-range="-85 5" zoom-range="3 16" enable-fly="false"></pc-script-instance>
+                        <!-- The scene color map is for the acrylic stand, which refracts the scene
+                             behind it -->
+                        <pc-script-instance name="cameraFrame" attributes='{
+                            "rendering": { "toneMapping": "neutral", "samples": 4, "sharpness": 0, "sceneColorMap": true },
+                            "ssao": { "type": "combine", "intensity": 0.5, "radius": 0.4, "samples": 12, "scale": 0.5 },
+                            "bloom": { "enabled": true, "intensity": 0.02, "blurLevel": 7 },
+                            "vignette": { "enabled": true, "intensity": 0.45, "inner": 0.4, "outer": 1.2 },
+                            "taa": { "enabled": false }
+                        }'></pc-script-instance>
+                        <!-- An effect the camera frame does not have built in, enabled when it is
+                             the anti-aliasing selected -->
+                        <pc-script-instance name="smaaEffect" enabled="false"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+                <!-- Key light, shining down into the cut from the front left -->
+                <pc-entity name="light" rotation="45 -50 0">
+                    <pc-light intensity="1.6" cast-shadows shadow-distance="16" shadow-resolution="2048" shadow-bias="0.2" normal-offset-bias="0.04"></pc-light>
+                </pc-entity>
+                <!-- Floor -->
+                <pc-entity name="floor" scale="60 1 60">
+                    <pc-render type="plane" material="floor" cast-shadows="false"></pc-render>
+                </pc-entity>
+                <!-- A turbofan on a display stand. The planes clip the render components under
+                     its Engine node only, so the stand and the floor stay whole. -->
+                <pc-model name="turbofan" asset="turbofan">
+                    <!-- The cut runs along the engine's axis, from its inlet to its exhaust -->
+                    <pc-node name="Engine">
+                        <pc-script>
+                            <pc-script-instance name="cutaway" cut opening="90" rotation="0" length="0" start="-2.2" end="2.6" caps></pc-script-instance>
+                        </pc-script>
+                    </pc-node>
+                    <!-- The spools turn slowly, the fan and its turbine slower than the core -->
+                    <pc-node name="LowSpool">
+                        <pc-script>
+                            <pc-script-instance name="rotate" speed="-40 0 0"></pc-script-instance>
+                        </pc-script>
+                    </pc-node>
+                    <pc-node name="HighSpool">
+                        <pc-script>
+                            <pc-script-instance name="rotate" speed="-70 0 0"></pc-script-instance>
+                        </pc-script>
+                    </pc-node>
+                </pc-model>
+            </pc-scene>
+        </pc-app>
+        <div class="cut-panel example-panel">
+            <span class="panel-caption">Cutaway</span>
+            <label>Enabled
+                <input id="cut" type="checkbox">
+            </label>
+            <label class="cut-row">Opening
+                <input id="opening" type="range" min="0" max="180" step="1">
+                <span class="cut-value" id="opening-value"></span>
+            </label>
+            <label class="cut-row">Rotation
+                <input id="rotation" type="range" min="-180" max="180" step="1">
+                <span class="cut-value" id="rotation-value"></span>
+            </label>
+            <label class="cut-row">Length
+                <input id="length" type="range" min="0" max="1" step="0.01">
+                <span class="cut-value" id="length-value"></span>
+            </label>
+            <label class="cut-row">Section caps
+                <input id="caps" type="checkbox">
+            </label>
+            <label>Spin
+                <input id="spin" type="checkbox" checked>
+            </label>
+            <span class="panel-caption">Post effects</span>
+            <label>Anti-aliasing
+                <select id="aa">
+                    <option value="msaa">MSAA</option>
+                    <option value="smaa">SMAA</option>
+                    <option value="taa">TAA</option>
+                    <option value="none">None</option>
+                </select>
+            </label>
+            <label>Bloom
+                <input id="bloom" type="checkbox">
+            </label>
+            <label>Ambient occlusion
+                <input id="ssao" type="checkbox">
+            </label>
+            <label>Vignette
+                <input id="vignette" type="checkbox">
+            </label>
+        </div>
+        <script type="module">
+            const app = document.querySelector('pc-app');
+            const camera = document.querySelector('pc-camera');
+            const cutaway = document.querySelector('pc-script-instance[name="cutaway"]');
+            const spins = document.querySelectorAll('pc-script-instance[name="rotate"]');
+            const frame = document.querySelector('pc-script-instance[name="cameraFrame"]');
+            const smaa = document.querySelector('pc-script-instance[name="smaaEffect"]');
+
+            const input = id => document.getElementById(id);
+
+            // A boolean script attribute is on unless it says 'false', as a bare one does
+            const isOn = name => cutaway.hasAttribute(name) && cutaway.getAttribute(name) !== 'false';
+
+            // The cut. Each control owns one attribute of the cutaway script, and takes its
+            // initial state from the markup, so the scene declaration stays the source of truth.
+            const sliders = [
+                { name: 'opening', unit: v => `${v}°` },
+                { name: 'rotation', unit: v => `${v}°` },
+                { name: 'length', unit: v => v.toFixed(2) }
+            ].map(({ name, unit }) => ({ name, unit, input: input(name), value: input(`${name}-value`) }));
+
+            const showValue = (slider) => {
+                slider.value.textContent = slider.unit(slider.input.valueAsNumber);
+            };
+
+            for (const slider of sliders) {
+                slider.input.value = cutaway.getAttribute(slider.name);
+                showValue(slider);
+                slider.input.addEventListener('input', () => {
+                    cutaway.setAttribute(slider.name, slider.input.value);
+                    showValue(slider);
+                });
+            }
+
+            // The controls that move the planes do nothing while the cut is off
+            const rows = document.querySelectorAll('.cut-row');
+            const updateRows = () => {
+                const off = !input('cut').checked;
+                for (const row of rows) {
+                    row.classList.toggle('inert', off);
+                    row.querySelector('input').disabled = off;
+                }
+            };
+
+            for (const name of ['cut', 'caps']) {
+                const toggle = input(name);
+                toggle.checked = isOn(name);
+                toggle.addEventListener('change', () => {
+                    cutaway.setAttribute(name, String(toggle.checked));
+                    updateRows();
+                });
+            }
+            updateRows();
+
+            input('spin').addEventListener('change', () => {
+                for (const spin of spins) {
+                    spin.setAttribute('enabled', String(input('spin').checked));
+                }
+            });
+
+            // The post effects. The camera frame script reads its settings from one attribute, so
+            // the controls rewrite the settings the markup gave it.
+            const settings = JSON.parse(frame.getAttribute('attributes'));
+            const effects = {
+                bloom: input('bloom'),
+                ssao: input('ssao'),
+                vignette: input('vignette')
+            };
+            effects.bloom.checked = settings.bloom.enabled;
+            effects.ssao.checked = settings.ssao.type !== 'none';
+            effects.vignette.checked = settings.vignette.enabled;
+
+            const applyEffects = () => {
+                const aa = input('aa').value;
+                settings.rendering.samples = aa === 'msaa' ? 4 : 1;
+                // TAA softens the image, which sharpening restores
+                settings.rendering.sharpness = aa === 'taa' ? 0.5 : 0;
+                settings.taa.enabled = aa === 'taa';
+                settings.bloom.enabled = effects.bloom.checked;
+                settings.ssao.type = effects.ssao.checked ? 'combine' : 'none';
+                settings.vignette.enabled = effects.vignette.checked;
+                frame.setAttribute('attributes', JSON.stringify(settings));
+                smaa.setAttribute('enabled', String(aa === 'smaa'));
+            };
+
+            for (const control of [input('aa'), ...Object.values(effects)]) {
+                control.addEventListener('change', applyEffects);
+            }
+
+            // Keep the engine in view across the narrow side of the screen, such as on a phone
+            // held upright
+            const fitView = () => {
+                const portrait = window.innerWidth < window.innerHeight;
+                camera.toggleAttribute('horizontal-fov', portrait);
+                camera.setAttribute('fov', portrait ? '58' : '40');
+            };
+            window.addEventListener('resize', fitView);
+            fitView();
+
+            // On start, the cut runs from the inlet back to the exhaust. Taking hold of the
+            // slider ends it.
+            await app.ready();
+
+            const length = sliders.find(slider => slider.name === 'length');
+            let revealing = true;
+            length.input.addEventListener('input', () => {
+                revealing = false;
+            });
+
+            const started = performance.now();
+            const reveal = (now) => {
+                if (!revealing) return;
+                const t = Math.min(1, (now - started) / 3000);
+                // smootherstep
+                length.input.value = t * t * t * (t * (t * 6 - 15) + 10);
+                cutaway.setAttribute('length', length.input.value);
+                showValue(length);
+                if (t < 1) {
+                    requestAnimationFrame(reveal);
+                }
+            };
+            requestAnimationFrame(reveal);
+        </script>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>
