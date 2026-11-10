@@ -66,11 +66,11 @@
                     <pc-rigid-body type="dynamic" restitution="0.9"></pc-rigid-body>
                 </pc-model>
                 <!-- Ground -->
-                <pc-entity name="ground" scale="1000 1000 1000">
+                <pc-entity name="ground">
                     <pc-collision half-extents="100 0.5 100" linear-offset="0 -0.5 0"></pc-collision>
                     <pc-rigid-body></pc-rigid-body>
                     <pc-script>
-                        <pc-script-instance name="grid"></pc-script-instance>
+                        <pc-script-instance name="grid" major-line-color="1 1 1" minor-line-color="0.8 0.8 0.8 0.8"></pc-script-instance>
                     </pc-script>
                 </pc-entity>
             </pc-scene>

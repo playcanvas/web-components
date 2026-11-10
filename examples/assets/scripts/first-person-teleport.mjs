@@ -332,7 +332,7 @@ export class FirstPersonTeleport extends Script {
         const t = -ro.y / rd.y;
         if (t <= 0) return null;
 
-        return ro.add(rd.scale(t));
+        return ro.add(rd.mulScalar(t));
     }
 
     _placeMarker(hit) {
