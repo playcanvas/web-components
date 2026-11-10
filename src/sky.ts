@@ -22,6 +22,8 @@ class SkyElement extends AsyncElement {
 
     private _center = new Vec3(0, 0.01, 0);
 
+    private _enabled = true;
+
     private _intensity = 1;
 
     private _rotation = new Vec3();
@@ -32,7 +34,7 @@ class SkyElement extends AsyncElement {
 
     private _scale = new Vec3(100, 100, 100);
 
-    private _type: 'box' | 'dome' | 'infinite' | 'none' = 'infinite';
+    private _type: 'box' | 'dome' | 'infinite' = 'infinite';
 
     private _scene: Scene | null = null;
 
@@ -86,30 +88,14 @@ class SkyElement extends AsyncElement {
             this._scene.envAtlas = envAtlas;
         }
 
-        this._applyType();
+        // Whether it shows first: a hidden sky then takes its type without building a mesh
+        this._scene.sky.enabled = this._enabled;
+        this._scene.sky.type = this._type;
         this._scene.sky.node.setLocalScale(this._scale);
         this._scene.sky.center = this._center;
         this._scene.skyboxIntensity = this._intensity;
         this._scene.skyboxMip = this._mipLevel;
         this._scene.skyboxRotation = new Quat().setFromEulerAngles(this._rotation);
-    }
-
-    /**
-     * Applies the type to the scene. `none` is this element's own value rather than an engine sky
-     * type: it disables the scene's sky, which then builds no mesh or shader while the skybox
-     * still lights the scene, and leaves the sky's projection as it was.
-     */
-    private _applyType() {
-        if (!this._scene) return;
-
-        const sky = this._scene.sky;
-
-        // The type first: a sky that is still hidden takes it without building a mesh, so showing
-        // it builds the mesh once
-        if (this._type !== 'none') {
-            sky.type = this._type;
-        }
-        sky.enabled = this._type !== 'none';
     }
 
     private async _loadSkybox() {
@@ -163,8 +149,8 @@ class SkyElement extends AsyncElement {
         scene.envAtlas?.destroy();
         scene.envAtlas = null;
 
-        // A hidden sky is this element's doing too: without it the scene's sky is the engine's
-        // again, there for a skybox assigned by other means
+        // A hidden sky is this element's doing too: without the element the scene's sky is the
+        // engine's again, there for a skybox assigned by other means
         scene.sky.enabled = true;
     }
 
@@ -204,6 +190,27 @@ class SkyElement extends AsyncElement {
      */
     get center() {
         return this._center;
+    }
+
+    /**
+     * Sets whether the skybox is rendered. A skybox that is not rendered still lights the scene
+     * when `lighting` is set, which is how a scene is lit by an environment it does not show.
+     * Defaults to true.
+     * @param value - Whether the skybox is rendered.
+     */
+    set enabled(value: boolean) {
+        this._enabled = value;
+        if (this._scene) {
+            this._scene.sky.enabled = value;
+        }
+    }
+
+    /**
+     * Gets whether the skybox is rendered, which does not affect the lighting it gives the scene.
+     * @returns Whether the skybox is rendered.
+     */
+    get enabled() {
+        return this._enabled;
     }
 
     /**
@@ -300,14 +307,15 @@ class SkyElement extends AsyncElement {
     }
 
     /**
-     * Sets the type of the skybox: `infinite` for a background at infinity, `box` or `dome` to
-     * project it onto a mesh the scene sits in, or `none` to hide it while it still lights the
-     * scene. Defaults to `infinite`.
+     * Sets the type of the skybox: `infinite` for a background at infinity, or `box` or `dome`
+     * to project it onto a mesh the scene sits in. Defaults to `infinite`.
      * @param value - The type.
      */
-    set type(value: 'box' | 'dome' | 'infinite' | 'none') {
+    set type(value: 'box' | 'dome' | 'infinite') {
         this._type = value;
-        this._applyType();
+        if (this._scene) {
+            this._scene.sky.type = value;
+        }
     }
 
     /**
@@ -319,7 +327,7 @@ class SkyElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'center', 'intensity', 'lighting', 'mip-level', 'rotation', 'scale', 'type'];
+        return ['asset', 'center', 'enabled', 'intensity', 'lighting', 'mip-level', 'rotation', 'scale', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -329,6 +337,9 @@ class SkyElement extends AsyncElement {
                 break;
             case 'center':
                 this.center = parseVec3(newValue, new Vec3(0, 0.01, 0), name);
+                break;
+            case 'enabled':
+                this.enabled = parseBool(newValue, true);
                 break;
             case 'intensity':
                 this.intensity = parseNumber(newValue, 1, name);
@@ -346,7 +357,7 @@ class SkyElement extends AsyncElement {
                 this.scale = parseVec3(newValue, new Vec3(100, 100, 100), name);
                 break;
             case 'type':
-                this.type = parseEnum(newValue, ['box', 'dome', 'infinite', 'none'], 'infinite', name);
+                this.type = parseEnum(newValue, ['box', 'dome', 'infinite'], 'infinite', name);
                 break;
         }
     }

@@ -36,10 +36,10 @@
             <pc-material id="ball-mat" diffuse="#e8590c" metalness="0" roughness="0.48" use-metalness></pc-material>
             <!-- Scene -->
             <pc-scene>
-                <!-- The HDR is the scene's only image-based light. type="none" keeps the skybox out
-                     of the frame while `lighting` still builds the environment atlas from it, so the
-                     metal and glass have something to reflect against the flat clear color. -->
-                <pc-sky asset="studio" type="none" lighting></pc-sky>
+                <!-- The HDR is the scene's only image-based light. enabled="false" keeps the skybox
+                     out of the frame while `lighting` still builds the environment atlas from it, so
+                     the metal and glass have something to reflect against the flat clear color. -->
+                <pc-sky asset="studio" enabled="false" lighting></pc-sky>
                 <!-- Camera. The ball launcher fires from here, through wherever you tap. -->
                 <pc-entity name="camera" position="1.05 1.85 4.35">
                     <!-- Very dark on purpose. With cameraFrame attached the scene renders into a
