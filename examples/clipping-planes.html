@@ -146,7 +146,7 @@
             <pc-asset src="../node_modules/playcanvas/scripts/esm/camera-frame.mjs"></pc-asset>
             <pc-asset src="../node_modules/playcanvas/scripts/esm/smaa.mjs"></pc-asset>
             <pc-asset src="assets/scripts/cutaway.mjs"></pc-asset>
-            <pc-asset src="assets/scripts/spin.mjs"></pc-asset>
+            <pc-asset src="assets/scripts/rotate.mjs"></pc-asset>
             <pc-asset src="assets/skies/octagon-lamps-photo-studio-2k.hdr" id="studio"></pc-asset>
             <pc-asset src="assets/models/turbofan.glb" id="turbofan"></pc-asset>
             <!-- Materials -->
@@ -196,12 +196,12 @@
                     <!-- The spools turn slowly, the fan and its turbine slower than the core -->
                     <pc-node name="LowSpool">
                         <pc-script>
-                            <pc-script-instance name="spin" speed="-40 0 0"></pc-script-instance>
+                            <pc-script-instance name="rotate" speed="-40 0 0"></pc-script-instance>
                         </pc-script>
                     </pc-node>
                     <pc-node name="HighSpool">
                         <pc-script>
-                            <pc-script-instance name="spin" speed="-70 0 0"></pc-script-instance>
+                            <pc-script-instance name="rotate" speed="-70 0 0"></pc-script-instance>
                         </pc-script>
                     </pc-node>
                 </pc-model>
@@ -253,7 +253,7 @@
             const app = document.querySelector('pc-app');
             const camera = document.querySelector('pc-camera');
             const cutaway = document.querySelector('pc-script-instance[name="cutaway"]');
-            const spins = document.querySelectorAll('pc-script-instance[name="spin"]');
+            const spins = document.querySelectorAll('pc-script-instance[name="rotate"]');
             const frame = document.querySelector('pc-script-instance[name="cameraFrame"]');
             const smaa = document.querySelector('pc-script-instance[name="smaaEffect"]');
 
