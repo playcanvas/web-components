@@ -56,6 +56,7 @@ export const examples = [
     { name: 'Sprites', path: 'sprites.html', category: 'Graphics' },
     { name: 'GLB Loader', path: 'glb-loader.html', category: 'Graphics' },
     { name: 'Shadow Cascades', path: 'shadow-cascades.html', category: 'Graphics' },
+    { name: 'Clipping Planes', path: 'clipping-planes.html', category: 'Graphics' },
     { name: 'Area Lights', path: 'area-lights.html', category: 'Graphics' },
     { name: 'Video Texture', path: 'video-texture.html', category: 'Graphics' },
     { name: 'Video Recorder', path: 'video-recorder.html', category: 'Graphics' },

@@ -13,7 +13,7 @@
  *   so they never warn.
  */
 
-import { BoundingBox, Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
+import { BoundingBox, Color, Plane, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { CSS_COLORS } from './colors';
 
@@ -243,6 +243,36 @@ export const parseNumber = <T extends number | null>(
         return defaultValue;
     }
     return number;
+};
+
+/**
+ * Parse a list of planes. The expected format is one plane or more, separated by commas, each as
+ * 4 space-separated numbers: the normal of the plane, then its distance from the origin along
+ * that normal (e.g. '0 -1 0 3, 1 0 0 0'). Returns an empty list when the attribute is absent
+ * (`null`) or empty, or when any plane is malformed — the latter also logs a warning.
+ *
+ * @param value - The attribute value to parse (`null` when the attribute is absent).
+ * @param attribute - The attribute name, used in the warning message.
+ * @returns The parsed planes.
+ * @internal
+ */
+export const parsePlanes = (value: string | null, attribute: string): Plane[] => {
+    if (value === null || value.trim() === '') {
+        return [];
+    }
+    const planes: Plane[] = [];
+    for (const part of value.split(',')) {
+        const components = parseComponents(part, 4);
+        if (!components) {
+            console.warn(
+                `Invalid value '${value}' for attribute '${attribute}'. Expected planes separated by commas, each as 4 space-separated numbers. Using no planes.`
+            );
+            return [];
+        }
+        const [x, y, z, distance] = components;
+        planes.push(new Plane(new Vec3(x, y, z), distance));
+    }
+    return planes;
 };
 
 /**
