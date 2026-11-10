@@ -2,7 +2,7 @@ import {
     Color,
     Script,
     Texture,
-    PIXELFORMAT_R8_G8_B8,
+    PIXELFORMAT_RGB8,
     FILTER_LINEAR_MIPMAP_LINEAR,
     FILTER_LINEAR,
     ADDRESS_CLAMP_TO_EDGE
@@ -74,7 +74,7 @@ export class VideoTexture extends Script {
 
         // Create a texture to hold the video frame data
         this.videoTexture = new Texture(this.app.graphicsDevice, {
-            format: PIXELFORMAT_R8_G8_B8,
+            format: PIXELFORMAT_RGB8,
             minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,

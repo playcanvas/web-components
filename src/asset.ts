@@ -115,6 +115,7 @@ const extToType = new Map([
     ['js', 'script'],
     ['json', 'json'],
     ['ktx2', 'texture'],
+    ['lcc2', 'gsplat'],
     ['mp3', 'audio'],
     ['mjs', 'script'],
     ['ply', 'gsplat'],
