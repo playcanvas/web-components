@@ -74,7 +74,7 @@ Then point the import map at the installed packages:
 <script type="module" src="/node_modules/@playcanvas/web-components/dist/pwc.mjs"></script>
 ```
 
-**New project** — scaffold a Vite and TypeScript app with one of 12 runnable starters:
+**New project** — scaffold a Vite and TypeScript app from a runnable starter:
 
 ```bash
 npm create playcanvas@latest my-app -- -f web-components
