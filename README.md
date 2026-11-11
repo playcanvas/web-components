@@ -100,6 +100,10 @@ The package ships a [Custom Elements Manifest](https://github.com/webcomponents/
 
 **Other tooling** — the manifest itself is at `@playcanvas/web-components/dist/custom-elements.json` and is declared in the package's `customElements` field, which is how tools such as `lit-analyzer` and Storybook locate it.
 
+## Developing with AI
+
+Coding agents: start from the [Web Components guides index](https://developer.playcanvas.com/user-manual/web-components/llms.txt) and the [Web Components API index](https://api.playcanvas.com/web-components/llms.txt), which link a Markdown version of every page.
+
 ## Development 
 
 ### Setting Up Local Development
