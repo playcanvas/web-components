@@ -2,7 +2,7 @@ import type { SpriteComponent } from 'playcanvas';
 import { Color } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
-import { parseBool, parseColor, parseEnum, parseNumber } from '../parse';
+import { attr, defineAttributes } from '../attributes';
 
 import { ComponentElement } from './component';
 import type { SpriteClipElement } from './sprite-clip';
@@ -27,6 +27,62 @@ import type { SpriteClipElement } from './sprite-clip';
  * @category Components
  */
 class SpriteComponentElement extends ComponentElement<SpriteComponent> {
+    /**
+     * The color the sprite is tinted with. Its alpha is ignored - see `opacity`. Defaults to white.
+     */
+    declare color: Color;
+
+    /**
+     * Whether the sprite is mirrored horizontally. Defaults to `false`.
+     */
+    declare flipX: boolean;
+
+    /**
+     * Whether the sprite is mirrored vertically. Defaults to `false`.
+     */
+    declare flipY: boolean;
+
+    /**
+     * The index of the frame to render, as last set - on an animated sprite the playing clip moves
+     * on from it, so `component.frame` is the frame on screen. It is an index among the frame keys
+     * of the current sprite. Setting it on an animated sprite moves the playing clip to that frame,
+     * which plays on from there - but a clip starting to play begins at its first frame, so a
+     * `frame` declared in markup has no effect on an animated sprite. Defaults to 0.
+     */
+    declare frame: number;
+
+    /**
+     * The height of the sprite in world units, used only when its sprite asset's `render-mode` is
+     * `sliced` or `tiled`. Defaults to 1.
+     */
+    declare height: number;
+
+    /**
+     * The opacity of the sprite. It ranges from 0 to 1. Defaults to 1.
+     */
+    declare opacity: number;
+
+    /**
+     * The playback speed multiplier applied to every clip. 0 freezes playback. Defaults to 1.
+     */
+    declare speed: number;
+
+    /**
+     * The type of the sprite: `simple` or `animated`. Can be:
+     *
+     * - `simple` - Renders one frame of the sprite `asset`.
+     * - `animated` - Plays the `<pc-sprite-clip>` children, starting with the one named by `clip`.
+     *
+     * Defaults to `simple`.
+     */
+    declare type: 'simple' | 'animated';
+
+    /**
+     * The width of the sprite in world units, used only when its sprite asset's `render-mode` is
+     * `sliced` or `tiled`. Defaults to 1.
+     */
+    declare width: number;
+
     private _asset = '';
 
     /**
@@ -43,29 +99,11 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
 
     private _clip = '';
 
-    private _color: Color = new Color(1, 1, 1, 1);
-
-    private _flipX = false;
-
-    private _flipY = false;
-
-    private _frame = 0;
-
-    private _height = 1;
-
-    private _opacity = 1;
-
-    private _speed = 1;
-
-    private _type: 'simple' | 'animated' = 'simple';
-
     /**
      * The unknown asset id already warned about, so that resolving the same missing id again (a
      * host readiness cycle) complains once.
      */
     private _warnedAsset: string | null = null;
-
-    private _width = 1;
 
     /** @ignore */
     constructor() {
@@ -75,16 +113,8 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
     protected getInitialComponentData() {
         // The engine assigns `type` whether or not it is supplied, so it always is
         const data: Record<string, any> = {
-            type: this._type,
-            autoPlayClip: this._clip,
-            color: this._color,
-            flipX: this._flipX,
-            flipY: this._flipY,
-            frame: this._frame,
-            height: this._height,
-            opacity: this._opacity,
-            speed: this._speed,
-            width: this._width
+            ...super.getInitialComponentData(),
+            autoPlayClip: this._clip
         };
 
         const asset = this._resolveAsset();
@@ -193,7 +223,9 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
                 continue;
             }
             if (this._assignedClips.has(clip.name)) {
-                clip._markInvalid(`pc-sprite-clip '${clip.name}' - an earlier clip already uses this name - clip not added`);
+                clip._markInvalid(
+                    `pc-sprite-clip '${clip.name}' - an earlier clip already uses this name - clip not added`
+                );
                 continue;
             }
 
@@ -315,208 +347,8 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
         return this._clip;
     }
 
-    /**
-     * Sets the color the sprite is tinted with. Its alpha is ignored - see `opacity`. Defaults
-     * to white.
-     * @param value - The tint color.
-     */
-    set color(value: Color) {
-        this._color = value;
-        if (this.component) {
-            this.component.color = value;
-        }
-    }
-
-    /**
-     * Gets the color the sprite is tinted with.
-     * @returns The tint color.
-     */
-    get color() {
-        return this._color;
-    }
-
-    /**
-     * Sets whether the sprite is mirrored horizontally. Defaults to `false`.
-     * @param value - Whether to flip the sprite horizontally.
-     */
-    set flipX(value: boolean) {
-        this._flipX = value;
-        if (this.component) {
-            this.component.flipX = value;
-        }
-    }
-
-    /**
-     * Gets whether the sprite is mirrored horizontally.
-     * @returns Whether the sprite is flipped horizontally.
-     */
-    get flipX() {
-        return this._flipX;
-    }
-
-    /**
-     * Sets whether the sprite is mirrored vertically. Defaults to `false`.
-     * @param value - Whether to flip the sprite vertically.
-     */
-    set flipY(value: boolean) {
-        this._flipY = value;
-        if (this.component) {
-            this.component.flipY = value;
-        }
-    }
-
-    /**
-     * Gets whether the sprite is mirrored vertically.
-     * @returns Whether the sprite is flipped vertically.
-     */
-    get flipY() {
-        return this._flipY;
-    }
-
-    /**
-     * Sets the index of the frame to render, among the frame keys of the current sprite. On an
-     * animated sprite it moves the playing clip to that frame, which plays on from there - but a
-     * clip starting to play begins at its first frame, so a `frame` declared in markup has no
-     * effect on an animated sprite. Defaults to 0.
-     * @param value - The frame index.
-     */
-    set frame(value: number) {
-        this._frame = value;
-        if (this.component) {
-            this.component.frame = value;
-        }
-    }
-
-    /**
-     * Gets the index of the frame to render, as last set - on an animated sprite the playing clip
-     * moves on from it, so `component.frame` is the frame on screen.
-     * @returns The frame index.
-     */
-    get frame() {
-        return this._frame;
-    }
-
-    /**
-     * Sets the height of the sprite in world units, used only when its sprite asset's
-     * `render-mode` is `sliced` or `tiled`. Defaults to 1.
-     * @param value - The height.
-     */
-    set height(value: number) {
-        this._height = value;
-        if (this.component) {
-            this.component.height = value;
-        }
-    }
-
-    /**
-     * Gets the height of the sprite in world units, used only when its sprite asset's
-     * `render-mode` is `sliced` or `tiled`.
-     * @returns The height.
-     */
-    get height() {
-        return this._height;
-    }
-
-    /**
-     * Sets the opacity of the sprite, from 0 to 1. Defaults to 1.
-     * @param value - The opacity.
-     */
-    set opacity(value: number) {
-        this._opacity = value;
-        if (this.component) {
-            this.component.opacity = value;
-        }
-    }
-
-    /**
-     * Gets the opacity of the sprite.
-     * @returns The opacity.
-     */
-    get opacity() {
-        return this._opacity;
-    }
-
-    /**
-     * Sets the playback speed multiplier applied to every clip, where 0 freezes playback.
-     * Defaults to 1.
-     * @param value - The playback speed multiplier.
-     */
-    set speed(value: number) {
-        this._speed = value;
-        if (this.component) {
-            this.component.speed = value;
-        }
-    }
-
-    /**
-     * Gets the playback speed multiplier applied to every clip.
-     * @returns The playback speed multiplier.
-     */
-    get speed() {
-        return this._speed;
-    }
-
-    /**
-     * Sets the type of the sprite. Can be:
-     *
-     * - `simple` - Renders one frame of the sprite `asset`.
-     * - `animated` - Plays the `<pc-sprite-clip>` children, starting with the one named by `clip`.
-     *
-     * Defaults to `simple`.
-     * @param value - The sprite type.
-     */
-    set type(value: 'simple' | 'animated') {
-        this._type = value;
-        if (this.component) {
-            // Switching to animated starts the selected clip through the engine's auto-play
-            this.component.type = value;
-        }
-    }
-
-    /**
-     * Gets the type of the sprite: `simple` or `animated`.
-     * @returns The sprite type.
-     */
-    get type(): 'simple' | 'animated' {
-        return this._type;
-    }
-
-    /**
-     * Sets the width of the sprite in world units, used only when its sprite asset's
-     * `render-mode` is `sliced` or `tiled`. Defaults to 1.
-     * @param value - The width.
-     */
-    set width(value: number) {
-        this._width = value;
-        if (this.component) {
-            this.component.width = value;
-        }
-    }
-
-    /**
-     * Gets the width of the sprite in world units, used only when its sprite asset's
-     * `render-mode` is `sliced` or `tiled`.
-     * @returns The width.
-     */
-    get width() {
-        return this._width;
-    }
-
     static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'asset',
-            'clip',
-            'color',
-            'flip-x',
-            'flip-y',
-            'frame',
-            'height',
-            'opacity',
-            'speed',
-            'type',
-            'width'
-        ];
+        return [...super.observedAttributes, 'asset', 'clip'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -529,36 +361,22 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
             case 'clip':
                 this.clip = newValue ?? '';
                 break;
-            case 'color':
-                this.color = parseColor(newValue, Color.WHITE, name);
-                break;
-            case 'flip-x':
-                this.flipX = parseBool(newValue, false);
-                break;
-            case 'flip-y':
-                this.flipY = parseBool(newValue, false);
-                break;
-            case 'frame':
-                this.frame = parseNumber(newValue, 0, name);
-                break;
-            case 'height':
-                this.height = parseNumber(newValue, 1, name);
-                break;
-            case 'opacity':
-                this.opacity = parseNumber(newValue, 1, name);
-                break;
-            case 'speed':
-                this.speed = parseNumber(newValue, 1, name);
-                break;
-            case 'type':
-                this.type = parseEnum(newValue, ['simple', 'animated'], 'simple', name);
-                break;
-            case 'width':
-                this.width = parseNumber(newValue, 1, name);
-                break;
         }
     }
 }
+
+// Switching type to animated starts the selected clip through the engine's auto-play
+defineAttributes(SpriteComponentElement, 'component', {
+    color: attr.color(Color.WHITE),
+    flipX: attr.bool(false),
+    flipY: attr.bool(false),
+    frame: attr.number(0),
+    height: attr.number(1),
+    opacity: attr.number(1),
+    speed: attr.number(1),
+    type: attr.oneOf(['simple', 'animated'], 'simple'),
+    width: attr.number(1)
+});
 
 globalThis.customElements?.define('pc-sprite', SpriteComponentElement);
 
