@@ -279,46 +279,42 @@ class JointComponentElement extends ComponentElement<JointComponent> {
 
 // Each attribute's parser and default. The two body references reach the engine as the entities
 // they name, resolved from the joint element each time one is written to a component.
-defineAttributes(
-    JointComponentElement,
-    {
-        angularDamping: attr.vec3(Vec3.ONE),
-        angularEquilibrium: attr.vec3(Vec3.ZERO),
-        angularLimitsX: attr.vec2(Vec2.ZERO),
-        angularLimitsY: attr.vec2(Vec2.ZERO),
-        angularLimitsZ: attr.vec2(Vec2.ZERO),
-        angularMotionX: attr.oneOf(motionModes, 'locked'),
-        angularMotionY: attr.oneOf(motionModes, 'locked'),
-        angularMotionZ: attr.oneOf(motionModes, 'locked'),
-        angularStiffness: attr.vec3(Vec3.ZERO),
-        breakImpulse: attr.number(Infinity),
-        enableCollision: attr.bool(false),
-        enableLimits: attr.bool(false),
-        entityA: attr
-            .string('')
-            .to((value, element) => resolveEntity(value, element, 'entity-a', 'constraint not created')),
-        entityB: attr
-            .string('')
-            .to((value, element) => resolveEntity(value, element, 'entity-b', 'constraint not created')),
-        limits: attr.vec2(new Vec2(-45, 45)),
-        linearDamping: attr.vec3(Vec3.ONE),
-        linearEquilibrium: attr.vec3(Vec3.ZERO),
-        linearLimitsX: attr.vec2(Vec2.ZERO),
-        linearLimitsY: attr.vec2(Vec2.ZERO),
-        linearLimitsZ: attr.vec2(Vec2.ZERO),
-        linearMotionX: attr.oneOf(motionModes, 'locked'),
-        linearMotionY: attr.oneOf(motionModes, 'locked'),
-        linearMotionZ: attr.oneOf(motionModes, 'locked'),
-        linearStiffness: attr.vec3(Vec3.ZERO),
-        maxMotorForce: attr.number(0),
-        motorSpeed: attr.number(0),
-        swingLimitY: attr.number(45),
-        swingLimitZ: attr.number(45),
-        twistLimit: attr.number(20),
-        type: attr.oneOf(['fixed', 'ball', 'hinge', 'slider', '6dof'], 'fixed')
-    },
-    (element) => element.component
-);
+defineAttributes(JointComponentElement, 'component', {
+    angularDamping: attr.vec3(Vec3.ONE),
+    angularEquilibrium: attr.vec3(Vec3.ZERO),
+    angularLimitsX: attr.vec2(Vec2.ZERO),
+    angularLimitsY: attr.vec2(Vec2.ZERO),
+    angularLimitsZ: attr.vec2(Vec2.ZERO),
+    angularMotionX: attr.oneOf(motionModes, 'locked'),
+    angularMotionY: attr.oneOf(motionModes, 'locked'),
+    angularMotionZ: attr.oneOf(motionModes, 'locked'),
+    angularStiffness: attr.vec3(Vec3.ZERO),
+    breakImpulse: attr.number(Infinity),
+    enableCollision: attr.bool(false),
+    enableLimits: attr.bool(false),
+    entityA: attr
+        .string('')
+        .to((value, element) => resolveEntity(value, element, 'entity-a', 'constraint not created')),
+    entityB: attr
+        .string('')
+        .to((value, element) => resolveEntity(value, element, 'entity-b', 'constraint not created')),
+    limits: attr.vec2(new Vec2(-45, 45)),
+    linearDamping: attr.vec3(Vec3.ONE),
+    linearEquilibrium: attr.vec3(Vec3.ZERO),
+    linearLimitsX: attr.vec2(Vec2.ZERO),
+    linearLimitsY: attr.vec2(Vec2.ZERO),
+    linearLimitsZ: attr.vec2(Vec2.ZERO),
+    linearMotionX: attr.oneOf(motionModes, 'locked'),
+    linearMotionY: attr.oneOf(motionModes, 'locked'),
+    linearMotionZ: attr.oneOf(motionModes, 'locked'),
+    linearStiffness: attr.vec3(Vec3.ZERO),
+    maxMotorForce: attr.number(0),
+    motorSpeed: attr.number(0),
+    swingLimitY: attr.number(45),
+    swingLimitZ: attr.number(45),
+    twistLimit: attr.number(20),
+    type: attr.oneOf(['fixed', 'ball', 'hinge', 'slider', '6dof'], 'fixed')
+});
 
 globalThis.customElements?.define('pc-joint', JointComponentElement);
 

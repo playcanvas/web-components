@@ -270,38 +270,34 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
 
 // Each attribute's parser and default. Three go to the engine under its own name for them, and
 // gamma is anything but `srgb` to the engine: no correction.
-defineAttributes(
-    CameraComponentElement,
-    {
-        clearColor: attr.color(new Color(0.75, 0.75, 0.75, 1)),
-        clearColorBuffer: attr.bool(true),
-        clearDepth: attr.number(1),
-        clearDepthBuffer: attr.bool(true),
-        clearStencilBuffer: attr.bool(true),
-        clipIntersection: attr.bool(false),
-        clippingPlanes: attr.planes(),
-        cullFaces: attr.bool(true),
-        farClip: attr.number(1000),
-        flipFaces: attr.bool(false),
-        fov: attr.number(45),
-        frustumCulling: attr.bool(true),
-        gamma: attr
-            .oneOf(['linear', 'srgb'], 'srgb')
-            .to((value) => (value === 'srgb' ? GAMMA_SRGB : GAMMA_NONE))
-            .as('gammaCorrection'),
-        horizontalFov: attr.bool(false),
-        nearClip: attr.number(0.1),
-        orthoHeight: attr.number(10),
-        priority: attr.number(0),
-        projection: attr.oneOf(projections, 'perspective'),
-        projectionOffset: attr.vec2(new Vec2(0, 0)),
-        rect: attr.vec4(new Vec4(0, 0, 1, 1)),
-        sceneColorMap: attr.bool(false).as('renderSceneColorMap'),
-        scissorRect: attr.vec4(new Vec4(0, 0, 1, 1)),
-        tonemap: attr.oneOf(tonemaps, 'linear').as('toneMapping')
-    },
-    (element) => element.component
-);
+defineAttributes(CameraComponentElement, 'component', {
+    clearColor: attr.color(new Color(0.75, 0.75, 0.75, 1)),
+    clearColorBuffer: attr.bool(true),
+    clearDepth: attr.number(1),
+    clearDepthBuffer: attr.bool(true),
+    clearStencilBuffer: attr.bool(true),
+    clipIntersection: attr.bool(false),
+    clippingPlanes: attr.planes(),
+    cullFaces: attr.bool(true),
+    farClip: attr.number(1000),
+    flipFaces: attr.bool(false),
+    fov: attr.number(45),
+    frustumCulling: attr.bool(true),
+    gamma: attr
+        .oneOf(['linear', 'srgb'], 'srgb')
+        .to((value) => (value === 'srgb' ? GAMMA_SRGB : GAMMA_NONE))
+        .as('gammaCorrection'),
+    horizontalFov: attr.bool(false),
+    nearClip: attr.number(0.1),
+    orthoHeight: attr.number(10),
+    priority: attr.number(0),
+    projection: attr.oneOf(projections, 'perspective'),
+    projectionOffset: attr.vec2(new Vec2(0, 0)),
+    rect: attr.vec4(new Vec4(0, 0, 1, 1)),
+    sceneColorMap: attr.bool(false).as('renderSceneColorMap'),
+    scissorRect: attr.vec4(new Vec4(0, 0, 1, 1)),
+    tonemap: attr.oneOf(tonemaps, 'linear').as('toneMapping')
+});
 
 globalThis.customElements?.define('pc-camera', CameraComponentElement);
 

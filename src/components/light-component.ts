@@ -250,37 +250,33 @@ class LightComponentElement extends ComponentElement<LightComponent> {
 // Each attribute's parser and default and, for the two enums that are maps, the engine constant
 // behind each name. The engine reads a null `shadowBounds` as "no bounds": cascades fitted to each
 // camera.
-defineAttributes(
-    LightComponentElement,
-    {
-        cascadeBlend: attr.number(0),
-        cascadeDistribution: attr.number(0.5),
-        castShadows: attr.bool(false),
-        color: attr.color(Color.WHITE),
-        innerConeAngle: attr.number(40),
-        intensity: attr.number(1),
-        normalOffsetBias: attr.number(0),
-        numCascades: attr.number(1),
-        outerConeAngle: attr.number(45),
-        penumbraFalloff: attr.number(1),
-        penumbraSize: attr.number(1),
-        range: attr.number(10),
-        shadowBias: attr.number(0.05),
-        shadowBlockerSamples: attr.number(16),
-        shadowBounds: attr.boundingBox(null),
-        shadowDistance: attr.number(40),
-        shadowIntensity: attr.number(1),
-        shadowResolution: attr.number(1024),
-        shadowSamples: attr.number(16),
-        shadowType: attr.oneOf(shadowTypes, 'pcf3-32f'),
-        shape: attr.oneOf(lightShapes, 'punctual'),
-        type: attr.oneOf(['directional', 'omni', 'spot'], 'directional'),
-        volumetricScattering: attr.number(1),
-        vsmBias: attr.number(0.0025),
-        vsmBlurSize: attr.number(11)
-    },
-    (element) => element.component
-);
+defineAttributes(LightComponentElement, 'component', {
+    cascadeBlend: attr.number(0),
+    cascadeDistribution: attr.number(0.5),
+    castShadows: attr.bool(false),
+    color: attr.color(Color.WHITE),
+    innerConeAngle: attr.number(40),
+    intensity: attr.number(1),
+    normalOffsetBias: attr.number(0),
+    numCascades: attr.number(1),
+    outerConeAngle: attr.number(45),
+    penumbraFalloff: attr.number(1),
+    penumbraSize: attr.number(1),
+    range: attr.number(10),
+    shadowBias: attr.number(0.05),
+    shadowBlockerSamples: attr.number(16),
+    shadowBounds: attr.boundingBox(null),
+    shadowDistance: attr.number(40),
+    shadowIntensity: attr.number(1),
+    shadowResolution: attr.number(1024),
+    shadowSamples: attr.number(16),
+    shadowType: attr.oneOf(shadowTypes, 'pcf3-32f'),
+    shape: attr.oneOf(lightShapes, 'punctual'),
+    type: attr.oneOf(['directional', 'omni', 'spot'], 'directional'),
+    volumetricScattering: attr.number(1),
+    vsmBias: attr.number(0.0025),
+    vsmBlurSize: attr.number(11)
+});
 
 globalThis.customElements?.define('pc-light', LightComponentElement);
 

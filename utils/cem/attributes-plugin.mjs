@@ -18,8 +18,9 @@
  * silently drift.
  *
  * An element that declares its attributes in a schema has no such callback. Its
- * `defineAttributes(Class, { clearColor: attr.color(...) })` call carries the same things, one
- * entry per attribute, and is read the same way.
+ * `defineAttributes(Class, 'component', { clearColor: attr.color(...) })` call carries the same
+ * things, one entry per attribute, and is read the same way. An element can have both: a schema
+ * for the attributes that only write a value through, and callback branches for the rest.
  */
 
 /**
@@ -97,7 +98,18 @@ const SCHEMA_KINDS = {
 
 const kebabToCamel = name => name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
 
-const camelToKebab = name => name.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`);
+/**
+ * Names the attribute of a schema property, exactly as `camelToKebab` in `src/attributes.ts` does:
+ * a run of capitals is one word, so `enableGGXSpecular` is `enable-ggx-specular`. The two must
+ * agree, or the manifest would publish an attribute the element does not observe.
+ *
+ * @param {string} name - The property name.
+ * @returns {string} The attribute name.
+ */
+const camelToKebab = name => name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
 
 /**
  * Extracts `name === 'some-attribute'` comparisons, so that elements handling a single attribute
@@ -416,10 +428,14 @@ const describeParser = (ts, sourceFile, parser, [first, second], context) => {
 const publishAttribute = (classDoc, name, fieldName, { type, default: defaultValue, hint }) => {
     classDoc.attributes ??= [];
 
-    let attribute = classDoc.attributes.find(existing => existing.name === name);
-    if (!attribute) {
-        attribute = { name };
+    // The name leads, however the entry came about: the analyzer seeds one from a literal
+    // `observedAttributes` list, and otherwise makes one from an `@attribute` tag, type first
+    const index = classDoc.attributes.findIndex(existing => existing.name === name);
+    const attribute = { name, ...classDoc.attributes[index] };
+    if (index === -1) {
         classDoc.attributes.push(attribute);
+    } else {
+        classDoc.attributes[index] = attribute;
     }
 
     attribute.type = { text: type };
@@ -455,7 +471,7 @@ const findKindCall = (ts, expression) => {
 };
 
 /**
- * Publishes the attributes of a `defineAttributes(Class, { property: attr.kind(...), ... })` call,
+ * Publishes the attributes of a `defineAttributes(Class, target, { property: attr.kind(...) })` call,
  * where each entry carries what a callback branch does: the property, the parser and the default.
  *
  * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
@@ -463,13 +479,14 @@ const findKindCall = (ts, expression) => {
  * @param {object} moduleDoc - The module in the manifest.
  */
 const publishSchema = (ts, call, moduleDoc) => {
-    const [classArgument, schema] = call.arguments;
+    // The class, the name of the property holding its engine object, then the schema
+    const [classArgument, , schema] = call.arguments;
     const className = classArgument?.getText();
     const classDoc = moduleDoc.declarations?.find(declaration => declaration.name === className);
 
     // A schema the plugin cannot read publishes no attributes at all, so it must not pass quietly
     if (!classDoc || !schema || !ts.isObjectLiteralExpression(schema)) {
-        throw new Error(`[cem] defineAttributes(${className}, ...) needs a class declared above it and an inline schema`);
+        throw new Error(`[cem] defineAttributes(${className}, ...) needs a class declared above it and an inline schema as its third argument`);
     }
 
     for (const property of schema.properties) {

@@ -41,7 +41,7 @@ import {
  *
  * @internal
  */
-export type AttributeSpec<T, E = T> = {
+export type AttributeSpec<T, E = T, N extends string | undefined = undefined> = {
     /**
      * Parses the attribute's text. `null` is the absent attribute, which yields the default.
      */
@@ -53,9 +53,10 @@ export type AttributeSpec<T, E = T> = {
     readonly toEngine?: (value: T, element: Element) => E;
 
     /**
-     * The engine property the value is written to. Absent where it has the element property's name.
+     * The engine property the value is written to, or `undefined` where it has the element
+     * property's name.
      */
-    readonly engine?: string;
+    readonly engine: N;
 
     /**
      * Names the engine property, where it is not the element property's name.
@@ -63,7 +64,7 @@ export type AttributeSpec<T, E = T> = {
      * @param engine - The engine property.
      * @returns The attribute, written to that property.
      */
-    as(engine: string): AttributeSpec<T, E>;
+    as<M extends string>(engine: M): AttributeSpec<T, E, M>;
 
     /**
      * Converts the value to what the engine takes, where that is not the value itself. The
@@ -73,7 +74,7 @@ export type AttributeSpec<T, E = T> = {
      * @param toEngine - The conversion.
      * @returns The attribute, converted on its way to the engine.
      */
-    to<C>(toEngine: (value: T, element: Element) => C): AttributeSpec<T, C>;
+    to<C>(toEngine: (value: T, element: Element) => C): AttributeSpec<T, C, N>;
 };
 
 /**
@@ -82,33 +83,55 @@ export type AttributeSpec<T, E = T> = {
  *
  * @internal
  */
-export type AttributeSchema = Record<string, AttributeSpec<any, any>>;
+export type AttributeSchema = Record<string, AttributeSpec<any, any, any>>;
 
-type ValueOf<S> = S extends AttributeSpec<infer T, unknown> ? T : never;
+// Each is read off the one member that carries it. Inferring the three from AttributeSpec as a
+// whole does not survive its methods, which return it again.
+
+type ValueOf<A> = A extends { readonly parse: (value: string | null, attribute: string) => infer T } ? T : never;
+
+type EngineValueOf<A> = A extends { readonly toEngine?: (value: any, element: Element) => infer E } ? E : never;
+
+type EngineNameOf<A, K> = A extends { readonly engine: infer N } ? (N extends string ? N : K) : never;
 
 /**
  * The schema's properties that the class does not declare with the type the attribute parses to.
  */
-type Undeclared<E, S extends AttributeSchema> = {
-    [K in keyof S]: K extends keyof E ? ([E[K], ValueOf<S[K]>] extends [ValueOf<S[K]>, E[K]] ? never : K) : K;
+type Undeclared<El, S extends AttributeSchema> = {
+    [K in keyof S]: K extends keyof El ? ([El[K], ValueOf<S[K]>] extends [ValueOf<S[K]>, El[K]] ? never : K) : K;
 }[keyof S];
 
 /**
- * Resolves to nothing further when every property agrees with its declaration, and otherwise to a
- * type no schema satisfies, whose name is the error message.
+ * The schema's properties that the engine object cannot be given: it has no property of the name,
+ * or one that does not take the value. A hand-written setter fails to compile on either, and so
+ * must this - an engine release that renames a property would otherwise go unnoticed.
  */
-type Declared<E, S extends AttributeSchema> = [Undeclared<E, S>] extends [never]
-    ? unknown
-    : `'${Undeclared<E, S> & string}' is not declared on the class with the type its attribute parses to`;
+type Unwritable<G, S extends AttributeSchema> = {
+    [K in keyof S]: EngineNameOf<S[K], K> extends keyof G
+        ? [EngineValueOf<S[K]>] extends [G[EngineNameOf<S[K], K>]]
+            ? never
+            : K
+        : K;
+}[keyof S];
 
-const spec = <T, E = T>(
+/**
+ * Resolves to nothing further when every property agrees with its declaration and with the engine
+ * object, and otherwise to a type no schema satisfies, whose name is the error message.
+ */
+type Checked<El, G, S extends AttributeSchema> = [Undeclared<El, S>] extends [never]
+    ? [Unwritable<G, S>] extends [never]
+        ? unknown
+        : `'${Unwritable<G, S> & string}' has no engine property of its name that takes its value`
+    : `'${Undeclared<El, S> & string}' is not declared on the class with the type its attribute parses to`;
+
+const spec = <T, E = T, N extends string | undefined = undefined>(
     parse: (value: string | null, attribute: string) => T,
     toEngine?: (value: T, element: Element) => E,
-    engine?: string
-): AttributeSpec<T, E> => ({
+    engine?: N
+): AttributeSpec<T, E, N> => ({
     parse,
     toEngine,
-    engine,
+    engine: engine as N,
     as: (name) => spec(parse, toEngine, name),
     to: (convert) => spec(parse, convert, engine)
 });
@@ -142,7 +165,8 @@ export const attr = {
     color: <T extends Color | null>(defaultValue: T) =>
         spec((value, attribute) => parseColor(value, defaultValue, attribute)),
 
-    number: (defaultValue: number) => spec((value, attribute) => parseNumber(value, defaultValue, attribute)),
+    number: <T extends number | null>(defaultValue: T) =>
+        spec((value, attribute) => parseNumber(value, defaultValue, attribute)),
 
     /**
      * One of a set of names: an array where the engine takes the name itself, or a map from each
@@ -170,7 +194,7 @@ type Entry = {
     attribute: string;
     property: string;
     engine: string;
-    spec: AttributeSpec<unknown, unknown>;
+    spec: AttributeSpec<unknown, unknown, string | undefined>;
 };
 
 /** Each class's attributes, its ancestors' included, keyed by attribute name. */
@@ -179,7 +203,18 @@ const schemas = new WeakMap<object, Map<string, Entry>>();
 /** The values written to each element's properties, keyed by property name. */
 const stores = new WeakMap<object, Record<string, unknown>>();
 
-const camelToKebab = (name: string) => name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+/**
+ * Names the attribute of a property. A run of capitals is one word, so `enableGGXSpecular` is
+ * `enable-ggx-specular`. The manifest plugin derives the same names, and must do it the same way.
+ *
+ * @param name - The property name.
+ * @returns The attribute name.
+ */
+const camelToKebab = (name: string) =>
+    name
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+        .toLowerCase();
 
 const schemaOf = (ctor: object | null): Map<string, Entry> | undefined => {
     for (let current = ctor; current; current = Object.getPrototypeOf(current)) {
@@ -213,24 +248,31 @@ const convert = ({ spec: { toEngine } }: Entry, value: unknown, element: Element
 
 /**
  * Gives a class the accessors for a schema of attributes. A property holds what was last written
- * to it and, once `target` returns the engine object behind the element, writes through to it.
- * Call it before the class is registered as a custom element, which is when the browser reads
- * `observedAttributes`.
+ * to it and, once the element has its engine object, writes through to it. Call it before the
+ * class is registered as a custom element, which is when the browser reads `observedAttributes`.
+ * A class can be given more than one schema, where its attributes do not all write through the
+ * same way.
+ *
+ * The engine object is named rather than returned from a callback so that its type is known
+ * before the schema is checked against it.
  *
  * @param ctor - The element class.
+ * @param target - The element's property holding the engine object its attributes write through
+ * to, which is `null` while there is none.
  * @param schema - The attributes, keyed by property name.
- * @param target - Returns the engine object the element's properties write through to, or `null`
- * while there is none.
+ * @param written - Called after a property has been written through to the engine object, for an
+ * element that has something to do then.
  * @internal
  */
-export const defineAttributes = <E extends Element, S extends AttributeSchema>(
-    ctor: abstract new (...args: any[]) => E,
-    schema: S & Declared<E, S>,
-    target: (element: E) => object | null
+export const defineAttributes = <El extends Element, P extends keyof El, S extends AttributeSchema>(
+    ctor: abstract new (...args: any[]) => El,
+    target: P,
+    schema: S & Checked<El, NonNullable<El[P]>, S>,
+    written?: (element: El) => void
 ) => {
     const entries = new Map(schemaOf(ctor));
 
-    for (const [property, attribute] of Object.entries<AttributeSpec<unknown, unknown>>(schema)) {
+    for (const [property, attribute] of Object.entries<Entry['spec']>(schema)) {
         const entry: Entry = {
             attribute: camelToKebab(property),
             property,
@@ -241,14 +283,15 @@ export const defineAttributes = <E extends Element, S extends AttributeSchema>(
 
         Object.defineProperty(ctor.prototype, property, {
             configurable: true,
-            get(this: E) {
+            get(this: El) {
                 return read(this, entry);
             },
-            set(this: E, value: unknown) {
+            set(this: El, value: unknown) {
                 storeOf(this)[property] = value;
-                const engine = target(this) as Record<string, unknown> | null;
+                const engine = this[target] as Record<string, unknown> | null;
                 if (engine) {
                     engine[entry.engine] = convert(entry, value, this);
+                    written?.(this);
                 }
             }
         });
