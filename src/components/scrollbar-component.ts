@@ -1,8 +1,8 @@
 import type { ScrollbarComponent } from 'playcanvas';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from 'playcanvas';
 
+import { attr, defineAttributes } from '../attributes';
 import { resolveEntity } from '../entity-reference';
-import { parseEnum, parseNumber } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -26,11 +26,22 @@ const orientations = new Map<'horizontal' | 'vertical', number>([
  * @category Components
  */
 class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
-    private _orientation: 'horizontal' | 'vertical' = 'horizontal';
+    /**
+     * The size of the handle relative to the size of the track. It is in the range 0 to 1. Defaults
+     * to 0.
+     */
+    declare handleSize: number;
 
-    private _value = 0;
+    /**
+     * The orientation of the scrollbar. Can be `horizontal` or `vertical`. Defaults to
+     * `horizontal`.
+     */
+    declare orientation: 'horizontal' | 'vertical';
 
-    private _handleSize = 0;
+    /**
+     * The current position value of the scrollbar. It is in the range 0 to 1.
+     */
+    declare value: number;
 
     private _handle = '';
 
@@ -40,11 +51,7 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
     }
 
     protected getInitialComponentData() {
-        const data: Record<string, any> = {
-            orientation: orientations.get(this._orientation),
-            value: this._value,
-            handleSize: this._handleSize
-        };
+        const data: Record<string, any> = { ...super.getInitialComponentData() };
 
         const handle = resolveEntity(this._handle, this, 'handle', 'reference ignored');
         if (handle) {
@@ -61,65 +68,6 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
      */
     get component(): ScrollbarComponent | null {
         return super.component;
-    }
-
-    /**
-     * Sets the orientation of the scrollbar. Can be `horizontal` or `vertical`. Defaults to
-     * `horizontal`.
-     * @param value - The orientation.
-     */
-    set orientation(value: 'horizontal' | 'vertical') {
-        this._orientation = value;
-        if (this.component) {
-            this.component.orientation = orientations.get(value) ?? ORIENTATION_HORIZONTAL;
-        }
-    }
-
-    /**
-     * Gets the orientation of the scrollbar.
-     * @returns The orientation.
-     */
-    get orientation() {
-        return this._orientation;
-    }
-
-    /**
-     * Sets the current position value of the scrollbar, in the range 0 to 1.
-     * @param value - The scrollbar value.
-     */
-    set value(value: number) {
-        this._value = value;
-        if (this.component) {
-            this.component.value = value;
-        }
-    }
-
-    /**
-     * Gets the current position value of the scrollbar.
-     * @returns The scrollbar value.
-     */
-    get value() {
-        return this._value;
-    }
-
-    /**
-     * Sets the size of the handle relative to the size of the track, in the range 0 to 1.
-     * Defaults to 0.
-     * @param value - The handle size.
-     */
-    set handleSize(value: number) {
-        this._handleSize = value;
-        if (this.component) {
-            this.component.handleSize = value;
-        }
-    }
-
-    /**
-     * Gets the size of the handle relative to the size of the track.
-     * @returns The handle size.
-     */
-    get handleSize() {
-        return this._handleSize;
     }
 
     /**
@@ -149,28 +97,25 @@ class ScrollbarComponentElement extends ComponentElement<ScrollbarComponent> {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'orientation', 'value', 'handle-size', 'handle'];
+        return [...super.observedAttributes, 'handle'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'orientation':
-                this.orientation = parseEnum(newValue, orientations, 'horizontal', name);
-                break;
-            case 'value':
-                this.value = parseNumber(newValue, 0, name);
-                break;
-            case 'handle-size':
-                this.handleSize = parseNumber(newValue, 0, name);
-                break;
             case 'handle':
                 this.handle = newValue ?? '';
                 break;
         }
     }
 }
+
+defineAttributes(ScrollbarComponentElement, 'component', {
+    handleSize: attr.number(0),
+    orientation: attr.oneOf(orientations, 'horizontal'),
+    value: attr.number(0)
+});
 
 globalThis.customElements?.define('pc-scrollbar', ScrollbarComponentElement);
 
