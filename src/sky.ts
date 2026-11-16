@@ -4,7 +4,8 @@ import { EnvLighting, Quat, Vec3 } from 'playcanvas';
 import type { AppElement } from './app';
 import { AssetBinding, useAsset } from './asset-binding';
 import { AsyncElement } from './async-element';
-import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
+import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
+import { parseBool, parseEnum, parseVec3 } from './parse';
 
 /**
  * The SkyElement interface provides properties and methods for manipulating
@@ -18,17 +19,27 @@ import { parseBool, parseEnum, parseNumber, parseVec3 } from './parse';
  * @category Application
  */
 class SkyElement extends AsyncElement {
+    /**
+     * The intensity of the skybox.
+     */
+    declare intensity: number;
+
+    /**
+     * The mip level of the skybox. 0 is the sharpest: raising it selects a blurrier mip, which is
+     * how a skybox is softened without blurring the texture itself.
+     */
+    declare mipLevel: number;
+
+    /**
+     * The Euler rotation of the skybox.
+     */
+    declare rotation: Vec3;
+
     private _asset = '';
 
     private _center = new Vec3(0, 0.01, 0);
 
     private _enabled = true;
-
-    private _intensity = 1;
-
-    private _rotation = new Vec3();
-
-    private _mipLevel = 0;
 
     private _lighting = false;
 
@@ -36,7 +47,12 @@ class SkyElement extends AsyncElement {
 
     private _type: 'box' | 'dome' | 'infinite' = 'infinite';
 
-    private _scene: Scene | null = null;
+    /**
+     * The scene the sky belongs to, while the element is attached to one. Not private, because
+     * the schema names it as what the skybox attributes write through to.
+     * @internal
+     */
+    _scene: Scene | null = null;
 
     private _appElement: AppElement | null = null;
 
@@ -93,9 +109,9 @@ class SkyElement extends AsyncElement {
         this._scene.sky.type = this._type;
         this._scene.sky.node.setLocalScale(this._scale);
         this._scene.sky.center = this._center;
-        this._scene.skyboxIntensity = this._intensity;
-        this._scene.skyboxMip = this._mipLevel;
-        this._scene.skyboxRotation = new Quat().setFromEulerAngles(this._rotation);
+        this._scene.skyboxIntensity = this.intensity;
+        this._scene.skyboxMip = this.mipLevel;
+        this._scene.skyboxRotation = new Quat().setFromEulerAngles(this.rotation);
     }
 
     private async _loadSkybox() {
@@ -214,25 +230,6 @@ class SkyElement extends AsyncElement {
     }
 
     /**
-     * Sets the intensity of the skybox.
-     * @param value - The intensity.
-     */
-    set intensity(value: number) {
-        this._intensity = value;
-        if (this._scene) {
-            this._scene.skyboxIntensity = this._intensity;
-        }
-    }
-
-    /**
-     * Gets the intensity of the skybox.
-     * @returns The intensity.
-     */
-    get intensity() {
-        return this._intensity;
-    }
-
-    /**
      * Sets whether the skybox is used as a light source.
      * @param value - Whether to use lighting.
      */
@@ -246,45 +243,6 @@ class SkyElement extends AsyncElement {
      */
     get lighting() {
         return this._lighting;
-    }
-
-    /**
-     * Sets the mip level of the skybox, where 0 is the sharpest. Raising it selects a blurrier mip,
-     * which is how a skybox is softened without blurring the texture itself.
-     * @param value - The mip level.
-     */
-    set mipLevel(value: number) {
-        this._mipLevel = value;
-        if (this._scene) {
-            this._scene.skyboxMip = this._mipLevel;
-        }
-    }
-
-    /**
-     * Gets the mip level of the skybox.
-     * @returns The mip level.
-     */
-    get mipLevel() {
-        return this._mipLevel;
-    }
-
-    /**
-     * Sets the Euler rotation of the skybox.
-     * @param value - The rotation.
-     */
-    set rotation(value: Vec3) {
-        this._rotation = value;
-        if (this._scene) {
-            this._scene.skyboxRotation = new Quat().setFromEulerAngles(value);
-        }
-    }
-
-    /**
-     * Gets the Euler rotation of the skybox.
-     * @returns The rotation.
-     */
-    get rotation() {
-        return this._rotation;
     }
 
     /**
@@ -327,10 +285,12 @@ class SkyElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'center', 'enabled', 'intensity', 'lighting', 'mip-level', 'rotation', 'scale', 'type'];
+        return [...attributeNames(this), 'asset', 'center', 'enabled', 'lighting', 'scale', 'type'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
             case 'asset':
                 this.asset = newValue ?? '';
@@ -341,17 +301,8 @@ class SkyElement extends AsyncElement {
             case 'enabled':
                 this.enabled = parseBool(newValue, true);
                 break;
-            case 'intensity':
-                this.intensity = parseNumber(newValue, 1, name);
-                break;
             case 'lighting':
                 this.lighting = parseBool(newValue, false);
-                break;
-            case 'mip-level':
-                this.mipLevel = parseNumber(newValue, 0, name);
-                break;
-            case 'rotation':
-                this.rotation = parseVec3(newValue, Vec3.ZERO, name);
                 break;
             case 'scale':
                 this.scale = parseVec3(newValue, new Vec3(100, 100, 100), name);
@@ -362,6 +313,15 @@ class SkyElement extends AsyncElement {
         }
     }
 }
+
+defineAttributes(SkyElement, '_scene', {
+    intensity: attr.number(1).as('skyboxIntensity'),
+    mipLevel: attr.number(0).as('skyboxMip'),
+    rotation: attr
+        .vec3(Vec3.ZERO)
+        .to((value) => new Quat().setFromEulerAngles(value))
+        .as('skyboxRotation')
+});
 
 globalThis.customElements?.define('pc-sky', SkyElement);
 
