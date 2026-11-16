@@ -27,6 +27,7 @@ export default {
     // deliberately included - the elements that extend them inherit their attributes and events.
     exclude: [
         'src/asset-binding.ts',
+        'src/attributes.ts',
         'src/colors.ts',
         'src/entity-reference.ts',
         'src/html-element.ts',

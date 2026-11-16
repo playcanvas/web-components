@@ -16,6 +16,11 @@
  * default value (the helper's second argument). Deriving all of it here keeps the manifest in
  * lockstep with the code, rather than requiring ~200 hand-written `@attribute` tags that would
  * silently drift.
+ *
+ * An element that declares its attributes in a schema has no such callback. Its
+ * `defineAttributes(Class, 'component', { clearColor: attr.color(...) })` call carries the same
+ * things, one entry per attribute, and is read the same way. An element can have both: a schema
+ * for the attributes that only write a value through, and callback branches for the rest.
  */
 
 /**
@@ -72,7 +77,41 @@ const EMPTY_CONSTRUCTORS = {
     Vec4: '0 0 0 0'
 };
 
+/**
+ * The attribute kinds of `attr` in `src/attributes.ts`, mapped to the parser each one wraps. A
+ * kind takes the parser's arguments without the attribute's text, so both forms describe an
+ * attribute the same way. `string` wraps no parser: like a callback branch that assigns the
+ * attribute's text as it is, it publishes a plain string with no default.
+ */
+const SCHEMA_KINDS = {
+    bool: 'parseBool',
+    boundingBox: 'parseBoundingBox',
+    color: 'parseColor',
+    flags: 'parseFlags',
+    number: 'parseNumber',
+    oneOf: 'parseEnum',
+    planes: 'parsePlanes',
+    quat: 'parseQuat',
+    string: null,
+    vec2: 'parseVec2',
+    vec3: 'parseVec3',
+    vec4: 'parseVec4'
+};
+
 const kebabToCamel = name => name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+
+/**
+ * Names the attribute of a schema property, exactly as `camelToKebab` in `src/attributes.ts` does:
+ * a run of capitals is one word, so `enableGGXSpecular` is `enable-ggx-specular`. The two must
+ * agree, or the manifest would publish an attribute the element does not observe.
+ *
+ * @param {string} name - The property name.
+ * @returns {string} The attribute name.
+ */
+const camelToKebab = name => name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
 
 /**
  * Extracts `name === 'some-attribute'` comparisons, so that elements handling a single attribute
@@ -324,44 +363,146 @@ const describeValue = (ts, sourceFile, value, context) => {
         return { type: 'string' };
     }
 
-    const helper = PARSE_HELPERS[value.expression.getText()];
+    // A parser takes the attribute's text first; the arguments after it describe the attribute
+    return describeParser(ts, sourceFile, value.expression.getText(), value.arguments.slice(1), context);
+};
+
+/**
+ * Derives an attribute's type and default from the parser that reads it and the arguments that
+ * follow the attribute's text: the default, preceded for an enum or a set of flags by the valid
+ * names.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').SourceFile} sourceFile - The file declaring the element.
+ * @param {string} parser - The name of the parser in `src/parse.ts`.
+ * @param {readonly import('typescript').Expression[]} args - The arguments after the text.
+ * @param {string} context - A label used in warnings.
+ * @returns {{ type: string, default?: string, hint?: string }} The derived metadata, where `hint`
+ * is the syntax sentence appended to the attribute description.
+ */
+const describeParser = (ts, sourceFile, parser, [first, second], context) => {
+    const helper = PARSE_HELPERS[parser];
     if (!helper) {
         return { type: 'string' };
     }
 
-    const [, second, third] = value.arguments;
-
     if (helper.type === 'enum') {
-        const values = resolveEnumValues(ts, sourceFile, second);
+        const values = resolveEnumValues(ts, sourceFile, first);
         if (values.length === 0) {
             console.warn(`[cem] could not resolve enum values for ${context}; falling back to string`);
-            return { type: 'string', default: renderDefault(ts, third) };
+            return { type: 'string', default: renderDefault(ts, second) };
         }
         return {
             type: values.map(name => `'${name}'`).join(' | '),
-            default: renderDefault(ts, third)
+            default: renderDefault(ts, second)
         };
     }
 
     // A set of flags takes any combination of its names, so it has no union type to publish -
     // the names go in the syntax hint instead. The default is written in markup form.
     if (helper.type === 'flags') {
-        const values = resolveEnumValues(ts, sourceFile, second);
+        const values = resolveEnumValues(ts, sourceFile, first);
         if (values.length === 0) {
             console.warn(`[cem] could not resolve flag names for ${context}; publishing no syntax hint`);
         }
         return {
             type: 'string',
-            default: renderDefault(ts, third),
+            default: renderDefault(ts, second),
             hint: values.length > 0 ? `Accepts space-separated names from: ${values.join(', ')}.` : undefined
         };
     }
 
     return {
         type: helper.type,
-        default: renderDefault(ts, second),
+        default: renderDefault(ts, first),
         hint: FORMAT_HINTS[helper.format]
     };
+};
+
+/**
+ * Publishes an attribute on a class, replacing whatever the analyzer made of it.
+ *
+ * @param {object} classDoc - The class declaration in the manifest.
+ * @param {string} name - The attribute name.
+ * @param {string} fieldName - The property the attribute writes to.
+ * @param {{ type: string, default?: string, hint?: string }} described - The derived metadata.
+ */
+const publishAttribute = (classDoc, name, fieldName, { type, default: defaultValue, hint }) => {
+    classDoc.attributes ??= [];
+
+    // The name leads, however the entry came about: the analyzer seeds one from a literal
+    // `observedAttributes` list, and otherwise makes one from an `@attribute` tag, type first
+    const index = classDoc.attributes.findIndex(existing => existing.name === name);
+    const attribute = { name, ...classDoc.attributes[index] };
+    if (index === -1) {
+        classDoc.attributes.push(attribute);
+    } else {
+        classDoc.attributes[index] = attribute;
+    }
+
+    attribute.type = { text: type };
+    attribute.fieldName = fieldName;
+    if (defaultValue !== undefined) {
+        attribute.default = defaultValue;
+    }
+    if (hint) {
+        // Consumed (and removed) in moduleLinkPhase, once member docs are available
+        attribute._pwcHint = hint;
+    }
+};
+
+/**
+ * Finds the `attr.kind(...)` call a schema entry starts with, beneath any `.as(...)` or `.to(...)`
+ * that follows it. Those say where the value goes in the engine, which the manifest does not
+ * publish.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').Expression} expression - The schema entry's value.
+ * @returns {import('typescript').CallExpression | null} The call, or `null` if there is none.
+ */
+const findKindCall = (ts, expression) => {
+    let call = expression;
+    while (ts.isCallExpression(call) &&
+        ts.isPropertyAccessExpression(call.expression) &&
+        ts.isCallExpression(call.expression.expression)) {
+        call = call.expression.expression;
+    }
+    return ts.isCallExpression(call) &&
+        ts.isPropertyAccessExpression(call.expression) &&
+        call.expression.expression.getText() === 'attr' ? call : null;
+};
+
+/**
+ * Publishes the attributes of a `defineAttributes(Class, target, { property: attr.kind(...) })` call,
+ * where each entry carries what a callback branch does: the property, the parser and the default.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').CallExpression} call - The `defineAttributes` call.
+ * @param {object} moduleDoc - The module in the manifest.
+ */
+const publishSchema = (ts, call, moduleDoc) => {
+    // The class, the name of the property holding its engine object, then the schema
+    const [classArgument, , schema] = call.arguments;
+    const className = classArgument?.getText();
+    const classDoc = moduleDoc.declarations?.find(declaration => declaration.name === className);
+
+    // A schema the plugin cannot read publishes no attributes at all, so it must not pass quietly
+    if (!classDoc || !schema || !ts.isObjectLiteralExpression(schema)) {
+        throw new Error(`[cem] defineAttributes(${className}, ...) needs a class declared above it and an inline schema as its third argument`);
+    }
+
+    for (const property of schema.properties) {
+        const fieldName = property.name?.getText();
+        const kind = ts.isPropertyAssignment(property) ? findKindCall(ts, property.initializer) : null;
+        const kindName = kind?.expression.name.text;
+        if (!kind || !Object.hasOwn(SCHEMA_KINDS, kindName)) {
+            throw new Error(`[cem] ${className}'s '${fieldName}' is not an attr.* kind this plugin knows`);
+        }
+
+        publishAttribute(classDoc, camelToKebab(fieldName), fieldName, describeParser(
+            ts, call.getSourceFile(), SCHEMA_KINDS[kindName], kind.arguments, `${className}'s '${fieldName}'`
+        ));
+    }
 };
 
 /**
@@ -395,6 +536,11 @@ export const attributesFromCallbackPlugin = () => ({
     name: 'pwc-attributes-from-callback',
 
     analyzePhase({ ts, node, moduleDoc }) {
+        if (ts.isCallExpression(node) && node.expression.getText() === 'defineAttributes') {
+            publishSchema(ts, node, moduleDoc);
+            return;
+        }
+
         if (!ts.isClassDeclaration(node) || !node.name) {
             return;
         }
@@ -415,27 +561,9 @@ export const attributesFromCallbackPlugin = () => ({
         for (const branch of collectBranches(ts, callback.body)) {
             const assignment = findAssignment(ts, branch.statements);
             const fieldName = assignment?.fieldName ?? kebabToCamel(branch.name);
-            const { type, default: defaultValue, hint } = describeValue(
+            publishAttribute(classDoc, branch.name, fieldName, describeValue(
                 ts, sourceFile, assignment?.value, `${classDoc.name}'s '${branch.name}'`
-            );
-
-            classDoc.attributes ??= [];
-
-            let attribute = classDoc.attributes.find(existing => existing.name === branch.name);
-            if (!attribute) {
-                attribute = { name: branch.name };
-                classDoc.attributes.push(attribute);
-            }
-
-            attribute.type = { text: type };
-            attribute.fieldName = fieldName;
-            if (defaultValue !== undefined) {
-                attribute.default = defaultValue;
-            }
-            if (hint) {
-                // Consumed (and removed) in moduleLinkPhase, once member docs are available
-                attribute._pwcHint = hint;
-            }
+            ));
         }
     },
 

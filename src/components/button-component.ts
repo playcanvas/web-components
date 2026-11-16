@@ -2,8 +2,8 @@ import type { ButtonComponent } from 'playcanvas';
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT, Color, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
+import { attr, defineAttributes } from '../attributes';
 import { resolveEntity } from '../entity-reference';
-import { parseBool, parseColor, parseEnum, parseNumber, parseVec4 } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -28,33 +28,67 @@ const transitionModes = new Map<'tint' | 'sprite', number>([
  * @category Components
  */
 class ButtonComponentElement extends ComponentElement<ButtonComponent> {
-    private _active = true;
+    /**
+     * Whether the button is active. An active button responds to input.
+     */
+    declare active: boolean;
+
+    /**
+     * The duration over which tint transitions are applied. It is in milliseconds.
+     */
+    declare fadeDuration: number;
+
+    /**
+     * The padding used to expand the button's hit area. It is a Vec4: left, bottom, right, top.
+     */
+    declare hitPadding: Vec4;
+
+    /**
+     * The frame of the hover sprite to show.
+     */
+    declare hoverSpriteFrame: number;
+
+    /**
+     * The hover tint color. It is applied to the image entity when the button is hovered, in the
+     * tint transition mode. Defaults to `0.75 0.75 0.75 1`.
+     */
+    declare hoverTint: Color;
+
+    /**
+     * The frame of the inactive sprite to show.
+     */
+    declare inactiveSpriteFrame: number;
+
+    /**
+     * The inactive tint color. It is applied to the image entity when the button is inactive, in
+     * the tint transition mode. Defaults to `0.25 0.25 0.25 1`.
+     */
+    declare inactiveTint: Color;
+
+    /**
+     * The frame of the pressed sprite to show.
+     */
+    declare pressedSpriteFrame: number;
+
+    /**
+     * The pressed tint color. It is applied to the image entity when the button is pressed, in the
+     * tint transition mode. Defaults to `0.5 0.5 0.5 1`.
+     */
+    declare pressedTint: Color;
+
+    /**
+     * How the button reacts to being hovered/pressed. Can be `tint` or `sprite`. Defaults to
+     * `tint`.
+     */
+    declare transitionMode: 'tint' | 'sprite';
 
     private _image = '';
 
-    private _hitPadding = new Vec4(0, 0, 0, 0);
-
-    private _transitionMode: 'tint' | 'sprite' = 'tint';
-
-    private _hoverTint = new Color(0.75, 0.75, 0.75, 1);
-
-    private _pressedTint = new Color(0.5, 0.5, 0.5, 1);
-
-    private _inactiveTint = new Color(0.25, 0.25, 0.25, 1);
-
-    private _fadeDuration = 0;
-
     private _hoverSpriteAsset = '';
-
-    private _hoverSpriteFrame = 0;
 
     private _pressedSpriteAsset = '';
 
-    private _pressedSpriteFrame = 0;
-
     private _inactiveSpriteAsset = '';
-
-    private _inactiveSpriteFrame = 0;
 
     /** @ignore */
     constructor() {
@@ -62,18 +96,7 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
     }
 
     protected getInitialComponentData() {
-        const data: Record<string, any> = {
-            active: this._active,
-            hitPadding: this._hitPadding,
-            transitionMode: transitionModes.get(this._transitionMode),
-            hoverTint: this._hoverTint,
-            pressedTint: this._pressedTint,
-            inactiveTint: this._inactiveTint,
-            fadeDuration: this._fadeDuration,
-            hoverSpriteFrame: this._hoverSpriteFrame,
-            pressedSpriteFrame: this._pressedSpriteFrame,
-            inactiveSpriteFrame: this._inactiveSpriteFrame
-        };
+        const data: Record<string, any> = { ...super.getInitialComponentData() };
 
         // The image entity defaults to the button's own entity (which carries the image element)
         // when no explicit reference is provided.
@@ -112,25 +135,6 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
     }
 
     /**
-     * Sets whether the button is active and responds to input.
-     * @param value - Whether the button is active.
-     */
-    set active(value: boolean) {
-        this._active = value;
-        if (this.component) {
-            this.component.active = value;
-        }
-    }
-
-    /**
-     * Gets whether the button is active.
-     * @returns Whether the button is active.
-     */
-    get active() {
-        return this._active;
-    }
-
-    /**
      * Sets the reference (a `pc-entity`, `pc-model` or `pc-node` name, or a document-wide `#`
      * selector) to the entity whose image element is used for visual transitions. An exact name
      * resolves against the nearest enclosing entity first, then outward, then the document.
@@ -160,124 +164,6 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
     }
 
     /**
-     * Sets the padding used to expand the button's hit area, as a Vec4 (left, bottom, right, top).
-     * @param value - The hit padding.
-     */
-    set hitPadding(value: Vec4) {
-        this._hitPadding = value;
-        if (this.component) {
-            this.component.hitPadding = value;
-        }
-    }
-
-    /**
-     * Gets the padding used to expand the button's hit area.
-     * @returns The hit padding.
-     */
-    get hitPadding() {
-        return this._hitPadding;
-    }
-
-    /**
-     * Sets how the button reacts to being hovered/pressed. Can be `tint` or `sprite`. Defaults to
-     * `tint`.
-     * @param value - The transition mode.
-     */
-    set transitionMode(value: 'tint' | 'sprite') {
-        this._transitionMode = value;
-        if (this.component) {
-            this.component.transitionMode = transitionModes.get(value) ?? BUTTON_TRANSITION_MODE_TINT;
-        }
-    }
-
-    /**
-     * Gets how the button reacts to being hovered/pressed.
-     * @returns The transition mode.
-     */
-    get transitionMode() {
-        return this._transitionMode;
-    }
-
-    /**
-     * Sets the tint color applied to the image entity when the button is hovered (tint transition
-     * mode). Defaults to `0.75 0.75 0.75 1`.
-     * @param value - The hover tint.
-     */
-    set hoverTint(value: Color) {
-        this._hoverTint = value;
-        if (this.component) {
-            this.component.hoverTint = value;
-        }
-    }
-
-    /**
-     * Gets the hover tint color.
-     * @returns The hover tint.
-     */
-    get hoverTint() {
-        return this._hoverTint;
-    }
-
-    /**
-     * Sets the tint color applied to the image entity when the button is pressed (tint transition
-     * mode). Defaults to `0.5 0.5 0.5 1`.
-     * @param value - The pressed tint.
-     */
-    set pressedTint(value: Color) {
-        this._pressedTint = value;
-        if (this.component) {
-            this.component.pressedTint = value;
-        }
-    }
-
-    /**
-     * Gets the pressed tint color.
-     * @returns The pressed tint.
-     */
-    get pressedTint() {
-        return this._pressedTint;
-    }
-
-    /**
-     * Sets the tint color applied to the image entity when the button is inactive (tint transition
-     * mode). Defaults to `0.25 0.25 0.25 1`.
-     * @param value - The inactive tint.
-     */
-    set inactiveTint(value: Color) {
-        this._inactiveTint = value;
-        if (this.component) {
-            this.component.inactiveTint = value;
-        }
-    }
-
-    /**
-     * Gets the inactive tint color.
-     * @returns The inactive tint.
-     */
-    get inactiveTint() {
-        return this._inactiveTint;
-    }
-
-    /**
-     * Sets the duration (in milliseconds) over which tint transitions are applied.
-     * @param value - The fade duration.
-     */
-    set fadeDuration(value: number) {
-        this._fadeDuration = value;
-        if (this.component) {
-            this.component.fadeDuration = value;
-        }
-    }
-
-    /**
-     * Gets the duration over which tint transitions are applied.
-     * @returns The fade duration.
-     */
-    get fadeDuration() {
-        return this._fadeDuration;
-    }
-
-    /**
      * Sets the id of the `pc-asset` sprite shown when the button is hovered (sprite transition
      * mode).
      * @param value - The hover sprite asset id.
@@ -296,25 +182,6 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
      */
     get hoverSpriteAsset() {
         return this._hoverSpriteAsset;
-    }
-
-    /**
-     * Sets the frame of the hover sprite to show.
-     * @param value - The hover sprite frame.
-     */
-    set hoverSpriteFrame(value: number) {
-        this._hoverSpriteFrame = value;
-        if (this.component) {
-            this.component.hoverSpriteFrame = value;
-        }
-    }
-
-    /**
-     * Gets the frame of the hover sprite to show.
-     * @returns The hover sprite frame.
-     */
-    get hoverSpriteFrame() {
-        return this._hoverSpriteFrame;
     }
 
     /**
@@ -339,25 +206,6 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
     }
 
     /**
-     * Sets the frame of the pressed sprite to show.
-     * @param value - The pressed sprite frame.
-     */
-    set pressedSpriteFrame(value: number) {
-        this._pressedSpriteFrame = value;
-        if (this.component) {
-            this.component.pressedSpriteFrame = value;
-        }
-    }
-
-    /**
-     * Gets the frame of the pressed sprite to show.
-     * @returns The pressed sprite frame.
-     */
-    get pressedSpriteFrame() {
-        return this._pressedSpriteFrame;
-    }
-
-    /**
      * Sets the id of the `pc-asset` sprite shown when the button is inactive (sprite transition
      * mode).
      * @param value - The inactive sprite asset id.
@@ -378,42 +226,13 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
         return this._inactiveSpriteAsset;
     }
 
-    /**
-     * Sets the frame of the inactive sprite to show.
-     * @param value - The inactive sprite frame.
-     */
-    set inactiveSpriteFrame(value: number) {
-        this._inactiveSpriteFrame = value;
-        if (this.component) {
-            this.component.inactiveSpriteFrame = value;
-        }
-    }
-
-    /**
-     * Gets the frame of the inactive sprite to show.
-     * @returns The inactive sprite frame.
-     */
-    get inactiveSpriteFrame() {
-        return this._inactiveSpriteFrame;
-    }
-
     static get observedAttributes() {
         return [
             ...super.observedAttributes,
-            'active',
             'image',
-            'hit-padding',
-            'transition-mode',
-            'hover-tint',
-            'pressed-tint',
-            'inactive-tint',
-            'fade-duration',
             'hover-sprite-asset',
-            'hover-sprite-frame',
             'pressed-sprite-asset',
-            'pressed-sprite-frame',
-            'inactive-sprite-asset',
-            'inactive-sprite-frame'
+            'inactive-sprite-asset'
         ];
     }
 
@@ -421,51 +240,34 @@ class ButtonComponentElement extends ComponentElement<ButtonComponent> {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'active':
-                this.active = parseBool(newValue, true);
-                break;
             case 'image':
                 this.image = newValue ?? '';
-                break;
-            case 'hit-padding':
-                this.hitPadding = parseVec4(newValue, Vec4.ZERO, name);
-                break;
-            case 'transition-mode':
-                this.transitionMode = parseEnum(newValue, transitionModes, 'tint', name);
-                break;
-            case 'hover-tint':
-                this.hoverTint = parseColor(newValue, new Color(0.75, 0.75, 0.75, 1), name);
-                break;
-            case 'pressed-tint':
-                this.pressedTint = parseColor(newValue, new Color(0.5, 0.5, 0.5, 1), name);
-                break;
-            case 'inactive-tint':
-                this.inactiveTint = parseColor(newValue, new Color(0.25, 0.25, 0.25, 1), name);
-                break;
-            case 'fade-duration':
-                this.fadeDuration = parseNumber(newValue, 0, name);
                 break;
             case 'hover-sprite-asset':
                 this.hoverSpriteAsset = newValue ?? '';
                 break;
-            case 'hover-sprite-frame':
-                this.hoverSpriteFrame = parseNumber(newValue, 0, name);
-                break;
             case 'pressed-sprite-asset':
                 this.pressedSpriteAsset = newValue ?? '';
-                break;
-            case 'pressed-sprite-frame':
-                this.pressedSpriteFrame = parseNumber(newValue, 0, name);
                 break;
             case 'inactive-sprite-asset':
                 this.inactiveSpriteAsset = newValue ?? '';
                 break;
-            case 'inactive-sprite-frame':
-                this.inactiveSpriteFrame = parseNumber(newValue, 0, name);
-                break;
         }
     }
 }
+
+defineAttributes(ButtonComponentElement, 'component', {
+    active: attr.bool(true),
+    fadeDuration: attr.number(0),
+    hitPadding: attr.vec4(Vec4.ZERO),
+    hoverSpriteFrame: attr.number(0),
+    hoverTint: attr.color(new Color(0.75, 0.75, 0.75, 1)),
+    inactiveSpriteFrame: attr.number(0),
+    inactiveTint: attr.color(new Color(0.25, 0.25, 0.25, 1)),
+    pressedSpriteFrame: attr.number(0),
+    pressedTint: attr.color(new Color(0.5, 0.5, 0.5, 1)),
+    transitionMode: attr.oneOf(transitionModes, 'tint')
+});
 
 globalThis.customElements?.define('pc-button', ButtonComponentElement);
 

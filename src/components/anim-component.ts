@@ -2,9 +2,10 @@ import type { AnimComponent, Asset, ContainerResource, Entity } from 'playcanvas
 import { ANIM_CONTROL_STATES, AnimTrack } from 'playcanvas';
 
 import { AssetElement } from '../asset';
+import { attr, defineAttributes } from '../attributes';
 import type { EntityBaseElement } from '../entity-base';
 import { ModelElement } from '../model';
-import { parseBool, parseNumber } from '../parse';
+import { parseNumber } from '../parse';
 
 import type { AnimClipElement } from './anim-clip';
 import { ComponentElement } from './component';
@@ -57,9 +58,15 @@ type PlaybackState = {
  */
 class AnimComponentElement extends ComponentElement<AnimComponent> {
     /**
-     * Whether playback starts automatically once a clip is assigned.
+     * Whether playback starts automatically once a clip is assigned. Defaults to `true`. Applies
+     * when clips are assigned — it does not stop a clip that is already playing.
      */
-    private _activate = true;
+    declare activate: boolean;
+
+    /**
+     * The playback speed multiplier applied across all clips. 0 freezes playback. Defaults to 1.
+     */
+    declare speed: number;
 
     /**
      * The clip elements whose states are currently assigned, by clip name. The single writer of
@@ -96,11 +103,6 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
      * superseded pass cannot assign clips alongside declared children or a newer pass.
      */
     private _sourceGeneration = 0;
-
-    /**
-     * The playback speed multiplier applied across all clips.
-     */
-    private _speed = 1;
 
     /**
      * The cross-fade duration of declarative clip switches, in seconds.
@@ -192,15 +194,6 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
         super('anim');
     }
 
-    protected getInitialComponentData() {
-        // The engine assigns creation data in key order and `activate` gates playback, so it
-        // must precede any future key that builds layers (e.g. a state graph)
-        return {
-            activate: this._activate,
-            speed: this._speed
-        };
-    }
-
     protected initComponent() {
         if (!this.component) {
             return;
@@ -271,7 +264,9 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
             return false;
         }
         if (name.indexOf('.') !== -1) {
-            clip._markInvalid(`pc-anim-clip '${name}' - '.' in a clip name is reserved for blend tree paths - clip not assigned`);
+            clip._markInvalid(
+                `pc-anim-clip '${name}' - '.' in a clip name is reserved for blend tree paths - clip not assigned`
+            );
             return false;
         }
         if (this._assignedClips.has(name)) {
@@ -352,7 +347,9 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
                 continue;
             }
             if (track.name.indexOf('.') !== -1) {
-                console.warn(`pc-anim${label} - track '${track.name}' - '.' in a clip name is reserved for blend tree paths - track skipped`);
+                console.warn(
+                    `pc-anim${label} - track '${track.name}' - '.' in a clip name is reserved for blend tree paths - track skipped`
+                );
                 continue;
             }
             if (seen.has(track.name)) {
@@ -432,12 +429,14 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
         // binding root before the reassignment binds against it.
         this._applyRootBone();
         const layer = component.baseLayer;
-        const restore = layer ? {
-            state: layer.activeState,
-            time: layer.activeStateCurrentTime,
-            playing: component.playing,
-            layerPlaying: layer.playing
-        } : undefined;
+        const restore = layer
+            ? {
+                  state: layer.activeState,
+                  time: layer.activeStateCurrentTime,
+                  playing: component.playing,
+                  layerPlaying: layer.playing
+              }
+            : undefined;
         component.removeStateGraph();
         this._applyClips(restore);
     }
@@ -614,27 +613,7 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
      */
     get clips(): string[] {
         const layer = this.component ? this.component.baseLayer : null;
-        return layer ? layer.states.filter(state => !ANIM_CONTROL_STATES.includes(state)) : [];
-    }
-
-    /**
-     * Sets whether playback starts automatically once a clip is assigned. Defaults to `true`.
-     * Applies when clips are assigned — it does not stop a clip that is already playing.
-     * @param value - Whether playback starts automatically.
-     */
-    set activate(value: boolean) {
-        this._activate = value;
-        if (this.component) {
-            this.component.activate = value;
-        }
-    }
-
-    /**
-     * Gets whether playback starts automatically once a clip is assigned.
-     * @returns Whether playback starts automatically.
-     */
-    get activate() {
-        return this._activate;
+        return layer ? layer.states.filter((state) => !ANIM_CONTROL_STATES.includes(state)) : [];
     }
 
     /**
@@ -673,26 +652,6 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
     }
 
     /**
-     * Sets the playback speed multiplier applied across all clips, where 0 freezes playback.
-     * Defaults to 1.
-     * @param value - The playback speed multiplier.
-     */
-    set speed(value: number) {
-        this._speed = value;
-        if (this.component) {
-            this.component.speed = value;
-        }
-    }
-
-    /**
-     * Gets the playback speed multiplier applied across all clips.
-     * @returns The playback speed multiplier.
-     */
-    get speed() {
-        return this._speed;
-    }
-
-    /**
      * Sets the cross-fade duration of clip switches made through the `clip` attribute, in
      * seconds. Defaults to 0 (a hard cut).
      * @param value - The cross-fade duration in seconds.
@@ -710,21 +669,15 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
     }
 
     static get observedAttributes() {
-        return [...super.observedAttributes, 'activate', 'clip', 'speed', 'transition-time'];
+        return [...super.observedAttributes, 'clip', 'transition-time'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'activate':
-                this.activate = parseBool(newValue, true);
-                break;
             case 'clip':
                 this.clip = newValue ?? '';
-                break;
-            case 'speed':
-                this.speed = parseNumber(newValue, 1, name);
                 break;
             case 'transition-time':
                 this.transitionTime = parseNumber(newValue, 0, name);
@@ -732,6 +685,11 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
         }
     }
 }
+
+defineAttributes(AnimComponentElement, 'component', {
+    activate: attr.bool(true),
+    speed: attr.number(1)
+});
 
 globalThis.customElements?.define('pc-anim', AnimComponentElement);
 

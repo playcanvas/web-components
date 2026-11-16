@@ -2,6 +2,7 @@ import type { Component } from 'playcanvas';
 
 import type { AppElement } from '../app';
 import { AsyncElement } from '../async-element';
+import { applyAttribute, attributeNames, engineData } from '../attributes';
 import type { EntityBaseElement } from '../entity-base';
 import { parseBool } from '../parse';
 
@@ -53,14 +54,15 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
     }
 
     /**
-     * Returns the data the component is created with. Overridden by subclasses to supply the
-     * initial values of their cached properties. The element's `enabled` state is not among them:
-     * the base class adds it when it creates the component.
+     * Returns the data the component is created with: the value of every attribute in the
+     * subclass's schema. Overridden by subclasses that cache their properties themselves, to
+     * supply those. The element's `enabled` state is not among them: the base class adds it when
+     * it creates the component.
      *
      * @returns The initial component data.
      */
-    protected getInitialComponentData() {
-        return {};
+    protected getInitialComponentData(): object {
+        return engineData(this);
     }
 
     /**
@@ -257,10 +259,16 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['enabled'];
+        // `this` is the element class being registered, so a subclass that declares its attributes
+        // in a schema needs no override
+        return ['enabled', ...attributeNames(this)];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        if (applyAttribute(this, name, newValue)) {
+            return;
+        }
+
         switch (name) {
             case 'enabled':
                 this.enabled = parseBool(newValue, true);

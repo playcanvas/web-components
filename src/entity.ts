@@ -1,7 +1,8 @@
 import { Vec3 } from 'playcanvas';
 
+import { applyAttribute, attributeNames } from './attributes';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
-import { parseBool, parseTags, parseVec3 } from './parse';
+import { parseTags, parseVec3 } from './parse';
 
 /**
  * The EntityElement interface provides properties and methods for manipulating
@@ -106,17 +107,13 @@ class EntityElement extends EntityOwnerElement {
     }
 
     static get observedAttributes() {
-        return ['enabled', 'name', 'position', 'rotation', 'scale', 'tags'];
+        return [...attributeNames(this), 'position', 'rotation', 'scale', 'tags'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
-            case 'enabled':
-                this.enabled = parseBool(newValue, true);
-                break;
-            case 'name':
-                this.name = newValue ?? 'Untitled';
-                break;
             case 'position':
                 this.position = parseVec3(newValue, Vec3.ZERO, name);
                 break;

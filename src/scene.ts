@@ -2,13 +2,21 @@ import type { AppBase, Scene } from 'playcanvas';
 import { Color, Vec3 } from 'playcanvas';
 
 import { AsyncElement } from './async-element';
+import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
 import type { OpacityDither } from './material';
 import { parseBool, parseColor, parseEnum, parseNumber, parseVec3 } from './parse';
 import { ListenerRegistry } from './pointer-events';
 
 // Every material opacity dither but `none`, which is not a coverage pattern - the Engine rejects it
 // here, and `gsplat-stochastic` is what turns dithering off.
-const gsplatDithers: Exclude<OpacityDither, 'none'>[] = ['bayer2', 'bayer4', 'bayer8', 'bayer16', 'bluenoise', 'ignnoise'];
+const gsplatDithers: Exclude<OpacityDither, 'none'>[] = [
+    'bayer2',
+    'bayer4',
+    'bayer8',
+    'bayer16',
+    'bluenoise',
+    'ignnoise'
+];
 
 /**
  * The SceneElement interface provides properties and methods for manipulating
@@ -29,9 +37,10 @@ const gsplatDithers: Exclude<OpacityDither, 'none'>[] = ['bayer2', 'bayer4', 'ba
  */
 class SceneElement extends AsyncElement {
     /**
-     * The exposure of the scene.
+     * The exposure of the scene. It tweaks the overall brightness of the rendered image. Ignored if
+     * the scene is using physical units. Defaults to 1.
      */
-    private _exposure = 1;
+    declare exposure: number;
 
     /**
      * The fog type of the scene.
@@ -237,7 +246,7 @@ class SceneElement extends AsyncElement {
 
     private _updateSceneSettings() {
         if (this._scene) {
-            this._scene.exposure = this._exposure;
+            this._scene.exposure = this.exposure;
 
             this._scene.fog.type = this._fog;
             this._scene.fog.color = this._fogColor;
@@ -267,26 +276,6 @@ class SceneElement extends AsyncElement {
      */
     private _applyGravity(value: Vec3) {
         this.closestApp?.app?.systems.rigidbody?.gravity.copy(value);
-    }
-
-    /**
-     * Sets the exposure of the scene, which tweaks the overall brightness of the rendered image.
-     * Ignored if the scene is using physical units. Defaults to 1.
-     * @param value - The exposure.
-     */
-    set exposure(value: number) {
-        this._exposure = value;
-        if (this.scene) {
-            this.scene.exposure = value;
-        }
-    }
-
-    /**
-     * Gets the exposure of the scene.
-     * @returns The exposure.
-     */
-    get exposure() {
-        return this._exposure;
     }
 
     /**
@@ -556,7 +545,7 @@ class SceneElement extends AsyncElement {
 
     static get observedAttributes() {
         return [
-            'exposure',
+            ...attributeNames(this),
             'fog',
             'fog-color',
             'fog-density',
@@ -574,10 +563,9 @@ class SceneElement extends AsyncElement {
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
-            case 'exposure':
-                this.exposure = parseNumber(newValue, 1, name);
-                break;
             case 'fog':
                 this.fog = parseEnum(newValue, ['none', 'linear', 'exp', 'exp2'], 'none', name);
                 break;
@@ -621,6 +609,10 @@ class SceneElement extends AsyncElement {
         }
     }
 }
+
+defineAttributes(SceneElement, 'scene', {
+    exposure: attr.number(1)
+});
 
 globalThis.customElements?.define('pc-scene', SceneElement);
 

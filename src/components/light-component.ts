@@ -16,7 +16,7 @@ import {
     SHADOW_VSM_32F
 } from 'playcanvas';
 
-import { parseBool, parseBoundingBox, parseColor, parseEnum, parseNumber } from '../parse';
+import { attr, defineAttributes } from '../attributes';
 
 import { ComponentElement } from './component';
 
@@ -65,413 +65,115 @@ const lightShapes = new Map<LightShape, number>([
  * @category Components
  */
 class LightComponentElement extends ComponentElement<LightComponent> {
-    private _cascadeBlend = 0;
-
-    private _cascadeDistribution = 0.5;
-
-    private _castShadows = false;
-
-    private _color = new Color(1, 1, 1);
-
-    private _innerConeAngle = 40;
-
-    private _intensity = 1;
-
-    private _normalOffsetBias = 0;
-
-    private _numCascades = 1;
-
-    private _outerConeAngle = 45;
-
-    private _range = 10;
-
-    private _shadowBias = 0.05;
-
-    private _shadowBounds: BoundingBox | null = null;
-
-    private _shadowDistance = 40;
-
-    private _shadowIntensity = 1;
-
-    private _shadowResolution = 1024;
-
-    private _shadowType:
-        | 'pcf1-16f'
-        | 'pcf1-32f'
-        | 'pcf3-16f'
-        | 'pcf3-32f'
-        | 'pcf5-16f'
-        | 'pcf5-32f'
-        | 'vsm-16f'
-        | 'vsm-32f'
-        | 'pcss-32f' = 'pcf3-32f';
-
-    private _shape: LightShape = 'punctual';
-
-    private _type: 'directional' | 'omni' | 'spot' = 'directional';
-
-    private _vsmBias = 0.0025;
-
-    private _vsmBlurSize = 11;
-
-    private _volumetricScattering = 1;
-
-    private _penumbraSize = 1;
-
-    private _penumbraFalloff = 1;
-
-    private _shadowSamples = 16;
-
-    private _shadowBlockerSamples = 16;
-
-    /** @ignore */
-    constructor() {
-        super('light');
-    }
-
-    protected getInitialComponentData() {
-        return {
-            cascadeBlend: this._cascadeBlend,
-            cascadeDistribution: this._cascadeDistribution,
-            castShadows: this._castShadows,
-            color: this._color,
-            innerConeAngle: this._innerConeAngle,
-            intensity: this._intensity,
-            normalOffsetBias: this._normalOffsetBias,
-            numCascades: this._numCascades,
-            outerConeAngle: this._outerConeAngle,
-            penumbraFalloff: this._penumbraFalloff,
-            penumbraSize: this._penumbraSize,
-            range: this._range,
-            shadowBias: this._shadowBias,
-            shadowBlockerSamples: this._shadowBlockerSamples,
-            // The engine reads null as "no bounds": cascades fitted to each camera
-            shadowBounds: this._shadowBounds,
-            shadowDistance: this._shadowDistance,
-            shadowIntensity: this._shadowIntensity,
-            shadowResolution: this._shadowResolution,
-            shadowSamples: this._shadowSamples,
-            shadowType: shadowTypes.get(this._shadowType) ?? SHADOW_PCF3_32F,
-            shape: lightShapes.get(this._shape) ?? LIGHTSHAPE_PUNCTUAL,
-            type: this._type,
-            volumetricScattering: this._volumetricScattering,
-            vsmBias: this._vsmBias,
-            vsmBlurSize: this._vsmBlurSize
-        };
-    }
-
     /**
-     * Gets the underlying PlayCanvas light component. `null` until the element is
-     * ready — see {@link ComponentElement.component}.
-     * @returns The light component, or `null`.
+     * The cascade blend factor of the light, from 0 (no blending) to 1, which applies only to
+     * `directional` lights with `num-cascades` greater than 1. It is the fraction of each shadow
+     * cascade that is blended into the next one. Defaults to 0.
      */
-    get component(): LightComponent | null {
-        return super.component;
-    }
+    declare cascadeBlend: number;
 
     /**
-     * Sets the fraction of each shadow cascade that is blended into the next one, from 0 (no
-     * blending) to 1, which applies only to `directional` lights with `num-cascades` greater than
-     * 1. Defaults to 0.
-     * @param value - The cascade blend factor.
-     */
-    set cascadeBlend(value: number) {
-        this._cascadeBlend = value;
-        if (this.component) {
-            this.component.cascadeBlend = value;
-        }
-    }
-
-    /**
-     * Gets the cascade blend factor of the light, from 0 (no blending) to 1, which applies only to
-     * `directional` lights with `num-cascades` greater than 1.
-     * @returns The cascade blend factor.
-     */
-    get cascadeBlend() {
-        return this._cascadeBlend;
-    }
-
-    /**
-     * Sets the distribution of the camera frustum split between shadow cascades, from 0 (linear
-     * split) to 1 (logarithmic split, concentrating shadow resolution near the camera), which
-     * applies only to `directional` lights with `num-cascades` greater than 1. Defaults to 0.5.
-     * @param value - The cascade distribution.
-     */
-    set cascadeDistribution(value: number) {
-        this._cascadeDistribution = value;
-        if (this.component) {
-            this.component.cascadeDistribution = value;
-        }
-    }
-
-    /**
-     * Gets the cascade distribution of the light, from 0 (linear split) to 1 (logarithmic split,
+     * The cascade distribution of the light, from 0 (linear split) to 1 (logarithmic split,
      * concentrating shadow resolution near the camera), which applies only to `directional` lights
-     * with `num-cascades` greater than 1.
-     * @returns The cascade distribution.
+     * with `num-cascades` greater than 1. It is how the camera frustum is split between shadow
+     * cascades. Defaults to 0.5.
      */
-    get cascadeDistribution() {
-        return this._cascadeDistribution;
-    }
+    declare cascadeDistribution: number;
 
     /**
-     * Sets the cast shadows flag of the light.
-     * @param value - The cast shadows flag.
+     * The cast shadows flag of the light.
      */
-    set castShadows(value: boolean) {
-        this._castShadows = value;
-        if (this.component) {
-            this.component.castShadows = value;
-        }
-    }
+    declare castShadows: boolean;
 
     /**
-     * Gets the cast shadows flag of the light.
-     * @returns The cast shadows flag.
+     * The color of the light.
      */
-    get castShadows() {
-        return this._castShadows;
-    }
+    declare color: Color;
 
     /**
-     * Sets the color of the light.
-     * @param value - The color.
+     * The inner cone angle of the light.
      */
-    set color(value: Color) {
-        this._color = value;
-        if (this.component) {
-            this.component.color = value;
-        }
-    }
+    declare innerConeAngle: number;
 
     /**
-     * Gets the color of the light.
-     * @returns The color.
+     * The intensity of the light.
      */
-    get color() {
-        return this._color;
-    }
+    declare intensity: number;
 
     /**
-     * Sets the inner cone angle of the light.
-     * @param value - The inner cone angle.
+     * The normal offset bias of the light.
      */
-    set innerConeAngle(value: number) {
-        this._innerConeAngle = value;
-        if (this.component) {
-            this.component.innerConeAngle = value;
-        }
-    }
+    declare normalOffsetBias: number;
 
     /**
-     * Gets the inner cone angle of the light.
-     * @returns The inner cone angle.
-     */
-    get innerConeAngle() {
-        return this._innerConeAngle;
-    }
-
-    /**
-     * Sets the intensity of the light.
-     * @param value - The intensity.
-     */
-    set intensity(value: number) {
-        this._intensity = value;
-        if (this.component) {
-            this.component.intensity = value;
-        }
-    }
-
-    /**
-     * Gets the intensity of the light.
-     * @returns The intensity.
-     */
-    get intensity() {
-        return this._intensity;
-    }
-
-    /**
-     * Sets the normal offset bias of the light.
-     * @param value - The normal offset bias.
-     */
-    set normalOffsetBias(value: number) {
-        this._normalOffsetBias = value;
-        if (this.component) {
-            this.component.normalOffsetBias = value;
-        }
-    }
-
-    /**
-     * Gets the normal offset bias of the light.
-     * @returns The normal offset bias.
-     */
-    get normalOffsetBias() {
-        return this._normalOffsetBias;
-    }
-
-    /**
-     * Sets the number of shadow cascades of the light, an integer from 1 (no cascades) to 4, which
+     * The number of shadow cascades of the light, an integer from 1 (no cascades) to 4, which
      * applies only to `directional` lights. Defaults to 1.
-     * @param value - The number of shadow cascades.
      */
-    set numCascades(value: number) {
-        this._numCascades = value;
-        if (this.component) {
-            this.component.numCascades = value;
-        }
-    }
+    declare numCascades: number;
 
     /**
-     * Gets the number of shadow cascades of the light, an integer from 1 (no cascades) to 4, which
-     * applies only to `directional` lights.
-     * @returns The number of shadow cascades.
+     * The outer cone angle of the light.
      */
-    get numCascades() {
-        return this._numCascades;
-    }
+    declare outerConeAngle: number;
 
     /**
-     * Sets the outer cone angle of the light.
-     * @param value - The outer cone angle.
+     * The penumbra falloff of the light. Used for PCSS shadows.
      */
-    set outerConeAngle(value: number) {
-        this._outerConeAngle = value;
-        if (this.component) {
-            this.component.outerConeAngle = value;
-        }
-    }
+    declare penumbraFalloff: number;
 
     /**
-     * Gets the outer cone angle of the light.
-     * @returns The outer cone angle.
+     * The penumbra size of the light. Used for PCSS shadows.
      */
-    get outerConeAngle() {
-        return this._outerConeAngle;
-    }
+    declare penumbraSize: number;
 
     /**
-     * Sets the range of the light.
-     * @param value - The range.
+     * The range of the light.
      */
-    set range(value: number) {
-        this._range = value;
-        if (this.component) {
-            this.component.range = value;
-        }
-    }
+    declare range: number;
 
     /**
-     * Gets the range of the light.
-     * @returns The range.
+     * The shadow bias of the light.
      */
-    get range() {
-        return this._range;
-    }
+    declare shadowBias: number;
 
     /**
-     * Sets the shadow bias of the light.
-     * @param value - The shadow bias.
+     * The number of shadow blocker samples. Used for PCSS shadows.
      */
-    set shadowBias(value: number) {
-        this._shadowBias = value;
-        if (this.component) {
-            this.component.shadowBias = value;
-        }
-    }
+    declare shadowBlockerSamples: number;
 
     /**
-     * Gets the shadow bias of the light.
-     * @returns The shadow bias.
+     * The world space box that the shadow of a `directional` light is fitted to. It takes the
+     * place of cascades fitted to each camera: the whole shadow map then covers the box as seen
+     * from the light, which concentrates its resolution on part of a large scene. The box only
+     * needs to enclose the shadow casters: receivers further along the light, such as the ground
+     * below them, are still shadowed. While it is set, `num-cascades`, `shadow-distance`,
+     * `cascade-blend` and `cascade-distribution` are not used. Defaults to `null`, which fits the
+     * shadow to each camera as usual.
      */
-    get shadowBias() {
-        return this._shadowBias;
-    }
+    declare shadowBounds: BoundingBox | null;
 
     /**
-     * Sets a world space box that the shadow of a `directional` light is fitted to, in place of
-     * cascades fitted to each camera. The whole shadow map then covers the box as seen from the
-     * light, which concentrates its resolution on part of a large scene. The box only needs to
-     * enclose the shadow casters: receivers further along the light, such as the ground below
-     * them, are still shadowed. While it is set, `num-cascades`, `shadow-distance`,
-     * `cascade-blend` and `cascade-distribution` are not used. Defaults to `null`, which fits
-     * the shadow to each camera as usual.
-     * @param value - The shadow bounds, or `null` for none.
+     * The shadow distance of the light.
      */
-    set shadowBounds(value: BoundingBox | null) {
-        this._shadowBounds = value;
-        if (this.component) {
-            this.component.shadowBounds = value;
-        }
-    }
+    declare shadowDistance: number;
 
     /**
-     * Gets the world space box that the shadow of a `directional` light is fitted to.
-     * @returns The shadow bounds, or `null` when there are none.
+     * The shadow intensity of the light.
      */
-    get shadowBounds() {
-        return this._shadowBounds;
-    }
+    declare shadowIntensity: number;
 
     /**
-     * Sets the shadow distance of the light.
-     * @param value - The shadow distance.
+     * The shadow resolution of the light.
      */
-    set shadowDistance(value: number) {
-        this._shadowDistance = value;
-        if (this.component) {
-            this.component.shadowDistance = value;
-        }
-    }
+    declare shadowResolution: number;
 
     /**
-     * Gets the shadow distance of the light.
-     * @returns The shadow distance.
+     * The number of shadow samples. Used for PCSS shadows.
      */
-    get shadowDistance() {
-        return this._shadowDistance;
-    }
+    declare shadowSamples: number;
 
     /**
-     * Sets the shadow intensity of the light.
-     * @param value - The shadow intensity.
-     */
-    set shadowIntensity(value: number) {
-        this._shadowIntensity = value;
-        if (this.component) {
-            this.component.shadowIntensity = value;
-        }
-    }
-
-    /**
-     * Gets the shadow intensity of the light.
-     * @returns The shadow intensity.
-     */
-    get shadowIntensity() {
-        return this._shadowIntensity;
-    }
-
-    /**
-     * Sets the shadow resolution of the light.
-     * @param value - The shadow resolution.
-     */
-    set shadowResolution(value: number) {
-        this._shadowResolution = value;
-        if (this.component) {
-            this.component.shadowResolution = value;
-        }
-    }
-
-    /**
-     * Gets the shadow resolution of the light.
-     * @returns The shadow resolution.
-     */
-    get shadowResolution() {
-        return this._shadowResolution;
-    }
-
-    /**
-     * Sets the shadow type of the light.
-     * @param value - The shadow type. Can be:
+     * The shadow type of the light. Can be:
      *
      * - `pcf1-16f` - 1-tap percentage-closer filtered shadow map with 16-bit depth.
      * - `pcf1-32f` - 1-tap percentage-closer filtered shadow map with 32-bit depth.
@@ -483,37 +185,21 @@ class LightComponentElement extends ComponentElement<LightComponent> {
      * - `vsm-32f` - Variance shadow map with 32-bit depth.
      * - `pcss-32f` - Percentage-closer soft shadow with 32-bit depth.
      */
-    set shadowType(
-        value:
-            | 'pcf1-16f'
-            | 'pcf1-32f'
-            | 'pcf3-16f'
-            | 'pcf3-32f'
-            | 'pcf5-16f'
-            | 'pcf5-32f'
-            | 'vsm-16f'
-            | 'vsm-32f'
-            | 'pcss-32f'
-    ) {
-        this._shadowType = value;
-        if (this.component) {
-            this.component.shadowType = shadowTypes.get(value) ?? SHADOW_PCF3_32F;
-        }
-    }
+    declare shadowType:
+        | 'pcf1-16f'
+        | 'pcf1-32f'
+        | 'pcf3-16f'
+        | 'pcf3-32f'
+        | 'pcf5-16f'
+        | 'pcf5-32f'
+        | 'vsm-16f'
+        | 'vsm-32f'
+        | 'pcss-32f';
 
     /**
-     * Gets the shadow type of the light.
-     * @returns The shadow type.
-     */
-    get shadowType() {
-        return this._shadowType;
-    }
-
-    /**
-     * Sets the shape of the light source: `punctual` for a point, or an area light shaped as a
-     * `rect`, `disk` or `sphere` that takes its size from the entity's scale and needs the lookup
-     * tables loaded by `area-light-luts` on `<pc-app>`. Defaults to `punctual`.
-     * @param value - The light shape. Can be:
+     * The shape of the light source: `punctual`, or an area light shaped as a `rect`, `disk` or
+     * `sphere` that takes its size from the entity's scale and needs the lookup tables loaded by
+     * `area-light-luts` on `<pc-app>`. Defaults to `punctual`. Can be:
      *
      * - `punctual` - An infinitesimally small point.
      * - `rect` - A rectangle in the entity's local XZ plane, 1 by 1 at unit scale.
@@ -522,292 +208,75 @@ class LightComponentElement extends ComponentElement<LightComponent> {
      *
      * Area shapes fall off with their size and distance, so `range` is only a cutoff for them.
      */
-    set shape(value: LightShape) {
-        this._shape = value;
-        if (this.component) {
-            this.component.shape = lightShapes.get(value) ?? LIGHTSHAPE_PUNCTUAL;
-        }
+    declare shape: LightShape;
+
+    /**
+     * The type of the light. Can be `directional`, `omni` or `spot`. Defaults to `directional`.
+     */
+    declare type: 'directional' | 'omni' | 'spot';
+
+    /**
+     * How strongly the light scatters into volumetric fog, which applies only to `omni` and `spot`
+     * lights while a camera frame renders volumetric fog with local lights. It is a multiplier on
+     * the light's contribution: 0 leaves the light out of the fog. Defaults to 1.
+     */
+    declare volumetricScattering: number;
+
+    /**
+     * The VSM bias of the light.
+     */
+    declare vsmBias: number;
+
+    /**
+     * The VSM blur size of the light. Minimum is 1, maximum is 25. Default is 11.
+     */
+    declare vsmBlurSize: number;
+
+    /** @ignore */
+    constructor() {
+        super('light');
     }
 
     /**
-     * Gets the shape of the light source: `punctual`, or an area light shaped as a `rect`, `disk`
-     * or `sphere` that takes its size from the entity's scale and needs the lookup tables loaded by
-     * `area-light-luts` on `<pc-app>`.
-     * @returns The light shape.
+     * Gets the underlying PlayCanvas light component. `null` until the element is
+     * ready — see {@link ComponentElement.component}.
+     * @returns The light component, or `null`.
      */
-    get shape() {
-        return this._shape;
-    }
-
-    /**
-     * Sets the type of the light. Can be `directional`, `omni` or `spot`. Defaults to
-     * `directional`.
-     * @param value - The type.
-     */
-    set type(value: 'directional' | 'omni' | 'spot') {
-        this._type = value;
-        if (this.component) {
-            this.component.type = value;
-        }
-    }
-
-    /**
-     * Gets the type of the light.
-     * @returns The type.
-     */
-    get type() {
-        return this._type;
-    }
-
-    /**
-     * Sets the VSM bias of the light.
-     * @param value - The VSM bias.
-     */
-    set vsmBias(value: number) {
-        this._vsmBias = value;
-        if (this.component) {
-            this.component.vsmBias = value;
-        }
-    }
-
-    /**
-     * Gets the VSM bias of the light.
-     * @returns The VSM bias.
-     */
-    get vsmBias() {
-        return this._vsmBias;
-    }
-
-    /**
-     * Sets the VSM blur size of the light. Minimum is 1, maximum is 25. Default is 11.
-     * @param value - The VSM blur size.
-     */
-    set vsmBlurSize(value: number) {
-        this._vsmBlurSize = value;
-        if (this.component) {
-            this.component.vsmBlurSize = value;
-        }
-    }
-
-    /**
-     * Gets the VSM blur size of the light.
-     * @returns The VSM blur size.
-     */
-    get vsmBlurSize() {
-        return this._vsmBlurSize;
-    }
-
-    /**
-     * Sets how strongly the light scatters into volumetric fog, as a multiplier on its
-     * contribution, which applies only to `omni` and `spot` lights while a camera frame renders
-     * volumetric fog with local lights. 0 leaves the light out of the fog. Defaults to 1.
-     * @param value - The volumetric scattering multiplier.
-     */
-    set volumetricScattering(value: number) {
-        this._volumetricScattering = value;
-        if (this.component) {
-            this.component.volumetricScattering = value;
-        }
-    }
-
-    /**
-     * Gets how strongly the light scatters into volumetric fog, which applies only to `omni` and
-     * `spot` lights while a camera frame renders volumetric fog with local lights.
-     * @returns The volumetric scattering multiplier.
-     */
-    get volumetricScattering() {
-        return this._volumetricScattering;
-    }
-
-    /**
-     * Sets the penumbra size of the light. Used for PCSS shadows.
-     * @param value - The penumbra size.
-     */
-    set penumbraSize(value: number) {
-        this._penumbraSize = value;
-        if (this.component) {
-            this.component.penumbraSize = value;
-        }
-    }
-
-    /**
-     * Gets the penumbra size of the light.
-     * @returns The penumbra size.
-     */
-    get penumbraSize() {
-        return this._penumbraSize;
-    }
-
-    /**
-     * Sets the penumbra falloff of the light. Used for PCSS shadows.
-     * @param value - The penumbra falloff.
-     */
-    set penumbraFalloff(value: number) {
-        this._penumbraFalloff = value;
-        if (this.component) {
-            this.component.penumbraFalloff = value;
-        }
-    }
-
-    /**
-     * Gets the penumbra falloff of the light.
-     * @returns The penumbra falloff.
-     */
-    get penumbraFalloff() {
-        return this._penumbraFalloff;
-    }
-
-    /**
-     * Sets the number of shadow samples. Used for PCSS shadows.
-     * @param value - The number of shadow samples.
-     */
-    set shadowSamples(value: number) {
-        this._shadowSamples = value;
-        if (this.component) {
-            this.component.shadowSamples = value;
-        }
-    }
-
-    /**
-     * Gets the number of shadow samples.
-     * @returns The number of shadow samples.
-     */
-    get shadowSamples() {
-        return this._shadowSamples;
-    }
-
-    /**
-     * Sets the number of shadow blocker samples. Used for PCSS shadows.
-     * @param value - The number of shadow blocker samples.
-     */
-    set shadowBlockerSamples(value: number) {
-        this._shadowBlockerSamples = value;
-        if (this.component) {
-            this.component.shadowBlockerSamples = value;
-        }
-    }
-
-    /**
-     * Gets the number of shadow blocker samples.
-     * @returns The number of shadow blocker samples.
-     */
-    get shadowBlockerSamples() {
-        return this._shadowBlockerSamples;
-    }
-
-    static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'cascade-blend',
-            'cascade-distribution',
-            'cast-shadows',
-            'color',
-            'inner-cone-angle',
-            'intensity',
-            'normal-offset-bias',
-            'num-cascades',
-            'outer-cone-angle',
-            'penumbra-falloff',
-            'penumbra-size',
-            'range',
-            'shadow-bias',
-            'shadow-blocker-samples',
-            'shadow-bounds',
-            'shadow-distance',
-            'shadow-intensity',
-            'shadow-resolution',
-            'shadow-samples',
-            'shadow-type',
-            'shape',
-            'type',
-            'volumetric-scattering',
-            'vsm-bias',
-            'vsm-blur-size'
-        ];
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        super.attributeChangedCallback(name, _oldValue, newValue);
-
-        switch (name) {
-            case 'cascade-blend':
-                this.cascadeBlend = parseNumber(newValue, 0, name);
-                break;
-            case 'cascade-distribution':
-                this.cascadeDistribution = parseNumber(newValue, 0.5, name);
-                break;
-            case 'cast-shadows':
-                this.castShadows = parseBool(newValue, false);
-                break;
-            case 'color':
-                this.color = parseColor(newValue, Color.WHITE, name);
-                break;
-            case 'inner-cone-angle':
-                this.innerConeAngle = parseNumber(newValue, 40, name);
-                break;
-            case 'intensity':
-                this.intensity = parseNumber(newValue, 1, name);
-                break;
-            case 'normal-offset-bias':
-                this.normalOffsetBias = parseNumber(newValue, 0, name);
-                break;
-            case 'num-cascades':
-                this.numCascades = parseNumber(newValue, 1, name);
-                break;
-            case 'outer-cone-angle':
-                this.outerConeAngle = parseNumber(newValue, 45, name);
-                break;
-            case 'penumbra-falloff':
-                this.penumbraFalloff = parseNumber(newValue, 1, name);
-                break;
-            case 'penumbra-size':
-                this.penumbraSize = parseNumber(newValue, 1, name);
-                break;
-            case 'range':
-                this.range = parseNumber(newValue, 10, name);
-                break;
-            case 'shadow-bias':
-                this.shadowBias = parseNumber(newValue, 0.05, name);
-                break;
-            case 'shadow-blocker-samples':
-                this.shadowBlockerSamples = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-bounds':
-                this.shadowBounds = parseBoundingBox(newValue, null, name);
-                break;
-            case 'shadow-distance':
-                this.shadowDistance = parseNumber(newValue, 40, name);
-                break;
-            case 'shadow-intensity':
-                this.shadowIntensity = parseNumber(newValue, 1, name);
-                break;
-            case 'shadow-resolution':
-                this.shadowResolution = parseNumber(newValue, 1024, name);
-                break;
-            case 'shadow-samples':
-                this.shadowSamples = parseNumber(newValue, 16, name);
-                break;
-            case 'shadow-type':
-                this.shadowType = parseEnum(newValue, shadowTypes, 'pcf3-32f', name);
-                break;
-            case 'shape':
-                this.shape = parseEnum(newValue, lightShapes, 'punctual', name);
-                break;
-            case 'type':
-                this.type = parseEnum(newValue, ['directional', 'omni', 'spot'], 'directional', name);
-                break;
-            case 'volumetric-scattering':
-                this.volumetricScattering = parseNumber(newValue, 1, name);
-                break;
-            case 'vsm-bias':
-                this.vsmBias = parseNumber(newValue, 0.0025, name);
-                break;
-            case 'vsm-blur-size':
-                this.vsmBlurSize = parseNumber(newValue, 11, name);
-                break;
-        }
+    get component(): LightComponent | null {
+        return super.component;
     }
 }
+
+// Each attribute's parser and default and, for the two enums that are maps, the engine constant
+// behind each name. The engine reads a null `shadowBounds` as "no bounds": cascades fitted to each
+// camera.
+defineAttributes(LightComponentElement, 'component', {
+    cascadeBlend: attr.number(0),
+    cascadeDistribution: attr.number(0.5),
+    castShadows: attr.bool(false),
+    color: attr.color(Color.WHITE),
+    innerConeAngle: attr.number(40),
+    intensity: attr.number(1),
+    normalOffsetBias: attr.number(0),
+    numCascades: attr.number(1),
+    outerConeAngle: attr.number(45),
+    penumbraFalloff: attr.number(1),
+    penumbraSize: attr.number(1),
+    range: attr.number(10),
+    shadowBias: attr.number(0.05),
+    shadowBlockerSamples: attr.number(16),
+    shadowBounds: attr.boundingBox(null),
+    shadowDistance: attr.number(40),
+    shadowIntensity: attr.number(1),
+    shadowResolution: attr.number(1024),
+    shadowSamples: attr.number(16),
+    shadowType: attr.oneOf(shadowTypes, 'pcf3-32f'),
+    shape: attr.oneOf(lightShapes, 'punctual'),
+    type: attr.oneOf(['directional', 'omni', 'spot'], 'directional'),
+    volumetricScattering: attr.number(1),
+    vsmBias: attr.number(0.0025),
+    vsmBlurSize: attr.number(11)
+});
 
 globalThis.customElements?.define('pc-light', LightComponentElement);
 

@@ -1,8 +1,8 @@
 import type { Plane, RenderComponent, StandardMaterial } from 'playcanvas';
 import { SHADOW_CASCADE_0, SHADOW_CASCADE_1, SHADOW_CASCADE_2, SHADOW_CASCADE_3 } from 'playcanvas';
 
+import { attr, defineAttributes } from '../attributes';
 import { MaterialElement } from '../material';
-import { parseBool, parseEnum, parseFlags, parsePlanes } from '../parse';
 
 import { ComponentElement } from './component';
 
@@ -13,11 +13,6 @@ const shadowCascades = new Map<'0' | '1' | '2' | '3', number>([
     ['2', SHADOW_CASCADE_2],
     ['3', SHADOW_CASCADE_3]
 ]);
-
-// Every cascade, which is how the markup default `0 1 2 3` combines. The engine's own default,
-// SHADOW_CASCADE_ALL, sets the bits of cascades it does not have as well (255 rather than 15), but
-// directional lights stop at four cascades, so the two render the same.
-const ALL_CASCADES = SHADOW_CASCADE_0 | SHADOW_CASCADE_1 | SHADOW_CASCADE_2 | SHADOW_CASCADE_3;
 
 /**
  * The RenderComponentElement interface provides properties and methods for manipulating
@@ -39,19 +34,45 @@ const ALL_CASCADES = SHADOW_CASCADE_0 | SHADOW_CASCADE_1 | SHADOW_CASCADE_2 | SH
  * @category Components
  */
 class RenderComponentElement extends ComponentElement<RenderComponent> {
-    private _castShadows = true;
+    /**
+     * The cast shadows flag of the render component.
+     */
+    declare castShadows: boolean;
 
-    private _clipIntersection = false;
+    /**
+     * Whether the clipping planes of the render component clip only what is behind all of them, in
+     * place of what is behind any of them. Two planes then cut out a wedge, and three a corner.
+     * Defaults to false.
+     */
+    declare clipIntersection: boolean;
 
-    private _clippingPlanes: Plane[] = [];
+    /**
+     * The planes, in world space, that cut the render component open. They cut as a cutaway does:
+     * what is behind a plane, on the side its normal points away from, is not rendered, casts no
+     * shadow and cannot be picked. The rest of the scene stays whole. Up to 8 planes are used. The
+     * planes are copied, so assign the array again to apply a change to one. Defaults to no planes.
+     */
+    declare clippingPlanes: Plane[];
+
+    /**
+     * The receive shadows flag of the render component.
+     */
+    declare receiveShadows: boolean;
+
+    /**
+     * Which shadow cascades of directional lights the render component casts into, which needs
+     * `cast-shadows`. In markup, it is the space-separated cascade indices from 0 to 3, such as `0
+     * 1` for the two cascades nearest the camera; as a property, it is the engine's bitmask of
+     * `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags. Defaults to all cascades, `0 1 2 3`.
+     */
+    declare shadowCascadeMask: number;
+
+    /**
+     * The type of the render component.
+     */
+    declare type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus';
 
     private _material = '';
-
-    private _receiveShadows = true;
-
-    private _shadowCascadeMask = ALL_CASCADES;
-
-    private _type: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus' = 'box';
 
     /** @ignore */
     constructor() {
@@ -59,14 +80,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
     }
 
     protected getInitialComponentData() {
-        const data: Record<string, unknown> = {
-            type: this._type,
-            castShadows: this._castShadows,
-            clipIntersection: this._clipIntersection,
-            clippingPlanes: this._clippingPlanes,
-            receiveShadows: this._receiveShadows,
-            shadowCascadeMask: this._shadowCascadeMask
-        };
+        const data: Record<string, unknown> = { ...super.getInitialComponentData() };
 
         // Only a resolved material is passed on: an undefined one would replace the engine's
         // default material with nothing at the component level
@@ -85,89 +99,6 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
      */
     get component(): RenderComponent | null {
         return super.component;
-    }
-
-    /**
-     * Sets the type of the render component.
-     * @param value - The type.
-     */
-    set type(value: 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus') {
-        this._type = value;
-        if (this.component) {
-            this.component.type = value;
-        }
-    }
-
-    /**
-     * Gets the type of the render component.
-     * @returns The type.
-     */
-    get type(): 'box' | 'capsule' | 'cone' | 'cylinder' | 'plane' | 'sphere' | 'torus' {
-        return this._type;
-    }
-
-    /**
-     * Sets the cast shadows flag of the render component.
-     * @param value - The cast shadows flag.
-     */
-    set castShadows(value: boolean) {
-        this._castShadows = value;
-        if (this.component) {
-            this.component.castShadows = value;
-        }
-    }
-
-    /**
-     * Gets the cast shadows flag of the render component.
-     * @returns The cast shadows flag.
-     */
-    get castShadows(): boolean {
-        return this._castShadows;
-    }
-
-    /**
-     * Sets whether the clipping planes of the render component clip only what is behind all of
-     * them, in place of what is behind any of them: two planes then cut out a wedge, and three a
-     * corner. Defaults to false.
-     * @param value - Whether only what is behind all of the planes is clipped.
-     */
-    set clipIntersection(value: boolean) {
-        this._clipIntersection = value;
-        if (this.component) {
-            this.component.clipIntersection = value;
-        }
-    }
-
-    /**
-     * Gets whether the clipping planes of the render component clip only what is behind all of
-     * them, in place of what is behind any of them.
-     * @returns Whether only what is behind all of the planes is clipped.
-     */
-    get clipIntersection(): boolean {
-        return this._clipIntersection;
-    }
-
-    /**
-     * Sets the planes, in world space, that cut the render component open, as a cutaway does.
-     * What is behind a plane, on the side its normal points away from, is not rendered, casts no
-     * shadow and cannot be picked. The rest of the scene stays whole. Up to 8 planes are used.
-     * The planes are copied, so assign the array again to apply a change to one. Defaults to no
-     * planes.
-     * @param value - The clipping planes.
-     */
-    set clippingPlanes(value: Plane[]) {
-        this._clippingPlanes = value;
-        if (this.component) {
-            this.component.clippingPlanes = value;
-        }
-    }
-
-    /**
-     * Gets the planes, in world space, that cut the render component open.
-     * @returns The clipping planes.
-     */
-    get clippingPlanes(): Plane[] {
-        return this._clippingPlanes;
     }
 
     /**
@@ -194,95 +125,32 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
         return this._material;
     }
 
-    /**
-     * Sets the receive shadows flag of the render component.
-     * @param value - The receive shadows flag.
-     */
-    set receiveShadows(value: boolean) {
-        this._receiveShadows = value;
-        if (this.component) {
-            this.component.receiveShadows = value;
-        }
-    }
-
-    /**
-     * Gets the receive shadows flag of the render component.
-     * @returns The receive shadows flag.
-     */
-    get receiveShadows(): boolean {
-        return this._receiveShadows;
-    }
-
-    /**
-     * Sets which shadow cascades of directional lights the render component casts into, which
-     * needs `cast-shadows`. In markup, it is the space-separated cascade indices from 0 to 3, such
-     * as `0 1` for the two cascades nearest the camera; as a property, it is the engine's bitmask
-     * of `SHADOW_CASCADE_0` to `SHADOW_CASCADE_3` flags. Defaults to all cascades, `0 1 2 3`.
-     * @param value - The cascade mask.
-     */
-    set shadowCascadeMask(value: number) {
-        this._shadowCascadeMask = value;
-        if (this.component) {
-            this.component.shadowCascadeMask = value;
-        }
-    }
-
-    /**
-     * Gets which shadow cascades of directional lights the render component casts into, which
-     * needs `cast-shadows`. As a property, it is a bitmask of `SHADOW_CASCADE_0` to
-     * `SHADOW_CASCADE_3` flags.
-     * @returns The cascade mask.
-     */
-    get shadowCascadeMask() {
-        return this._shadowCascadeMask;
-    }
-
     static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'cast-shadows',
-            'clip-intersection',
-            'clipping-planes',
-            'material',
-            'receive-shadows',
-            'shadow-cascade-mask',
-            'type'
-        ];
+        return [...super.observedAttributes, 'material'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
         super.attributeChangedCallback(name, _oldValue, newValue);
 
         switch (name) {
-            case 'cast-shadows':
-                this.castShadows = parseBool(newValue, true);
-                break;
-            case 'clip-intersection':
-                this.clipIntersection = parseBool(newValue, false);
-                break;
-            case 'clipping-planes':
-                this.clippingPlanes = parsePlanes(newValue, name);
-                break;
             case 'material':
                 this.material = newValue ?? '';
-                break;
-            case 'receive-shadows':
-                this.receiveShadows = parseBool(newValue, true);
-                break;
-            case 'shadow-cascade-mask':
-                this.shadowCascadeMask = parseFlags(newValue, shadowCascades, '0 1 2 3', name);
-                break;
-            case 'type':
-                this.type = parseEnum(
-                    newValue,
-                    ['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere', 'torus'],
-                    'box',
-                    name
-                );
                 break;
         }
     }
 }
+
+// The cascade mask defaults to every cascade, which is how `0 1 2 3` combines. The engine's own
+// default, SHADOW_CASCADE_ALL, sets the bits of cascades it does not have as well (255 rather than
+// 15), but directional lights stop at four cascades, so the two render the same.
+defineAttributes(RenderComponentElement, 'component', {
+    castShadows: attr.bool(true),
+    clipIntersection: attr.bool(false),
+    clippingPlanes: attr.planes(),
+    receiveShadows: attr.bool(true),
+    shadowCascadeMask: attr.flags(shadowCascades, '0 1 2 3'),
+    type: attr.oneOf(['box', 'capsule', 'cone', 'cylinder', 'plane', 'sphere', 'torus'], 'box')
+});
 
 globalThis.customElements?.define('pc-render', RenderComponentElement);
 

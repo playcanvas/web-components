@@ -1,7 +1,7 @@
 import type { GSplatComponent } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
-import { parseBool, parseNumber } from '../parse';
+import { attr, defineAttributes } from '../attributes';
 
 import { ComponentElement } from './component';
 
@@ -20,17 +20,45 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class GSplatComponentElement extends ComponentElement<GSplatComponent> {
+    /**
+     * Whether the splat casts shadows.
+     */
+    declare castShadows: boolean;
+
+    /**
+     * The camera distance of the first LOD transition. That is the one from LOD 0 to LOD 1: parts
+     * of the splat closer than this use the finest LOD, and each further level starts at {@link
+     * lodMultiplier} times the previous distance. In world units, compensated for the camera's
+     * field of view. How these distances combine with the scene-wide splat budget is set by the
+     * `gsplat-splat-budget-mode` attribute of `<pc-scene>`. Clamped to a minimum of 0.1. Defaults
+     * to 5. Only affects assets that contain LOD levels (e.g. `.lod-meta.json`).
+     */
+    declare lodBaseDistance: number;
+
+    /**
+     * The multiplier between successive LOD transition distances. Higher values keep finer detail
+     * further from the camera, at a higher memory cost; lower values switch to coarser levels
+     * sooner. Clamped to a minimum of 1.2. Defaults to 3. Only affects assets that contain LOD
+     * levels (e.g. `.lod-meta.json`).
+     */
+    declare lodMultiplier: number;
+
+    /**
+     * The maximum allowed LOD index. It is inclusive: the LOD selected by distance is clamped so it
+     * never goes coarser (higher index) than this value. The default of 99 effectively means "no
+     * cap". Only affects assets that contain LOD levels (e.g. `.lod-meta.json`).
+     */
+    declare lodRangeMax: number;
+
+    /**
+     * The minimum allowed LOD index. It is inclusive: the LOD selected by distance is clamped so it
+     * never goes finer (lower index) than this value. Raising it avoids downloading the highest
+     * quality (largest) LOD files. Defaults to 0. Only affects assets that contain LOD levels (e.g.
+     * `.lod-meta.json`).
+     */
+    declare lodRangeMin: number;
+
     private _asset = '';
-
-    private _castShadows = false;
-
-    private _lodBaseDistance = 5;
-
-    private _lodMultiplier = 3;
-
-    private _lodRangeMin = 0;
-
-    private _lodRangeMax = 99;
 
     /** @ignore */
     constructor() {
@@ -39,12 +67,8 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
 
     protected getInitialComponentData() {
         return {
-            asset: useAsset(this._asset),
-            castShadows: this._castShadows,
-            lodBaseDistance: this._lodBaseDistance,
-            lodMultiplier: this._lodMultiplier,
-            lodRangeMin: this._lodRangeMin,
-            lodRangeMax: this._lodRangeMax
+            ...super.getInitialComponentData(),
+            asset: useAsset(this._asset)
         };
     }
 
@@ -77,124 +101,8 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
         return this._asset;
     }
 
-    /**
-     * Sets whether the splat casts shadows.
-     * @param value - Whether the splat casts shadows.
-     */
-    set castShadows(value: boolean) {
-        this._castShadows = value;
-        if (this.component) {
-            this.component.castShadows = value;
-        }
-    }
-
-    /**
-     * Gets whether the splat casts shadows.
-     * @returns Whether the splat casts shadows.
-     */
-    get castShadows() {
-        return this._castShadows;
-    }
-
-    /**
-     * Sets the camera distance of the first LOD transition, from LOD 0 to LOD 1. Parts of the
-     * splat closer than this use the finest LOD, and each further level starts at
-     * {@link lodMultiplier} times the previous distance. In world units, compensated for the
-     * camera's field of view. How these distances combine with the scene-wide splat budget is set
-     * by the `gsplat-splat-budget-mode` attribute of `<pc-scene>`. Clamped to a minimum of 0.1.
-     * Defaults to 5. Only affects assets that contain LOD levels (e.g. `.lod-meta.json`).
-     * @param value - The LOD base distance.
-     */
-    set lodBaseDistance(value: number) {
-        this._lodBaseDistance = value;
-        if (this.component) {
-            this.component.lodBaseDistance = value;
-        }
-    }
-
-    /**
-     * Gets the camera distance of the first LOD transition.
-     * @returns The LOD base distance.
-     */
-    get lodBaseDistance() {
-        return this._lodBaseDistance;
-    }
-
-    /**
-     * Sets the multiplier between successive LOD transition distances. Higher values keep finer
-     * detail further from the camera, at a higher memory cost; lower values switch to coarser
-     * levels sooner. Clamped to a minimum of 1.2. Defaults to 3. Only affects assets that contain
-     * LOD levels (e.g. `.lod-meta.json`).
-     * @param value - The LOD multiplier.
-     */
-    set lodMultiplier(value: number) {
-        this._lodMultiplier = value;
-        if (this.component) {
-            this.component.lodMultiplier = value;
-        }
-    }
-
-    /**
-     * Gets the multiplier between successive LOD transition distances.
-     * @returns The LOD multiplier.
-     */
-    get lodMultiplier() {
-        return this._lodMultiplier;
-    }
-
-    /**
-     * Sets the minimum allowed LOD index (inclusive). The LOD selected by distance is clamped so it
-     * never goes finer (lower index) than this value. Raising it avoids downloading the highest
-     * quality (largest) LOD files. Defaults to 0. Only affects assets that contain LOD levels (e.g.
-     * `.lod-meta.json`).
-     * @param value - The minimum LOD index.
-     */
-    set lodRangeMin(value: number) {
-        this._lodRangeMin = value;
-        if (this.component) {
-            this.component.lodRangeMin = value;
-        }
-    }
-
-    /**
-     * Gets the minimum allowed LOD index.
-     * @returns The minimum LOD index.
-     */
-    get lodRangeMin() {
-        return this._lodRangeMin;
-    }
-
-    /**
-     * Sets the maximum allowed LOD index (inclusive). The LOD selected by distance is clamped so it
-     * never goes coarser (higher index) than this value. The default of 99 effectively means "no
-     * cap". Defaults to 99. Only affects assets that contain LOD levels (e.g. `.lod-meta.json`).
-     * @param value - The maximum LOD index.
-     */
-    set lodRangeMax(value: number) {
-        this._lodRangeMax = value;
-        if (this.component) {
-            this.component.lodRangeMax = value;
-        }
-    }
-
-    /**
-     * Gets the maximum allowed LOD index.
-     * @returns The maximum LOD index.
-     */
-    get lodRangeMax() {
-        return this._lodRangeMax;
-    }
-
     static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'asset',
-            'cast-shadows',
-            'lod-base-distance',
-            'lod-multiplier',
-            'lod-range-min',
-            'lod-range-max'
-        ];
+        return [...super.observedAttributes, 'asset'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
@@ -204,24 +112,17 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
             case 'asset':
                 this.asset = newValue ?? '';
                 break;
-            case 'cast-shadows':
-                this.castShadows = parseBool(newValue, false);
-                break;
-            case 'lod-base-distance':
-                this.lodBaseDistance = parseNumber(newValue, 5, name);
-                break;
-            case 'lod-multiplier':
-                this.lodMultiplier = parseNumber(newValue, 3, name);
-                break;
-            case 'lod-range-min':
-                this.lodRangeMin = parseNumber(newValue, 0, name);
-                break;
-            case 'lod-range-max':
-                this.lodRangeMax = parseNumber(newValue, 99, name);
-                break;
         }
     }
 }
+
+defineAttributes(GSplatComponentElement, 'component', {
+    castShadows: attr.bool(false),
+    lodBaseDistance: attr.number(5),
+    lodMultiplier: attr.number(3),
+    lodRangeMax: attr.number(99),
+    lodRangeMin: attr.number(0)
+});
 
 globalThis.customElements?.define('pc-gsplat', GSplatComponentElement);
 
