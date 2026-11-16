@@ -2,7 +2,7 @@ import type { SpriteAnimationClip } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
 import { AsyncElement } from '../async-element';
-import { parseBool, parseNumber } from '../parse';
+import { applyAttribute, attr, attributeNames, defineAttributes } from '../attributes';
 
 import { SpriteComponentElement } from './sprite-component';
 
@@ -24,7 +24,25 @@ import { SpriteComponentElement } from './sprite-component';
  * @category Components
  */
 class SpriteClipElement extends AsyncElement {
-    private _asset = '';
+    /**
+     * The id of the `pc-asset` of the sprite whose frames the clip plays.
+     */
+    declare asset: string;
+
+    /**
+     * The rate the clip plays at, in frames per second, where a negative rate plays a looping clip
+     * backwards and ends one that does not loop at once. A clip starts on its first frame whichever
+     * way it plays, so a looping clip at a negative rate wraps round to its last frame and counts
+     * down from there, while one that does not loop ends at once. Defaults to 0, which holds the
+     * first frame.
+     */
+    declare fps: number;
+
+    /**
+     * Whether the clip loops. A clip that does not loop stops on its last frame. Defaults to
+     * `false`.
+     */
+    declare loop: boolean;
 
     /**
      * Incremented on every connect and disconnect, and captured by connectedCallback on entry —
@@ -33,10 +51,6 @@ class SpriteClipElement extends AsyncElement {
      * callback.
      */
     private _connectionGeneration = 0;
-
-    private _fps = 0;
-
-    private _loop = false;
 
     private _name = '';
 
@@ -157,70 +171,6 @@ class SpriteClipElement extends AsyncElement {
     }
 
     /**
-     * Sets the id of the `pc-asset` of the sprite whose frames the clip plays.
-     * @param value - The sprite asset id.
-     */
-    set asset(value: string) {
-        this._asset = value;
-        if (this._spriteAnimationClip) {
-            // The engine setter accepts null - clearing the clip's sprite - but its declared
-            // type does not
-            this._spriteAnimationClip.spriteAsset = useAsset(value)?.id ?? (null as unknown as number);
-        }
-    }
-
-    /**
-     * Gets the id of the `pc-asset` of the sprite whose frames the clip plays.
-     * @returns The sprite asset id.
-     */
-    get asset() {
-        return this._asset;
-    }
-
-    /**
-     * Sets the rate the clip plays at, in frames per second, where a negative rate plays a
-     * looping clip backwards. A clip starts on its first frame whichever way it plays, so a
-     * looping clip at a negative rate wraps round to its last frame and counts down from there,
-     * while one that does not loop ends at once. Defaults to 0, which holds the first frame.
-     * @param value - The frames per second.
-     */
-    set fps(value: number) {
-        this._fps = value;
-        if (this._spriteAnimationClip) {
-            this._spriteAnimationClip.fps = value;
-        }
-    }
-
-    /**
-     * Gets the rate the clip plays at, in frames per second, where a negative rate plays a
-     * looping clip backwards and ends one that does not loop at once.
-     * @returns The frames per second.
-     */
-    get fps() {
-        return this._fps;
-    }
-
-    /**
-     * Sets whether the clip loops. A clip that does not loop stops on its last frame. Defaults
-     * to `false`.
-     * @param value - Whether the clip loops.
-     */
-    set loop(value: boolean) {
-        this._loop = value;
-        if (this._spriteAnimationClip) {
-            this._spriteAnimationClip.loop = value;
-        }
-    }
-
-    /**
-     * Gets whether the clip loops.
-     * @returns Whether the clip loops.
-     */
-    get loop() {
-        return this._loop;
-    }
-
-    /**
      * Sets the name of the clip, which the parent `<pc-sprite>`'s `clip` attribute selects it by.
      * Names must be unique within a `<pc-sprite>`.
      * @param value - The clip name.
@@ -240,26 +190,30 @@ class SpriteClipElement extends AsyncElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'fps', 'loop', 'name'];
+        return [...attributeNames(this), 'name'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
-            case 'asset':
-                this.asset = newValue ?? '';
-                break;
-            case 'fps':
-                this.fps = parseNumber(newValue, 0, name);
-                break;
-            case 'loop':
-                this.loop = parseBool(newValue, false);
-                break;
             case 'name':
                 this.name = newValue ?? '';
                 break;
         }
     }
 }
+
+// The asset reaches the clip as the id of the pc-asset it names. The engine setter accepts null -
+// clearing the clip's sprite - but its declared type does not.
+defineAttributes(SpriteClipElement, 'spriteAnimationClip', {
+    asset: attr
+        .string('')
+        .to((value) => useAsset(value)?.id ?? (null as unknown as number))
+        .as('spriteAsset'),
+    fps: attr.number(0),
+    loop: attr.bool(false)
+});
 
 globalThis.customElements?.define('pc-sprite-clip', SpriteClipElement);
 
