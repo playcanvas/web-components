@@ -41,14 +41,14 @@ export const buildDescendantEntities = (root: Element, app: AppBase) => {
  */
 class EntityOwnerElement extends EntityBaseElement {
     /**
-     * Whether the entity is enabled.
+     * The enabled state of the entity.
      */
-    private _enabled = true;
+    declare enabled: boolean;
 
     /**
      * The name of the entity.
      */
-    private _name = 'Untitled';
+    declare name: string;
 
     /**
      * The position of the entity.
@@ -91,14 +91,14 @@ class EntityOwnerElement extends EntityBaseElement {
             return;
         }
 
-        // Seed from the cached fields rather than re-reading the attributes. Every observed
-        // attribute is routed through its property setter by attributeChangedCallback, so the field
+        // Seed from the properties rather than re-reading the attributes. Every observed attribute
+        // is routed through its property setter by attributeChangedCallback, so each property
         // already holds the parsed attribute value - and it also holds anything assigned through the
         // property API before the app booted, which reading the attribute back would discard.
-        const entity = new Entity(this._name, app);
+        const entity = new Entity(this.name, app);
         this._entity = entity;
 
-        entity.enabled = this._enabled;
+        entity.enabled = this.enabled;
         entity.setLocalPosition(this._position);
         entity.setLocalEulerAngles(this._rotation);
         entity.setLocalScale(this._scale);
@@ -179,44 +179,6 @@ class EntityOwnerElement extends EntityBaseElement {
      */
     protected _onBuilt() {
         this._onReady();
-    }
-
-    /**
-     * Sets the enabled state of the entity.
-     * @param value - Whether the entity is enabled.
-     */
-    set enabled(value) {
-        this._enabled = value;
-        if (this.entity) {
-            this.entity.enabled = value;
-        }
-    }
-
-    /**
-     * Gets the enabled state of the entity.
-     * @returns Whether the entity is enabled.
-     */
-    get enabled() {
-        return this._enabled;
-    }
-
-    /**
-     * Sets the name of the entity.
-     * @param value - The name of the entity.
-     */
-    set name(value) {
-        this._name = value;
-        if (this.entity) {
-            this.entity.name = value;
-        }
-    }
-
-    /**
-     * Gets the name of the entity.
-     * @returns The name of the entity.
-     */
-    get name() {
-        return this._name;
     }
 
     /**

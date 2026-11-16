@@ -2,8 +2,9 @@ import type { ContainerResource, Entity } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
 import { AssetBinding } from './asset-binding';
+import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
-import { parseBool, parseTags, parseVec3 } from './parse';
+import { parseTags, parseVec3 } from './parse';
 
 /**
  * One material assignment of a {@link HierarchyNode} with a render component: a mesh instance's
@@ -439,19 +440,15 @@ class ModelElement extends EntityOwnerElement {
     }
 
     static get observedAttributes() {
-        return ['asset', 'enabled', 'name', 'position', 'rotation', 'scale', 'tags'];
+        return [...attributeNames(this), 'asset', 'position', 'rotation', 'scale', 'tags'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
             case 'asset':
                 this.asset = newValue ?? '';
-                break;
-            case 'enabled':
-                this.enabled = parseBool(newValue, true);
-                break;
-            case 'name':
-                this.name = newValue ?? 'Untitled';
                 break;
             case 'position':
                 this.position = parseVec3(newValue, Vec3.ZERO, name);
@@ -468,6 +465,12 @@ class ModelElement extends EntityOwnerElement {
         }
     }
 }
+
+// The two attributes that are values written through to the host entity, as on pc-entity
+defineAttributes(ModelElement, 'entity', {
+    enabled: attr.bool(true),
+    name: attr.string('Untitled')
+});
 
 globalThis.customElements?.define('pc-model', ModelElement);
 
