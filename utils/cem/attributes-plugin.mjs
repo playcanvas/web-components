@@ -79,7 +79,8 @@ const EMPTY_CONSTRUCTORS = {
 /**
  * The attribute kinds of `attr` in `src/attributes.ts`, mapped to the parser each one wraps. A
  * kind takes the parser's arguments without the attribute's text, so both forms describe an
- * attribute the same way.
+ * attribute the same way. `string` wraps no parser: like a callback branch that assigns the
+ * attribute's text as it is, it publishes a plain string with no default.
  */
 const SCHEMA_KINDS = {
     bool: 'parseBool',
@@ -88,7 +89,9 @@ const SCHEMA_KINDS = {
     number: 'parseNumber',
     oneOf: 'parseEnum',
     planes: 'parsePlanes',
+    string: null,
     vec2: 'parseVec2',
+    vec3: 'parseVec3',
     vec4: 'parseVec4'
 };
 
@@ -472,13 +475,13 @@ const publishSchema = (ts, call, moduleDoc) => {
     for (const property of schema.properties) {
         const fieldName = property.name?.getText();
         const kind = ts.isPropertyAssignment(property) ? findKindCall(ts, property.initializer) : null;
-        const parser = SCHEMA_KINDS[kind?.expression.name.text];
-        if (!parser) {
+        const kindName = kind?.expression.name.text;
+        if (!kind || !Object.hasOwn(SCHEMA_KINDS, kindName)) {
             throw new Error(`[cem] ${className}'s '${fieldName}' is not an attr.* kind this plugin knows`);
         }
 
         publishAttribute(classDoc, camelToKebab(fieldName), fieldName, describeParser(
-            ts, call.getSourceFile(), parser, kind.arguments, `${className}'s '${fieldName}'`
+            ts, call.getSourceFile(), SCHEMA_KINDS[kindName], kind.arguments, `${className}'s '${fieldName}'`
         ));
     }
 };

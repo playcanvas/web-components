@@ -19,7 +19,7 @@
  * holds what its parser returns for an absent attribute.
  */
 
-import type { BoundingBox, Color, Plane, Vec2, Vec4 } from 'playcanvas';
+import type { BoundingBox, Color, Plane, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import {
     parseBool,
@@ -29,6 +29,7 @@ import {
     parseNumber,
     parsePlanes,
     parseVec2,
+    parseVec3,
     parseVec4
 } from './parse';
 
@@ -49,7 +50,7 @@ export type AttributeSpec<T, E = T> = {
     /**
      * Converts the value to what the engine takes. Absent where the engine takes it as it is.
      */
-    readonly toEngine?: (value: T) => E;
+    readonly toEngine?: (value: T, element: Element) => E;
 
     /**
      * The engine property the value is written to. Absent where it has the element property's name.
@@ -65,12 +66,14 @@ export type AttributeSpec<T, E = T> = {
     as(engine: string): AttributeSpec<T, E>;
 
     /**
-     * Converts the value to what the engine takes, where that is not the value itself.
+     * Converts the value to what the engine takes, where that is not the value itself. The
+     * conversion runs only when there is an engine object to write to, and is given the element,
+     * which a reference to another element resolves against.
      *
      * @param toEngine - The conversion.
      * @returns The attribute, converted on its way to the engine.
      */
-    to<C>(toEngine: (value: T) => C): AttributeSpec<T, C>;
+    to<C>(toEngine: (value: T, element: Element) => C): AttributeSpec<T, C>;
 };
 
 /**
@@ -100,7 +103,7 @@ type Declared<E, S extends AttributeSchema> = [Undeclared<E, S>] extends [never]
 
 const spec = <T, E = T>(
     parse: (value: string | null, attribute: string) => T,
-    toEngine?: (value: T) => E,
+    toEngine?: (value: T, element: Element) => E,
     engine?: string
 ): AttributeSpec<T, E> => ({
     parse,
@@ -150,8 +153,14 @@ export const attr = {
     /** A list of planes, which has no default but the empty list. */
     planes: () => spec((value, attribute): Plane[] => parsePlanes(value, attribute)),
 
+    /** The attribute's text as it is, which every value is valid for. */
+    string: (defaultValue: string) => spec((value) => value ?? defaultValue),
+
     vec2: <T extends Vec2 | null>(defaultValue: T) =>
         spec((value, attribute) => parseVec2(value, defaultValue, attribute)),
+
+    vec3: <T extends Vec3 | null>(defaultValue: T) =>
+        spec((value, attribute) => parseVec3(value, defaultValue, attribute)),
 
     vec4: <T extends Vec4 | null>(defaultValue: T) =>
         spec((value, attribute) => parseVec4(value, defaultValue, attribute))
@@ -199,7 +208,8 @@ const read = (element: object, { attribute, property, spec: { parse } }: Entry) 
     return store[property];
 };
 
-const convert = ({ spec: { toEngine } }: Entry, value: unknown) => (toEngine ? toEngine(value) : value);
+const convert = ({ spec: { toEngine } }: Entry, value: unknown, element: Element) =>
+    toEngine ? toEngine(value, element) : value;
 
 /**
  * Gives a class the accessors for a schema of attributes. A property holds what was last written
@@ -213,7 +223,7 @@ const convert = ({ spec: { toEngine } }: Entry, value: unknown) => (toEngine ? t
  * while there is none.
  * @internal
  */
-export const defineAttributes = <E extends object, S extends AttributeSchema>(
+export const defineAttributes = <E extends Element, S extends AttributeSchema>(
     ctor: abstract new (...args: any[]) => E,
     schema: S & Declared<E, S>,
     target: (element: E) => object | null
@@ -238,7 +248,7 @@ export const defineAttributes = <E extends object, S extends AttributeSchema>(
                 storeOf(this)[property] = value;
                 const engine = target(this) as Record<string, unknown> | null;
                 if (engine) {
-                    engine[entry.engine] = convert(entry, value);
+                    engine[entry.engine] = convert(entry, value, this);
                 }
             }
         });
@@ -265,13 +275,13 @@ export const attributeNames = (ctor: object): string[] => [...(schemaOf(ctor)?.k
  * @returns Whether the attribute is one of the schema's.
  * @internal
  */
-export const applyAttribute = (element: object, name: string, value: string | null): boolean => {
+export const applyAttribute = (element: Element, name: string, value: string | null): boolean => {
     const entry = schemaOf(element.constructor)?.get(name);
     if (!entry) {
         return false;
     }
     // Through the accessor, as a write from script goes
-    (element as Record<string, unknown>)[entry.property] = entry.spec.parse(value, name);
+    (element as unknown as Record<string, unknown>)[entry.property] = entry.spec.parse(value, name);
     return true;
 };
 
@@ -283,10 +293,10 @@ export const applyAttribute = (element: object, name: string, value: string | nu
  * @returns The engine data.
  * @internal
  */
-export const engineData = (element: object): Record<string, unknown> => {
+export const engineData = (element: Element): Record<string, unknown> => {
     const data: Record<string, unknown> = {};
     for (const entry of schemaOf(element.constructor)?.values() ?? []) {
-        data[entry.engine] = convert(entry, read(element, entry));
+        data[entry.engine] = convert(entry, read(element, entry), element);
     }
     return data;
 };
