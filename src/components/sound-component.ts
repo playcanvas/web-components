@@ -1,6 +1,6 @@
 import type { SoundComponent } from 'playcanvas';
 
-import { parseBool, parseEnum, parseNumber } from '../parse';
+import { attr, defineAttributes } from '../attributes';
 
 import { ComponentElement } from './component';
 
@@ -19,35 +19,46 @@ import { ComponentElement } from './component';
  * @category Components
  */
 class SoundComponentElement extends ComponentElement<SoundComponent> {
-    private _distanceModel: 'exponential' | 'inverse' | 'linear' = 'linear';
+    /**
+     * Which algorithm to use to reduce the volume of the sound as it moves away from the listener.
+     */
+    declare distanceModel: 'exponential' | 'inverse' | 'linear';
 
-    private _maxDistance = 10000;
+    /**
+     * The maximum distance from the listener at which audio falloff stops.
+     */
+    declare maxDistance: number;
 
-    private _pitch = 1;
+    /**
+     * The pitch of the sound.
+     */
+    declare pitch: number;
 
-    private _positional = true;
+    /**
+     * Whether the sounds play positionally. Positional sounds are attenuated by their distance from
+     * the audio listener. Defaults to true.
+     */
+    declare positional: boolean;
 
-    private _refDistance = 1;
+    /**
+     * The reference distance for reducing volume as the sound source moves further from the
+     * listener. Defaults to 1.
+     */
+    declare refDistance: number;
 
-    private _rollOffFactor = 1;
+    /**
+     * The factor used in the falloff equation. Defaults to 1.
+     */
+    declare rollOffFactor: number;
 
-    private _volume = 1;
+    /**
+     * The volume of the sound.
+     */
+    declare volume: number;
 
     /** @ignore */
     constructor() {
         super('sound');
-    }
-
-    protected getInitialComponentData() {
-        return {
-            distanceModel: this._distanceModel,
-            maxDistance: this._maxDistance,
-            pitch: this._pitch,
-            positional: this._positional,
-            refDistance: this._refDistance,
-            rollOffFactor: this._rollOffFactor,
-            volume: this._volume
-        };
     }
 
     /**
@@ -58,182 +69,17 @@ class SoundComponentElement extends ComponentElement<SoundComponent> {
     get component(): SoundComponent | null {
         return super.component;
     }
-
-    /**
-     * Sets which algorithm to use to reduce the volume of the sound as it moves away from the listener.
-     * @param value - The distance model.
-     */
-    set distanceModel(value: 'exponential' | 'inverse' | 'linear') {
-        this._distanceModel = value;
-        if (this.component) {
-            this.component.distanceModel = value;
-        }
-    }
-
-    /**
-     * Gets which algorithm to use to reduce the volume of the sound as it moves away from the listener.
-     * @returns The distance model.
-     */
-    get distanceModel(): 'exponential' | 'inverse' | 'linear' {
-        return this._distanceModel;
-    }
-
-    /**
-     * Sets the maximum distance from the listener at which audio falloff stops.
-     * @param value - The max distance.
-     */
-    set maxDistance(value: number) {
-        this._maxDistance = value;
-        if (this.component) {
-            this.component.maxDistance = value;
-        }
-    }
-
-    /**
-     * Gets the maximum distance from the listener at which audio falloff stops.
-     * @returns The max distance.
-     */
-    get maxDistance() {
-        return this._maxDistance;
-    }
-
-    /**
-     * Sets the pitch of the sound.
-     * @param value - The pitch.
-     */
-    set pitch(value: number) {
-        this._pitch = value;
-        if (this.component) {
-            this.component.pitch = value;
-        }
-    }
-
-    /**
-     * Gets the pitch of the sound.
-     * @returns The pitch.
-     */
-    get pitch() {
-        return this._pitch;
-    }
-
-    /**
-     * Sets whether the sounds play positionally, attenuated by their distance from the audio
-     * listener. Defaults to true.
-     * @param value - The positional flag.
-     */
-    set positional(value: boolean) {
-        this._positional = value;
-        if (this.component) {
-            this.component.positional = value;
-        }
-    }
-
-    /**
-     * Gets whether the sounds play positionally.
-     * @returns The positional flag.
-     */
-    get positional() {
-        return this._positional;
-    }
-
-    /**
-     * Sets the reference distance for reducing volume as the sound source moves further from the listener. Defaults to 1.
-     * @param value - The ref distance.
-     */
-    set refDistance(value: number) {
-        this._refDistance = value;
-        if (this.component) {
-            this.component.refDistance = value;
-        }
-    }
-
-    /**
-     * Gets the reference distance for reducing volume as the sound source moves further from the listener.
-     * @returns The ref distance.
-     */
-    get refDistance() {
-        return this._refDistance;
-    }
-
-    /**
-     * Sets the factor used in the falloff equation. Defaults to 1.
-     * @param value - The roll-off factor.
-     */
-    set rollOffFactor(value: number) {
-        this._rollOffFactor = value;
-        if (this.component) {
-            this.component.rollOffFactor = value;
-        }
-    }
-
-    /**
-     * Gets the factor used in the falloff equation.
-     * @returns The roll-off factor.
-     */
-    get rollOffFactor() {
-        return this._rollOffFactor;
-    }
-
-    /**
-     * Sets the volume of the sound.
-     * @param value - The volume.
-     */
-    set volume(value: number) {
-        this._volume = value;
-        if (this.component) {
-            this.component.volume = value;
-        }
-    }
-
-    /**
-     * Gets the volume of the sound.
-     * @returns The volume.
-     */
-    get volume() {
-        return this._volume;
-    }
-
-    static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'distance-model',
-            'max-distance',
-            'pitch',
-            'positional',
-            'ref-distance',
-            'roll-off-factor',
-            'volume'
-        ];
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        super.attributeChangedCallback(name, _oldValue, newValue);
-
-        switch (name) {
-            case 'distance-model':
-                this.distanceModel = parseEnum(newValue, ['exponential', 'inverse', 'linear'], 'linear', name);
-                break;
-            case 'max-distance':
-                this.maxDistance = parseNumber(newValue, 10000, name);
-                break;
-            case 'pitch':
-                this.pitch = parseNumber(newValue, 1, name);
-                break;
-            case 'positional':
-                this.positional = parseBool(newValue, true);
-                break;
-            case 'ref-distance':
-                this.refDistance = parseNumber(newValue, 1, name);
-                break;
-            case 'roll-off-factor':
-                this.rollOffFactor = parseNumber(newValue, 1, name);
-                break;
-            case 'volume':
-                this.volume = parseNumber(newValue, 1, name);
-                break;
-        }
-    }
 }
+
+defineAttributes(SoundComponentElement, 'component', {
+    distanceModel: attr.oneOf(['exponential', 'inverse', 'linear'], 'linear'),
+    maxDistance: attr.number(10000),
+    pitch: attr.number(1),
+    positional: attr.bool(true),
+    refDistance: attr.number(1),
+    rollOffFactor: attr.number(1),
+    volume: attr.number(1)
+});
 
 globalThis.customElements?.define('pc-sound', SoundComponentElement);
 
