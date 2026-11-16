@@ -66,6 +66,7 @@ import {
 import type { AssetElement } from './asset';
 import { AssetBinding } from './asset-binding';
 import { AsyncElement } from './async-element';
+import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
 import type { EntityBaseElement } from './entity-base';
 import type { EntityOwnerElement } from './entity-owner';
 import { LoadingBar } from './loading-bar';
@@ -138,6 +139,17 @@ const AREA_LIGHT_LUT_LENGTH = 64 * 64 * 4;
  */
 class AppElement extends AsyncElement {
     /**
+     * The scale on the time the application advances by each frame. Scripts, animation and physics
+     * all advance by the scaled time, so below 1 is slow motion, above 1 speeds it up and 0 freezes
+     * everything that advances with time. It does not pause scripts: their `update` and
+     * `postUpdate` methods are still called every frame with a `dt` of 0, so input handling,
+     * spawning and any other logic that is not multiplied by `dt` carries on. Give gameplay code
+     * its own pause check. To pause or slow down physics alone, use `physics-time-scale`. Defaults
+     * to 1.
+     */
+    declare timeScale: number;
+
+    /**
      * The canvas element.
      */
     private _canvas: HTMLCanvasElement | null = null;
@@ -161,8 +173,6 @@ class AppElement extends AsyncElement {
     private _loadingBar = true;
 
     private _withCredentials = false;
-
-    private _timeScale = 1;
 
     private _physicsTimeScale = 1;
 
@@ -487,7 +497,7 @@ class AppElement extends AsyncElement {
 
         // Before any entity exists, and so before app.start() initializes scripts: a script that
         // reads these in initialize() sees the element's values rather than the engine defaults
-        app.timeScale = this._timeScale;
+        app.timeScale = this.timeScale;
         const rigidbody = app.systems.rigidbody;
         if (rigidbody) {
             rigidbody.timeScale = this._physicsTimeScale;
@@ -1117,33 +1127,6 @@ class AppElement extends AsyncElement {
     }
 
     /**
-     * Sets the scale on the time the application advances by each frame. Scripts, animation and
-     * physics all advance by the scaled time, so below 1 is slow motion, above 1 speeds it up and
-     * 0 freezes everything that advances with time. It does not pause scripts: their `update` and
-     * `postUpdate` methods are still called every frame with a `dt` of 0, so input handling,
-     * spawning and any other logic that is not multiplied by `dt` carries on. Give gameplay code
-     * its own pause check. To pause or slow down physics alone, use `physics-time-scale`. Defaults
-     * to 1.
-     * @param value - The time scale.
-     */
-    set timeScale(value: number) {
-        this._timeScale = value;
-        if (this._app) {
-            this._app.timeScale = value;
-        }
-    }
-
-    /**
-     * Gets the scale on the time the application advances by each frame. Scripts, animation and
-     * physics all advance by the scaled time, so 0 freezes everything that advances with time,
-     * while scripts keep running with a `dt` of 0.
-     * @returns The time scale.
-     */
-    get timeScale() {
-        return this._timeScale;
-    }
-
-    /**
      * Sets whether asset requests send credentials (cookies and HTTP authentication) to other
      * origins, which the asset server must allow through CORS. The engine keeps this in its shared
      * HTTP client, so it applies to every application on the page. Defaults to `false`.
@@ -1169,6 +1152,7 @@ class AppElement extends AsyncElement {
 
     static get observedAttributes() {
         return [
+            ...attributeNames(this),
             'alpha',
             'antialias',
             'area-light-luts',
@@ -1180,12 +1164,13 @@ class AppElement extends AsyncElement {
             'physics-time-scale',
             'picking',
             'stencil-buffer',
-            'time-scale',
             'with-credentials'
         ];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
             case 'alpha':
                 this.alpha = parseBool(newValue, true);
@@ -1220,15 +1205,16 @@ class AppElement extends AsyncElement {
             case 'stencil-buffer':
                 this.stencilBuffer = parseBool(newValue, true);
                 break;
-            case 'time-scale':
-                this.timeScale = parseNumber(newValue, 1, name);
-                break;
             case 'with-credentials':
                 this.withCredentials = parseBool(newValue, false);
                 break;
         }
     }
 }
+
+defineAttributes(AppElement, 'app', {
+    timeScale: attr.number(1)
+});
 
 globalThis.customElements?.define('pc-app', AppElement);
 
