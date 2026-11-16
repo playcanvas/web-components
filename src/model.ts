@@ -2,7 +2,7 @@ import type { ContainerResource, Entity } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
 import { AssetBinding } from './asset-binding';
-import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
+import { applyAttribute, attributeNames } from './attributes';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseTags, parseVec3 } from './parse';
 
@@ -465,12 +465,6 @@ class ModelElement extends EntityOwnerElement {
         }
     }
 }
-
-// The two attributes that are values written through to the host entity, as on pc-entity
-defineAttributes(ModelElement, 'entity', {
-    enabled: attr.bool(true),
-    name: attr.string('Untitled')
-});
 
 globalThis.customElements?.define('pc-model', ModelElement);
 

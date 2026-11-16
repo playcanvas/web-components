@@ -1,6 +1,6 @@
 import { Vec3 } from 'playcanvas';
 
-import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
+import { applyAttribute, attributeNames } from './attributes';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseTags, parseVec3 } from './parse';
 
@@ -129,13 +129,6 @@ class EntityElement extends EntityOwnerElement {
         }
     }
 }
-
-// The two attributes that are values written through to the entity. The transform and the tags
-// are set through the entity's own methods, so EntityOwnerElement keeps those hand-written.
-defineAttributes(EntityElement, 'entity', {
-    enabled: attr.bool(true),
-    name: attr.string('Untitled')
-});
 
 globalThis.customElements?.define('pc-entity', EntityElement);
 

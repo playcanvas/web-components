@@ -1,6 +1,7 @@
 import type { AppBase } from 'playcanvas';
 import { Entity, Vec3 } from 'playcanvas';
 
+import { attr, defineAttributes } from './attributes';
 import { EntityBaseElement } from './entity-base';
 
 /**
@@ -258,5 +259,13 @@ class EntityOwnerElement extends EntityBaseElement {
         return this._tags;
     }
 }
+
+// The two attributes that are values written through to the entity. The transform and the tags
+// are set through the entity's own methods, so they stay hand-written above. The schema is on this
+// class rather than on pc-entity and pc-model, so that any class extending it has the properties.
+defineAttributes(EntityOwnerElement, 'entity', {
+    enabled: attr.bool(true),
+    name: attr.string('Untitled')
+});
 
 export { EntityOwnerElement };
