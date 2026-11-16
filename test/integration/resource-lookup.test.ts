@@ -90,15 +90,22 @@ describe('asset and material ids', () => {
     });
 
     describe('in an application inside a shadow root', () => {
-        const mountInShadowRoot = (html: string) => {
-            const { container } = mount('<div></div>');
-            const shadow = (container.firstElementChild as HTMLElement).attachShadow({ mode: 'open' });
+        /**
+         * Mounts markup in the shadow root of a host element in the document.
+         *
+         * @param html - The markup inside the shadow root.
+         * @param outside - Markup in the document, before the host.
+         * @returns The shadow root, and the container in the document that holds the host.
+         */
+        const mountInShadowRoot = (html: string, outside = '') => {
+            const { container } = mount(`${outside}<div></div>`);
+            const shadow = (container.lastElementChild as HTMLElement).attachShadow({ mode: 'open' });
             shadow.innerHTML = html;
-            return shadow;
+            return { shadow, container };
         };
 
         it('resolve, though the document cannot see them', async () => {
-            const shadow = mountInShadowRoot(app(RED + SEVEN));
+            const { shadow } = mountInShadowRoot(app(RED + SEVEN));
             const [inside] = await ready(shadow);
 
             expect(document.getElementById('paint'), 'the document should not see into the shadow root').toBeNull();
@@ -110,7 +117,7 @@ describe('asset and material ids', () => {
             // The test above never leaves the application, whose own children have the ids. Here
             // the second application has none, so they are looked for in the tree it is in, and
             // that has to be the shadow root: looking in the document would find nothing
-            const shadow = mountInShadowRoot(app(RED + SEVEN) + app(''));
+            const { shadow } = mountInShadowRoot(app(RED + SEVEN) + app(''));
             const [first, second] = await ready(shadow);
 
             expect(document.getElementById('paint'), 'the document should not see into the shadow root').toBeNull();
@@ -122,6 +129,26 @@ describe('asset and material ids', () => {
                 (first.querySelector('pc-material') as MaterialElement).material
             );
             expect(AssetElement.get('config', from)).toBe((first.querySelector('pc-asset') as AssetElement).asset);
+        });
+
+        it('do not resolve to those of an application in the document outside the shadow root', async () => {
+            // An id belongs to the tree it is in, so the search stops at the shadow root. When the
+            // lookup was the document's alone, an application in a shadow root that declared
+            // nothing was handed the material and the asset of one outside it, which belong to
+            // another graphics device and another asset registry
+            const { shadow, container } = mountInShadowRoot(app(''), app(RED + SEVEN));
+            const [outside] = await ready(container);
+            const [inside] = await ready(shadow);
+
+            expect(paintOf(outside)).toBe('1 0 0');
+            expect(particlesOf(outside)).toBe(7);
+
+            expect(paintOf(inside)).not.toBe('1 0 0');
+            expect(particlesOf(inside)).not.toBe(7);
+
+            const from = inside.querySelector('pc-render') as Element;
+            expect(MaterialElement.get('paint', from)).toBeUndefined();
+            expect(AssetElement.get('config', from)).toBeUndefined();
         });
     });
 
