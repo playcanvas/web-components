@@ -19,7 +19,7 @@
  * holds what its parser returns for an absent attribute.
  */
 
-import type { BoundingBox, Color, Plane, Vec2, Vec3, Vec4 } from 'playcanvas';
+import type { BoundingBox, Color, Plane, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import {
     parseBool,
@@ -28,6 +28,7 @@ import {
     parseEnum,
     parseNumber,
     parsePlanes,
+    parseQuat,
     parseVec2,
     parseVec3,
     parseVec4
@@ -176,6 +177,9 @@ export const attr = {
 
     /** A list of planes, which has no default but the empty list. */
     planes: () => spec((value, attribute): Plane[] => parsePlanes(value, attribute)),
+
+    quat: <T extends Quat | null>(defaultValue: T) =>
+        spec((value, attribute) => parseQuat(value, defaultValue, attribute)),
 
     /** The attribute's text as it is, which every value is valid for. */
     string: (defaultValue: string) => spec((value) => value ?? defaultValue),

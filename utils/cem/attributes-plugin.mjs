@@ -90,6 +90,7 @@ const SCHEMA_KINDS = {
     number: 'parseNumber',
     oneOf: 'parseEnum',
     planes: 'parsePlanes',
+    quat: 'parseQuat',
     string: null,
     vec2: 'parseVec2',
     vec3: 'parseVec3',
