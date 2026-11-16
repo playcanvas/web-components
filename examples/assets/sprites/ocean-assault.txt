@@ -1,0 +1,12 @@
+ocean-assault.png: the Ocean Assault example's pixel art, drawn entirely from code - a Node script
+rasterizes every frame and packs them into this one sheet: the seaplane, the raiders and their
+airship, shots and missiles, explosions, power ups, the sea, islands, clouds, a font and the logo.
+
+ocean-assault.json: the frames of that sheet by name, in the JSON hash layout that sprite sheet
+packers export - each frame's rectangle, and the name of the image.
+
+Both come from the PlayCanvas Engine's Ocean Assault demo (examples/assets/sprites in
+https://github.com/playcanvas/engine), where examples/utils/generate-ocean-assault-sheet.mjs
+writes them.
+
+MIT, as the engine is.
