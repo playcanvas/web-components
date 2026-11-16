@@ -328,7 +328,7 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
             return;
         }
 
-        const container = AssetElement.get(model.asset)?.resource as ContainerWithAnimations | undefined;
+        const container = AssetElement.get(model.asset, model)?.resource as ContainerWithAnimations | undefined;
         if (!container) {
             // The load failed; the model already reported it
             return;

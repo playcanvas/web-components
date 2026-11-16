@@ -94,7 +94,7 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
      * finishes loading after its replacement, or a callback left behind by a previous
      * connection — can never configure the component.
      */
-    private _binding = new AssetBinding();
+    private _binding = new AssetBinding(this);
 
     /** @ignore */
     constructor() {
@@ -102,7 +102,7 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
     }
 
     protected getInitialComponentData() {
-        const asset = useAsset(this._asset);
+        const asset = useAsset(this._asset, this);
         // A lazy config has no resource yet - the config binding applies it once the load
         // completes
         if (!asset || !asset.resource) {
@@ -117,7 +117,7 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
     protected initComponent() {
         // A loaded config already arrived through getInitialComponentData - the binding is only
         // needed for a load still in flight. Resolution here also starts a lazy config's load.
-        const asset = useAsset(this._asset);
+        const asset = useAsset(this._asset, this);
         if (asset && !asset.loaded) {
             this._bindConfig();
         }
@@ -147,7 +147,7 @@ class ParticleSystemComponentElement extends ComponentElement<ParticleSystemComp
      */
     private _resolveColorMap(resource: any) {
         if (resource.colorMapAsset) {
-            const colorMapAsset = useAsset(resource.colorMapAsset)?.id;
+            const colorMapAsset = useAsset(resource.colorMapAsset, this)?.id;
             if (colorMapAsset) {
                 resource.colorMapAsset = colorMapAsset;
             }

@@ -117,10 +117,11 @@ type Conversion = (rest: string, raw: string, from: Element) => any;
  * Resolves an `asset:` prefix to the Asset created by the `pc-asset` element with that id.
  * @param rest - The asset id.
  * @param raw - The raw value, returned unchanged when the id does not resolve.
+ * @param from - The element the value is declared under, whose application is searched first.
  * @returns The asset, or `raw`.
  */
-const assetConversion: Conversion = (rest, raw) => {
-    const asset = useAsset(rest);
+const assetConversion: Conversion = (rest, raw, from) => {
+    const asset = useAsset(rest, from);
     if (asset) {
         return asset;
     }

@@ -266,17 +266,17 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
 
         // Asset references are resolved from `<pc-asset>` element ids to engine asset ids. They are
         // only included when they resolve, so image/group elements (with no font) don't error.
-        const fontAsset = useAsset(this._fontAsset);
+        const fontAsset = useAsset(this._fontAsset, this);
         if (fontAsset) {
             data.fontAsset = fontAsset.id;
         }
 
-        const spriteAsset = useAsset(this._spriteAsset);
+        const spriteAsset = useAsset(this._spriteAsset, this);
         if (spriteAsset) {
             data.spriteAsset = spriteAsset.id;
         }
 
-        const textureAsset = useAsset(this._textureAsset);
+        const textureAsset = useAsset(this._textureAsset, this);
         if (textureAsset) {
             data.textureAsset = textureAsset.id;
         }
@@ -310,7 +310,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     set fontAsset(value: string) {
         this._fontAsset = value;
-        const asset = useAsset(value);
+        const asset = useAsset(value, this);
         if (this.component && asset) {
             this.component.fontAsset = asset.id;
         }
@@ -368,7 +368,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     set spriteAsset(value: string) {
         this._spriteAsset = value;
-        const asset = useAsset(value);
+        const asset = useAsset(value, this);
         if (this.component && asset) {
             this.component.spriteAsset = asset.id;
         }
@@ -388,7 +388,7 @@ class ElementComponentElement extends ComponentElement<ElementComponent> {
      */
     set textureAsset(value: string) {
         this._textureAsset = value;
-        const asset = useAsset(value);
+        const asset = useAsset(value, this);
         if (this.component && asset) {
             this.component.textureAsset = asset.id;
         }

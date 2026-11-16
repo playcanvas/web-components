@@ -68,7 +68,7 @@ class SkyElement extends AsyncElement {
      * Watches the current texture asset while it loads. Starting a new load or disconnecting
      * cancels it, so a superseded texture can never generate the skybox.
      */
-    private _binding = new AssetBinding();
+    private _binding = new AssetBinding(this);
 
     connectedCallback() {
         this._loadSkybox();
@@ -138,7 +138,7 @@ class SkyElement extends AsyncElement {
         // The bind below repeats the resolution, which useAsset documents as free - it cannot
         // happen after the bind, because a loaded asset delivers before bind returns and
         // _generateSkybox needs the scene by then.
-        if (!useAsset(this._asset)) {
+        if (!useAsset(this._asset, this)) {
             return;
         }
 
