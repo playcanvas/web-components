@@ -87,6 +87,7 @@ const SCHEMA_KINDS = {
     bool: 'parseBool',
     boundingBox: 'parseBoundingBox',
     color: 'parseColor',
+    flags: 'parseFlags',
     number: 'parseNumber',
     oneOf: 'parseEnum',
     planes: 'parsePlanes',

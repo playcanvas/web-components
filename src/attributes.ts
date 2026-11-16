@@ -26,6 +26,7 @@ import {
     parseBoundingBox,
     parseColor,
     parseEnum,
+    parseFlags,
     parseNumber,
     parsePlanes,
     parseQuat,
@@ -165,6 +166,13 @@ export const attr = {
 
     color: <T extends Color | null>(defaultValue: T) =>
         spec((value, attribute) => parseColor(value, defaultValue, attribute)),
+
+    /**
+     * Any of a set of names, separated by spaces, as the bitmask of the flags they map to. The
+     * default is written as the attribute would be.
+     */
+    flags: <T extends string>(flags: ReadonlyMap<T, number>, defaultValue: string) =>
+        spec((value, attribute) => parseFlags(value, flags, defaultValue, attribute)),
 
     number: <T extends number | null>(defaultValue: T) =>
         spec((value, attribute) => parseNumber(value, defaultValue, attribute)),
