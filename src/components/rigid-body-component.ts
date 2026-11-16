@@ -1,7 +1,7 @@
 import type { RigidBodyComponent } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
-import { parseEnum, parseNumber, parseVec3 } from '../parse';
+import { attr, defineAttributes } from '../attributes';
 
 import { ComponentElement } from './component';
 
@@ -22,73 +22,71 @@ import { ComponentElement } from './component';
  */
 class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
     /**
-     * The angular damping of the rigidbody.
+     * The rate at which the body loses angular velocity over time, from 0 (none) to 1. Defaults to
+     * 0.
      */
-    private _angularDamping = 0;
+    declare angularDamping: number;
 
     /**
-     * The angular factor of the rigidbody.
+     * The scaling applied to the body's rotation about each axis: 0 locks an axis and 1 leaves it
+     * free. Applies to `dynamic` bodies only. Defaults to 1 in each axis.
      */
-    private _angularFactor: Vec3 = new Vec3(1, 1, 1);
+    declare angularFactor: Vec3;
 
     /**
-     * The friction of the rigidbody.
+     * The friction applied where the body contacts another, from 0 (slides freely) to 1 (grips).
+     * Defaults to 0.5.
      */
-    private _friction = 0.5;
+    declare friction: number;
 
     /**
-     * The gravity scale of the rigidbody.
+     * The multiplier applied to the scene's gravity for this body: 1 falls normally, 0 ignores
+     * gravity and a negative value rises. Applies to `dynamic` bodies only. Defaults to 1.
      */
-    private _gravityScale = 1;
+    declare gravityScale: number;
 
     /**
-     * The linear damping of the rigidbody.
+     * The rate at which the body loses linear velocity over time, from 0 (none) to 1. Defaults to
+     * 0.
      */
-    private _linearDamping = 0;
+    declare linearDamping: number;
 
     /**
-     * The linear factor of the rigidbody.
+     * The scaling applied to the body's movement along each axis: 0 locks an axis and 1 leaves it
+     * free. Applies to `dynamic` bodies only. Defaults to 1 in each axis.
      */
-    private _linearFactor: Vec3 = new Vec3(1, 1, 1);
+    declare linearFactor: Vec3;
 
     /**
-     * The mass of the rigidbody.
+     * The mass of the body, which applies to `dynamic` bodies only. `static` and `kinematic` bodies
+     * behave as if infinitely massive. Defaults to 1.
      */
-    private _mass = 1;
+    declare mass: number;
 
     /**
-     * The restitution of the rigidbody.
+     * The bounciness of the body, from 0 (all energy lost in a collision) to 1 (none lost). The
+     * restitution of both colliding bodies is multiplied together, so two bodies at 1 bounce fully
+     * and one at 0 stops any bounce. Defaults to 0.
      */
-    private _restitution = 0;
+    declare restitution: number;
 
     /**
-     * The rolling friction of the rigidbody.
+     * The friction that resists the body rolling across a contact, where `friction` resists it
+     * sliding. Defaults to 0.
      */
-    private _rollingFriction = 0;
+    declare rollingFriction: number;
 
     /**
-     * The type of the rigidbody.
+     * How the body takes part in the simulation: `static`, `dynamic` or `kinematic`. A `static`
+     * body never moves, and other bodies collide with it. A `dynamic` body is moved by forces,
+     * gravity and collisions. A `kinematic` body is moved only by setting its transform, and pushes
+     * `dynamic` bodies aside. Defaults to `static`.
      */
-    private _type: 'static' | 'dynamic' | 'kinematic' = 'static';
+    declare type: 'static' | 'dynamic' | 'kinematic';
 
     /** @ignore */
     constructor() {
         super('rigidbody');
-    }
-
-    protected getInitialComponentData() {
-        return {
-            angularDamping: this._angularDamping,
-            angularFactor: this._angularFactor,
-            friction: this._friction,
-            gravityScale: this._gravityScale,
-            linearDamping: this._linearDamping,
-            linearFactor: this._linearFactor,
-            mass: this._mass,
-            restitution: this._restitution,
-            rollingFriction: this._rollingFriction,
-            type: this._type
-        };
     }
 
     /**
@@ -99,268 +97,20 @@ class RigidBodyComponentElement extends ComponentElement<RigidBodyComponent> {
     get component(): RigidBodyComponent | null {
         return super.component;
     }
-
-    /**
-     * Sets the rate at which the body loses angular velocity over time, from 0 (none) to 1.
-     * Defaults to 0.
-     * @param value - The angular damping.
-     */
-    set angularDamping(value: number) {
-        this._angularDamping = value;
-        if (this.component) {
-            this.component.angularDamping = value;
-        }
-    }
-
-    /**
-     * Gets the rate at which the body loses angular velocity over time, from 0 (none) to 1.
-     * @returns The angular damping.
-     */
-    get angularDamping() {
-        return this._angularDamping;
-    }
-
-    /**
-     * Sets the scaling applied to the body's rotation about each axis: 0 locks an axis and 1 leaves
-     * it free. Applies to `dynamic` bodies only. Defaults to 1 in each axis.
-     * @param value - The angular factor.
-     */
-    set angularFactor(value: Vec3) {
-        this._angularFactor = value;
-        if (this.component) {
-            this.component.angularFactor = value;
-        }
-    }
-
-    /**
-     * Gets the scaling applied to the body's rotation about each axis: 0 locks an axis and 1 leaves
-     * it free.
-     * @returns The angular factor.
-     */
-    get angularFactor() {
-        return this._angularFactor;
-    }
-
-    /**
-     * Sets the friction applied where the body contacts another, from 0 (slides freely) to 1
-     * (grips). Defaults to 0.5.
-     * @param value - The friction.
-     */
-    set friction(value: number) {
-        this._friction = value;
-        if (this.component) {
-            this.component.friction = value;
-        }
-    }
-
-    /**
-     * Gets the friction applied where the body contacts another, from 0 (slides freely) to 1
-     * (grips).
-     * @returns The friction.
-     */
-    get friction() {
-        return this._friction;
-    }
-
-    /**
-     * Sets the multiplier applied to the scene's gravity for this body: 1 falls normally, 0 ignores
-     * gravity and a negative value rises. Applies to `dynamic` bodies only. Defaults to 1.
-     * @param value - The gravity scale.
-     */
-    set gravityScale(value: number) {
-        this._gravityScale = value;
-        if (this.component) {
-            this.component.gravityScale = value;
-        }
-    }
-
-    /**
-     * Gets the multiplier applied to the scene's gravity for this body: 1 falls normally, 0 ignores
-     * gravity and a negative value rises.
-     * @returns The gravity scale.
-     */
-    get gravityScale() {
-        return this._gravityScale;
-    }
-
-    /**
-     * Sets the rate at which the body loses linear velocity over time, from 0 (none) to 1. Defaults
-     * to 0.
-     * @param value - The linear damping.
-     */
-    set linearDamping(value: number) {
-        this._linearDamping = value;
-        if (this.component) {
-            this.component.linearDamping = value;
-        }
-    }
-
-    /**
-     * Gets the rate at which the body loses linear velocity over time, from 0 (none) to 1.
-     * @returns The linear damping.
-     */
-    get linearDamping() {
-        return this._linearDamping;
-    }
-
-    /**
-     * Sets the scaling applied to the body's movement along each axis: 0 locks an axis and 1 leaves
-     * it free. Applies to `dynamic` bodies only. Defaults to 1 in each axis.
-     * @param value - The linear factor.
-     */
-    set linearFactor(value: Vec3) {
-        this._linearFactor = value;
-        if (this.component) {
-            this.component.linearFactor = value;
-        }
-    }
-
-    /**
-     * Gets the scaling applied to the body's movement along each axis: 0 locks an axis and 1 leaves
-     * it free.
-     * @returns The linear factor.
-     */
-    get linearFactor() {
-        return this._linearFactor;
-    }
-
-    /**
-     * Sets the mass of the body. Applies to `dynamic` bodies only; `static` and `kinematic` bodies
-     * behave as if infinitely massive. Defaults to 1.
-     * @param value - The mass.
-     */
-    set mass(value: number) {
-        this._mass = value;
-        if (this.component) {
-            this.component.mass = value;
-        }
-    }
-
-    /**
-     * Gets the mass of the body, which applies to `dynamic` bodies only.
-     * @returns The mass.
-     */
-    get mass() {
-        return this._mass;
-    }
-
-    /**
-     * Sets the bounciness of the body, from 0 (all energy lost in a collision) to 1 (none lost).
-     * The restitution of both colliding bodies is multiplied together, so two bodies at 1 bounce
-     * fully and one at 0 stops any bounce. Defaults to 0.
-     * @param value - The restitution.
-     */
-    set restitution(value: number) {
-        this._restitution = value;
-        if (this.component) {
-            this.component.restitution = value;
-        }
-    }
-
-    /**
-     * Gets the bounciness of the body, from 0 (all energy lost in a collision) to 1 (none lost).
-     * @returns The restitution.
-     */
-    get restitution() {
-        return this._restitution;
-    }
-
-    /**
-     * Sets the friction that resists the body rolling across a contact, where `friction` resists it
-     * sliding. Defaults to 0.
-     * @param value - The rolling friction.
-     */
-    set rollingFriction(value: number) {
-        this._rollingFriction = value;
-        if (this.component) {
-            this.component.rollingFriction = value;
-        }
-    }
-
-    /**
-     * Gets the friction that resists the body rolling across a contact, where `friction` resists it
-     * sliding.
-     * @returns The rolling friction.
-     */
-    get rollingFriction() {
-        return this._rollingFriction;
-    }
-
-    /**
-     * Sets how the body takes part in the simulation. Can be `static` (never moves, and other
-     * bodies collide with it), `dynamic` (moved by forces, gravity and collisions) or `kinematic`
-     * (moved only by setting its transform, and pushes `dynamic` bodies aside). Defaults to
-     * `static`.
-     * @param value - The type.
-     */
-    set type(value: 'static' | 'dynamic' | 'kinematic') {
-        this._type = value;
-        if (this.component) {
-            this.component.type = value;
-        }
-    }
-
-    /**
-     * Gets how the body takes part in the simulation: `static`, `dynamic` or `kinematic`.
-     * @returns The type.
-     */
-    get type() {
-        return this._type;
-    }
-
-    static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'angular-damping',
-            'angular-factor',
-            'friction',
-            'gravity-scale',
-            'linear-damping',
-            'linear-factor',
-            'mass',
-            'restitution',
-            'rolling-friction',
-            'type'
-        ];
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        super.attributeChangedCallback(name, _oldValue, newValue);
-
-        switch (name) {
-            case 'angular-damping':
-                this.angularDamping = parseNumber(newValue, 0, name);
-                break;
-            case 'angular-factor':
-                this.angularFactor = parseVec3(newValue, Vec3.ONE, name);
-                break;
-            case 'friction':
-                this.friction = parseNumber(newValue, 0.5, name);
-                break;
-            case 'gravity-scale':
-                this.gravityScale = parseNumber(newValue, 1, name);
-                break;
-            case 'linear-damping':
-                this.linearDamping = parseNumber(newValue, 0, name);
-                break;
-            case 'linear-factor':
-                this.linearFactor = parseVec3(newValue, Vec3.ONE, name);
-                break;
-            case 'mass':
-                this.mass = parseNumber(newValue, 1, name);
-                break;
-            case 'restitution':
-                this.restitution = parseNumber(newValue, 0, name);
-                break;
-            case 'rolling-friction':
-                this.rollingFriction = parseNumber(newValue, 0, name);
-                break;
-            case 'type':
-                this.type = parseEnum(newValue, ['static', 'dynamic', 'kinematic'], 'static', name);
-                break;
-        }
-    }
 }
+
+defineAttributes(RigidBodyComponentElement, 'component', {
+    angularDamping: attr.number(0),
+    angularFactor: attr.vec3(Vec3.ONE),
+    friction: attr.number(0.5),
+    gravityScale: attr.number(1),
+    linearDamping: attr.number(0),
+    linearFactor: attr.vec3(Vec3.ONE),
+    mass: attr.number(1),
+    restitution: attr.number(0),
+    rollingFriction: attr.number(0),
+    type: attr.oneOf(['static', 'dynamic', 'kinematic'], 'static')
+});
 
 globalThis.customElements?.define('pc-rigid-body', RigidBodyComponentElement);
 
