@@ -86,7 +86,10 @@ const SCHEMA_KINDS = {
     boundingBox: 'parseBoundingBox',
     color: 'parseColor',
     number: 'parseNumber',
-    oneOf: 'parseEnum'
+    oneOf: 'parseEnum',
+    planes: 'parsePlanes',
+    vec2: 'parseVec2',
+    vec4: 'parseVec4'
 };
 
 const kebabToCamel = name => name.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
@@ -428,6 +431,27 @@ const publishAttribute = (classDoc, name, fieldName, { type, default: defaultVal
 };
 
 /**
+ * Finds the `attr.kind(...)` call a schema entry starts with, beneath any `.as(...)` or `.to(...)`
+ * that follows it. Those say where the value goes in the engine, which the manifest does not
+ * publish.
+ *
+ * @param {import('typescript')} ts - The TypeScript module supplied by the analyzer.
+ * @param {import('typescript').Expression} expression - The schema entry's value.
+ * @returns {import('typescript').CallExpression | null} The call, or `null` if there is none.
+ */
+const findKindCall = (ts, expression) => {
+    let call = expression;
+    while (ts.isCallExpression(call) &&
+        ts.isPropertyAccessExpression(call.expression) &&
+        ts.isCallExpression(call.expression.expression)) {
+        call = call.expression.expression;
+    }
+    return ts.isCallExpression(call) &&
+        ts.isPropertyAccessExpression(call.expression) &&
+        call.expression.expression.getText() === 'attr' ? call : null;
+};
+
+/**
  * Publishes the attributes of a `defineAttributes(Class, { property: attr.kind(...), ... })` call,
  * where each entry carries what a callback branch does: the property, the parser and the default.
  *
@@ -447,17 +471,14 @@ const publishSchema = (ts, call, moduleDoc) => {
 
     for (const property of schema.properties) {
         const fieldName = property.name?.getText();
-        const kind = ts.isPropertyAssignment(property) && ts.isCallExpression(property.initializer) &&
-            ts.isPropertyAccessExpression(property.initializer.expression) ?
-            property.initializer.expression.name.text :
-            undefined;
-        const parser = SCHEMA_KINDS[kind];
+        const kind = ts.isPropertyAssignment(property) ? findKindCall(ts, property.initializer) : null;
+        const parser = SCHEMA_KINDS[kind?.expression.name.text];
         if (!parser) {
             throw new Error(`[cem] ${className}'s '${fieldName}' is not an attr.* kind this plugin knows`);
         }
 
         publishAttribute(classDoc, camelToKebab(fieldName), fieldName, describeParser(
-            ts, call.getSourceFile(), parser, property.initializer.arguments, `${className}'s '${fieldName}'`
+            ts, call.getSourceFile(), parser, kind.arguments, `${className}'s '${fieldName}'`
         ));
     }
 };

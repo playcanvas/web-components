@@ -4,11 +4,12 @@
  * the data the engine object is created with, an accessor pair, an `observedAttributes` name and
  * an `attributeChangedCallback` branch - and nothing but review keeps the five in step.
  *
- * A schema names each property, the parser for its attribute and, where the engine takes something
- * other than the parsed value, the conversion. {@link defineAttributes} turns it into the
- * accessors, and the element's base class reads the rest from it: {@link attributeNames} for
- * `observedAttributes`, {@link applyAttribute} for `attributeChangedCallback` and
- * {@link engineData} for the data the engine object is created with.
+ * A schema names each property and the parser for its attribute. Where the engine takes something
+ * other than the parsed value, or keeps it under another name, the entry says so with `to` and
+ * `as`. {@link defineAttributes} turns the schema into the accessors, and the element's base class
+ * reads the rest from it: {@link attributeNames} for `observedAttributes`, {@link applyAttribute}
+ * for `attributeChangedCallback` and {@link engineData} for the data the engine object is created
+ * with.
  *
  * The class still declares each property, with `declare`, so that its type and its documentation
  * are where the compiler, the API reference and the custom elements manifest look for them.
@@ -18,9 +19,18 @@
  * holds what its parser returns for an absent attribute.
  */
 
-import type { BoundingBox, Color } from 'playcanvas';
+import type { BoundingBox, Color, Plane, Vec2, Vec4 } from 'playcanvas';
 
-import { parseBool, parseBoundingBox, parseColor, parseEnum, parseNumber } from './parse';
+import {
+    parseBool,
+    parseBoundingBox,
+    parseColor,
+    parseEnum,
+    parseNumber,
+    parsePlanes,
+    parseVec2,
+    parseVec4
+} from './parse';
 
 // Keep `export` on these declarations, as asset-binding.ts does: with `stripInternal`, a separate
 // `export { ... }` statement would outlive the declarations it names.
@@ -34,17 +44,38 @@ export type AttributeSpec<T, E = T> = {
     /**
      * Parses the attribute's text. `null` is the absent attribute, which yields the default.
      */
-    parse: (value: string | null, attribute: string) => T;
+    readonly parse: (value: string | null, attribute: string) => T;
 
     /**
-     * Converts the value to what the engine takes. Omitted where the engine takes it as it is.
+     * Converts the value to what the engine takes. Absent where the engine takes it as it is.
      */
-    toEngine?: (value: T) => E;
+    readonly toEngine?: (value: T) => E;
+
+    /**
+     * The engine property the value is written to. Absent where it has the element property's name.
+     */
+    readonly engine?: string;
+
+    /**
+     * Names the engine property, where it is not the element property's name.
+     *
+     * @param engine - The engine property.
+     * @returns The attribute, written to that property.
+     */
+    as(engine: string): AttributeSpec<T, E>;
+
+    /**
+     * Converts the value to what the engine takes, where that is not the value itself.
+     *
+     * @param toEngine - The conversion.
+     * @returns The attribute, converted on its way to the engine.
+     */
+    to<C>(toEngine: (value: T) => C): AttributeSpec<T, C>;
 };
 
 /**
  * The attributes of an element, keyed by property name. The attribute is the same name in
- * kebab-case, and the engine property is the same name unchanged.
+ * kebab-case.
  *
  * @internal
  */
@@ -67,6 +98,18 @@ type Declared<E, S extends AttributeSchema> = [Undeclared<E, S>] extends [never]
     ? unknown
     : `'${Undeclared<E, S> & string}' is not declared on the class with the type its attribute parses to`;
 
+const spec = <T, E = T>(
+    parse: (value: string | null, attribute: string) => T,
+    toEngine?: (value: T) => E,
+    engine?: string
+): AttributeSpec<T, E> => ({
+    parse,
+    toEngine,
+    engine,
+    as: (name) => spec(parse, toEngine, name),
+    to: (convert) => spec(parse, convert, engine)
+});
+
 function oneOf<const T extends string>(valid: readonly T[], defaultValue: NoInfer<T>): AttributeSpec<T>;
 function oneOf<T extends string, E>(valid: ReadonlyMap<T, E>, defaultValue: NoInfer<T>): AttributeSpec<T, E>;
 function oneOf<T extends string, E>(
@@ -75,10 +118,10 @@ function oneOf<T extends string, E>(
 ): AttributeSpec<T, T | E | undefined> {
     const parse = (value: string | null, attribute: string) => parseEnum(value, valid, defaultValue, attribute);
     if (Array.isArray(valid)) {
-        return { parse };
+        return spec(parse);
     }
     const names = valid as ReadonlyMap<T, E>;
-    return { parse, toEngine: (value) => names.get(value) ?? names.get(defaultValue) };
+    return spec(parse, (value) => names.get(value) ?? names.get(defaultValue));
 }
 
 /**
@@ -88,32 +131,36 @@ function oneOf<T extends string, E>(
  * @internal
  */
 export const attr = {
-    bool: (defaultValue: boolean): AttributeSpec<boolean> => ({
-        parse: (value) => parseBool(value, defaultValue)
-    }),
+    bool: (defaultValue: boolean) => spec((value) => parseBool(value, defaultValue)),
 
-    boundingBox: <T extends BoundingBox | null>(defaultValue: T): AttributeSpec<BoundingBox | T> => ({
-        parse: (value, attribute) => parseBoundingBox(value, defaultValue, attribute)
-    }),
+    boundingBox: <T extends BoundingBox | null>(defaultValue: T) =>
+        spec((value, attribute) => parseBoundingBox(value, defaultValue, attribute)),
 
-    color: <T extends Color | null>(defaultValue: T): AttributeSpec<Color | T> => ({
-        parse: (value, attribute) => parseColor(value, defaultValue, attribute)
-    }),
+    color: <T extends Color | null>(defaultValue: T) =>
+        spec((value, attribute) => parseColor(value, defaultValue, attribute)),
 
-    number: (defaultValue: number): AttributeSpec<number> => ({
-        parse: (value, attribute) => parseNumber(value, defaultValue, attribute)
-    }),
+    number: (defaultValue: number) => spec((value, attribute) => parseNumber(value, defaultValue, attribute)),
 
     /**
      * One of a set of names: an array where the engine takes the name itself, or a map from each
      * name to what the engine takes for it.
      */
-    oneOf
+    oneOf,
+
+    /** A list of planes, which has no default but the empty list. */
+    planes: () => spec((value, attribute): Plane[] => parsePlanes(value, attribute)),
+
+    vec2: <T extends Vec2 | null>(defaultValue: T) =>
+        spec((value, attribute) => parseVec2(value, defaultValue, attribute)),
+
+    vec4: <T extends Vec4 | null>(defaultValue: T) =>
+        spec((value, attribute) => parseVec4(value, defaultValue, attribute))
 };
 
 type Entry = {
     attribute: string;
     property: string;
+    engine: string;
     spec: AttributeSpec<unknown, unknown>;
 };
 
@@ -144,21 +191,21 @@ const storeOf = (element: object) => {
     return store;
 };
 
-const read = (element: object, { attribute, property, spec }: Entry) => {
+const read = (element: object, { attribute, property, spec: { parse } }: Entry) => {
     const store = storeOf(element);
     if (!(property in store)) {
-        store[property] = spec.parse(null, attribute);
+        store[property] = parse(null, attribute);
     }
     return store[property];
 };
 
-const convert = ({ spec }: Entry, value: unknown) => (spec.toEngine ? spec.toEngine(value) : value);
+const convert = ({ spec: { toEngine } }: Entry, value: unknown) => (toEngine ? toEngine(value) : value);
 
 /**
  * Gives a class the accessors for a schema of attributes. A property holds what was last written
- * to it and, once `target` returns the engine object behind the element, writes through to the
- * property of the same name there. Call it before the class is registered as a custom element,
- * which is when the browser reads `observedAttributes`.
+ * to it and, once `target` returns the engine object behind the element, writes through to it.
+ * Call it before the class is registered as a custom element, which is when the browser reads
+ * `observedAttributes`.
  *
  * @param ctor - The element class.
  * @param schema - The attributes, keyed by property name.
@@ -173,8 +220,13 @@ export const defineAttributes = <E extends object, S extends AttributeSchema>(
 ) => {
     const entries = new Map(schemaOf(ctor));
 
-    for (const [property, spec] of Object.entries<AttributeSpec<unknown, unknown>>(schema)) {
-        const entry: Entry = { attribute: camelToKebab(property), property, spec };
+    for (const [property, attribute] of Object.entries<AttributeSpec<unknown, unknown>>(schema)) {
+        const entry: Entry = {
+            attribute: camelToKebab(property),
+            property,
+            engine: attribute.engine ?? property,
+            spec: attribute
+        };
         entries.set(entry.attribute, entry);
 
         Object.defineProperty(ctor.prototype, property, {
@@ -186,7 +238,7 @@ export const defineAttributes = <E extends object, S extends AttributeSchema>(
                 storeOf(this)[property] = value;
                 const engine = target(this) as Record<string, unknown> | null;
                 if (engine) {
-                    engine[property] = convert(entry, value);
+                    engine[entry.engine] = convert(entry, value);
                 }
             }
         });
@@ -234,7 +286,7 @@ export const applyAttribute = (element: object, name: string, value: string | nu
 export const engineData = (element: object): Record<string, unknown> => {
     const data: Record<string, unknown> = {};
     for (const entry of schemaOf(element.constructor)?.values() ?? []) {
-        data[entry.property] = convert(entry, read(element, entry));
+        data[entry.engine] = convert(entry, read(element, entry));
     }
     return data;
 };

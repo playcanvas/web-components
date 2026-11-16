@@ -20,7 +20,7 @@ import {
     XRTYPE_VR
 } from 'playcanvas';
 
-import { parseBool, parseColor, parseEnum, parseNumber, parsePlanes, parseVec2, parseVec4 } from '../parse';
+import { attr, defineAttributes } from '../attributes';
 
 import { ComponentElement } from './component';
 
@@ -63,83 +63,141 @@ const tonemaps = new Map<Tonemap, number>([
  * @category Components
  */
 class CameraComponentElement extends ComponentElement<CameraComponent> {
-    private _clearColor = new Color(0.75, 0.75, 0.75, 1);
+    /**
+     * The clear color of the camera.
+     */
+    declare clearColor: Color;
 
-    private _clearColorBuffer = true;
+    /**
+     * The clear color buffer of the camera.
+     */
+    declare clearColorBuffer: boolean;
 
-    private _clearDepth = 1;
+    /**
+     * The depth value the depth buffer is cleared to. Defaults to 1.
+     */
+    declare clearDepth: number;
 
-    private _clearDepthBuffer = true;
+    /**
+     * The clear depth buffer of the camera.
+     */
+    declare clearDepthBuffer: boolean;
 
-    private _clearStencilBuffer = true;
+    /**
+     * The clear stencil buffer of the camera.
+     */
+    declare clearStencilBuffer: boolean;
 
-    private _clipIntersection = false;
+    /**
+     * Whether the clipping planes of the camera clip only what is behind all of them, in place of
+     * what is behind any of them. Two planes then cut out a wedge, and three a corner. Defaults to
+     * false.
+     */
+    declare clipIntersection: boolean;
 
-    private _clippingPlanes: Plane[] = [];
+    /**
+     * The planes, in world space, that clip everything the camera renders. They clip as a section
+     * view does: what is behind a plane, on the side its normal points away from, is not rendered.
+     * The planes do not clip shadows or screen space elements. Up to 8 planes are used. The planes
+     * are copied, so assign the array again to apply a change to one. Defaults to no planes.
+     */
+    declare clippingPlanes: Plane[];
 
-    private _cullFaces = true;
+    /**
+     * The cull faces of the camera.
+     */
+    declare cullFaces: boolean;
 
-    private _farClip = 1000;
+    /**
+     * The far clip distance of the camera.
+     */
+    declare farClip: number;
 
-    private _flipFaces = false;
+    /**
+     * The flip faces of the camera.
+     */
+    declare flipFaces: boolean;
 
-    private _fov = 45;
+    /**
+     * The field of view of the camera.
+     */
+    declare fov: number;
 
-    private _frustumCulling = true;
+    /**
+     * The frustum culling of the camera.
+     */
+    declare frustumCulling: boolean;
 
-    private _gamma: 'linear' | 'srgb' = 'srgb';
+    /**
+     * The gamma correction of the camera.
+     */
+    declare gamma: 'linear' | 'srgb';
 
-    private _horizontalFov = false;
+    /**
+     * Whether the camera's field of view (fov) is horizontal or vertical. Defaults to false, which
+     * is vertical.
+     */
+    declare horizontalFov: boolean;
 
-    private _nearClip = 0.1;
+    /**
+     * The near clip distance of the camera.
+     */
+    declare nearClip: number;
 
-    private _projection: 'perspective' | 'orthographic' = 'perspective';
+    /**
+     * The orthographic height of the camera.
+     */
+    declare orthoHeight: number;
 
-    private _projectionOffset = new Vec2(0, 0);
+    /**
+     * The priority of the camera.
+     */
+    declare priority: number;
 
-    private _orthoHeight = 10;
+    /**
+     * The projection of the camera. Can be `perspective` or `orthographic`. Use `orthoHeight` to
+     * size an orthographic projection.
+     */
+    declare projection: 'perspective' | 'orthographic';
 
-    private _priority = 0;
+    /**
+     * The offset of the projection window from the view direction. It gives an off-center (shift
+     * lens) projection, in half-frustum units: `0 1` moves the window up by half the frustum
+     * height. Keeping the camera level and shifting the window frames a tall subject with its
+     * verticals parallel. Applies to both projections and is ignored in XR. Defaults to `0 0`.
+     */
+    declare projectionOffset: Vec2;
 
-    private _rect = new Vec4(0, 0, 1, 1);
+    /**
+     * The rect of the camera.
+     */
+    declare rect: Vec4;
 
-    private _sceneColorMap = false;
+    /**
+     * Whether the camera renders a copy of the scene's color for its materials to sample, which
+     * refractive materials - such as glTF materials with transmission - need to show what is
+     * behind them. The copy is made every frame, so leave it off unless a material uses it. A
+     * camera rendered through the `cameraFrame` script takes this from that script's
+     * `rendering.sceneColorMap` instead. Defaults to `false`.
+     */
+    declare sceneColorMap: boolean;
 
-    private _scissorRect = new Vec4(0, 0, 1, 1);
+    /**
+     * The scissor rect of the camera.
+     */
+    declare scissorRect: Vec4;
 
-    private _tonemap: Tonemap = 'linear';
+    /**
+     * The tone mapping of the camera. Can be `none`, `linear`, `filmic`, `hejl`, `aces`, `aces2`,
+     * `neutral`, `agx` or `agx-punchy`. Defaults to `linear`, which applies the scene exposure and
+     * nothing else; `none` skips the exposure too. `agx` gives a neutral, flat look that suits
+     * color grading, and `agx-punchy` raises its contrast and saturation.
+     */
+    declare tonemap: Tonemap;
 
     /** @ignore */
     constructor() {
         super('camera');
-    }
-
-    protected getInitialComponentData() {
-        return {
-            clearColor: this._clearColor,
-            clearColorBuffer: this._clearColorBuffer,
-            clearDepth: this._clearDepth,
-            clearDepthBuffer: this._clearDepthBuffer,
-            clearStencilBuffer: this._clearStencilBuffer,
-            clipIntersection: this._clipIntersection,
-            clippingPlanes: this._clippingPlanes,
-            cullFaces: this._cullFaces,
-            farClip: this._farClip,
-            flipFaces: this._flipFaces,
-            fov: this._fov,
-            frustumCulling: this._frustumCulling,
-            gammaCorrection: this._gamma === 'srgb' ? GAMMA_SRGB : GAMMA_NONE,
-            horizontalFov: this._horizontalFov,
-            nearClip: this._nearClip,
-            projection: projections.get(this._projection) ?? PROJECTION_PERSPECTIVE,
-            projectionOffset: this._projectionOffset,
-            orthoHeight: this._orthoHeight,
-            priority: this._priority,
-            rect: this._rect,
-            renderSceneColorMap: this._sceneColorMap,
-            scissorRect: this._scissorRect,
-            toneMapping: tonemaps.get(this._tonemap) ?? TONEMAP_LINEAR
-        };
     }
 
     /**
@@ -208,569 +266,42 @@ class CameraComponentElement extends ComponentElement<CameraComponent> {
     get component(): CameraComponent | null {
         return super.component;
     }
-
-    /**
-     * Sets the clear color of the camera.
-     * @param value - The clear color.
-     */
-    set clearColor(value) {
-        this._clearColor = value;
-        if (this.component) {
-            this.component.clearColor = value;
-        }
-    }
-
-    /**
-     * Gets the clear color of the camera.
-     * @returns The clear color.
-     */
-    get clearColor(): Color {
-        return this._clearColor;
-    }
-
-    /**
-     * Sets the clear color buffer of the camera.
-     * @param value - The clear color buffer.
-     */
-    set clearColorBuffer(value: boolean) {
-        this._clearColorBuffer = value;
-        if (this.component) {
-            this.component.clearColorBuffer = value;
-        }
-    }
-
-    /**
-     * Gets the clear color buffer of the camera.
-     * @returns The clear color buffer.
-     */
-    get clearColorBuffer(): boolean {
-        return this._clearColorBuffer;
-    }
-
-    /**
-     * Sets the depth value the depth buffer is cleared to. Defaults to 1.
-     * @param value - The clear depth value.
-     */
-    set clearDepth(value: number) {
-        this._clearDepth = value;
-        if (this.component) {
-            this.component.clearDepth = value;
-        }
-    }
-
-    /**
-     * Gets the depth value the depth buffer is cleared to.
-     * @returns The clear depth value.
-     */
-    get clearDepth(): number {
-        return this._clearDepth;
-    }
-
-    /**
-     * Sets the clear depth buffer of the camera.
-     * @param value - The clear depth buffer.
-     */
-    set clearDepthBuffer(value: boolean) {
-        this._clearDepthBuffer = value;
-        if (this.component) {
-            this.component.clearDepthBuffer = value;
-        }
-    }
-
-    /**
-     * Gets the clear depth buffer of the camera.
-     * @returns The clear depth buffer.
-     */
-    get clearDepthBuffer(): boolean {
-        return this._clearDepthBuffer;
-    }
-
-    /**
-     * Sets the clear stencil buffer of the camera.
-     * @param value - The clear stencil buffer.
-     */
-    set clearStencilBuffer(value: boolean) {
-        this._clearStencilBuffer = value;
-        if (this.component) {
-            this.component.clearStencilBuffer = value;
-        }
-    }
-
-    /**
-     * Gets the clear stencil buffer of the camera.
-     * @returns The clear stencil buffer.
-     */
-    get clearStencilBuffer(): boolean {
-        return this._clearStencilBuffer;
-    }
-
-    /**
-     * Sets whether the clipping planes of the camera clip only what is behind all of them, in
-     * place of what is behind any of them: two planes then cut out a wedge, and three a corner.
-     * Defaults to false.
-     * @param value - Whether only what is behind all of the planes is clipped.
-     */
-    set clipIntersection(value: boolean) {
-        this._clipIntersection = value;
-        if (this.component) {
-            this.component.clipIntersection = value;
-        }
-    }
-
-    /**
-     * Gets whether the clipping planes of the camera clip only what is behind all of them, in
-     * place of what is behind any of them.
-     * @returns Whether only what is behind all of the planes is clipped.
-     */
-    get clipIntersection(): boolean {
-        return this._clipIntersection;
-    }
-
-    /**
-     * Sets the planes, in world space, that clip everything the camera renders, as a section
-     * view does. What is behind a plane, on the side its normal points away from, is not
-     * rendered. The planes do not clip shadows or screen space elements. Up to 8 planes are
-     * used. The planes are copied, so assign the array again to apply a change to one. Defaults
-     * to no planes.
-     * @param value - The clipping planes.
-     */
-    set clippingPlanes(value: Plane[]) {
-        this._clippingPlanes = value;
-        if (this.component) {
-            this.component.clippingPlanes = value;
-        }
-    }
-
-    /**
-     * Gets the planes, in world space, that clip everything the camera renders.
-     * @returns The clipping planes.
-     */
-    get clippingPlanes(): Plane[] {
-        return this._clippingPlanes;
-    }
-
-    /**
-     * Sets the cull faces of the camera.
-     * @param value - The cull faces.
-     */
-    set cullFaces(value: boolean) {
-        this._cullFaces = value;
-        if (this.component) {
-            this.component.cullFaces = value;
-        }
-    }
-
-    /**
-     * Gets the cull faces of the camera.
-     * @returns The cull faces.
-     */
-    get cullFaces(): boolean {
-        return this._cullFaces;
-    }
-
-    /**
-     * Sets the far clip distance of the camera.
-     * @param value - The far clip distance.
-     */
-    set farClip(value: number) {
-        this._farClip = value;
-        if (this.component) {
-            this.component.farClip = value;
-        }
-    }
-
-    /**
-     * Gets the far clip distance of the camera.
-     * @returns The far clip distance.
-     */
-    get farClip(): number {
-        return this._farClip;
-    }
-
-    /**
-     * Sets the flip faces of the camera.
-     * @param value - The flip faces.
-     */
-    set flipFaces(value: boolean) {
-        this._flipFaces = value;
-        if (this.component) {
-            this.component.flipFaces = value;
-        }
-    }
-
-    /**
-     * Gets the flip faces of the camera.
-     * @returns The flip faces.
-     */
-    get flipFaces(): boolean {
-        return this._flipFaces;
-    }
-
-    /**
-     * Sets the field of view of the camera.
-     * @param value - The field of view.
-     */
-    set fov(value: number) {
-        this._fov = value;
-        if (this.component) {
-            this.component.fov = value;
-        }
-    }
-
-    /**
-     * Gets the field of view of the camera.
-     * @returns The field of view.
-     */
-    get fov(): number {
-        return this._fov;
-    }
-
-    /**
-     * Sets the frustum culling of the camera.
-     * @param value - The frustum culling.
-     */
-    set frustumCulling(value: boolean) {
-        this._frustumCulling = value;
-        if (this.component) {
-            this.component.frustumCulling = value;
-        }
-    }
-
-    /**
-     * Gets the frustum culling of the camera.
-     * @returns The frustum culling.
-     */
-    get frustumCulling(): boolean {
-        return this._frustumCulling;
-    }
-
-    /**
-     * Sets the gamma correction of the camera.
-     * @param value - The gamma correction.
-     */
-    set gamma(value: 'linear' | 'srgb') {
-        this._gamma = value;
-        if (this.component) {
-            this.component.gammaCorrection = value === 'srgb' ? GAMMA_SRGB : GAMMA_NONE;
-        }
-    }
-
-    /**
-     * Gets the gamma correction of the camera.
-     * @returns The gamma correction.
-     */
-    get gamma(): 'linear' | 'srgb' {
-        return this._gamma;
-    }
-
-    /**
-     * Sets whether the camera's field of view (fov) is horizontal or vertical. Defaults to false
-     * (meaning it is vertical be default).
-     * @param value - Whether the camera's field of view is horizontal.
-     */
-    set horizontalFov(value: boolean) {
-        this._horizontalFov = value;
-        if (this.component) {
-            this.component.horizontalFov = value;
-        }
-    }
-
-    /**
-     * Gets whether the camera's field of view (fov) is horizontal or vertical.
-     * @returns Whether the camera's field of view is horizontal.
-     */
-    get horizontalFov(): boolean {
-        return this._horizontalFov;
-    }
-
-    /**
-     * Sets the near clip distance of the camera.
-     * @param value - The near clip distance.
-     */
-    set nearClip(value: number) {
-        this._nearClip = value;
-        if (this.component) {
-            this.component.nearClip = value;
-        }
-    }
-
-    /**
-     * Gets the near clip distance of the camera.
-     * @returns The near clip distance.
-     */
-    get nearClip(): number {
-        return this._nearClip;
-    }
-
-    /**
-     * Sets the orthographic height of the camera.
-     * @param value - The orthographic height.
-     */
-    set orthoHeight(value: number) {
-        this._orthoHeight = value;
-        if (this.component) {
-            this.component.orthoHeight = value;
-        }
-    }
-
-    /**
-     * Gets the orthographic height of the camera.
-     * @returns The orthographic height.
-     */
-    get orthoHeight() {
-        return this._orthoHeight;
-    }
-
-    /**
-     * Sets the priority of the camera.
-     * @param value - The priority.
-     */
-    set priority(value: number) {
-        this._priority = value;
-        if (this.component) {
-            this.component.priority = value;
-        }
-    }
-
-    /**
-     * Gets the priority of the camera.
-     * @returns The priority.
-     */
-    get priority(): number {
-        return this._priority;
-    }
-
-    /**
-     * Sets the projection of the camera. Use `orthoHeight` to size an orthographic projection.
-     * @param value - The projection ('perspective' or 'orthographic').
-     */
-    set projection(value: 'perspective' | 'orthographic') {
-        this._projection = value;
-        if (this.component) {
-            this.component.projection = projections.get(value) ?? PROJECTION_PERSPECTIVE;
-        }
-    }
-
-    /**
-     * Gets the projection of the camera.
-     * @returns The projection.
-     */
-    get projection() {
-        return this._projection;
-    }
-
-    /**
-     * Sets the offset of the projection window from the view direction, for an off-center (shift
-     * lens) projection, in half-frustum units: `0 1` moves the window up by half the frustum
-     * height. Keeping the camera level and shifting the window frames a tall subject with its
-     * verticals parallel. Applies to both projections and is ignored in XR. Defaults to `0 0`.
-     * @param value - The projection offset.
-     */
-    set projectionOffset(value: Vec2) {
-        this._projectionOffset = value;
-        if (this.component) {
-            this.component.projectionOffset = value;
-        }
-    }
-
-    /**
-     * Gets the offset of the projection window from the view direction.
-     * @returns The projection offset.
-     */
-    get projectionOffset() {
-        return this._projectionOffset;
-    }
-
-    /**
-     * Sets the rect of the camera.
-     * @param value - The rect.
-     */
-    set rect(value: Vec4) {
-        this._rect = value;
-        if (this.component) {
-            this.component.rect = value;
-        }
-    }
-
-    /**
-     * Gets the rect of the camera.
-     * @returns The rect.
-     */
-    get rect(): Vec4 {
-        return this._rect;
-    }
-
-    /**
-     * Sets whether the camera renders a copy of the scene's color for its materials to sample,
-     * which refractive materials - such as glTF materials with transmission - need to show what
-     * is behind them. The copy is made every frame, so leave it off unless a material uses it. A
-     * camera rendered through the `cameraFrame` script takes this from that script's
-     * `rendering.sceneColorMap` instead. Defaults to `false`.
-     * @param value - Whether the camera renders the scene color map.
-     */
-    set sceneColorMap(value: boolean) {
-        this._sceneColorMap = value;
-        if (this.component) {
-            this.component.renderSceneColorMap = value;
-        }
-    }
-
-    /**
-     * Gets whether the camera renders a copy of the scene's color for its materials to sample,
-     * which refractive materials - such as glTF materials with transmission - need to show what
-     * is behind them.
-     * @returns Whether the camera renders the scene color map.
-     */
-    get sceneColorMap(): boolean {
-        return this._sceneColorMap;
-    }
-
-    /**
-     * Sets the scissor rect of the camera.
-     * @param value - The scissor rect.
-     */
-    set scissorRect(value: Vec4) {
-        this._scissorRect = value;
-        if (this.component) {
-            this.component.scissorRect = value;
-        }
-    }
-
-    /**
-     * Gets the scissor rect of the camera.
-     * @returns The scissor rect.
-     */
-    get scissorRect(): Vec4 {
-        return this._scissorRect;
-    }
-
-    /**
-     * Sets the tone mapping of the camera. Can be `none`, `linear`, `filmic`, `hejl`, `aces`,
-     * `aces2`, `neutral`, `agx` or `agx-punchy`. Defaults to `linear`, which applies the scene
-     * exposure and nothing else; `none` skips the exposure too. `agx` gives a neutral, flat look
-     * that suits color grading, and `agx-punchy` raises its contrast and saturation.
-     * @param value - The tone mapping.
-     */
-    set tonemap(value: Tonemap) {
-        this._tonemap = value;
-        if (this.component) {
-            this.component.toneMapping = tonemaps.get(value) ?? TONEMAP_LINEAR;
-        }
-    }
-
-    /**
-     * Gets the tone mapping of the camera.
-     * @returns The tone mapping.
-     */
-    get tonemap(): Tonemap {
-        return this._tonemap;
-    }
-
-    static get observedAttributes() {
-        return [
-            ...super.observedAttributes,
-            'clear-color',
-            'clear-color-buffer',
-            'clear-depth',
-            'clear-depth-buffer',
-            'clear-stencil-buffer',
-            'clip-intersection',
-            'clipping-planes',
-            'cull-faces',
-            'far-clip',
-            'flip-faces',
-            'fov',
-            'frustum-culling',
-            'gamma',
-            'horizontal-fov',
-            'near-clip',
-            'ortho-height',
-            'priority',
-            'projection',
-            'projection-offset',
-            'rect',
-            'scene-color-map',
-            'scissor-rect',
-            'tonemap'
-        ];
-    }
-
-    attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
-        super.attributeChangedCallback(name, _oldValue, newValue);
-
-        switch (name) {
-            case 'clear-color':
-                this.clearColor = parseColor(newValue, new Color(0.75, 0.75, 0.75, 1), name);
-                break;
-            case 'clear-color-buffer':
-                this.clearColorBuffer = parseBool(newValue, true);
-                break;
-            case 'clear-depth':
-                this.clearDepth = parseNumber(newValue, 1, name);
-                break;
-            case 'clear-depth-buffer':
-                this.clearDepthBuffer = parseBool(newValue, true);
-                break;
-            case 'clear-stencil-buffer':
-                this.clearStencilBuffer = parseBool(newValue, true);
-                break;
-            case 'clip-intersection':
-                this.clipIntersection = parseBool(newValue, false);
-                break;
-            case 'clipping-planes':
-                this.clippingPlanes = parsePlanes(newValue, name);
-                break;
-            case 'cull-faces':
-                this.cullFaces = parseBool(newValue, true);
-                break;
-            case 'far-clip':
-                this.farClip = parseNumber(newValue, 1000, name);
-                break;
-            case 'flip-faces':
-                this.flipFaces = parseBool(newValue, false);
-                break;
-            case 'fov':
-                this.fov = parseNumber(newValue, 45, name);
-                break;
-            case 'frustum-culling':
-                this.frustumCulling = parseBool(newValue, true);
-                break;
-            case 'gamma':
-                this.gamma = parseEnum(newValue, ['linear', 'srgb'], 'srgb', name);
-                break;
-            case 'horizontal-fov':
-                this.horizontalFov = parseBool(newValue, false);
-                break;
-            case 'near-clip':
-                this.nearClip = parseNumber(newValue, 0.1, name);
-                break;
-            case 'ortho-height':
-                this.orthoHeight = parseNumber(newValue, 10, name);
-                break;
-            case 'priority':
-                this.priority = parseNumber(newValue, 0, name);
-                break;
-            case 'projection':
-                this.projection = parseEnum(newValue, projections, 'perspective', name);
-                break;
-            case 'projection-offset':
-                this.projectionOffset = parseVec2(newValue, new Vec2(0, 0), name);
-                break;
-            case 'rect':
-                this.rect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
-                break;
-            case 'scene-color-map':
-                this.sceneColorMap = parseBool(newValue, false);
-                break;
-            case 'scissor-rect':
-                this.scissorRect = parseVec4(newValue, new Vec4(0, 0, 1, 1), name);
-                break;
-            case 'tonemap':
-                this.tonemap = parseEnum(newValue, tonemaps, 'linear', name);
-                break;
-        }
-    }
 }
+
+// Each attribute's parser and default. Three go to the engine under its own name for them, and
+// gamma is anything but `srgb` to the engine: no correction.
+defineAttributes(
+    CameraComponentElement,
+    {
+        clearColor: attr.color(new Color(0.75, 0.75, 0.75, 1)),
+        clearColorBuffer: attr.bool(true),
+        clearDepth: attr.number(1),
+        clearDepthBuffer: attr.bool(true),
+        clearStencilBuffer: attr.bool(true),
+        clipIntersection: attr.bool(false),
+        clippingPlanes: attr.planes(),
+        cullFaces: attr.bool(true),
+        farClip: attr.number(1000),
+        flipFaces: attr.bool(false),
+        fov: attr.number(45),
+        frustumCulling: attr.bool(true),
+        gamma: attr
+            .oneOf(['linear', 'srgb'], 'srgb')
+            .to((value) => (value === 'srgb' ? GAMMA_SRGB : GAMMA_NONE))
+            .as('gammaCorrection'),
+        horizontalFov: attr.bool(false),
+        nearClip: attr.number(0.1),
+        orthoHeight: attr.number(10),
+        priority: attr.number(0),
+        projection: attr.oneOf(projections, 'perspective'),
+        projectionOffset: attr.vec2(new Vec2(0, 0)),
+        rect: attr.vec4(new Vec4(0, 0, 1, 1)),
+        sceneColorMap: attr.bool(false).as('renderSceneColorMap'),
+        scissorRect: attr.vec4(new Vec4(0, 0, 1, 1)),
+        tonemap: attr.oneOf(tonemaps, 'linear').as('toneMapping')
+    },
+    (element) => element.component
+);
 
 globalThis.customElements?.define('pc-camera', CameraComponentElement);
 
