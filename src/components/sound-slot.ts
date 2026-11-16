@@ -2,7 +2,8 @@ import type { SoundSlot } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
 import { AsyncElement } from '../async-element';
-import { parseBool, parseNumber } from '../parse';
+import { applyAttribute, attr, attributeNames, defineAttributes } from '../attributes';
+import { parseNumber } from '../parse';
 
 import { SoundComponentElement } from './sound-component';
 
@@ -17,23 +18,44 @@ import { SoundComponentElement } from './sound-component';
  * @category Components
  */
 class SoundSlotElement extends AsyncElement {
+    /**
+     * The auto play flag of the sound slot.
+     */
+    declare autoPlay: boolean;
+
+    /**
+     * The loop flag of the sound slot.
+     */
+    declare loop: boolean;
+
+    /**
+     * The name of the sound slot.
+     */
+    declare name: string;
+
+    /**
+     * The overlap flag of the sound slot.
+     */
+    declare overlap: boolean;
+
+    /**
+     * The pitch of the sound slot.
+     */
+    declare pitch: number;
+
+    /**
+     * The start time of the sound slot.
+     */
+    declare startTime: number;
+
+    /**
+     * The volume of the sound slot.
+     */
+    declare volume: number;
+
     private _asset = '';
 
-    private _autoPlay = false;
-
     private _duration: number | null = null;
-
-    private _loop = false;
-
-    private _name = '';
-
-    private _overlap = false;
-
-    private _pitch = 1;
-
-    private _startTime = 0;
-
-    private _volume = 1;
 
     /**
      * The `<pc-sound>` this slot was added to, captured at connect time.
@@ -73,12 +95,12 @@ class SoundSlotElement extends AsyncElement {
         }
 
         const options = {
-            autoPlay: this._autoPlay,
-            loop: this._loop,
-            overlap: this._overlap,
-            pitch: this._pitch,
-            startTime: this._startTime,
-            volume: this._volume
+            autoPlay: this.autoPlay,
+            loop: this.loop,
+            overlap: this.overlap,
+            pitch: this.pitch,
+            startTime: this.startTime,
+            volume: this.volume
         } as any;
         if (this._duration) {
             options.duration = this._duration;
@@ -91,7 +113,7 @@ class SoundSlotElement extends AsyncElement {
         }
 
         this._soundElement = soundElement;
-        this.soundSlot = component.addSlot(this._name, options);
+        this.soundSlot = component.addSlot(this.name, options);
 
         this._onReady();
     }
@@ -103,7 +125,7 @@ class SoundSlotElement extends AsyncElement {
         // Uses the cached parent rather than a fresh lookup, since parentElement is already null
         // by now. The component itself is null if the parent <pc-sound> (or the whole <pc-app>) is
         // being torn down — parents disconnect first and have already removed the component.
-        this._soundElement?.component?.removeSlot(this._name);
+        this._soundElement?.component?.removeSlot(this.name);
         this._soundElement = null;
         this.soundSlot = null;
         this._resetReady();
@@ -143,25 +165,6 @@ class SoundSlotElement extends AsyncElement {
     }
 
     /**
-     * Sets the auto play flag of the sound slot.
-     * @param value - The auto play flag.
-     */
-    set autoPlay(value: boolean) {
-        this._autoPlay = value;
-        if (this.soundSlot) {
-            this.soundSlot.autoPlay = value;
-        }
-    }
-
-    /**
-     * Gets the auto play flag of the sound slot.
-     * @returns The auto play flag.
-     */
-    get autoPlay() {
-        return this._autoPlay;
-    }
-
-    /**
      * Sets the duration of the sound slot, in seconds (or `null` to play the whole clip).
      * @param value - The duration.
      */
@@ -180,156 +183,33 @@ class SoundSlotElement extends AsyncElement {
         return this._duration;
     }
 
-    /**
-     * Sets the loop flag of the sound slot.
-     * @param value - The loop flag.
-     */
-    set loop(value: boolean) {
-        this._loop = value;
-        if (this.soundSlot) {
-            this.soundSlot.loop = value;
-        }
-    }
-
-    /**
-     * Gets the loop flag of the sound slot.
-     * @returns The loop flag.
-     */
-    get loop() {
-        return this._loop;
-    }
-
-    /**
-     * Sets the name of the sound slot.
-     * @param value - The name.
-     */
-    set name(value: string) {
-        this._name = value;
-        if (this.soundSlot) {
-            this.soundSlot.name = value;
-        }
-    }
-
-    /**
-     * Gets the name of the sound slot.
-     * @returns The name.
-     */
-    get name() {
-        return this._name;
-    }
-
-    /**
-     * Sets the overlap flag of the sound slot.
-     * @param value - The overlap flag.
-     */
-    set overlap(value: boolean) {
-        this._overlap = value;
-        if (this.soundSlot) {
-            this.soundSlot.overlap = value;
-        }
-    }
-
-    /**
-     * Gets the overlap flag of the sound slot.
-     * @returns The overlap flag.
-     */
-    get overlap() {
-        return this._overlap;
-    }
-
-    /**
-     * Sets the pitch of the sound slot.
-     * @param value - The pitch.
-     */
-    set pitch(value: number) {
-        this._pitch = value;
-        if (this.soundSlot) {
-            this.soundSlot.pitch = value;
-        }
-    }
-
-    /**
-     * Gets the pitch of the sound slot.
-     * @returns The pitch.
-     */
-    get pitch() {
-        return this._pitch;
-    }
-
-    /**
-     * Sets the start time of the sound slot.
-     * @param value - The start time.
-     */
-    set startTime(value: number) {
-        this._startTime = value;
-        if (this.soundSlot) {
-            this.soundSlot.startTime = value;
-        }
-    }
-
-    /**
-     * Gets the start time of the sound slot.
-     * @returns The start time.
-     */
-    get startTime() {
-        return this._startTime;
-    }
-
-    /**
-     * Sets the volume of the sound slot.
-     * @param value - The volume.
-     */
-    set volume(value: number) {
-        this._volume = value;
-        if (this.soundSlot) {
-            this.soundSlot.volume = value;
-        }
-    }
-
-    /**
-     * Gets the volume of the sound slot.
-     * @returns The volume.
-     */
-    get volume() {
-        return this._volume;
-    }
-
     static get observedAttributes() {
-        return ['asset', 'auto-play', 'duration', 'loop', 'name', 'overlap', 'pitch', 'start-time', 'volume'];
+        return [...attributeNames(this), 'asset', 'duration'];
     }
 
     attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
+        applyAttribute(this, name, newValue);
+
         switch (name) {
             case 'asset':
                 this.asset = newValue ?? '';
                 break;
-            case 'auto-play':
-                this.autoPlay = parseBool(newValue, false);
-                break;
             case 'duration':
                 this.duration = parseNumber(newValue, null, name);
-                break;
-            case 'loop':
-                this.loop = parseBool(newValue, false);
-                break;
-            case 'name':
-                this.name = newValue ?? '';
-                break;
-            case 'overlap':
-                this.overlap = parseBool(newValue, false);
-                break;
-            case 'pitch':
-                this.pitch = parseNumber(newValue, 1, name);
-                break;
-            case 'start-time':
-                this.startTime = parseNumber(newValue, 0, name);
-                break;
-            case 'volume':
-                this.volume = parseNumber(newValue, 1, name);
                 break;
         }
     }
 }
+
+defineAttributes(SoundSlotElement, 'soundSlot', {
+    autoPlay: attr.bool(false),
+    loop: attr.bool(false),
+    name: attr.string(''),
+    overlap: attr.bool(false),
+    pitch: attr.number(1),
+    startTime: attr.number(0),
+    volume: attr.number(1)
+});
 
 globalThis.customElements?.define('pc-sound-slot', SoundSlotElement);
 
