@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>PlayCanvas Web Components - Ocean Assault</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "@playcanvas/web-components": "../dist/pwc.mjs",
+                    "playcanvas": "../node_modules/playcanvas/build/playcanvas.mjs"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/pwc.mjs"></script>
+        <link rel="stylesheet" href="css/example.css">
+        <style>
+            body {
+                background: #000;
+            }
+
+            /* The controls, bottom left: shown where the window is wide enough to leave room
+               beside the game, which is three quarters as wide as it is tall */
+            .controls {
+                display: none;
+                position: absolute;
+                bottom: max(16px, env(safe-area-inset-bottom));
+                left: max(16px, env(safe-area-inset-left));
+                margin: 0;
+                color: #8b98b0;
+                font: 12px/2 ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+                pointer-events: none;
+            }
+
+            @media (min-aspect-ratio: 3/2) and (min-height: 420px) {
+                .controls {
+                    display: block;
+                }
+            }
+
+            .controls kbd {
+                display: inline-block;
+                min-width: 1.3em;
+                padding: 0 0.45em;
+                border: 1px solid #59657f;
+                border-radius: 4px;
+                color: #f4f5ef;
+                font: inherit;
+                line-height: 1.5;
+                text-align: center;
+            }
+
+            /* A drag in place of the keys, where there is a touch screen */
+            .controls .touch {
+                display: none;
+            }
+
+            @media (pointer: coarse) {
+                .controls .keys {
+                    display: none;
+                }
+
+                .controls .touch {
+                    display: block;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- No antialiasing: the edge of a sprite is the edge of a pixel -->
+        <pc-app antialias="false">
+            <!-- Assets: the scripts, one sprite sheet and one audio file. The sheet is a texture
+                 atlas, read pixel for pixel - no filtering, no mipmaps. Its JSON file names the
+                 image beside it and gives each frame its rectangle. -->
+            <pc-asset src="assets/scripts/ocean-assault.mjs"></pc-asset>
+            <pc-asset id="sheet" type="textureatlas" src="assets/sprites/ocean-assault.json" srgb mipmaps="false" min-filter="nearest" mag-filter="nearest"></pc-asset>
+            <pc-asset id="sounds" src="assets/sounds/ocean-assault.mp3"></pc-asset>
+
+            <!-- Sprites cut from the sheet: each is a run of frame keys. A pixel of the sheet is
+                 one world unit, and a pixel of the game. -->
+            <!-- Scenery: the sea is one tile, repeated to fill whatever size a pc-sprite gives it.
+                 Its frames are its waves. An island or a cloud shows one frame of several. -->
+            <pc-asset id="sea" type="sprite" atlas="sheet" frame-keys="sea-0 sea-1 sea-2 sea-3 sea-4 sea-5 sea-6 sea-7" render-mode="tiled"></pc-asset>
+            <pc-asset id="island" type="sprite" atlas="sheet" frame-keys="island-0 island-1 island-2 island-3"></pc-asset>
+            <pc-asset id="cloud" type="sprite" atlas="sheet" frame-keys="cloud-0 cloud-1 cloud-2"></pc-asset>
+            <!-- The seaplane: two frames for its propeller, with its wings level or banked into a
+                 turn. Its shadow has one frame for each. -->
+            <pc-asset id="player-level" type="sprite" atlas="sheet" frame-keys="player-level-0 player-level-1"></pc-asset>
+            <pc-asset id="player-left" type="sprite" atlas="sheet" frame-keys="player-left-0 player-left-1"></pc-asset>
+            <pc-asset id="player-right" type="sprite" atlas="sheet" frame-keys="player-right-0 player-right-1"></pc-asset>
+            <pc-asset id="player-shadow" type="sprite" atlas="sheet" frame-keys="player-level-0 player-left-0 player-right-0"></pc-asset>
+            <!-- The raiders and their airship: the frames of each, then the white one it shows
+                 when it is hit -->
+            <pc-asset id="dart" type="sprite" atlas="sheet" frame-keys="dart-0 dart-1 dart-flash"></pc-asset>
+            <pc-asset id="wasp" type="sprite" atlas="sheet" frame-keys="wasp-0 wasp-1 wasp-flash"></pc-asset>
+            <pc-asset id="gunship" type="sprite" atlas="sheet" frame-keys="gunship-0 gunship-1 gunship-flash"></pc-asset>
+            <pc-asset id="boat" type="sprite" atlas="sheet" frame-keys="boat-0 boat-1 boat-flash"></pc-asset>
+            <pc-asset id="boss" type="sprite" atlas="sheet" frame-keys="boss-0 boss-flash"></pc-asset>
+            <!-- Shots. A missile has two frames, for its flame, for each of the 16 ways it can
+                 point. -->
+            <pc-asset id="shot" type="sprite" atlas="sheet" frame-keys="shot-0"></pc-asset>
+            <pc-asset id="needle" type="sprite" atlas="sheet" frame-keys="needle-0"></pc-asset>
+            <pc-asset id="orb" type="sprite" atlas="sheet" frame-keys="orb-0 orb-1"></pc-asset>
+            <pc-asset id="missile" type="sprite" atlas="sheet" frame-keys="
+                missile-0 missile-1 missile-2 missile-3 missile-4 missile-5 missile-6 missile-7
+                missile-8 missile-9 missile-10 missile-11 missile-12 missile-13 missile-14 missile-15
+                missile-16 missile-17 missile-18 missile-19 missile-20 missile-21 missile-22 missile-23
+                missile-24 missile-25 missile-26 missile-27 missile-28 missile-29 missile-30 missile-31"></pc-asset>
+            <!-- Explosions and smoke, and the power ups -->
+            <pc-asset id="boom" type="sprite" atlas="sheet" frame-keys="boom-0 boom-1 boom-2 boom-3 boom-4 boom-5"></pc-asset>
+            <pc-asset id="blast" type="sprite" atlas="sheet" frame-keys="blast-0 blast-1 blast-2 blast-3 blast-4 blast-5 blast-6 blast-7"></pc-asset>
+            <pc-asset id="spark" type="sprite" atlas="sheet" frame-keys="spark-0 spark-1"></pc-asset>
+            <pc-asset id="smoke" type="sprite" atlas="sheet" frame-keys="smoke-0 smoke-1 smoke-2 smoke-3"></pc-asset>
+            <pc-asset id="power" type="sprite" atlas="sheet" frame-keys="power-0 power-1 power-2 power-3"></pc-asset>
+            <pc-asset id="life" type="sprite" atlas="sheet" frame-keys="life-0 life-1 life-2 life-3"></pc-asset>
+            <!-- The HUD: a logo, an icon, a white pixel to stretch and tint, and a font with a
+                 frame for each character, in the order the spriteText script expects -->
+            <pc-asset id="logo" type="sprite" atlas="sheet" frame-keys="logo"></pc-asset>
+            <pc-asset id="icon-life" type="sprite" atlas="sheet" frame-keys="icon-life"></pc-asset>
+            <pc-asset id="pixel" type="sprite" atlas="sheet" frame-keys="pixel"></pc-asset>
+            <pc-asset id="font" type="sprite" atlas="sheet" frame-keys="
+                font-A font-B font-C font-D font-E font-F font-G font-H font-I font-J font-K font-L font-M
+                font-N font-O font-P font-Q font-R font-S font-T font-U font-V font-W font-X font-Y font-Z
+                font-0 font-1 font-2 font-3 font-4 font-5 font-6 font-7 font-8 font-9
+                font-dash font-bang font-colon font-dot font-times"></pc-asset>
+
+            <pc-scene>
+                <!-- The game is 192 by 256 pixels. Its camera sees just that: a world unit is a
+                     pixel, and the origin is the bottom left of the screen. -->
+                <pc-entity name="camera" position="96 128 50">
+                    <pc-camera projection="orthographic" ortho-height="128" near-clip="1" far-clip="100" clear-color="#2659a8"></pc-camera>
+                </pc-entity>
+                <!-- A second camera puts the game on the canvas. The pixelScreen script has the
+                     first camera draw on a texture of 192 by 256 pixels, and this one show that
+                     texture at the largest whole multiple of its size that fits, so every pixel
+                     of the game is a square of the screen. The texture holds colors as they are
+                     to be shown, which must not be gamma corrected again. -->
+                <pc-entity name="display">
+                    <pc-camera projection="orthographic" near-clip="1" far-clip="100" clear-color="black" priority="1" gamma="linear"></pc-camera>
+                    <pc-script>
+                        <pc-script-instance name="pixelScreen" source="entity:camera" width="192" height="256"></pc-script-instance>
+                    </pc-script>
+                </pc-entity>
+
+                <!-- The game. The oceanAssault script moves what is declared here, a whole pixel
+                     at a time. How far each thing is from the camera, its z, puts it in front of
+                     or behind the others. -->
+                <pc-entity name="game">
+                    <pc-script>
+                        <pc-script-instance name="oceanAssault" camera="entity:camera" screen="entity:display"></pc-script-instance>
+                    </pc-script>
+
+                    <!-- Sounds: every one is a part of the one audio file. Each slot plays its
+                         part, from start-time for duration, and overlaps itself, so shots and
+                         explosions pile up. -->
+                    <pc-sound positional="false" volume="0.7">
+                        <pc-sound-slot name="shot" asset="sounds" start-time="0.09" duration="0.14" overlap></pc-sound-slot>
+                        <pc-sound-slot name="hit" asset="sounds" start-time="0.41" duration="0.12" overlap></pc-sound-slot>
+                        <pc-sound-slot name="launch" asset="sounds" start-time="0.71" duration="0.47" overlap></pc-sound-slot>
+                        <pc-sound-slot name="boom" asset="sounds" start-time="1.36" duration="0.37" overlap></pc-sound-slot>
+                        <pc-sound-slot name="blast" asset="sounds" start-time="1.91" duration="0.97" overlap></pc-sound-slot>
+                        <pc-sound-slot name="pickup" asset="sounds" start-time="3.06" duration="0.28" overlap></pc-sound-slot>
+                        <pc-sound-slot name="crash" asset="sounds" start-time="3.52" duration="0.87" overlap></pc-sound-slot>
+                        <pc-sound-slot name="start" asset="sounds" start-time="4.57" duration="0.48" overlap></pc-sound-slot>
+                        <pc-sound-slot name="alarm" asset="sounds" start-time="5.23" duration="1.83" overlap></pc-sound-slot>
+                    </pc-sound>
+
+                    <!-- The sea: a 64 pixel tile, repeated over the screen and a tile more, which
+                         slides down a tile's height and starts again. Its waves are a clip: a
+                         loop of frames in which each crest rises, runs and sinks. -->
+                    <pc-entity name="sea" position="96 160 0">
+                        <pc-sprite type="animated" clip="waves" width="192" height="320">
+                            <pc-sprite-clip name="waves" asset="sea" fps="7" loop></pc-sprite-clip>
+                        </pc-sprite>
+                    </pc-entity>
+                    <!-- Islands go by with the sea, and clouds faster, above everything that
+                         flies. Each comes around again with another frame of its sprite. -->
+                    <pc-entity name="islands" position="0 0 1">
+                        <pc-entity name="island"><pc-sprite asset="island"></pc-sprite></pc-entity>
+                        <pc-entity name="island"><pc-sprite asset="island"></pc-sprite></pc-entity>
+                        <pc-entity name="island"><pc-sprite asset="island"></pc-sprite></pc-entity>
+                    </pc-entity>
+                    <pc-entity name="clouds" position="0 0 10">
+                        <pc-entity name="cloud"><pc-sprite asset="cloud" opacity="0.9"></pc-sprite></pc-entity>
+                        <pc-entity name="cloud"><pc-sprite asset="cloud" opacity="0.9"></pc-sprite></pc-entity>
+                        <pc-entity name="cloud"><pc-sprite asset="cloud" opacity="0.9"></pc-sprite></pc-entity>
+                    </pc-entity>
+
+                    <!-- The seaplane: a clip for its wings level, and one for each way it banks.
+                         A shadow is its sprite again, dark and see through, on the sea. -->
+                    <pc-entity name="player" position="96 40 7" enabled="false">
+                        <pc-sprite type="animated" clip="level">
+                            <pc-sprite-clip name="level" asset="player-level" fps="24" loop></pc-sprite-clip>
+                            <pc-sprite-clip name="left" asset="player-left" fps="24" loop></pc-sprite-clip>
+                            <pc-sprite-clip name="right" asset="player-right" fps="24" loop></pc-sprite-clip>
+                        </pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="player-shadow" position="102 32 3" enabled="false">
+                        <pc-sprite asset="player-shadow" color="0.03 0.07 0.2" opacity="0.38"></pc-sprite>
+                    </pc-entity>
+
+                    <!-- One of each thing there are many of. The script makes the rest, copies of
+                         these, and hands them out as the game needs them. -->
+                    <!-- The seaplane's shots, and the raiders': fast needles, and slow orbs that
+                         pulse. A gunboat's missile shows the frame for the way it points. -->
+                    <pc-entity name="shot" position="0 0 8" enabled="false">
+                        <pc-sprite asset="shot"></pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="needle" position="0 0 11" enabled="false">
+                        <pc-sprite asset="needle"></pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="orb" position="0 0 11" enabled="false">
+                        <pc-sprite type="animated" clip="pulse">
+                            <pc-sprite-clip name="pulse" asset="orb" fps="8" loop></pc-sprite-clip>
+                        </pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="missile" position="0 0 11" enabled="false">
+                        <pc-sprite asset="missile"></pc-sprite>
+                    </pc-entity>
+                    <!-- A raider, which takes the sprite of its type as it arrives, and its
+                         shadow -->
+                    <pc-entity name="enemy" position="0 0 5" enabled="false">
+                        <pc-sprite asset="dart"></pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="enemy-shadow" position="0 0 3" enabled="false">
+                        <pc-sprite asset="dart" color="0.03 0.07 0.2" opacity="0.38"></pc-sprite>
+                    </pc-entity>
+                    <!-- Explosions and smoke: a clip for each kind, which plays once -->
+                    <pc-entity name="effect" position="0 0 9" enabled="false">
+                        <pc-sprite type="animated">
+                            <pc-sprite-clip name="boom" asset="boom" fps="18"></pc-sprite-clip>
+                            <pc-sprite-clip name="blast" asset="blast" fps="15"></pc-sprite-clip>
+                            <pc-sprite-clip name="spark" asset="spark" fps="24"></pc-sprite-clip>
+                            <pc-sprite-clip name="smoke" asset="smoke" fps="12"></pc-sprite-clip>
+                        </pc-sprite>
+                    </pc-entity>
+                    <!-- Power ups: more guns, or another seaplane -->
+                    <pc-entity name="pickup" position="0 0 6" enabled="false">
+                        <pc-sprite type="animated">
+                            <pc-sprite-clip name="power" asset="power" fps="8" loop></pc-sprite-clip>
+                            <pc-sprite-clip name="life" asset="life" fps="8" loop></pc-sprite-clip>
+                        </pc-sprite>
+                    </pc-entity>
+
+                    <!-- The airship that follows the raiders, and its shadow -->
+                    <pc-entity name="boss" position="96 296 5" enabled="false">
+                        <pc-sprite asset="boss"></pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="boss-shadow" position="108 280 3" enabled="false">
+                        <pc-sprite asset="boss" color="0.03 0.07 0.2" opacity="0.38"></pc-sprite>
+                    </pc-entity>
+                    <!-- Its strength, across the top of the screen: a white pixel of the sheet,
+                         stretched and tinted. The script sizes the fill. -->
+                    <pc-entity name="bar-back" position="96 238 20" scale="61 3 1" enabled="false">
+                        <pc-sprite asset="pixel" color="0.08 0.09 0.15"></pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="bar-fill" position="96 238 21" scale="60 2 1" enabled="false">
+                        <pc-sprite asset="pixel" color="#ff4f9a"></pc-sprite>
+                    </pc-entity>
+                    <!-- A flash over the whole screen, as the airship goes up -->
+                    <pc-entity name="flash" position="96 128 19" scale="96 128 1" enabled="false">
+                        <pc-sprite asset="pixel" opacity="0"></pc-sprite>
+                    </pc-entity>
+
+                    <!-- The HUD. Text is a sprite for each character, which the spriteText script
+                         makes: the score, the best score, a message and a hint. -->
+                    <pc-entity name="score" position="4 249 20">
+                        <pc-script>
+                            <pc-script-instance name="spriteText" font="asset:font" length="6"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                    <pc-entity name="best" position="189 249 20">
+                        <pc-script>
+                            <pc-script-instance name="spriteText" font="asset:font" length="9" align="right" color="#ffd23f"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                    <pc-entity name="message" position="96 136 20">
+                        <pc-script>
+                            <pc-script-instance name="spriteText" font="asset:font" length="24" align="center"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                    <pc-entity name="hint" position="96 96 20">
+                        <pc-script>
+                            <pc-script-instance name="spriteText" font="asset:font" length="28" align="center" text="PRESS SPACE OR TAP"></pc-script-instance>
+                        </pc-script>
+                    </pc-entity>
+                    <!-- The title, and an icon for each seaplane in reserve -->
+                    <pc-entity name="logo" position="96 172 20">
+                        <pc-sprite asset="logo"></pc-sprite>
+                    </pc-entity>
+                    <pc-entity name="lives" position="0 0 20">
+                        <pc-entity name="life" position="8 8 0" enabled="false"><pc-sprite asset="icon-life"></pc-sprite></pc-entity>
+                        <pc-entity name="life" position="19 8 0" enabled="false"><pc-sprite asset="icon-life"></pc-sprite></pc-entity>
+                        <pc-entity name="life" position="30 8 0" enabled="false"><pc-sprite asset="icon-life"></pc-sprite></pc-entity>
+                        <pc-entity name="life" position="41 8 0" enabled="false"><pc-sprite asset="icon-life"></pc-sprite></pc-entity>
+                        <pc-entity name="life" position="52 8 0" enabled="false"><pc-sprite asset="icon-life"></pc-sprite></pc-entity>
+                    </pc-entity>
+                </pc-entity>
+            </pc-scene>
+        </pc-app>
+        <div class="controls">
+            <div class="keys">
+                <div><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> Fly</div>
+                <div><kbd>Space</kbd> Fire</div>
+            </div>
+            <div class="touch">Drag to fly and fire</div>
+        </div>
+        <script type="module" src="js/example.mjs"></script>
+    </body>
+</html>

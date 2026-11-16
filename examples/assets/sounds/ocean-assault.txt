@@ -1,0 +1,18 @@
+ocean-assault.mp3: every sound of the Ocean Assault example, one after another in one file,
+synthesized entirely from code. The example's pc-sound-slot elements each play one part of it:
+
+- shot: the seaplane's guns, from 0.09 s for 0.14 s
+- hit: a shot landing on something that is still flying, from 0.41 s for 0.12 s
+- launch: a gunboat's missile leaving its deck, from 0.71 s for 0.47 s
+- boom: a small raider going up, from 1.36 s for 0.37 s
+- blast: a big one, from 1.91 s for 0.97 s
+- pickup: a power up collected, from 3.06 s for 0.28 s
+- crash: the seaplane going down, from 3.52 s for 0.87 s
+- start: the game starting, from 4.57 s for 0.48 s
+- alarm: the airship arriving, from 5.23 s for 1.83 s
+
+It comes from the PlayCanvas Engine's Ocean Assault demo (examples/assets/sounds in
+https://github.com/playcanvas/engine), where examples/utils/generate-ocean-assault-sounds.mjs
+writes it, and ocean-assault.json beside it there gives the same times.
+
+MIT, as the engine is.
