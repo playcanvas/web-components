@@ -105,6 +105,24 @@ describe('asset and material ids', () => {
             expect(paintOf(inside)).toBe('1 0 0');
             expect(particlesOf(inside)).toBe(7);
         });
+
+        it('resolve to another application’s in the same shadow root when its own declares none', async () => {
+            // The test above never leaves the application, whose own children have the ids. Here
+            // the second application has none, so they are looked for in the tree it is in, and
+            // that has to be the shadow root: looking in the document would find nothing
+            const shadow = mountInShadowRoot(app(RED + SEVEN) + app(''));
+            const [first, second] = await ready(shadow);
+
+            expect(document.getElementById('paint'), 'the document should not see into the shadow root').toBeNull();
+            expect(paintOf(second)).toBe('1 0 0');
+            expect(particlesOf(second)).toBe(7);
+
+            const from = second.querySelector('pc-render') as Element;
+            expect(MaterialElement.get('paint', from)).toBe(
+                (first.querySelector('pc-material') as MaterialElement).material
+            );
+            expect(AssetElement.get('config', from)).toBe((first.querySelector('pc-asset') as AssetElement).asset);
+        });
     });
 
     describe('in two applications that use the same ones', () => {
