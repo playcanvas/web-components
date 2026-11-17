@@ -665,7 +665,7 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
     }
 
     /**
-     * Ends a `pc-script-instance` element's wait for its script class, cancelling everything it
+     * Ends a `pc-script-instance` element's wait for its script class, canceling everything it
      * had pending.
      * @param scriptElement - The element.
      */

@@ -263,7 +263,7 @@ if (manifest) {
 
     // The description comes from the getter's "Gets whether ..." JSDoc, so it exercises
     // toAttributeDescription's rewrite as well as the boolean default. Pinned because the terse
-    // "The x flag." accessor style would make a useless tooltip for a behaviour switch.
+    // "The x flag." accessor style would make a useless tooltip for a behavior switch.
     expectAttribute('pc-app', 'loading-bar', { type: 'boolean', default: 'true', fieldName: 'loadingBar' });
     check(/^Whether .* built-in loading bar/.test(attribute('pc-app', 'loading-bar')?.description ?? ''),
         `pc-app[loading-bar] lost its descriptive tooltip: ${JSON.stringify(attribute('pc-app', 'loading-bar')?.description)}`);
