@@ -113,6 +113,36 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
         }) as T | null;
     }
 
+    /**
+     * Adds the component to the entity of the host it has found, and follows the host from then
+     * on. Shared by the two ways a component is added: by `<pc-app>` as it builds the scene
+     * before starting ({@link _build}), and by this element's own connectedCallback.
+     *
+     * @param entityElement - The host element, which is ready.
+     */
+    private _attachToHost(entityElement: EntityBaseElement) {
+        const generation = this._connectionGeneration;
+
+        this._hostElement = entityElement;
+        this._applyComponent();
+
+        // Re-apply when the host's readiness cycles without this element disconnecting: a
+        // `<pc-node>` rebinding after its model reloads or retargets, or a re-created entity.
+        // The 'ready' event bubbles, so events from descendants pass through this host - only
+        // the host's own cycles count. Readiness is cycled here too, so decorations one level
+        // down re-apply the same way.
+        this._hostReadyListener = (event: Event) => {
+            if (event.target !== this._hostElement) {
+                return;
+            }
+            if (generation !== this._connectionGeneration) {
+                return;
+            }
+            this._hostCycled();
+        };
+        entityElement.addEventListener('ready', this._hostReadyListener);
+    }
+
     private async _addComponent() {
         const generation = this._connectionGeneration;
 
@@ -135,24 +165,34 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
             return;
         }
 
-        this._hostElement = entityElement;
-        this._applyComponent();
+        this._attachToHost(entityElement);
+    }
 
-        // Re-apply when the host's readiness cycles without this element disconnecting: a
-        // `<pc-node>` rebinding after its model reloads or retargets, or a re-created entity.
-        // The 'ready' event bubbles, so events from descendants pass through this host - only
-        // the host's own cycles count. Readiness is cycled here too, so decorations one level
-        // down re-apply the same way.
-        this._hostReadyListener = (event: Event) => {
-            if (event.target !== this._hostElement) {
-                return;
-            }
-            if (generation !== this._connectionGeneration) {
-                return;
-            }
-            this._hostCycled();
-        };
-        entityElement.addEventListener('ready', this._hostReadyListener);
+    /**
+     * Adds the component now, without waiting, when the host already fronts an entity it can be
+     * added to. Called by `<pc-app>` for every component element under it once preload has
+     * finished and before it starts the application, in tree order - which is where the engine
+     * loads a scene - so every component exists when `app.start()` initializes the scripts. The
+     * element is ready from here: its component exists, though the application has not started.
+     *
+     * A host that is not ready is left to connectedCallback, which waits for it: an unbound
+     * `<pc-node>`, or a `<pc-model>` whose content arrives after the application has started.
+     *
+     * @internal
+     */
+    _build() {
+        if (!this.isConnected || this._hostElement) {
+            return;
+        }
+
+        const entityElement = this.closestEntity;
+        if (!entityElement?._isReady) {
+            return;
+        }
+
+        this._attachToHost(entityElement);
+        this.initComponent();
+        this._onReady();
     }
 
     /**
@@ -191,6 +231,12 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
         // became ready. A re-insertion runs a connectedCallback of its own, so a stale resume
         // must not add the component alongside it.
         if (generation !== this._connectionGeneration) {
+            return;
+        }
+
+        // The application adds the components declared under it before it starts, so by the time
+        // it is ready this one is usually in place, configured and announced
+        if (this._hostElement) {
             return;
         }
 

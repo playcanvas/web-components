@@ -67,10 +67,12 @@ import type { AssetElement } from './asset';
 import { AssetBinding } from './asset-binding';
 import { AsyncElement } from './async-element';
 import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
+import { ComponentElement } from './components/component';
 import type { EntityBaseElement } from './entity-base';
 import type { EntityOwnerElement } from './entity-owner';
 import { LoadingBar } from './loading-bar';
 import type { MaterialElement } from './material';
+import type { ModelElement } from './model';
 import { parseBool, parseEnum, parseNumber } from './parse';
 import { PointerController } from './pointer-controller';
 import type { SceneElement } from './scene';
@@ -117,6 +119,15 @@ const AREA_LIGHT_LUT_LENGTH = 64 * 64 * 4;
  * on the entity elements under the pointer, where they behave like the DOM's own pointer events;
  * `picking` controls when that happens. The canvas keeps receiving its native events too, so a
  * listener on this element sees both kinds - `event.target` tells them apart.
+ *
+ * The scene the document declares is built before the application starts, as a scene the engine
+ * loads is: the entities first and then, once the assets have preloaded, the content of every
+ * preloaded `<pc-model>` and every component, in document order. Starting the application then
+ * runs `initialize()` on every script and, once all of them have run, `postInitialize()` on every
+ * script - so a script can rely on the entities, components and scripts the document declares
+ * beside it. The element becomes ready when the application has started. What arrives later is
+ * built when it arrives, and its scripts initialize then: an element added to the document, a
+ * script class registered after the start, the content of a model whose asset is `lazy`.
  *
  * @elementSummary The `<pc-app>` element creates a PlayCanvas application and the canvas it renders
  * into, and is the root of every scene. It holds the `<pc-asset>`, `<pc-material>`, `<pc-wasm>` and
@@ -199,6 +210,12 @@ class AppElement extends AsyncElement {
      * @internal
      */
     _hierarchyReady = false;
+
+    /**
+     * Whether `app.start()` is running, which is when the scripts built at boot initialize. A
+     * teardown that begins inside it leaves the application for the boot to destroy.
+     */
+    private _starting = false;
 
     /**
      * Incremented on every connect and disconnect. Boot captures the value on entry and abandons
@@ -602,29 +619,110 @@ class AppElement extends AsyncElement {
             return;
         }
 
-        // Load assets before starting the application
-        app.preload(() => {
-            // The element may have been removed while assets loaded. The application is already
-            // destroyed, so it must not be started — and readiness must not be signaled for a
-            // boot that no longer owns the element.
+        // Load assets before starting the application. Awaited, where the rest of the boot could
+        // have run from the engine's callback: what follows runs the scene's scripts, and the
+        // engine's loader takes an exception thrown inside that callback for a failure of
+        // whichever asset happened to load last.
+        await new Promise<void>((resolve) => {
+            app.preload(resolve);
+        });
+
+        // The element may have been removed while assets loaded. The application is already
+        // destroyed, so it must not be started — and readiness must not be signaled for a
+        // boot that no longer owns the element.
+        if (generation !== this._bootGeneration) {
+            return;
+        }
+
+        // Scope the counter to this preload pass, so a later app.preload() call by user code
+        // cannot push `loaded` past `total`
+        app.off('preload:progress', onPreloadProgress);
+        this._loadProgress = 1;
+
+        // Build what the document declares on the entities - where the engine loads a scene,
+        // between preload and start - so that app.start() finds every component in place
+        this._buildScene(app, generation);
+
+        // Building dispatched ready and load events synchronously, and a listener may have
+        // removed the element. The application is already destroyed - it must not be started.
+        if (generation !== this._bootGeneration) {
+            return;
+        }
+
+        // Start the application, which initializes every script built above, and then
+        // post-initializes them. A script that throws as it does cuts the start short, as it
+        // does in any engine application: the error surfaces from this callback, and the
+        // element does not become ready.
+        this._starting = true;
+        try {
+            app.start();
+        } finally {
+            this._starting = false;
+
+            // A script removed the element as it initialized. The teardown left the
+            // application for this to destroy - see disconnectedCallback
+            if (generation !== this._bootGeneration) {
+                app.destroy();
+            }
+        }
+
+        // Readiness must not be signaled for a boot that no longer owns the element
+        if (generation !== this._bootGeneration) {
+            return;
+        }
+
+        // Dismiss the bar only once a frame has actually rendered; ready fires before the
+        // first rAF tick
+        app.once('frameend', () => this._bar?.complete());
+
+        this._onReady();
+    }
+
+    /**
+     * Builds everything the document declares under this element that the boot sweep left for
+     * later, so that it all exists when the application starts: the content of every model whose
+     * container was preloaded, and then every component, in tree order. The script instances
+     * whose class is registered are created along with their component, left for `app.start()`
+     * to initialize.
+     *
+     * This runs once preload has finished, as the engine's own boot loads its scene, and for the
+     * same reasons: the assets a component names have loaded, and the physics world exists.
+     *
+     * What cannot be built yet keeps the path it has always had, and is built when it can be: a
+     * model whose container loads later, what is declared inside it, and a script whose class
+     * has not been registered.
+     *
+     * @param app - The application.
+     * @param generation - The boot this belongs to. A listener run from here may remove the
+     * element, which ends the boot.
+     */
+    private _buildScene(app: AppBase, generation: number) {
+        // app.start() creates the physics world, when the page has loaded Ammo. A collision or
+        // rigid body component created before the world exists gets no shape and no body, so it
+        // is created here instead, by the call app.start() makes.
+        app.systems.rigidbody?.onLibraryLoaded();
+
+        // Models first, so that the nodes inside them are bound, and the entities declared on
+        // those nodes are built, before any component looks for its host. One nested in another
+        // model's content is built as that content arrives, and so is reached in turn.
+        const modelElements = this.querySelectorAll<ModelElement>('pc-model');
+        for (const modelElement of Array.from(modelElements)) {
             if (generation !== this._bootGeneration) {
                 return;
             }
+            if (modelElement.closestApp === this) {
+                modelElement._loadPreloaded();
+            }
+        }
 
-            // Scope the counter to this preload pass, so a later app.preload() call by user code
-            // cannot push `loaded` past `total`
-            app.off('preload:progress', onPreloadProgress);
-            this._loadProgress = 1;
-
-            // Start the application
-            app.start();
-
-            // Dismiss the bar only once a frame has actually rendered; ready fires before the
-            // first rAF tick
-            app.once('frameend', () => this._bar?.complete());
-
-            this._onReady();
-        });
+        for (const element of Array.from(this.querySelectorAll('*'))) {
+            if (generation !== this._bootGeneration) {
+                return;
+            }
+            if (element instanceof ComponentElement && element.closestApp === this) {
+                element._build();
+            }
+        }
     }
 
     disconnectedCallback() {
@@ -641,8 +739,16 @@ class AppElement extends AsyncElement {
 
         // Clean up the application. Destroying it destroys every entity, whose destroy hooks
         // unregister them - clear() covers any entity the engine no longer reached.
+        //
+        // A script can remove the element from initialize(), which runs inside app.start(),
+        // and the engine cannot be destroyed under its own start: it goes on to post-initialize
+        // through systems that are gone. The boot destroys the application as soon as start
+        // returns instead, much as the engine itself puts off a destroy asked for during a frame.
+        // The entity elements below still destroy their own entities as they disconnect.
         if (this._app) {
-            this._app.destroy();
+            if (!this._starting) {
+                this._app.destroy();
+            }
             this._app = null;
         }
         this._entityElements.clear();

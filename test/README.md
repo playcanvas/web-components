@@ -99,8 +99,8 @@ production, where `pwc.mjs` is a deferred module script and elements upgrade wit
 already parsed. Filling an already-connected container would connect `<pc-app>` before its children
 and its boot queries would find nothing.
 
-**Settle before tearing down.** `<pc-app>` resolves its own ready promise from inside the
-`app.preload()` callback, _before_ its descendants' async `connectedCallback`s have finished. So
+**Settle before tearing down.** `<pc-app>` resolves its own ready promise as soon as the application
+has started, _before_ its descendants' async `connectedCallback`s have finished. So
 `bootApp()` awaits `settle()` over the whole subtree, not just the app. Removing a tree in that
 window makes `_addComponent` and `addSlot` dereference nulls.
 

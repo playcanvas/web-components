@@ -1,4 +1,4 @@
-import type { EventHandle, ScriptComponent, Script } from 'playcanvas';
+import type { EventHandle, ScriptComponent, ScriptComponentSystem, Script } from 'playcanvas';
 import { Color, Quat, Vec2, Vec3, Vec4 } from 'playcanvas';
 
 import { useAsset } from '../asset-binding';
@@ -563,6 +563,12 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
      * parks the request and, when the class arrives, creates the instance itself - disabled, as
      * asked here, without the declared state, and unknown to the element, which then never
      * becomes ready.
+     *
+     * Before the application has started, the instance is created the way the engine's scene
+     * loader creates one: with its declared enabled state, and flagged as preloading, which
+     * leaves `initialize()` to `app.start()`. The engine then initializes every script the scene
+     * declares, and post-initializes them once all have initialized, with every component in
+     * place.
      * @param scriptElement - The `pc-script-instance` element to create the script instance for.
      * @returns The created script, or `null`.
      */
@@ -570,13 +576,27 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
         const name = scriptElement.getAttribute('name');
         if (!name || !this.component) return null;
 
-        if (!this.component.system.app.scripts.has(name)) {
+        const { system } = this.component;
+        if (!system.app.scripts.has(name)) {
             this.waitForScript(scriptElement, name);
             return null;
         }
 
-        const script = this.component.create(name, { enabled: false });
+        // The engine's own flag for an application that has not started: cleared by app.start(),
+        // just before it initializes the scripts. The component types its system as the base
+        // class, which does not declare the flag.
+        const { preloading } = system as ScriptComponentSystem;
+
+        const script = preloading
+            ? this.component.create(name, { enabled: scriptElement.enabled, preloading: true })
+            : this.component.create(name, { enabled: false });
         if (!script) return null;
+
+        // A preloading create leaves the attributes to be initialized by hand. They are wanted
+        // now: a per-property attribute is parsed against the type of the script's default
+        if (preloading) {
+            this.component.initializeAttributes(script);
+        }
 
         scriptElement._script = script;
 
