@@ -18,11 +18,6 @@ export default {
             plugins: [terser()]
         },
         {
-            file: 'dist/pwc.cjs',
-            format: 'cjs',
-            sourcemap: true
-        },
-        {
             file: 'dist/pwc.js',
             name: 'pwc',
             format: 'umd',
