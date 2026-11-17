@@ -1,7 +1,7 @@
 import type { ContainerResource, Entity } from 'playcanvas';
 import { Vec3 } from 'playcanvas';
 
-import { AssetBinding } from './asset-binding';
+import { AssetBinding, findAsset } from './asset-binding';
 import { applyAttribute, attributeNames } from './attributes';
 import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
 import { parseTags, parseVec3 } from './parse';
@@ -379,11 +379,50 @@ class ModelElement extends EntityOwnerElement {
 
         await appElement.ready();
 
-        // The element may have been removed, or another load started, while we waited
+        // The element may have been removed, or another load started, while we waited. Among the
+        // loads that supersede this one is the application's own, which settles a model whose
+        // container was preloaded before it starts - see _loadPreloaded
         if (generation !== this._loadGeneration) {
             return;
         }
 
+        this._settleContent();
+    }
+
+    /**
+     * Settles the content now, without waiting for the application to start, when nothing is
+     * left to wait for: the container asset has loaded, or failed, or no asset is assigned.
+     * Called by `<pc-app>` for every model under it once preload has finished and before it
+     * starts the application, so a preloaded model's content - and with it every `<pc-node>`
+     * that binds into it, and what is declared on them - exists when `app.start()` initializes
+     * the scripts. It supersedes the load that {@link _onBuilt} started, which is still waiting
+     * for the application.
+     *
+     * A model whose container has not loaded by then is left to that load, which binds the asset
+     * once the application has started: an asset marked `lazy`, or one added to the document
+     * late.
+     *
+     * @internal
+     */
+    _loadPreloaded() {
+        if (!this._entity || !this._built) {
+            return;
+        }
+
+        if (this._asset !== '' && !findAsset(this._asset, this)?.loaded) {
+            return;
+        }
+
+        this._loadGeneration++;
+        this._settleContent();
+    }
+
+    /**
+     * Settles the current asset selection against a host that is ready for content: readiness
+     * with no content when no asset is assigned, and otherwise a binding that instantiates the
+     * container when it has loaded - at once, if it already has - or reports its failure.
+     */
+    private _settleContent() {
         // The host may not be parented yet - a model under a pc-node that has not bound, reached
         // through the asset setter. Nothing settles here: _onBuilt re-runs this load once the
         // host builds.

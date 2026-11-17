@@ -31,8 +31,8 @@ export type BootOptions = {
  * Waits for every AsyncElement under `root` to become ready, throwing a message that names the
  * offenders if any of them do not.
  *
- * This is load bearing rather than convenient. <pc-app> resolves its own ready promise from inside
- * the app.preload() callback, which is BEFORE its descendants' async connectedCallbacks have run to
+ * This is load bearing rather than convenient. <pc-app> resolves its own ready promise as soon as
+ * the application has started, which is BEFORE its descendants' async connectedCallbacks have run to
  * completion. Tearing the tree down in that window makes ComponentElement._addComponent()
  * dereference an entity that is already null, and SoundSlotElement.connectedCallback() dereference
  * a component that is already null - both surfacing as unhandled rejections that fail the whole

@@ -85,9 +85,10 @@ describe('<pc-model>', () => {
 
     it('instantiates exactly once when pc-app is removed and re-added while booting', async () => {
         // Both connections' loads park on the same carried-over app-ready promise, so both
-        // resume when the second boot completes. Only the load belonging to the current
-        // connection may instantiate - the superseded one would leave an undisposed entity
-        // behind, invisible except to this counter.
+        // resume when the second boot completes - by which time that boot has instantiated the
+        // preloaded container itself, before starting. Neither parked load may instantiate
+        // again: a second content root would be left behind undisposed, invisible except to this
+        // counter.
         const handle = mount(`
             <pc-app backend="null">
                 ${ASSET_TAG}
@@ -96,15 +97,14 @@ describe('<pc-model>', () => {
         `);
         const appElement = handle.get<AppElement>('pc-app');
 
-        // The ready event dispatches synchronously when the app resolves readiness, BEFORE the
-        // parked loads resume on the microtask queue - early enough to wrap the resource they
-        // will both instantiate from.
+        // The asset element's load event dispatches as the container loads, BEFORE the application
+        // instantiates the model from it on its way to starting, and before the parked loads
+        // resume once it has - early enough to wrap the resource they all instantiate from. It
+        // does not bubble, so the listener is on the asset element itself.
         let instantiations = 0;
-        appElement.addEventListener('ready', (event) => {
-            if (event.target !== appElement) {
-                return;
-            }
-            const resource = handle.get('pc-asset').asset!.resource as { instantiateRenderEntity: () => unknown };
+        const assetElement = handle.get('pc-asset');
+        assetElement.addEventListener('load', () => {
+            const resource = assetElement.asset!.resource as { instantiateRenderEntity: () => unknown };
             const original = resource.instantiateRenderEntity.bind(resource);
             resource.instantiateRenderEntity = () => {
                 instantiations += 1;
