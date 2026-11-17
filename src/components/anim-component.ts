@@ -38,7 +38,9 @@ type PlaybackState = {
  * The element drives animation clips over the host entity's hierarchy. Clips come from
  * `<pc-anim-clip>` children — or, when the element is a direct child of a `<pc-model>` and
  * declares no clips, every animation of that model's container asset is assigned, named by track
- * name, in container order. The first clip plays automatically (opt out with `activate="false"`);
+ * name, in container order. A '.' in a track name becomes '_' in its clip name, since the engine
+ * reserves '.' for blend tree paths (a Mixamo track `Armature|mixamo.com|Layer0` is the clip
+ * `Armature|mixamo_com|Layer0`). The first clip plays automatically (opt out with `activate="false"`);
  * switch clips declaratively through the `clip` attribute, or imperatively through {@link play}
  * and {@link transition}. Tracks bind to scene nodes by name, so any hierarchy whose node names
  * match a clip's curves can be animated — a model's skeleton is simply the common case.
@@ -307,8 +309,8 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
 
     /**
      * Assigns every clip of the enclosing model's container, named by track name, in container
-     * order. Names the engine cannot host — dotted (reserved for blend tree paths) or already
-     * taken — are skipped with a warning naming each.
+     * order. A '.' in a track name, reserved by the engine for blend tree paths, becomes '_' in
+     * the clip name; a track whose clip name is already taken is skipped with a warning.
      */
     private async _kickAutoAssign(restore?: PlaybackState) {
         const generation = this._sourceGeneration;
@@ -346,18 +348,15 @@ class AnimComponentElement extends ComponentElement<AnimComponent> {
             if (!(track instanceof AnimTrack)) {
                 continue;
             }
-            if (track.name.indexOf('.') !== -1) {
-                console.warn(
-                    `pc-anim${label} - track '${track.name}' - '.' in a clip name is reserved for blend tree paths - track skipped`
-                );
+            // The engine reads '.' in a state name as a blend tree path, so a dotted track name
+            // (Mixamo exports 'Armature|mixamo.com|Layer0') is hosted with '_' in its place
+            const name = track.name.replaceAll('.', '_');
+            if (seen.has(name)) {
+                console.warn(`pc-anim${label} - duplicate clip name '${name}' - track '${track.name}' skipped`);
                 continue;
             }
-            if (seen.has(track.name)) {
-                console.warn(`pc-anim${label} - duplicate track name '${track.name}' - track skipped`);
-                continue;
-            }
-            seen.add(track.name);
-            component.assignAnimation(track.name, track);
+            seen.add(name);
+            component.assignAnimation(name, track);
         }
 
         this._autoAssigned = seen.size > 0;

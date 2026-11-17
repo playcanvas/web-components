@@ -233,16 +233,41 @@ describe('<pc-anim>', () => {
             expect(bonePosition(app).y).toBeGreaterThan(0);
         });
 
-        it('skips container tracks the engine cannot host, naming each', async () => {
+        it('skips a container track whose clip name is already taken', async () => {
             const { get } = await bootApp(`
-                <pc-asset id="odd" type="container" src="${animatedSrc('Walk', 'Walk', 'bad.name')}"></pc-asset>
+                <pc-asset id="odd" type="container" src="${animatedSrc('Walk', 'Walk')}"></pc-asset>
                 <pc-model asset="odd"><pc-anim></pc-anim></pc-model>
             `);
             const anim = get<AnimComponentElement>('pc-anim');
 
             await vi.waitFor(() => expect(anim.clips).toEqual(['Walk']));
-            warnings.expect("pc-anim - duplicate track name 'Walk' - track skipped");
-            warnings.expect("pc-anim - track 'bad.name' - '.' in a clip name is reserved for blend tree paths - track skipped");
+            warnings.expect("pc-anim - duplicate clip name 'Walk' - track 'Walk' skipped");
+        });
+
+        it('hosts a dotted track name with underscores, and plays it', async () => {
+            // Mixamo exports name their track 'Armature|mixamo.com|Layer0'; the engine reads '.'
+            // in a state name as a blend tree path
+            const { app, get, step } = await bootApp(`
+                <pc-asset id="mixamo" type="container" src="${animatedSrc('Armature|mixamo.com|Layer0')}"></pc-asset>
+                <pc-model asset="mixamo"><pc-anim></pc-anim></pc-model>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+
+            await vi.waitFor(() => expect(anim.clips).toEqual(['Armature|mixamo_com|Layer0']));
+            step(0.5);
+            expect(anim.component!.baseLayer!.activeState).toBe('Armature|mixamo_com|Layer0');
+            expect(bonePosition(app).y).toBeGreaterThan(0);
+        });
+
+        it('skips a dotted track whose underscored name collides with another track', async () => {
+            const { get } = await bootApp(`
+                <pc-asset id="odd" type="container" src="${animatedSrc('a_b', 'a.b')}"></pc-asset>
+                <pc-model asset="odd"><pc-anim></pc-anim></pc-model>
+            `);
+            const anim = get<AnimComponentElement>('pc-anim');
+
+            await vi.waitFor(() => expect(anim.clips).toEqual(['a_b']));
+            warnings.expect("pc-anim - duplicate clip name 'a_b' - track 'a.b' skipped");
         });
     });
 
