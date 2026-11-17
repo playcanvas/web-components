@@ -203,7 +203,7 @@ class ModelElement extends EntityOwnerElement {
      * the load — a newer load, a disconnect, the host dying — cancels it, so the asset settling
      * later cannot deliver to a load that no longer owns the element.
      */
-    private _binding = new AssetBinding();
+    private _binding = new AssetBinding(this);
 
     /**
      * The root entity of the instantiated model content, parented beneath the host entity.

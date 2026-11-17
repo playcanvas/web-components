@@ -619,7 +619,7 @@ class NodeElement extends EntityBaseElement {
 
         /** Resolves a replacement id, warning when it does not resolve. */
         const resolveReplacement = (id: string): Material | null => {
-            const material = MaterialElement.get(id);
+            const material = MaterialElement.get(id, this);
             if (!material) {
                 console.warn(`${label} material-overrides could not resolve pc-material '${id}' - rule ignored`);
             }

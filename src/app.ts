@@ -190,7 +190,7 @@ class AppElement extends AsyncElement {
      * Watches the area light lookup table asset while it loads. Rebinding or disconnecting cancels
      * it, so a superseded file can never reach the engine.
      */
-    private _areaLightLutsBinding = new AssetBinding();
+    private _areaLightLutsBinding = new AssetBinding(this);
 
     /**
      * Whether the application has created its initial entity hierarchy. Read by EntityElement to

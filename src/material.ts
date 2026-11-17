@@ -26,7 +26,7 @@ import {
 import type { Texture } from 'playcanvas';
 
 import type { AppElement } from './app';
-import { AssetBinding } from './asset-binding';
+import { AssetBinding, findById } from './asset-binding';
 import { applyAttribute, attr, attributeNames, defineAttributes, engineData } from './attributes';
 import { HTMLElement } from './html-element';
 import { parseNumber } from './parse';
@@ -771,7 +771,7 @@ class MaterialElement extends HTMLElement {
     private _setMap(id: string, slot: TextureSlot) {
         let binding = this._mapBindings.get(slot);
         if (!binding) {
-            binding = new AssetBinding();
+            binding = new AssetBinding(this);
             this._mapBindings.set(slot, binding);
         }
 
@@ -980,12 +980,18 @@ class MaterialElement extends HTMLElement {
      * Returns the {@link StandardMaterial} created by the `<pc-material>` element with the given
      * `id`, or `undefined` if there is no such element or its material has not been created yet.
      *
+     * The id is an element id. Given the element that refers to the material, it is looked for in
+     * that element's `<pc-app>` first and then in the tree the element is in, which is the
+     * document unless the application is inside a shadow root. That is how the library's own
+     * elements resolve a material, and what keeps two applications that use the same id apart.
+     * Without an element, only the document is searched.
+     *
      * @param id - The `id` of the `<pc-material>` element.
+     * @param from - The element that refers to the material.
      * @returns The material, or `undefined`.
      */
-    static get(id: string) {
-        const materialElement = document.querySelector<MaterialElement>(`pc-material[id="${id}"]`);
-        return materialElement?.material;
+    static get(id: string, from?: Element) {
+        return (findById('pc-material', id, from) as MaterialElement | null)?.material ?? undefined;
     }
 
     static get observedAttributes() {

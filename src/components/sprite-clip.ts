@@ -209,7 +209,7 @@ class SpriteClipElement extends AsyncElement {
 defineAttributes(SpriteClipElement, 'spriteAnimationClip', {
     asset: attr
         .string('')
-        .to((value) => useAsset(value)?.id ?? (null as unknown as number))
+        .to((value, element) => useAsset(value, element)?.id ?? (null as unknown as number))
         .as('spriteAsset'),
     fps: attr.number(0),
     loop: attr.bool(false)

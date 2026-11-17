@@ -46,7 +46,7 @@ class AnimClipElement extends AsyncElement {
      * Watches the current source asset while it loads. Starting a new resolution or
      * disconnecting cancels it, so a superseded source can never hand its track to the parent.
      */
-    private _binding = new AssetBinding();
+    private _binding = new AssetBinding(this);
 
     /**
      * Incremented on every connect and disconnect, and captured by connectedCallback on entry —
@@ -203,7 +203,7 @@ class AnimClipElement extends AsyncElement {
             return;
         }
 
-        const asset = AssetElement.get(model.asset);
+        const asset = AssetElement.get(model.asset, model);
         if (!asset?.resource) {
             // The model's load failed; it already reported the error
             return;

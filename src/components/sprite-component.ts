@@ -175,7 +175,7 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
      * @returns The asset, or `undefined` when `asset` is empty or names no asset.
      */
     private _resolveAsset() {
-        const asset = useAsset(this._asset);
+        const asset = useAsset(this._asset, this);
         if (this._asset && !asset && this._warnedAsset !== this._asset) {
             this._warnedAsset = this._asset;
             const label = this.id ? ` '${this.id}'` : '';
@@ -236,7 +236,7 @@ class SpriteComponentElement extends ComponentElement<SpriteComponent> {
                     name: clip.name,
                     fps: clip.fps,
                     loop: clip.loop,
-                    spriteAsset: useAsset(clip.asset)?.id
+                    spriteAsset: useAsset(clip.asset, this)?.id
                 })
             );
             if (clip.name === this._clip) {

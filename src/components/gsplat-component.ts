@@ -68,7 +68,7 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
     protected getInitialComponentData() {
         return {
             ...super.getInitialComponentData(),
-            asset: useAsset(this._asset)
+            asset: useAsset(this._asset, this)
         };
     }
 
@@ -87,7 +87,7 @@ class GSplatComponentElement extends ComponentElement<GSplatComponent> {
      */
     set asset(value: string) {
         this._asset = value;
-        const asset = useAsset(value);
+        const asset = useAsset(value, this);
         if (this.component && asset) {
             this.component.asset = asset;
         }

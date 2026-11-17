@@ -84,7 +84,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
 
         // Only a resolved material is passed on: an undefined one would replace the engine's
         // default material with nothing at the component level
-        const material = MaterialElement.get(this._material);
+        const material = MaterialElement.get(this._material, this);
         if (material) {
             data.material = material;
         }
@@ -107,7 +107,7 @@ class RenderComponentElement extends ComponentElement<RenderComponent> {
      */
     set material(value: string) {
         this._material = value;
-        const material = MaterialElement.get(value);
+        const material = MaterialElement.get(value, this);
         // Guarded like every other reference attribute in the library. Assigning an unresolved
         // lookup used to write `undefined` straight through to every mesh instance, and the
         // engine's MeshInstance setter takes that literally - it clears the material and skips

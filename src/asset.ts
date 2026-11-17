@@ -384,7 +384,7 @@ class AssetElement extends AsyncElement {
             // sprite handler loads the atlas when the sprite itself loads.
             const atlas = this.getAttribute('atlas') ?? data.textureAtlasAsset;
             if (typeof atlas === 'string') {
-                const atlasAsset = AssetElement.get(atlas);
+                const atlasAsset = AssetElement.get(atlas, this);
                 if (atlasAsset) {
                     data.textureAtlasAsset = atlasAsset.id;
                 } else {
@@ -668,11 +668,18 @@ class AssetElement extends AsyncElement {
      * Returns the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
      * `undefined` if there is no such element or its asset has not been created yet.
      *
+     * The id is an element id. Given the element that refers to the asset, it is looked for in
+     * that element's `<pc-app>` first and then in the tree the element is in, which is the
+     * document unless the application is inside a shadow root. That is how the library's own
+     * elements resolve an asset, and what keeps two applications that use the same id apart.
+     * Without an element, only the document is searched.
+     *
      * @param id - The `id` of the `<pc-asset>` element.
+     * @param from - The element that refers to the asset.
      * @returns The asset, or `undefined`.
      */
-    static get(id: string) {
-        return findAsset(id);
+    static get(id: string, from?: Element) {
+        return findAsset(id, from);
     }
 
     static get observedAttributes() {

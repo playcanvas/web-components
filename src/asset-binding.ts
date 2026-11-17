@@ -13,18 +13,68 @@ import type { AssetElement } from './asset';
 // first, so the lookup lives here and AssetElement.get delegates to it.
 
 /**
+ * Finds the element of one kind that an id names, as the element resolving the id sees it.
+ *
+ * The id is looked for in the `<pc-app>` the resolving element belongs to first, among the direct
+ * children where assets and materials are declared, and then in the tree that element is in: the
+ * document, or the shadow root of a component that renders an application inside one. Looking in
+ * the application first keeps two applications in one document apart when they use the same id,
+ * where each would otherwise be handed the first one's asset. Looking in the element's own tree
+ * is what lets an id inside a shadow root resolve at all, since the document cannot see into one.
+ *
+ * It is still an element id, found where the DOM keeps it: an id that is unique in its tree, as
+ * HTML asks, resolves exactly as `getElementById` resolves it.
+ *
+ * @param tag - The tag of the element looked for.
+ * @param id - The `id` of the element.
+ * @param from - The element resolving the id. Without one, only the document is searched.
+ * @returns The element, or `null`.
+ * @internal
+ */
+export const findById = (tag: string, id: string, from?: Element): Element | null => {
+    if (!id) {
+        return null;
+    }
+
+    const app = from?.localName === 'pc-app' ? from : from?.closest('pc-app');
+    for (const child of app?.children ?? []) {
+        if (child.localName === tag && child.id === id) {
+            return child;
+        }
+    }
+
+    // A detached element's root is whatever it is under, which has no ids of its own to search
+    const root = from?.getRootNode();
+    const tree = root && 'getElementById' in root ? (root as Document | ShadowRoot) : document;
+
+    // getElementById rather than a selector built from the id: an id containing a quote or a
+    // backslash would make the selector throw, whereas here it simply matches nothing
+    const element = tree.getElementById(id);
+    if (element?.localName === tag) {
+        return element;
+    }
+
+    // Another kind of element has the id first, which only a document with a repeated id has
+    for (const candidate of element ? tree.querySelectorAll(tag) : []) {
+        if (candidate.id === id) {
+            return candidate;
+        }
+    }
+
+    return null;
+};
+
+/**
  * Looks up the {@link Asset} created by the `<pc-asset>` element with the given `id`, or
  * `undefined` if there is no such element or its asset has not been created yet.
  *
  * @param id - The `id` of the `<pc-asset>` element.
+ * @param from - The element resolving the id, whose application is searched first.
  * @returns The asset, or `undefined`.
  * @internal
  */
-export const findAsset = (id: string) => {
-    // getElementById rather than a selector built from the id: an id containing a quote or a
-    // backslash would make the selector throw, whereas here it simply matches nothing
-    const element = document.getElementById(id);
-    return element?.localName === 'pc-asset' ? (element as AssetElement).asset : undefined;
+export const findAsset = (id: string, from?: Element) => {
+    return (findById('pc-asset', id, from) as AssetElement | null)?.asset ?? undefined;
 };
 
 /**
@@ -35,11 +85,12 @@ export const findAsset = (id: string) => {
  * the resource.
  *
  * @param id - The `id` of the `<pc-asset>` element.
+ * @param from - The element resolving the id, whose application is searched first.
  * @returns The asset, or `undefined`.
  * @internal
  */
-export const useAsset = (id: string) => {
-    const asset = findAsset(id);
+export const useAsset = (id: string, from?: Element) => {
+    const asset = findAsset(id, from);
     // load() ignores an asset that is already loaded or loading, so repeated resolution
     // costs nothing.
     if (asset) {
@@ -98,6 +149,19 @@ export class AssetBinding {
 
     private _loadHandle: EventHandle | null = null;
 
+    /**
+     * The element whose asset this watches, which is the element the asset's id is resolved from.
+     */
+    private _from: Element | undefined;
+
+    /**
+     * @param from - The element whose asset this watches. Its application is where the asset's id
+     * is looked for first.
+     */
+    constructor(from?: Element) {
+        this._from = from;
+    }
+
     private _errorHandle: EventHandle | null = null;
 
     private _detach() {
@@ -134,7 +198,7 @@ export class AssetBinding {
         const generation = ++this._generation;
         this._detach();
 
-        const asset = useAsset(id);
+        const asset = useAsset(id, this._from);
         if (!asset) {
             return undefined;
         }
