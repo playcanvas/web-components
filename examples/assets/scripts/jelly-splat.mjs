@@ -439,7 +439,7 @@ class JellySplat extends Script {
         this._onPointerDown = this._onPointerDown.bind(this);
         this._onPointerMove = this._onPointerMove.bind(this);
         this._onPointerUp = this._onPointerUp.bind(this);
-        // capture phase, ahead of the camera controls. A cancelled pointer, like a touch the
+        // capture phase, ahead of the camera controls. A canceled pointer, like a touch the
         // browser takes over, lets go the same as one that is lifted.
         window.addEventListener('pointerdown', this._onPointerDown, true);
         window.addEventListener('pointermove', this._onPointerMove, true);
