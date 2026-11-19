@@ -308,14 +308,32 @@ class NodeElement extends EntityBaseElement {
     }
 
     connectedCallback() {
+        if (!this._follow()) {
+            const label = this._name ? ` '${this._name}'` : '';
+            console.warn(`pc-node${label} must be a descendant of pc-model - node not bound`);
+        }
+    }
+
+    /**
+     * Finds the host this element binds into and follows its binding cycles from here on, binding
+     * at once if the host is already instantiated. Called when the element connects, and by the
+     * root of an inserted subtree that is built before this element has connected - which makes
+     * the later call a repeat, with nothing left to do.
+     *
+     * @returns Whether the element has a host to follow.
+     * @internal
+     */
+    _follow(): boolean {
+        if (this._host) {
+            return true;
+        }
+
         const host = (this.parentElement?.closest('pc-model, pc-node') ?? null) as
             | ModelElement
             | NodeElement
             | null;
         if (!host) {
-            const label = this._name ? ` '${this._name}'` : '';
-            console.warn(`pc-node${label} must be a descendant of pc-model - node not bound`);
-            return;
+            return false;
         }
 
         this._host = host;
@@ -332,6 +350,8 @@ class NodeElement extends EntityBaseElement {
 
         // The host may already be instantiated (an element inserted after load binds immediately)
         this._rebind();
+
+        return true;
     }
 
     disconnectedCallback() {

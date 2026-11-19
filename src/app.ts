@@ -67,12 +67,10 @@ import type { AssetElement } from './asset';
 import { AssetBinding } from './asset-binding';
 import { AsyncElement } from './async-element';
 import { applyAttribute, attr, attributeNames, defineAttributes } from './attributes';
-import { ComponentElement } from './components/component';
 import type { EntityBaseElement } from './entity-base';
-import type { EntityOwnerElement } from './entity-owner';
+import { buildDescendantContent, buildDescendantEntities } from './entity-owner';
 import { LoadingBar } from './loading-bar';
 import type { MaterialElement } from './material';
-import type { ModelElement } from './model';
 import { parseBool, parseEnum, parseNumber } from './parse';
 import { PointerController } from './pointer-controller';
 import type { SceneElement } from './scene';
@@ -125,9 +123,16 @@ const AREA_LIGHT_LUT_LENGTH = 64 * 64 * 4;
  * preloaded `<pc-model>` and every component, in document order. Starting the application then
  * runs `initialize()` on every script and, once all of them have run, `postInitialize()` on every
  * script - so a script can rely on the entities, components and scripts the document declares
- * beside it. The element becomes ready when the application has started. What arrives later is
- * built when it arrives, and its scripts initialize then: an element added to the document, a
- * script class registered after the start, the content of a model whose asset is `lazy`.
+ * beside it. The element becomes ready when the application has started.
+ *
+ * A `<pc-entity>` or `<pc-model>` added to the document after that is built the same way, along
+ * with everything declared under it, before its entity joins the scene: its scripts then
+ * initialize together and post-initialize together, before the insertion returns. Several
+ * inserted side by side in one operation are all built before any of them joins the scene, and
+ * then join one after the other, so each can refer to the others but the scripts of one have run
+ * before the next joins. What cannot be built with the rest is built when it can be, and its
+ * scripts initialize then: a script class registered later, the content of a model whose asset
+ * has not loaded, and a component element added on its own to an entity already in the scene.
  *
  * @elementSummary The `<pc-app>` element creates a PlayCanvas application and the canvas it renders
  * into, and is the root of every scene. It holds the `<pc-asset>`, `<pc-material>`, `<pc-wasm>` and
@@ -210,6 +215,15 @@ class AppElement extends AsyncElement {
      * @internal
      */
     _hierarchyReady = false;
+
+    /**
+     * Whether the application has built the scene the document declared when it booted: the
+     * content of its preloaded models and its components, on top of the entity hierarchy. Read
+     * by an element that connects after the hierarchy exists, to decide whether to build what is
+     * declared under it itself or to leave everything but the entities to the boot.
+     * @internal
+     */
+    _sceneBuilt = false;
 
     /**
      * Whether `app.start()` is running, which is when the scripts built at boot initialize. A
@@ -574,17 +588,10 @@ class AppElement extends AsyncElement {
             materialElement._createMaterial();
         });
 
-        // Create all entities. pc-model joins the sweep because it owns a host entity of its
-        // own; its instantiated content arrives later, beneath that host.
-        const ownerElements = this.querySelectorAll<EntityOwnerElement>('pc-entity, pc-model');
-        Array.from(ownerElements).forEach((ownerElement) => {
-            ownerElement._createEntity(app);
-        });
-
-        // Build hierarchy
-        ownerElements.forEach((ownerElement) => {
-            ownerElement._buildHierarchy(app);
-        });
+        // Create all entities, and then build the hierarchy. pc-model joins the sweep because it
+        // owns a host entity of its own; its instantiated content arrives later, beneath that
+        // host.
+        buildDescendantEntities(this, app);
 
         // Building the hierarchy dispatched each entity's ready event synchronously, and a
         // listener may have removed the element. The sweep itself degrades safely - destroying
@@ -649,6 +656,9 @@ class AppElement extends AsyncElement {
             return;
         }
 
+        // From here a subtree added to the document builds everything it declares itself
+        this._sceneBuilt = true;
+
         // Start the application, which initializes every script built above, and then
         // post-initializes them. A script that throws as it does cuts the start short, as it
         // does in any engine application: the error surfaces from this callback, and the
@@ -688,10 +698,6 @@ class AppElement extends AsyncElement {
      * This runs once preload has finished, as the engine's own boot loads its scene, and for the
      * same reasons: the assets a component names have loaded, and the physics world exists.
      *
-     * What cannot be built yet keeps the path it has always had, and is built when it can be: a
-     * model whose container loads later, what is declared inside it, and a script whose class
-     * has not been registered.
-     *
      * @param app - The application.
      * @param generation - The boot this belongs to. A listener run from here may remove the
      * element, which ends the boot.
@@ -702,27 +708,7 @@ class AppElement extends AsyncElement {
         // is created here instead, by the call app.start() makes.
         app.systems.rigidbody?.onLibraryLoaded();
 
-        // Models first, so that the nodes inside them are bound, and the entities declared on
-        // those nodes are built, before any component looks for its host. One nested in another
-        // model's content is built as that content arrives, and so is reached in turn.
-        const modelElements = this.querySelectorAll<ModelElement>('pc-model');
-        for (const modelElement of Array.from(modelElements)) {
-            if (generation !== this._bootGeneration) {
-                return;
-            }
-            if (modelElement.closestApp === this) {
-                modelElement._loadPreloaded();
-            }
-        }
-
-        for (const element of Array.from(this.querySelectorAll('*'))) {
-            if (generation !== this._bootGeneration) {
-                return;
-            }
-            if (element instanceof ComponentElement && element.closestApp === this) {
-                element._build();
-            }
-        }
+        buildDescendantContent([this], (element) => generation === this._bootGeneration && element.closestApp === this);
     }
 
     disconnectedCallback() {
@@ -760,6 +746,7 @@ class AppElement extends AsyncElement {
         // must neither see a hierarchy that no longer exists nor resume against a readiness that
         // no longer holds.
         this._hierarchyReady = false;
+        this._sceneBuilt = false;
         this._resetReady();
 
         // Stop tracking the element's size and the display's pixel ratio

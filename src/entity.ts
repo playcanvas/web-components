@@ -1,7 +1,7 @@
 import { Vec3 } from 'playcanvas';
 
 import { applyAttribute, attributeNames } from './attributes';
-import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
+import { EntityOwnerElement } from './entity-owner';
 import { parseTags, parseVec3 } from './parse';
 
 /**
@@ -9,6 +9,31 @@ import { parseTags, parseVec3 } from './parse';
  * {@link https://developer.playcanvas.com/user-manual/web-components/tags/pc-entity/ | `<pc-entity>`} elements.
  * The EntityElement interface also inherits the properties and methods of the
  * {@link HTMLElement} interface.
+ *
+ * An element added to an application that is already running is built in one go, along with
+ * everything declared under it: its entity and those of the entities below it, the content of
+ * every `<pc-model>` whose asset has loaded, and every component with its scripts. The entity
+ * joins the scene last, which enables the whole hierarchy at once, as `addChild()` does for a
+ * hierarchy built through the engine: every script in it runs `initialize()`, and then every
+ * script runs `postInitialize()`, before the insertion returns. Each element reports ready as it
+ * is built, which is before the entity has joined the scene. This holds however the subtree
+ * arrives: built with `createElement()`, parsed by `innerHTML` or `insertAdjacentHTML()`, or
+ * cloned from a `<template>`.
+ *
+ * Entities and models that one operation inserts side by side - the children of a fragment or a
+ * cloned `<template>`, the top-level elements of `innerHTML` or `insertAdjacentHTML()`, the
+ * arguments of `append()` - are all built before any of them joins the scene, so each can refer
+ * to the others: an `entity:` reference from one to another resolves, and its components and
+ * scripts are in place. They then join the scene one after the other, in document order, each as
+ * a hierarchy of its own, as they would in as many calls to `addChild()`. So the scripts of the
+ * first have initialized and post-initialized before the second joins, and until it joins the
+ * second is not in the scene graph, where `findByName()` would look for it. Put them under one
+ * entity to have their scripts initialize together.
+ *
+ * So what is inserted is configured before it is inserted, as a hierarchy is before
+ * `addChild()`: its scripts initialize with the attributes it has when it is inserted, and it
+ * can refer to what arrives with it or is already in the document, but not to what a later
+ * operation inserts.
  *
  * The pointer events below are dispatched by the containing `<pc-app>` element when the pointer
  * is over this entity's geometry, and behave like the DOM's own pointer events: each targets the
@@ -71,7 +96,8 @@ import { parseTags, parseVec3 } from './parse';
  */
 class EntityElement extends EntityOwnerElement {
     connectedCallback() {
-        // Wait for app to be ready
+        this._connected = true;
+
         const closestApp = this.closestApp;
         if (!closestApp) {
             // An entity outside an application is inert and never becomes ready, so awaiting it
@@ -83,22 +109,16 @@ class EntityElement extends EntityOwnerElement {
             return;
         }
 
-        // If app is already running, create entity immediately
+        // If the application has built its hierarchy, build this element and what is declared
+        // under it now; during a boot, the application's own sweep does it
         if (closestApp._hierarchyReady) {
-            const app = closestApp.app!;
-
-            this._createEntity(app);
-            this._buildHierarchy(app);
-
-            // Handle any child entities that might exist. A build that deferred (an unresolved
-            // pc-node above) defers the whole subtree with it - the node's bind sweeps it.
-            if (this._built) {
-                buildDescendantEntities(this, app);
-            }
+            this._buildSubtree(closestApp);
         }
     }
 
     disconnectedCallback() {
+        this._connected = false;
+
         // Destroying the entity destroys its whole subtree, and the engine fires 'destroy' for
         // every entity in it - so _onEntityDestroy resets this element AND every descendant
         // element before the descendants' own disconnectedCallbacks run. Their entities are null

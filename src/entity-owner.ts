@@ -1,23 +1,26 @@
 import type { AppBase } from 'playcanvas';
 import { Entity, Vec3 } from 'playcanvas';
 
+import type { AppElement } from './app';
+import type { AsyncElement } from './async-element';
 import { attr, defineAttributes } from './attributes';
+import { ComponentElement } from './components/component';
 import { EntityBaseElement } from './entity-base';
+import type { ModelElement } from './model';
+import type { NodeElement } from './node';
 
 /**
  * Creates and parents the entities of every descendant entity-owning element of `root`, in two
- * passes so that no parent's existence depends on document order. Called wherever a subtree could
- * not build itself: an element inserted into an application that is already running, and a
- * `<pc-node>` whose children waited for it to bind.
+ * passes so that no parent's existence depends on document order. This is the first half of
+ * building a subtree, and {@link buildDescendantContent} is the second. Called by `<pc-app>` as it
+ * boots, by the root of a subtree inserted into a running application, and by a `<pc-node>` whose
+ * children waited for it to bind.
  *
  * Descendants that are not yet custom elements are skipped, because there is nothing useful to do
- * for them and reaching for `_createEntity` would throw. A subtree cloned from a `<template>`
- * arrives entirely unupgraded — template content lives in an inert document, where custom element
- * definitions are never looked up — and appending the clone upgrades its elements in tree order,
- * an element before its descendants. So a sweep from an element's own `connectedCallback` sees
- * plain `HTMLElement`s below it. Each becomes an entity-owning element moments later and its own
- * `connectedCallback` creates and parents it, by which time the ancestor it parents under has its
- * entity — the same guarantee tree order gives this sweep.
+ * for them and reaching for `_createEntity` would throw. A `<pc-node>` inserted on its own is the
+ * one caller that can meet them: `<pc-app>` and an inserted entity upgrade their subtree before
+ * they build it. Each skipped element becomes an entity-owning element moments later, and its own
+ * `connectedCallback` builds it.
  *
  * @param root - The element whose descendant entities to build.
  * @param app - The application to create the entities in.
@@ -30,6 +33,52 @@ export const buildDescendantEntities = (root: Element, app: AppBase) => {
     children.forEach((child) => child._createEntity(app));
     children.forEach((child) => child._buildHierarchy(app));
 };
+
+/**
+ * Builds what `roots` and the elements under them declare on their entities, once those entities
+ * exist: the content of every model whose container has loaded, and then every component, in tree
+ * order, each with the script instances whose class is registered. This is the second half of
+ * building a subtree. Called by `<pc-app>` once preload has finished and before it starts the
+ * application, and for what is inserted into a running application before any of it joins the
+ * scene - so in both cases the scripts initialize with everything in place.
+ *
+ * Models come first, so that the nodes inside them are bound, and the entities declared on those
+ * nodes are built, before any component looks for its host. One nested in another model's content
+ * is built as that content arrives, and so is reached in turn.
+ *
+ * What cannot be built yet keeps the path it has always had, and is built when it can be: a model
+ * whose container loads later, what is declared inside it, and a script whose class has not been
+ * registered.
+ *
+ * @param roots - The elements to build the content of, in document order, which every element
+ * under them has been upgraded along with.
+ * @param owns - Whether an element is still this caller's to build. A listener run from here may
+ * end the build, and `<pc-app>` leaves what a nested application owns to it.
+ * @internal
+ */
+export const buildDescendantContent = (roots: Element[], owns: (element: AsyncElement) => boolean = () => true) => {
+    const elements = roots.flatMap((root) => [root, ...Array.from(root.querySelectorAll('*'))]);
+
+    // Told apart by tag, because the class cannot be imported here: it extends the one below
+    const models = elements.filter((element): element is ModelElement => element.localName === 'pc-model');
+    for (const model of models) {
+        if (owns(model)) {
+            model._loadPreloaded();
+        }
+    }
+
+    for (const element of elements) {
+        if (element instanceof ComponentElement && owns(element)) {
+            element._build();
+        }
+    }
+};
+
+/**
+ * The elements a root has taken on to build along with itself, for as long as it takes to upgrade
+ * them. Each connects as it upgrades, and leaves its building to that root.
+ */
+const taken = new WeakSet<Element>();
 
 /**
  * The base class for elements that create and own their backing entity: `<pc-entity>` and
@@ -72,10 +121,20 @@ class EntityOwnerElement extends EntityBaseElement {
     private _tags: string[] = [];
 
     /**
-     * Whether the hierarchy has been built for this entity — set once `_buildHierarchy` has
-     * parented it. Read by subclasses that gate work on the entity being in the scene graph.
+     * Whether this entity has its place in the hierarchy: it has been parented, or it is the root
+     * of an inserted subtree, which is parented once the subtree under it is built. Read by
+     * subclasses that gate work on the entity being built.
      */
     protected _built = false;
+
+    /**
+     * Whether the element has connected: its connectedCallback has run since it was last put in
+     * the document. Set and cleared by the subclasses, whose callbacks those are. An element in
+     * the document that has yet to connect has only just arrived, in the DOM operation that is
+     * still connecting what it inserted - which is how a root tells the elements that arrived
+     * with it from the ones that were there before.
+     */
+    protected _connected = false;
 
     /**
      * Creates the backing entity. Called by the containing `<pc-app>` element during its boot
@@ -142,7 +201,25 @@ class EntityOwnerElement extends EntityBaseElement {
      * @internal
      */
     _buildHierarchy(app: AppBase) {
-        if (!this.entity || this._built) return;
+        const parent = this._parentEntity(app);
+        if (!parent) return;
+
+        this._built = true;
+        parent.addChild(this._entity!);
+        this._onBuilt();
+    }
+
+    /**
+     * Finds the entity this element's entity is to be parented under: the entity of the nearest
+     * ancestor `<pc-entity>`, `<pc-model>` or `<pc-node>` when there is one, and the application
+     * root otherwise.
+     *
+     * @param app - The application whose root adopts parentless entities.
+     * @returns The parent, or `null` when there is nothing to parent, or nothing to parent it
+     * under yet.
+     */
+    private _parentEntity(app: AppBase): Entity | null {
+        if (!this._entity || this._built) return null;
 
         const closestEntity = this.closestEntity;
 
@@ -150,33 +227,153 @@ class EntityOwnerElement extends EntityBaseElement {
         // mis-anchor this entity to the application root while the host is still resolving.
         // Stay unbuilt - the host drives this subtree itself once it binds.
         if (closestEntity && !closestEntity.entity) {
-            return;
+            return null;
         }
 
-        // An owner that exists but is not yet parented is itself deferred behind an unresolved
-        // node further up. Building beneath it would announce readiness for an entity that is
-        // not in the scene graph; stay unbuilt with it - the node's bind sweeps the whole
-        // subtree, ancestors before descendants.
+        // An owner that exists but is not yet parented is itself deferred, behind an unresolved
+        // node further up or as part of a subtree its root is still assembling. Stay unbuilt with
+        // it - whichever builds it sweeps the whole subtree, ancestors before descendants.
         if (closestEntity instanceof EntityOwnerElement && !closestEntity._built) {
-            return;
+            return null;
         }
 
-        this._built = true;
-
-        if (closestEntity?.entity) {
-            closestEntity.entity.addChild(this.entity);
-        } else {
-            app.root.addChild(this.entity);
-        }
-
-        this._onBuilt();
+        return closestEntity?.entity ?? app.root;
     }
 
     /**
-     * Called by `_buildHierarchy` once the backing entity has been parented — exactly once
-     * per build cycle. The default announces readiness, which is what a parented `<pc-entity>`
-     * means; `<pc-model>` overrides it to start loading content instead, because its readiness
-     * tracks the content settling rather than the host entering the scene graph.
+     * Builds this element and everything declared under it, in an application whose hierarchy
+     * already exists - along with the elements that arrived beside it. Called when the element
+     * connects.
+     *
+     * Everything is assembled before any of it joins the scene: the entities, the content of
+     * every model whose container has loaded, and every component with the script instances
+     * whose class is registered. Adding the root entity to its parent then enables the whole
+     * hierarchy at once, as the engine does for a hierarchy handed to `addChild`: every script
+     * in it runs `initialize()`, and then every script runs `postInitialize()`, with every
+     * entity and component in place. Each element reports ready as it is built, which is before
+     * its root joins the scene.
+     *
+     * One DOM operation can insert several entity-owning elements side by side: the children of
+     * a fragment or a cloned template, of `innerHTML`, or the arguments of `append`. The first
+     * of them to connect builds them all, so that what one declares can refer to another, and
+     * then adds them to the scene one after the other, in document order. Each is a hierarchy of
+     * its own to the engine, as each would be in as many calls to `addChild`: the scripts of one
+     * have initialized and post-initialized before the next joins the scene.
+     *
+     * While the application is still preloading, only the entities are built. The application
+     * builds every component under it once preload has finished, and starts its scripts
+     * together.
+     *
+     * An element whose ancestor is assembling the subtree it belongs to, or which another
+     * element has built, has nothing left to do here.
+     *
+     * @param appElement - The application element, which has built its hierarchy.
+     */
+    protected _buildSubtree(appElement: AppElement) {
+        // The element that arrived before this one is building it
+        if (taken.has(this)) {
+            return;
+        }
+
+        const app = appElement.app!;
+
+        // A subtree parsed from a string, or cloned from a <template>, arrives unupgraded and
+        // upgrades in tree order, this element before its descendants. Upgrading them now makes
+        // the subtree whole, so that it can be built here as one built with createElement is.
+        // Each descendant connects as it upgrades, and finds this element not built yet.
+        customElements.upgrade(this);
+
+        this._createEntity(app);
+
+        const parent = this._parentEntity(app);
+        if (!parent) {
+            return;
+        }
+
+        // Every root gets its entity and its place before anything is built on one, and before
+        // the first event is dispatched: what one of them declares can then refer to another,
+        // and nothing a listener inserts can take one of them for an element still to arrive
+        const roots = [this, ...this._arrivedWith()];
+        const entities = roots.map((root) => {
+            root._createEntity(app);
+            root._built = true;
+            return root._entity;
+        });
+
+        // Building dispatches ready and load events synchronously, and a listener may remove
+        // one of these elements, which destroys its entity. Nothing more is built under that
+        // one then, and it does not join the scene.
+        const building = (index: number) => roots[index]._entity === entities[index];
+
+        roots.forEach((root, index) => {
+            if (!building(index)) {
+                return;
+            }
+
+            // In a subtree that arrived already upgraded, no element below the root has
+            // connected yet, so the nodes have yet to find the model they bind into
+            root.querySelectorAll<NodeElement>('pc-node').forEach((node) => node._follow());
+
+            root._onBuilt();
+            if (building(index)) {
+                buildDescendantEntities(root, app);
+            }
+        });
+
+        if (appElement._sceneBuilt) {
+            buildDescendantContent(roots.filter((_root, index) => building(index)));
+        }
+
+        // Each root joins the scene only now, with everything that arrived in place. A script
+        // that initializes as one joins may remove another.
+        roots.forEach((_root, index) => {
+            if (building(index)) {
+                parent.addChild(entities[index]!);
+            }
+        });
+    }
+
+    /**
+     * Finds the entity-owning elements that arrived in the document with this one - the siblings
+     * after it that the same DOM operation inserted - and upgrades the ones that arrived as
+     * plain elements.
+     *
+     * One operation inserts one run of siblings, and connects them in document order. So when
+     * the first of them connects, the others are in the document and have not connected: they
+     * have yet to be upgraded, or they are custom elements whose connectedCallback has not run.
+     * A sibling that has connected was there before the operation, and so is everything after
+     * it - including one whose entity a script has since destroyed, which this must not rebuild.
+     *
+     * @returns The elements that arrived with this one, in document order.
+     */
+    private _arrivedWith(): EntityOwnerElement[] {
+        const arrived: Element[] = [];
+        for (let sibling = this.nextElementSibling; sibling; sibling = sibling.nextElementSibling) {
+            if (sibling.localName !== 'pc-entity' && sibling.localName !== 'pc-model') {
+                continue;
+            }
+            if (sibling instanceof EntityOwnerElement && (sibling._connected || sibling._built)) {
+                break;
+            }
+            arrived.push(sibling);
+        }
+
+        // Upgrading connects each one, and everything under it, into a subtree whose root is
+        // spoken for
+        arrived.forEach((element) => taken.add(element));
+        arrived.forEach((element) => customElements.upgrade(element));
+        arrived.forEach((element) => taken.delete(element));
+
+        return arrived.filter((element): element is EntityOwnerElement => element instanceof EntityOwnerElement);
+    }
+
+    /**
+     * Called once the backing entity is built — exactly once per build cycle: by
+     * `_buildHierarchy` when it has parented the entity, and by `_buildSubtree` for the root of
+     * an inserted subtree, which is parented last. The default announces readiness, which is
+     * what a built `<pc-entity>` means; `<pc-model>` overrides it to start loading content
+     * instead, because its readiness tracks the content settling rather than the host being
+     * built.
      */
     protected _onBuilt() {
         this._onReady();

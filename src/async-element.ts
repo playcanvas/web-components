@@ -47,8 +47,8 @@ class AsyncElement extends HTMLElement {
 
     /**
      * Whether the element is ready now: what {@link ready} resolves for, read without waiting.
-     * `<pc-app>` reads it as it builds the scene before starting, to tell which elements already
-     * front an engine object that others can be built on.
+     * Read as a subtree is built - the scene at boot, or one inserted later - to tell which
+     * elements already front an engine object that others can be built on.
      *
      * @returns Whether the element is ready.
      * @internal
