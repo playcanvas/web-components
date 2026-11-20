@@ -297,15 +297,15 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
         this.addEventListener('scriptnamechange', this.handleScriptNameChange.bind(this));
     }
 
-    connectedCallback() {
-        // (Re-)observe on every connection - disconnectedCallback disconnects the observer.
+    protected initComponent() {
+        // Watch the children from the moment the component exists, which is when there is first
+        // something for a change to apply to - disconnectedCallback disconnects the observer, and
+        // observing again is a no-op. A component built along with an inserted subtree exists,
+        // and its scripts have initialized, before this element's connectedCallback has run.
         // Attribute changes on child pc-script-instance elements are watched here too: per-property
         // script attributes are not statically known, so they cannot use observedAttributes.
         this.observer.observe(this, { childList: true, subtree: true, attributes: true });
-        return super.connectedCallback();
-    }
 
-    protected initComponent() {
         this.querySelectorAll<ScriptInstanceElement>(':scope > pc-script-instance').forEach((scriptElement) => {
             // A host readiness cycle re-runs this against a component that can have survived it
             // (a pc-model reloading content on its stable host entity). The engine rejects a
@@ -569,6 +569,10 @@ class ScriptComponentElement extends ComponentElement<ScriptComponent> {
      * leaves `initialize()` to `app.start()`. The engine then initializes every script the scene
      * declares, and post-initializes them once all have initialized, with every component in
      * place.
+     *
+     * In a subtree that is built before it joins a running scene, the entity is not enabled yet,
+     * so applying the declared enabled state initializes nothing. The engine does that for every
+     * script of the subtree, and then post-initializes them, when the root entity is added.
      * @param scriptElement - The `pc-script-instance` element to create the script instance for.
      * @returns The created script, or `null`.
      */

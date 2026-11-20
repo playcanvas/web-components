@@ -3,7 +3,7 @@ import { Vec3 } from 'playcanvas';
 
 import { AssetBinding, findAsset } from './asset-binding';
 import { applyAttribute, attributeNames } from './attributes';
-import { buildDescendantEntities, EntityOwnerElement } from './entity-owner';
+import { EntityOwnerElement } from './entity-owner';
 import { parseTags, parseVec3 } from './parse';
 
 /**
@@ -277,6 +277,8 @@ class ModelElement extends EntityOwnerElement {
     }
 
     connectedCallback() {
+        this._connected = true;
+
         // A model outside an application is inert and never becomes ready, so awaiting it hangs.
         // Warn rather than fail silently, naming the parent it requires, as every other misplaced
         // element does.
@@ -287,24 +289,17 @@ class ModelElement extends EntityOwnerElement {
             return;
         }
 
-        // If the app is already running, create the host immediately; during a boot, the app's
-        // own sweep does it. Either way, _onBuilt starts the content load once the host is
-        // parented.
+        // If the application has built its hierarchy, build the host and what is declared under
+        // it now; during a boot, the application's own sweep does it. Either way, _onBuilt starts
+        // the content load once the host is built.
         if (closestApp._hierarchyReady) {
-            const app = closestApp.app!;
-
-            this._createEntity(app);
-            this._buildHierarchy(app);
-
-            // A build that deferred (an unresolved pc-node above) defers the whole subtree with
-            // it - the node's bind sweeps it.
-            if (this._built) {
-                buildDescendantEntities(this, app);
-            }
+            this._buildSubtree(closestApp);
         }
     }
 
     disconnectedCallback() {
+        this._connected = false;
+
         // Destroying the host destroys the instantiated content with it, and the destroy hook
         // resets the element. The generation guard comes first so a load suspended on an await
         // cannot resume against the torn-down element.
@@ -314,8 +309,8 @@ class ModelElement extends EntityOwnerElement {
     }
 
     /**
-     * Starts (or restarts) the content load once the host has been parented. Readiness is not
-     * announced here — it tracks the content settling, not the host entering the scene graph.
+     * Starts (or restarts) the content load once the host has been built. Readiness is not
+     * announced here — it tracks the content settling, not the host being built.
      */
     protected override _onBuilt() {
         this._loadContent();
@@ -337,8 +332,9 @@ class ModelElement extends EntityOwnerElement {
 
     /**
      * Resolves readiness and dispatches the `load` event. Called once the instantiated content
-     * has been parented beneath the host — the host itself is already in the scene graph by
-     * then, so a ready model's content always has world transforms.
+     * has been parented beneath the host. The host is in the scene graph by then, unless it
+     * belongs to an inserted subtree that is still being built - which joins the scene before
+     * the insertion returns, so a ready model's content has its world transforms from then.
      */
     private _announceLoad() {
         this._onReady();
@@ -390,17 +386,18 @@ class ModelElement extends EntityOwnerElement {
     }
 
     /**
-     * Settles the content now, without waiting for the application to start, when nothing is
-     * left to wait for: the container asset has loaded, or failed, or no asset is assigned.
-     * Called by `<pc-app>` for every model under it once preload has finished and before it
-     * starts the application, so a preloaded model's content - and with it every `<pc-node>`
-     * that binds into it, and what is declared on them - exists when `app.start()` initializes
-     * the scripts. It supersedes the load that {@link _onBuilt} started, which is still waiting
+     * Settles the content now, without waiting for the application, when nothing is left to wait
+     * for: the container asset has loaded, or no asset is assigned. Called for every model in a
+     * subtree as it is built - by `<pc-app>` once preload has finished and before it starts the
+     * application, and by the root of a subtree inserted into a running application before it
+     * joins the scene - so the content of a model whose container has loaded, and with it every
+     * `<pc-node>` that binds into it and what is declared on them, exists when the scripts
+     * initialize. It supersedes the load that {@link _onBuilt} started, which is still waiting
      * for the application.
      *
      * A model whose container has not loaded by then is left to that load, which binds the asset
-     * once the application has started: an asset marked `lazy`, or one added to the document
-     * late.
+     * once the application has started: an asset marked `lazy`, one added to the document late,
+     * or one that failed to load, whose failure that load reports.
      *
      * @internal
      */

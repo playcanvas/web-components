@@ -115,8 +115,8 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
 
     /**
      * Adds the component to the entity of the host it has found, and follows the host from then
-     * on. Shared by the two ways a component is added: by `<pc-app>` as it builds the scene
-     * before starting ({@link _build}), and by this element's own connectedCallback.
+     * on. Shared by the two ways a component is added: as part of a subtree that is built in one
+     * go ({@link _build}), and by this element's own connectedCallback.
      *
      * @param entityElement - The host element, which is ready.
      */
@@ -170,13 +170,15 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
 
     /**
      * Adds the component now, without waiting, when the host already fronts an entity it can be
-     * added to. Called by `<pc-app>` for every component element under it once preload has
-     * finished and before it starts the application, in tree order - which is where the engine
-     * loads a scene - so every component exists when `app.start()` initializes the scripts. The
-     * element is ready from here: its component exists, though the application has not started.
+     * added to. Called for every component element of a subtree as it is built, in tree order:
+     * by `<pc-app>` once preload has finished and before it starts the application - which is
+     * where the engine loads a scene - and by the root of a subtree inserted into a running
+     * application, before its entity joins the scene. Either way every component exists when the
+     * scripts initialize. The element is ready from here: its component exists, though its
+     * entity may not be in a running scene yet.
      *
      * A host that is not ready is left to connectedCallback, which waits for it: an unbound
-     * `<pc-node>`, or a `<pc-model>` whose content arrives after the application has started.
+     * `<pc-node>`, or a `<pc-model>` whose content arrives later.
      *
      * @internal
      */
@@ -190,6 +192,7 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
             return;
         }
 
+        this._appElement = this.closestApp;
         this._attachToHost(entityElement);
         this.initComponent();
         this._onReady();
@@ -222,6 +225,12 @@ class ComponentElement<T extends Component = Component> extends AsyncElement {
     }
 
     async connectedCallback() {
+        // The root of the subtree this element was inserted with has already built it, before
+        // the element connected
+        if (this._hostElement) {
+            return;
+        }
+
         const generation = ++this._connectionGeneration;
 
         this._appElement = this.closestApp ?? null;
