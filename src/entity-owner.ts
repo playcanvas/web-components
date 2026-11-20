@@ -57,17 +57,19 @@ export const buildDescendantEntities = (root: Element, app: AppBase) => {
  * @internal
  */
 export const buildDescendantContent = (roots: Element[], owns: (element: AsyncElement) => boolean = () => true) => {
-    const elements = roots.flatMap((root) => [root, ...Array.from(root.querySelectorAll('*'))]);
+    const elements = () => roots.flatMap((root) => [root, ...Array.from(root.querySelectorAll('*'))]);
 
     // Told apart by tag, because the class cannot be imported here: it extends the one below
-    const models = elements.filter((element): element is ModelElement => element.localName === 'pc-model');
+    const models = elements().filter((element): element is ModelElement => element.localName === 'pc-model');
     for (const model of models) {
         if (owns(model)) {
             model._loadPreloaded();
         }
     }
 
-    for (const element of elements) {
+    // Read afresh: a model dispatches ready and load events as its content arrives, and what a
+    // listener adds to the document then is there to be built with the rest
+    for (const element of elements()) {
         if (element instanceof ComponentElement && owns(element)) {
             element._build();
         }

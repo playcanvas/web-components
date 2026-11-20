@@ -526,6 +526,37 @@ describe('<pc-app> boot order', () => {
             expect(uncaught.seen).toEqual([]);
         });
 
+        it('has a component that a listener adds as its content arrives built with the rest', async () => {
+            const log: string[] = [];
+            const handle = mountProbed(
+                `
+                <pc-asset id="m" type="container" src="${containerSrc('listened-root')}"></pc-asset>
+                <pc-model name="host" asset="m"></pc-model>
+                <pc-entity name="a"></pc-entity>
+                <pc-entity name="b">
+                    <pc-script><pc-script-instance name="probe" other="a"></pc-script-instance></pc-script>
+                </pc-entity>
+                `,
+                log
+            );
+
+            // A preloaded model fires load as its content is instantiated, which is before the
+            // components are built. What a listener adds to the document then is there to build.
+            handle.get<ModelElement>('pc-model').addEventListener('load', () => {
+                handle.get('pc-entity[name="a"]').appendChild(document.createElement('pc-camera'));
+            });
+
+            await started(handle);
+
+            expect(log).toEqual([
+                "app 'start' event - 1 camera, 1 script",
+                'b.initialize - a has camera, and its script does not exist',
+                'b.postInitialize - a has camera, and its script does not exist',
+                'pc-app ready'
+            ]);
+            expect(uncaught.seen).toEqual([]);
+        });
+
         it('builds what is declared inside it when its content arrives - if its container is lazy', async () => {
             const log: string[] = [];
             const ModelProbe = modelProbeClass(log);

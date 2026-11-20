@@ -780,6 +780,40 @@ describe('a subtree inserted into a running application', () => {
                 expect(uncaught.seen).toEqual([]);
             }
         );
+
+        it.each(TWO_WAYS.map(([name, insert], index) => [name, insert, `listened-${index}`] as const))(
+            'has a component that a listener adds as a model loads built with the rest - %s',
+            async (_name, insert, id) => {
+                const { app, log, stage } = await boot(
+                    `<pc-asset id="${id}" type="container" src="${containerSrc(`${id}-root`)}"></pc-asset>`
+                );
+
+                // A loaded model fires load as the subtree is built, before its components are.
+                // The event does not bubble, so the listener meets it on its way down.
+                stage.addEventListener(
+                    'load',
+                    () => stage.querySelector('pc-entity[name="a"]')!.appendChild(document.createElement('pc-camera')),
+                    { capture: true, once: true }
+                );
+
+                insert(
+                    stage,
+                    `<pc-entity name="group">
+                        <pc-model name="model" asset="${id}"></pc-model>
+                        <pc-entity name="a"></pc-entity>
+                        <pc-entity name="b">${probe('a')}</pc-entity>
+                    </pc-entity>`
+                );
+                log.push(`inserted - ${census(app)}`);
+
+                expect(log).toEqual([
+                    'b.initialize - a has camera, and its script does not exist',
+                    'b.postInitialize - a has camera, and its script does not exist',
+                    'inserted - 1 camera, 1 script'
+                ]);
+                expect(uncaught.seen).toEqual([]);
+            }
+        );
     });
 
     describe('under a disabled entity', () => {
