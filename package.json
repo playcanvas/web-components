@@ -99,7 +99,7 @@
     "playcanvas": "2.24.2",
     "prettier": "3.10.1",
     "publint": "0.3.25",
-    "rollup": "4.68.7",
+    "rollup": "4.68.8",
     "serve": "14.2.8",
     "tslib": "2.9.1",
     "typedoc": "0.28.20",
